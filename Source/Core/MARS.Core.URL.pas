@@ -17,11 +17,9 @@ unit MARS.Core.URL;
 interface
 
 uses
-    Classes, SysUtils
+    Classes, SysUtils, Generics.Collections, HTTPApp
   , MARS.Core.JSON
-  , HTTPApp
-  , Generics.Collections
-;
+  ;
 
 type
 
@@ -223,6 +221,8 @@ end;
 destructor TMARSURL.Destroy;
 begin
   FQueryTokens.Free;
+  FPathParams.Free;
+  FSubResources.Free;
   inherited;
 end;
 

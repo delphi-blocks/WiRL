@@ -609,6 +609,7 @@ begin
         InvokeResourceMethod(LInstance, LMethod, LWriter, ARequest, LMediaType);
       finally
         LWriter := nil;
+        LMediaType.Free;
       end;
 
     finally

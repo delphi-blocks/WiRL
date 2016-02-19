@@ -9,22 +9,13 @@ unit Server.Forms.Main;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics,
-  Controls, Forms, Dialogs, ActnList,
-  StdCtrls, ExtCtrls
+  Windows, Messages, SysUtils, Classes, Controls, Forms, Dialogs,
+  ActnList, StdCtrls, ExtCtrls, Diagnostics
 
-  , Diagnostics
   , IdContext
-
   , MARS.Core.Engine
   , MARS.http.Server.Indy
-
-
-//  , MARS.Core.Utils
   , MARS.Core.Application
-  , MARS.Diagnostics.Manager
-  , MARS.Diagnostics.Resources
-//  , MARS.Core.Token
   ;
 
 type
