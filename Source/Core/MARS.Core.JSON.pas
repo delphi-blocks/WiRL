@@ -85,16 +85,16 @@ uses
 
 function StringArrayToJsonArray(const values: TArray<string>): string;
 var
-  arr: TJSONArray;
-  i: Integer;
+  LArray: TJSONArray;
+  LIndex: Integer;
 begin
-  arr := TJSONArray.Create;
+  LArray := TJSONArray.Create;
   try
-    for i := 0 to High(values) do
-      arr.Add(values[i]);
-    Result := arr.ToJSON;
+    for LIndex := 0 to High(values) do
+      LArray.Add(values[LIndex]);
+    Result := LArray.ToJSON;
   finally
-    arr.Free;
+    LArray.Free;
   end;
 end;
 
@@ -175,24 +175,24 @@ end;
 
 function TJSONObjectHelper.GetValue(const name: string): Variant;
 var
-  pair: TJSONPair;
-  value: TJSONValue;
+  LPair: TJSONPair;
+  LValue: TJSONValue;
 begin
 {$ifdef DelphiXE6_UP}
-  pair := GetPairByName(name);
+  LPair := GetPairByName(name);
 {$else}
-  pair := Get(name);
+  LPair := Get(name);
 {$endif}
-  if not Assigned(pair) then
+  if not Assigned(LPair) then
     Exit(Unassigned);
-  value := pair.JsonValue;
-  if value is TJSONTrue then
+  LValue := LPair.JsonValue;
+  if LValue is TJSONTrue then
     Exit(True);
-  if value is TJSONFalse then
+  if LValue is TJSONFalse then
     Exit(False);
-  if value is TJSONNumber then
-    Exit(TJSONNumber(value).AsDouble);
-  Result := value.Value;
+  if LValue is TJSONNumber then
+    Exit(TJSONNumber(LValue).AsDouble);
+  Result := LValue.Value;
 end;
 
 function TJSONObjectHelper.ReadBoolValue(const AName: string): Boolean;

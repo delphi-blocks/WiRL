@@ -15,6 +15,7 @@ uses
   , MARS.Core.Declarations
   , MARS.Core.MediaType
   , MARS.Core.MessageBodyWriter
+  , MARS.Core.Exceptions
   ;
 
 type
@@ -140,23 +141,37 @@ begin
     else if AMediaType.Charset = TMediaType.CHARSET_UTF16 then
       LEncoding := TEncoding.Unicode;
 
-    if AValue.IsType<string> then
-    begin
-      LStreamWriter := TStreamWriter.Create(AOutputStream, LEncoding);
-      try
-        LStreamWriter.Write(AValue.AsType<string>);
-      finally
-        LStreamWriter.Free;
+    LStreamWriter := TStreamWriter.Create(AOutputStream, LEncoding);
+    try
+
+      case AValue.Kind of
+        tkUnknown: LStreamWriter.Write(AValue.AsType<string>);
+
+        tkChar,
+        tkWChar,
+        tkString,
+        tkUString,
+        tkLString,
+        tkWString: LStreamWriter.Write(AValue.AsType<string>);
+
+        tkVariant: LStreamWriter.Write(AValue.AsType<string>);
+
+        tkInteger,
+        tkInt64,
+        tkEnumeration: LStreamWriter.Write(AValue.AsType<Integer>);
+
+        tkFloat: LStreamWriter.Write(AValue.AsType<Currency>);
+
+        tkSet,
+        tkArray,
+        tkRecord,
+        tkInterface,
+        tkDynArray:
+          raise EMARSWebApplicationException.Create('Resource''s returned type not supported', 500);
       end;
-    end
-    else if AValue.IsType<Integer> then
-    begin
-      LStreamWriter := TStreamWriter.Create(AOutputStream, LEncoding);
-      try
-        LStreamWriter.Write(AValue.AsType<Integer>);
-      finally
-        LStreamWriter.Free;
-      end;
+
+    finally
+      LStreamWriter.Free;
     end;
   end;
 end;

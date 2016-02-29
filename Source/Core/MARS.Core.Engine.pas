@@ -179,7 +179,7 @@ begin
     LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0]]);
     if (BasePath <> '') and (BasePath <> TMARSURL.URL_PATH_SEPARATOR) then
     begin
-      if not LURL.MatchPath(BasePath) then
+        if not LURL.MatchPath(BasePath + TMARSURL.URL_PATH_SEPARATOR) then
         raise Exception.CreateFmt('[Engine] Requested URL [%s] does not match base engine URL [%s]', [LURL.URL, BasePath]);
       LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0], LURL.PathTokens[1]]);
     end;
