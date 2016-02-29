@@ -80,7 +80,8 @@ type
 
     function AddResource(AResource: string): Boolean;
 
-    function HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse; const AURL: TMARSURL): Boolean;
+    procedure HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse; const
+        AURL: TMARSURL);
     procedure CollectGarbage(const AValue: TValue);
 
     property Name: string read FName write FName;
@@ -210,7 +211,7 @@ begin
   end;
 
   if not LAllowed then
-    raise EMARSWebApplicationException.Create('Forbidden', 403);
+    raise EMARSNotAuthorizedException.Create('Method call not authorized', Self.ClassName);
 
   finally
     LAllowedRoles.Free;
@@ -407,7 +408,8 @@ begin
   if ATokenIndex < Length(LTokens) then
     Result := LTokens[ATokenIndex]
   else
-    raise Exception.CreateFmt('ExtractToken, index: %d from %s', [ATokenIndex, AString]);
+    raise EMARSServerException.Create(
+      Format('ExtractToken, index: %d from %s', [ATokenIndex, AString]), 'ExtractToken');
 end;
 
 
@@ -422,7 +424,7 @@ var
   LContextValue: TValue;
 begin
   if Length(AAttrArray) > 1 then
-    raise Exception.Create('Only 1 attribute permitted');
+    raise EMARSServerException.Create('Only 1 attribute per param permitted', Self.ClassName);
 
   LParamName := '';
   LParamValue := '';
@@ -574,11 +576,18 @@ begin
 
   except
     on E: Exception do
-      raise EMARSWebApplicationException.Create('Error in FillResourceMethodParameters');
+    begin
+      raise EMARSWebApplicationException.Create(E, 400,
+        [
+          Pair.S('issuer', Self.ClassName),
+          Pair.S('method', 'FillResourceMethodParameters')
+        ]);
+     end;
   end;
 end;
 
-function TMARSApplication.HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse; const AURL: TMARSURL): Boolean;
+procedure TMARSApplication.HandleRequest(ARequest: TWebRequest; AResponse:
+    TWebResponse; const AURL: TMARSURL);
 var
   LInfo: TMARSConstructorInfo;
   LMethod: TRttiMethod;
@@ -586,45 +595,37 @@ var
   LWriter: IMessageBodyWriter;
   LMediaType: TMediaType;
 begin
-  Result := False;
+  if not FResourceRegistry.TryGetValue(URL.Resource, LInfo) then
+    raise EMARSNotFoundException.Create(
+      Format('Resource [%s] not found', [URL.Resource]),
+      Self.ClassName, 'HandleRequest'
+    );
+
+  LMethod := FindMethodToInvoke(URL, LInfo);
+
+  if not Assigned(LMethod) then
+    raise EMARSNotFoundException.Create(
+      Format('Resource''s method [%s] not found to handle resource [%s]', [GetEnumName(TypeInfo(TMethodType), Ord(ARequest.MethodType)), URL.Resource + URL.SubResources.ToString]),
+      Self.ClassName, 'HandleRequest'
+    );
+
+  CheckAuthorization(LMethod, TMARSTokenList.Instance.GetToken(Request));
+
+  LInstance := LInfo.ConstructorFunc();
   try
-    if not FResourceRegistry.TryGetValue(URL.Resource, LInfo) then
-      raise Exception.CreateFmt('[%s] not found',[URL.Resource]);
+    TMARSMessageBodyRegistry.Instance.FindWriter(LMethod, string(Request.Accept),
+      LWriter, LMediaType);
 
-    LMethod := FindMethodToInvoke(URL, LInfo);
-
-    if not Assigned(LMethod) then
-      raise Exception.CreateFmt('[%s] No method found to handle %s'
-        , [URL.Resource, GetEnumName(TypeInfo(TMethodType), Ord(ARequest.MethodType))]);
-
-    CheckAuthorization(LMethod, TMARSTokenList.Instance.GetToken(Request));
-
-    LInstance := LInfo.ConstructorFunc();
+    ContextInjection(LInstance);
     try
-      TMARSMessageBodyRegistry.Instance.FindWriter(LMethod, string(Request.Accept),
-        LWriter, LMediaType);
-
-      ContextInjection(LInstance);
-      try
-        InvokeResourceMethod(LInstance, LMethod, LWriter, ARequest, LMediaType);
-      finally
-        LWriter := nil;
-        LMediaType.Free;
-      end;
-
+      InvokeResourceMethod(LInstance, LMethod, LWriter, ARequest, LMediaType);
     finally
-      LInstance.Free;
+      LWriter := nil;
+      LMediaType.Free;
     end;
 
-    Result := True;
-  except
-    on E: EMARSWebApplicationException do
-    begin
-      Response.StatusCode := E.Status;
-      Response.Content := E.Message;
-      Response.ContentType := TMediaType.TEXT_HTML;
-    end
-    else raise;
+  finally
+    LInstance.Free;
   end;
 end;
 
@@ -693,11 +694,13 @@ begin
         //tkInterface: ;
         //tkDynArray: ;
         else
-          Response.StatusCode := 400;
+          raise EMARSNotSupportedException.Create('Resource''s returned type not supported', Self.ClassName);
       end;
     end;
   finally
-    if not AMethod.HasAttribute<ResultIsReference>(nil) then
+    // ResultIsReference is for compatibility only
+    if (not AMethod.HasAttribute<SingletonAttribute>) and
+       (not AMethod.HasAttribute<ResultIsReference>) then
       CollectGarbage(LMethodResult);
   end;
 end;
@@ -745,6 +748,5 @@ begin
 
   Result := LParamIndex;
 end;
-
 
 end.

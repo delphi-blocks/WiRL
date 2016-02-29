@@ -14,10 +14,12 @@ uses
   , Diagnostics
 
   , MARS.Core.Classes
+  , MARS.Core.MediaType
+  , MARS.Core.Exceptions
   , MARS.Core.Registry
   , MARS.Core.Application
   , MARS.Core.URL
-;
+  ;
 
 {$M+}
 
@@ -54,7 +56,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse): Boolean;
+    procedure HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse);
 
     function AddApplication(const AName, ABasePath: string; const AResources: array of string): TMARSApplication; virtual;
     procedure AddSubscriber(const ASubscriber: IMARSHandleRequestEventListener);
@@ -165,43 +167,57 @@ begin
   end;
 end;
 
-function TMARSEngine.HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse): Boolean;
+procedure TMARSEngine.HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse);
 var
   LApplication: TMARSApplication;
   LURL: TMARSURL;
   LApplicationPath: string;
   LStopWatch: TStopWatch;
 begin
-  Result := False;
-
-  LURL := TMARSURL.Create(ARequest);
   try
-    LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0]]);
-    if (BasePath <> '') and (BasePath <> TMARSURL.URL_PATH_SEPARATOR) then
-    begin
+    LURL := TMARSURL.Create(ARequest);
+    try
+      LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0]]);
+      if (BasePath <> '') and (BasePath <> TMARSURL.URL_PATH_SEPARATOR) then
+      begin
         if not LURL.MatchPath(BasePath + TMARSURL.URL_PATH_SEPARATOR) then
-        raise Exception.CreateFmt('[Engine] Requested URL [%s] does not match base engine URL [%s]', [LURL.URL, BasePath]);
-      LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0], LURL.PathTokens[1]]);
+          raise EMARSNotFoundException.Create(
+            Format('Requested URL [%s] does not match base engine URL [%s]', [LURL.URL, BasePath]),
+            Self.ClassName, 'HandleRequest'
+          );
+
+        LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0], LURL.PathTokens[1]]);
+      end;
+
+      if FApplications.TryGetValue(LApplicationPath, LApplication) then
+      begin
+        LURL.BasePath := LApplicationPath;
+        FWebRequest := ARequest;
+        FWebResponse := AResponse;
+        FURL := LURL;
+        DoBeforeHandleRequest(LApplication);
+        LStopWatch := TStopwatch.StartNew;
+        LApplication.HandleRequest(ARequest, AResponse, LURL);
+        LStopWatch.Stop;
+        DoAfterHandleRequest(LApplication, LStopWatch);
+      end
+      else
+        raise EMARSNotFoundException.Create(
+          Format('Application [%s] not found, please check the URL [%s]', [LApplicationPath, LURL.URL]),
+          Self.ClassName, 'HandleRequest'
+        );
+    finally
+      LURL.Free;
     end;
-
-    if FApplications.TryGetValue(LApplicationPath, LApplication) then
+  except
+    on E: EMARSWebApplicationException do
     begin
-      LURL.BasePath := LApplicationPath;
-      FWebRequest := ARequest;
-      FWebResponse := AResponse;
-      FURL := LURL;
-      DoBeforeHandleRequest(LApplication);
-      LStopWatch := TStopwatch.StartNew;
-      LApplication.HandleRequest(ARequest, AResponse, LURL);
-      LStopWatch.Stop;
-      DoAfterHandleRequest(LApplication, LStopWatch);
-
-      Result := True;
+      AResponse.StatusCode := E.Status;
+      AResponse.Content := E.ToJSON;
+      AResponse.ContentType := TMediaType.APPLICATION_JSON;
     end
     else
-      raise Exception.CreateFmt('[Engine] Requested URL [%s] belongs to an unknown application [%s]', [LURL.URL, LApplicationPath]);
-  finally
-    LURL.Free;
+      raise;
   end;
 end;
 

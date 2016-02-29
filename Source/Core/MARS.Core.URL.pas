@@ -23,6 +23,11 @@ uses
 
 type
 
+  TMARSURLDictionary = class(TDictionary<Integer, string>)
+  public
+    function ToString: string; override;
+  end;
+
   TMARSURL = class
   private
     FURL: string;
@@ -37,8 +42,8 @@ type
     FQueryTokens: TDictionary<string, string>;
 
     FResource: string;
-    FSubResources: TDictionary<Integer, string>;
-    FPathParams: TDictionary<Integer, string>;
+    FSubResources: TMARSURLDictionary;
+    FPathParams: TMARSURLDictionary;
     FBasePath: string;
 
     procedure SetURL(const Value: string);
@@ -87,8 +92,8 @@ type
 
     property BasePath: string read FBasePath write SetBasePath;
     property Resource: string read FResource write FResource;
-    property SubResources: TDictionary<Integer, string> read FSubResources;
-    property PathParams: TDictionary<Integer, string> read FPathParams;
+    property SubResources: TMARSURLDictionary read FSubResources;
+    property PathParams: TMARSURLDictionary read FPathParams;
     property HasSubResources: Boolean read GetHasSubResources;
     property HasPathParams: Boolean read GetHasPathParams;
 
@@ -128,8 +133,8 @@ begin
   FPathTokens := [];
   {$endif}
 
-  FSubResources := TDictionary<Integer, string>.Create;
-  FPathParams := TDictionary<Integer, string>.Create;
+  FSubResources := TMARSURLDictionary.Create;
+  FPathParams := TMARSURLDictionary.Create;
 
   FPortNumber := 0;
   FProtocol := '';
@@ -474,6 +479,17 @@ begin
   // encode each result item
   for LIndex := 0 to Length(Result)-1 do
     Result[LIndex] := URLEncode(Result[LIndex]);
+end;
+
+{ TMARSURLDictionary }
+
+function TMARSURLDictionary.ToString: string;
+var
+  LPair: TPair<Integer, string>;
+begin
+  Result := '';
+  for LPair in Self.ToArray do
+    Result := Result + '/' + LPair.Value;
 end;
 
 end.

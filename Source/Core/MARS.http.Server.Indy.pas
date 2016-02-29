@@ -81,17 +81,7 @@ begin
         if Assigned(LToken) then
           LToken.LastRequest := string(LRequest.PathInfo);
 
-        if not FEngine.HandleRequest(LRequest, LResponse) then
-        begin
-          LResponse.ContentType := 'application/json';
-          LResponse.Content :=
-            '{"success": false, "details": '
-            + '{'
-              + '"error": "Request not found",'
-              + '"pathinfo": "' + string(LRequest.PathInfo) + '"'
-            + '}'
-          + '}';
-        end;
+        FEngine.HandleRequest(LRequest, LResponse);
       end;
       AResponseInfo.CustomHeaders.AddStrings(LResponse.CustomHeaders);
     finally

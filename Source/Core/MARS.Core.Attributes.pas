@@ -17,6 +17,7 @@ uses
   , MARS.Core.Utils;
 
 type
+
 {$REGION 'JAX-Like Attributes'}
 
   PathAttribute = class(TCustomAttribute)
@@ -140,11 +141,17 @@ type
     property Roles: TStringList read FRoles;
   end;
 
+  SingletonAttribute = class(TCustomAttribute);
+
 {$ENDREGION}
 
 {$REGION 'MARS-specific Attributes'}
-  ResultIsReference = class(TCustomAttribute);
-{$ENDREGION}
+
+  /// <summary>
+  /// ResultIsReference is for compatibility only, use the standard (JAX-RS defined) Singleton Attribute
+  /// </summary>
+  ResultIsReference = class(TCustomAttribute)
+  end deprecated;
 
   LoginRequiredAttribute = class(TCustomAttribute);
 
@@ -175,9 +182,9 @@ type
 
   RestAttribute = class(TCustomAttribute)
   end;
+{$ENDREGION}
 
 implementation
-
 
 { URLParamAttribute }
 
