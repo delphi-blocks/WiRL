@@ -215,9 +215,14 @@ begin
       AResponse.StatusCode := E.Status;
       AResponse.Content := E.ToJSON;
       AResponse.ContentType := TMediaType.APPLICATION_JSON;
+    end;
+
+    on E: Exception do
+    begin
+      AResponse.StatusCode := 500;
+      AResponse.Content := EMARSWebApplicationException.ExceptionToJSON(E);
+      AResponse.ContentType := TMediaType.APPLICATION_JSON;
     end
-    else
-      raise;
   end;
 end;
 

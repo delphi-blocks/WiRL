@@ -65,6 +65,9 @@ type
       [PathParam] Addendo1: Integer;
       [PathParam] Addendo2: Integer): Integer;
 
+    [GET, Path('/exception'), Produces(TMediaType.APPLICATION_JSON)]
+    function TestException: string;
+
     [POST, Path('/postexample'), Produces(TMediaType.TEXT_PLAIN)]
     function PostExample([BodyParam] AContent: string): string;
 
@@ -75,7 +78,6 @@ type
     [GET, Path('/pdf')]
     [Produces('application/pdf')]
     function GetPDF: TStream;
-
   end;
 
 implementation
@@ -141,7 +143,6 @@ begin
   finally
     LArray.Free;
   end;
-
 end;
 
 function THelloWorldResource.ReverseString(AString: string): string;
@@ -149,10 +150,14 @@ begin
   Result := StrUtils.ReverseString(AString);
 end;
 
-
 function THelloWorldResource.Somma(Addendo1, Addendo2: Integer): Integer;
 begin
   Result := Addendo1 + Addendo2;
+end;
+
+function THelloWorldResource.TestException: string;
+begin
+  raise Exception.Create('User Error Message');
 end;
 
 initialization

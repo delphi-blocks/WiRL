@@ -83,6 +83,7 @@ type
 
     destructor Destroy; override;
 
+    class function ExceptionToJSON(E: Exception): string;
     function ToJSON: string;
     property Status: Integer read FStatus write FStatus;
   end;
@@ -261,6 +262,21 @@ begin
   inherited;
 end;
 
+class function EMARSWebApplicationException.ExceptionToJSON(E: Exception): string;
+var
+  LJSON: TJSONObject;
+begin
+  LJSON := TJSONObject.Create;
+  try
+    LJSON.AddPair(TJSONPair.Create('status', TJSONNumber.Create(500)));
+    LJSON.AddPair(TJSONPair.Create('exception', TJSONString.Create(E.ClassName)));
+    LJSON.AddPair(TJSONPair.Create('message', TJSONString.Create(E.Message)));
+    Result := LJSON.ToJSON;
+  finally
+    LJSON.Free;
+  end;
+end;
+
 function EMARSWebApplicationException.ToJSON: string;
 begin
   Result := FValues.ToJSON;
@@ -270,32 +286,84 @@ end;
 
 constructor EMARSNotFoundException.Create(const AMessage: string; const
     AIssuer: string = ''; const AMethod: string = '');
+var
+  LPairArray: TExceptionValues;
 begin
-  inherited Create(AMessage, 404, [Pair.S('issuer', AIssuer), Pair.S('method', AMethod)]);
+  if not AIssuer.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
+  end;
+  if not AMethod.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
+  end;
+
+  inherited Create(AMessage, 404, LPairArray);
 end;
 
 { EMARSServerException }
 
 constructor EMARSServerException.Create(const AMessage: string; const AIssuer:
     string = ''; const AMethod: string = '');
+var
+  LPairArray: TExceptionValues;
 begin
-  inherited Create(AMessage, 500, [Pair.S('issuer', AIssuer), Pair.S('method', AMethod)]);
+  if not AIssuer.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
+  end;
+  if not AMethod.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
+  end;
+
+  inherited Create(AMessage, 500, LPairArray);
 end;
 
 { EMARSNotAuthorizedException }
 
 constructor EMARSNotAuthorizedException.Create(const AMessage: string; const
     AIssuer: string = ''; const AMethod: string = '');
+var
+  LPairArray: TExceptionValues;
 begin
-  inherited Create(AMessage, 401, [Pair.S('issuer', AIssuer), Pair.S('method', AMethod)]);
+  if not AIssuer.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
+  end;
+  if not AMethod.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
+  end;
+
+  inherited Create(AMessage, 401, LPairArray);
 end;
 
 { EMARSNotSupportedException }
 
 constructor EMARSNotSupportedException.Create(const AMessage: string; const
     AIssuer: string = ''; const AMethod: string = '');
+var
+  LPairArray: TExceptionValues;
 begin
-  inherited Create(AMessage, 500, [Pair.S('issuer', AIssuer), Pair.S('method', AMethod)]);
+  if not AIssuer.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
+  end;
+  if not AMethod.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
+  end;
+
+  inherited Create(AMessage, 500, LPairArray);
 end;
 
 end.
