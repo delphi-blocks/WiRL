@@ -29,6 +29,7 @@ type
   TJSONNull = {$ifdef DelphiXE6_UP}JSON.TJSONNull{$else}DBXJSON.TJSONNull{$endif};
   TJSONFalse = {$ifdef DelphiXE6_UP}JSON.TJSONFalse{$else}DBXJSON.TJSONFalse{$endif};
   TJSONArray = {$ifdef DelphiXE6_UP}JSON.TJSONArray{$else}DBXJSON.TJSONArray{$endif};
+  TJSONBool = {$ifdef DelphiXE6_UP}JSON.TJSONBool{$else}DBXJSON.TJSONBool{$endif};
 
   TJSONValueHelper = class helper for TJSONValue
   public

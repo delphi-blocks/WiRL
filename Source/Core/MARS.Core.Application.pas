@@ -104,6 +104,7 @@ uses
   , MARS.Core.Response
   , MARS.Core.Attributes
   , MARS.Core.Engine
+  , MARS.Core.JSON
   ;
 
 { TMARSApplication }
@@ -491,6 +492,7 @@ begin
     else
     if LAttr is BodyParamAttribute then
     begin
+      LParamName := AParam.Name;
       LParamValue := Request.Content;
     end;
 
@@ -500,11 +502,28 @@ begin
       tkFloat: Result := TValue.From<Double>(StrToFloat(LParamValue));
 
       tkChar: Result := TValue.From(AnsiChar(LParamValue[1]));
-      tkWChar: ;
-      tkEnumeration: ;
-      tkSet: ;
-      tkClass: ;
-      tkMethod: ;
+//      tkWChar: ;
+//      tkEnumeration: ;
+//      tkSet: ;
+      tkClass: begin
+          // TODO: better error handling in case of an invalid type cast
+          // TODO: add a dynamic way to create the right class
+          if MatchStr(AParam.ParamType.Name, ['TJSONObject']) then
+          begin
+            Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONObject;
+          end
+          else if MatchStr(AParam.ParamType.Name, ['TJSONArray']) then
+          begin
+            Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONArray;
+          end
+          else if MatchStr(AParam.ParamType.Name, ['TJSONValue']) then
+          begin
+            Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONValue;
+          end
+          else
+            raise EMARSServerException.Create(Format('Unsupported class [%s] for param [%s]', [AParam.ParamType.Name, LParamName]), Self.ClassName);
+        end;
+//      tkMethod: ;
 
       tkLString,
       tkUString,
@@ -513,13 +532,15 @@ begin
 
       tkVariant: Result := TValue.From(LParamValue);
 
-      tkArray: ;
-      tkRecord: ;
-      tkInterface: ;
-      tkDynArray: ;
-      tkClassRef: ;
-      tkPointer: ;
-      tkProcedure: ;
+//      tkArray: ;
+//      tkRecord: ;
+//      tkInterface: ;
+//      tkDynArray: ;
+//      tkClassRef: ;
+//      tkPointer: ;
+//      tkProcedure: ;
+      else
+        raise EMARSServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
     end;
   end;
 end;
@@ -634,6 +655,7 @@ procedure TMARSApplication.InvokeResourceMethod(AInstance: TObject;
   ARequest: TWebRequest; AMediaType: TMediaType);
 var
   LMethodResult: TValue;
+  LArgument :TValue;
   LArgumentArray: TArgumentArray;
   LMARSResponse: TMARSResponse;
   LStream: TStringStream;
@@ -702,6 +724,8 @@ begin
     if (not AMethod.HasAttribute<SingletonAttribute>) and
        (not AMethod.HasAttribute<ResultIsReference>) then
       CollectGarbage(LMethodResult);
+    for LArgument in LArgumentArray do
+      CollectGarbage(LArgument);
   end;
 end;
 
