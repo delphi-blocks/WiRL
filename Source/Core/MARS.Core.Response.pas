@@ -36,22 +36,13 @@ type
 
 implementation
 
-
 { TMARSResponse }
 
 procedure TMARSResponse.CopyTo(AWebResponse: TWebResponse);
-var
-  LStream: TStringStream;
 begin
   if Assigned(ContentStream) then
   begin
-    LStream := TStringStream.Create();
-    try
-      LStream.CopyFrom(ContentStream, 0);
-      AWebResponse.Content := LStream.DataString;
-    finally
-      LStream.Free;
-    end;
+    AWebResponse.ContentStream := ContentStream;
   end
   else
     AWebResponse.Content := Content;
@@ -63,7 +54,7 @@ end;
 
 destructor TMARSResponse.Destroy;
 begin
-  FreeAndNil(FContentStream);
+  //FreeAndNil(FContentStream);
   inherited;
 end;
 

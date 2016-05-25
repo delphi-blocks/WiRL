@@ -26,15 +26,33 @@ uses
 type
   TMARSEngine = class;
 
-  IMARSHandleRequestEventListener = interface
+  IMARSHandleListener = interface
+  ['{5C4F450A-1264-449E-A400-DA6C2714FD23}']
+  end;
+
+  // Request is a valid resource
+  IMARSHandleRequestEventListener = interface(IMARSHandleListener)
+  ['{969EF9FA-7887-47E6-8996-8B0D6326668E}']
     procedure BeforeHandleRequest(const ASender: TMARSEngine; const AApplication: TMARSApplication);
     procedure AfterHandleRequest(const ASender: TMARSEngine; const AApplication: TMARSApplication; const AStopWatch: TStopWatch);
+  end;
+
+  // Any request even outside the BasePath
+  IMARSHandleRequestEventListenerEx = interface(IMARSHandleListener)
+  ['{45809922-03DB-4B4D-8E2C-64D931978A94}']
+    procedure BeforeRequestStart(const ASender: TMARSEngine; var Handled: Boolean);
+    procedure AfterRequestEnd(const ASender: TMARSEngine; const AStopWatch: TStopWatch);
+  end;
+
+  IMARSHandleExceptionListener = interface(IMARSHandleListener)
+  ['{BDE72935-F73B-4378-8755-01D18EC566B2}']
+    procedure HandleException(const ASender: TMARSEngine; const AApplication: TMARSApplication; E: Exception);
   end;
 
   TMARSEngine = class
   private
     FApplications: TMARSApplicationDictionary;
-    FSubscribers: TList<IMARSHandleRequestEventListener>;
+    FSubscribers: TList<IMARSHandleListener>;
     FCriticalSection: TCriticalSection;
     FBasePath: string;
     FSessionTimeOut: Integer;
@@ -52,6 +70,9 @@ type
   protected
     procedure DoBeforeHandleRequest(const AApplication: TMARSApplication); virtual;
     procedure DoAfterHandleRequest(const AApplication: TMARSApplication; const AStopWatch: TStopWatch); virtual;
+    function DoBeforeRequestStart() :Boolean; virtual;
+    procedure DoAfterRequestEnd(const AStopWatch: TStopWatch); virtual;
+    procedure DoHandleException(const AApplication: TMARSApplication; E: Exception); virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -59,8 +80,8 @@ type
     procedure HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse);
 
     function AddApplication(const AName, ABasePath: string; const AResources: array of string): TMARSApplication; virtual;
-    procedure AddSubscriber(const ASubscriber: IMARSHandleRequestEventListener);
-    procedure RemoveSubscriber(const ASubscriber: IMARSHandleRequestEventListener);
+    procedure AddSubscriber(const ASubscriber: IMARSHandleListener);
+    procedure RemoveSubscriber(const ASubscriber: IMARSHandleListener);
 
     procedure EnumerateApplications(const ADoSomething: TProc<string, TMARSApplication>);
 
@@ -105,8 +126,7 @@ begin
   end;
 end;
 
-procedure TMARSEngine.AddSubscriber(
-  const ASubscriber: IMARSHandleRequestEventListener);
+procedure TMARSEngine.AddSubscriber(const ASubscriber: IMARSHandleListener);
 begin
   FSubscribers.Add(ASubscriber);
 end;
@@ -115,7 +135,7 @@ constructor TMARSEngine.Create;
 begin
   FApplications := TMARSApplicationDictionary.Create([doOwnsValues]);
   FCriticalSection := TCriticalSection.Create;
-  FSubscribers := TList<IMARSHandleRequestEventListener>.Create;
+  FSubscribers := TList<IMARSHandleListener>.Create;
   FSessionTimeOut := 1200000;
   FPort := 8080;
   FThreadPoolSize := 75;
@@ -136,18 +156,58 @@ end;
 procedure TMARSEngine.DoAfterHandleRequest(const AApplication: TMARSApplication;
   const AStopWatch: TStopWatch);
 var
-  LSubscriber: IMARSHandleRequestEventListener;
+  LSubscriber: IMARSHandleListener;
+  LHandleRequestEventListener: IMARSHandleRequestEventListener;
 begin
   for LSubscriber in FSubscribers do
-    LSubscriber.AfterHandleRequest(Self, AApplication, AStopWatch);
+    if Supports(LSubscriber, IMARSHandleRequestEventListener, LHandleRequestEventListener) then
+      LHandleRequestEventListener.AfterHandleRequest(Self, AApplication, AStopWatch);
+end;
+
+procedure TMARSEngine.DoAfterRequestEnd(const AStopWatch: TStopWatch);
+var
+  LSubscriber: IMARSHandleListener;
+  LHandleRequestEventListenerEx: IMARSHandleRequestEventListenerEx;
+begin
+  for LSubscriber in FSubscribers do
+    if Supports(LSubscriber, IMARSHandleRequestEventListenerEx, LHandleRequestEventListenerEx) then
+      LHandleRequestEventListenerEx.AfterRequestEnd(Self, AStopWatch);
 end;
 
 procedure TMARSEngine.DoBeforeHandleRequest(const AApplication: TMARSApplication);
 var
-  LSubscriber: IMARSHandleRequestEventListener;
+  LSubscriber: IMARSHandleListener;
+  LHandleRequestEventListener: IMARSHandleRequestEventListener;
 begin
   for LSubscriber in FSubscribers do
-    LSubscriber.BeforeHandleRequest(Self, AApplication);
+    if Supports(LSubscriber, IMARSHandleRequestEventListener, LHandleRequestEventListener) then
+      LHandleRequestEventListener.BeforeHandleRequest(Self, AApplication);
+end;
+
+function TMARSEngine.DoBeforeRequestStart(): Boolean;
+var
+  LSubscriber: IMARSHandleListener;
+  LHandleRequestEventListenerEx: IMARSHandleRequestEventListenerEx;
+begin
+  Result := False;
+  for LSubscriber in FSubscribers do
+    if Supports(LSubscriber, IMARSHandleRequestEventListenerEx, LHandleRequestEventListenerEx) then
+    begin
+      LHandleRequestEventListenerEx.BeforeRequestStart(Self, Result);
+      if Result then
+        Break;
+    end;
+end;
+
+procedure TMARSEngine.DoHandleException(const AApplication: TMARSApplication;
+  E: Exception);
+var
+  LSubscriber: IMARSHandleListener;
+  LHandleExceptionListener: IMARSHandleExceptionListener;
+begin
+  for LSubscriber in FSubscribers do
+    if Supports(LSubscriber, IMARSHandleExceptionListener, LHandleExceptionListener) then
+      LHandleExceptionListener.HandleException(Self, AApplication, E);
 end;
 
 procedure TMARSEngine.EnumerateApplications(
@@ -173,7 +233,12 @@ var
   LURL: TMARSURL;
   LApplicationPath: string;
   LStopWatch: TStopWatch;
+  LStopWatchEx: TStopWatch;
 begin
+  FWebRequest := ARequest;
+  FWebResponse := AResponse;
+  LStopWatchEx := TStopwatch.StartNew;
+  if not DoBeforeRequestStart() then
   try
     LURL := TMARSURL.Create(ARequest);
     try
@@ -192,8 +257,6 @@ begin
       if FApplications.TryGetValue(LApplicationPath, LApplication) then
       begin
         LURL.BasePath := LApplicationPath;
-        FWebRequest := ARequest;
-        FWebResponse := AResponse;
         FURL := LURL;
         DoBeforeHandleRequest(LApplication);
         LStopWatch := TStopwatch.StartNew;
@@ -215,6 +278,7 @@ begin
       AResponse.StatusCode := E.Status;
       AResponse.Content := E.ToJSON;
       AResponse.ContentType := TMediaType.APPLICATION_JSON;
+      DoHandleException(LApplication, E);
     end;
 
     on E: Exception do
@@ -222,12 +286,15 @@ begin
       AResponse.StatusCode := 500;
       AResponse.Content := EMARSWebApplicationException.ExceptionToJSON(E);
       AResponse.ContentType := TMediaType.APPLICATION_JSON;
+      DoHandleException(LApplication, E);
     end
   end;
+  LStopWatchEx.Stop;
+  DoAfterRequestEnd(LStopWatchEx);
 end;
 
 procedure TMARSEngine.RemoveSubscriber(
-  const ASubscriber: IMARSHandleRequestEventListener);
+  const ASubscriber: IMARSHandleListener);
 begin
   FSubscribers.Remove(ASubscriber);
 end;
