@@ -65,7 +65,10 @@ type
     function Matches(const ARequest: TWebRequest): Boolean; override;
   end;
 
-  OPTIONSAttribute = class(HttpMethodAttribute);
+  OPTIONSAttribute = class(HttpMethodAttribute)
+  public
+    function Matches(const ARequest: TWebRequest): Boolean; override;
+  end;
 
   /// <summary>
   ///   A list of media types. Each entry may specify a single type or consist of a comma separated list of types. E.g.
@@ -348,6 +351,13 @@ end;
 function HEADAttribute.Matches(const ARequest: TWebRequest): Boolean;
 begin
   Result := ARequest.MethodType = TMethodType.mtHead;
+end;
+
+{ OPTIONSAttribute }
+
+function OPTIONSAttribute.Matches(const ARequest: TWebRequest): Boolean;
+begin
+  Result := ARequest.Method = 'OPTIONS';
 end;
 
 end.
