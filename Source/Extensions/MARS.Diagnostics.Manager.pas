@@ -74,7 +74,7 @@ type
     property LastSessionEnd: TDateTime read FLastSessionEnd;
   end;
 
-  TMARSDiagnosticsManager = class(TNonInterfacedObject, IMARSTokenEventListener, IMARSHandleRequestEventListener)
+  TMARSDiagnosticsManager = class(TNonInterfacedObject, IMARSTokenEventListener, IMARSHandleListener, IMARSHandleRequestEventListener)
   private
     type TDiagnosticsManagerSingleton = TMARSSingleton<TMARSDiagnosticsManager>;
   private
