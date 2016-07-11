@@ -1,13 +1,7 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
-
-
-
-
-
-    Nando Dessena <nando(at)dessena(dot)it>
 
 *)
 unit MARS.Core.URL;
@@ -17,12 +11,10 @@ unit MARS.Core.URL;
 interface
 
 uses
-    Classes, SysUtils, Generics.Collections, HTTPApp
-  , MARS.Core.JSON
-  ;
+  System.SysUtils, System.Classes, System.Generics.Collections, Web.HTTPApp,
+  MARS.Core.JSON;
 
 type
-
   TMARSURLDictionary = class(TDictionary<Integer, string>)
   public
     function ToString: string; override;
@@ -111,11 +103,8 @@ type
 implementation
 
 uses
-    StrUtils
-
-  , MARS.Core.Utils
-  , IdURI
-  ;
+  System.StrUtils, IdURI,
+  MARS.Core.Utils;
 
 { TMARSURL }
 
@@ -293,7 +282,7 @@ begin
   LURI := TIdURI.Create(FURL);
   try
     FProtocol := LURI.Protocol;
-    { TODO -oAndrea : Generalizzare le default port per i vari protocolli }
+
     if SameText(FProtocol, '') or SameText(FProtocol, 'http') then
       LDefaultPortNumber := 80
     else if SameText(FProtocol, 'https') then

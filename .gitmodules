@@ -1,0 +1,3 @@
+[submodule "Libs/JWT"]
+	path = Libs/JWT
+	url = https://github.com/paolo-rossi/delphi-jose-jwt.git

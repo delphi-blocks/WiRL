@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -9,15 +9,11 @@ unit MARS.Client.FireDAC;
 interface
 
 uses
-  Classes, SysUtils
-  , MARS.Core.JSON
-
-  , FireDAC.Comp.Client
-
-  , MARS.Client.Resource
-  , MARS.Client.Client
-
-  ;
+  System.Classes, System.SysUtils,
+  MARS.Core.JSON,
+  FireDAC.Comp.Client,
+  MARS.Client.Resource,
+  MARS.Client.Client;
 
 type
   TMARSFDResourceDatasetsItem = class(TCollectionItem)
@@ -71,12 +67,11 @@ procedure Register;
 implementation
 
 uses
-    Data.FireDACJSONReflect
-  , FireDAC.Comp.DataSet
-  , MARS.Core.Utils
-  , MARS.Client.Utils
-  , MARS.Data.FireDAC.Utils
-  ;
+  Data.FireDACJSONReflect,
+  FireDAC.Comp.DataSet,
+  MARS.Core.Utils,
+  MARS.Client.Utils,
+  MARS.Data.FireDAC.Utils;
 
 procedure Register;
 begin

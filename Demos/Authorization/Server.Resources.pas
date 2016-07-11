@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -45,7 +45,7 @@ type
   end;
 
   [Path('token')]
-  TTokenResource = class(TMARSTokenResource)
+  TAuthResource = class(TMARSAuthResource)
   private
   protected
   public
@@ -71,6 +71,6 @@ end;
 
 initialization
   TMARSResourceRegistry.Instance.RegisterResource<TFirstResource>;
-  TMARSResourceRegistry.Instance.RegisterResource<TTokenResource>;
+  TMARSResourceRegistry.Instance.RegisterResource<TAuthResource>;
 
 end.

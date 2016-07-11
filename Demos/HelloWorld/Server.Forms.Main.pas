@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -9,14 +9,12 @@ unit Server.Forms.Main;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Controls, Forms, Dialogs,
-  ActnList, StdCtrls, ExtCtrls, Diagnostics
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
+  Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
-  , IdContext
-  , MARS.Core.Engine
-  , MARS.http.Server.Indy
-  , MARS.Core.Application
-  ;
+  MARS.Core.Engine,
+  MARS.Core.Application,
+  MARS.http.Server.Indy;
 
 type
   TMainForm = class(TForm)
@@ -28,6 +26,7 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
+    Edit1: TEdit;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -48,10 +47,9 @@ implementation
 {$R *.dfm}
 
 uses
-   MARS.Core.MessageBodyWriter
-  , MARS.Core.MessageBodyWriters
-  , MARS.Core.URL
-  ;
+  MARS.Core.MessageBodyWriter,
+  MARS.Core.MessageBodyWriters,
+  MARS.Core.URL;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -64,6 +62,8 @@ begin
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
+var
+  LApp: TMARSApplication;
 begin
   FEngine := TMARSEngine.Create;
 
@@ -73,8 +73,15 @@ begin
   FEngine.Name := 'MARS HelloWorld';
   FEngine.BasePath := '/rest';
 
-  FEngine.AddApplication('Default', '/default'
-    , ['Server.Resources.THelloWorldResource']
+  LApp := FEngine.AddApplication('Default', '/default',
+    ['Server.Resources.THelloWorldResource']
+  );
+
+  LApp.SetSecret(
+    function (): TBytes
+    begin
+      Result := TEncoding.UTF8.GetBytes(Edit1.Text);
+    end
   );
 
   // Create http server

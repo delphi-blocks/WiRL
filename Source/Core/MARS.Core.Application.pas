@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -16,25 +16,27 @@ interface
 // http://www.mkyong.com/webservices/jax-rs/jax-rs-path-uri-matching-example/
 
 uses
-  SysUtils
-  , Classes
-  , HTTPApp
-  , Rtti
-  , Generics.Collections
-  , MARS.Core.Classes
-  , MARS.Core.URL
-  , MARS.Core.MessageBodyWriter
-  , MARS.Core.Registry
-  , MARS.Core.MediaType
-  , MARS.Core.Token
-  ;
+  System.SysUtils, System.Classes, Web.HTTPApp, System.Rtti,
+  System.Generics.Collections,
+  MARS.Core.Classes,
+  MARS.Core.URL,
+  MARS.Core.MessageBodyWriter,
+  MARS.Core.Registry,
+  MARS.Core.MediaType,
+  MARS.Core.Token;
 
 type
+  TSecretGenerator = reference to function(): TBytes;
   TAttributeArray = TArray<TCustomAttribute>;
   TArgumentArray = array of TValue;
 
   TMARSApplication = class
   private
+    const SCRT_PREFIX = 'bWFycy5zZWNyZXQu';
+  private
+    class threadvar FToken: TMARSAuthContext;
+  private
+    FSecret: TBytes;
     FRttiContext: TRttiContext;
     FResourceRegistry: TObjectDictionary<string, TMARSConstructorInfo>;
     FBasePath: string;
@@ -46,6 +48,7 @@ type
     function GetResponse: TWebResponse;
     function GetURL: TMARSURL;
   protected
+    procedure InternalHandleRequest(ARequest: TWebRequest; AResponse: TWebResponse; const AURL: TMARSURL);
     function FindMethodToInvoke(const AURL: TMARSURL;
       const AInfo: TMARSConstructorInfo): TRttiMethod; virtual;
 
@@ -53,18 +56,12 @@ type
       AResourceInstance: TObject; AMethod: TRttiMethod): TValue;
     function FillNonAnnotatedParam(AParam: TRttiParameter): TValue;
     procedure FillResourceMethodParameters(AInstance: TObject; AMethod: TRttiMethod; var AArgumentArray: TArgumentArray);
-
-    /// <summary>
-    ///   Invoke the resource's method filling it's parameters (if any)
-    /// </summary>
-    /// <returns>
-    ///   Return the object to be freed after the function goes out of scope
-    /// </returns>
     procedure InvokeResourceMethod(AInstance: TObject; AMethod: TRttiMethod;
       const AWriter: IMessageBodyWriter; ARequest: TWebRequest;
       AMediaType: TMediaType); virtual;
 
-    procedure CheckAuthorization(const AMethod: TRttiMethod; const AToken: TMARSToken);
+    function GetNewToken(ARequest: TWebRequest): TMARSAuthContext;
+    procedure CheckAuthorization(const AMethod: TRttiMethod; const AToken: TMARSAuthContext);
     procedure ContextInjection(AInstance: TObject);
     function ContextInjectionByType(const AType: TClass; out AValue: TValue): Boolean;
 
@@ -78,10 +75,10 @@ type
     constructor Create(const AEngine: TObject);
     destructor Destroy; override;
 
+    procedure SetSecret(ASecretGen: TSecretGenerator);
     function AddResource(AResource: string): Boolean;
 
-    procedure HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse; const
-        AURL: TMARSURL);
+    procedure HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse; const AURL: TMARSURL);
     procedure CollectGarbage(const AValue: TValue);
 
     property Name: string read FName write FName;
@@ -96,16 +93,15 @@ type
 implementation
 
 uses
-  StrUtils
-  , TypInfo
-  , MARS.Core.Exceptions
-  , MARS.Core.Utils
-  , MARS.Rtti.Utils
-  , MARS.Core.Response
-  , MARS.Core.Attributes
-  , MARS.Core.Engine
-  , MARS.Core.JSON
-  ;
+  System.StrUtils, System.TypInfo,
+  MARS.Core.Exceptions,
+  MARS.Core.Utils,
+  MARS.Rtti.Utils,
+  MARS.Core.Response,
+  MARS.Core.Attributes,
+  MARS.Core.Engine,
+  MARS.Core.JSON;
+
 
 { TMARSApplication }
 
@@ -162,7 +158,8 @@ begin
       Result := AddResourceToApplicationRegistry(LInfo);
 end;
 
-procedure TMARSApplication.CheckAuthorization(const AMethod: TRttiMethod; const AToken: TMARSToken);
+procedure TMARSApplication.CheckAuthorization(const AMethod: TRttiMethod; const
+    AToken: TMARSAuthContext);
 var
   LDenyAll, LPermitAll, LRolesAllowed: Boolean;
   LAllowedRoles: TStringList;
@@ -201,7 +198,7 @@ begin
       LAllowed := False;
       for LRole in LAllowedRoles do
       begin
-        LAllowed := AToken.UserRoles.IndexOf(LRole) <> -1;
+        LAllowed := AToken.Subject.HasRole(LRole);
         if LAllowed then
           Break;
       end;
@@ -291,9 +288,12 @@ function TMARSApplication.ContextInjectionByType(const AType: TClass;
   out AValue: TValue): Boolean;
 begin
   Result := True;
-  // Token
-  if (AType.InheritsFrom(TMARSToken)) then
-    AValue := TMARSTokenList.Instance.GetToken(Request)
+  // AuthContext
+  if (AType.InheritsFrom(TMARSAuthContext)) then
+    AValue := FToken
+  // Claims (Subject)
+  else if (AType.InheritsFrom(TMARSSubject)) then
+    AValue := FToken.Subject
   // HTTP request
   else if (AType.InheritsFrom(TWebRequest)) then
     AValue := Request
@@ -502,28 +502,24 @@ begin
       tkFloat: Result := TValue.From<Double>(StrToFloat(LParamValue));
 
       tkChar: Result := TValue.From(AnsiChar(LParamValue[1]));
-//      tkWChar: ;
-//      tkEnumeration: ;
-//      tkSet: ;
-      tkClass: begin
-          // TODO: better error handling in case of an invalid type cast
-          // TODO: add a dynamic way to create the right class
-          if MatchStr(AParam.ParamType.Name, ['TJSONObject']) then
-          begin
-            Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONObject;
-          end
-          else if MatchStr(AParam.ParamType.Name, ['TJSONArray']) then
-          begin
-            Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONArray;
-          end
-          else if MatchStr(AParam.ParamType.Name, ['TJSONValue']) then
-          begin
-            Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONValue;
-          end
-          else
-            raise EMARSServerException.Create(Format('Unsupported class [%s] for param [%s]', [AParam.ParamType.Name, LParamName]), Self.ClassName);
-        end;
-//      tkMethod: ;
+      tkWChar: ;
+      tkEnumeration: ;
+      tkSet: ;
+      tkClass:
+      begin
+        // TODO: better error handling in case of an invalid type cast
+        // TODO: add a dynamic way to create the right class
+        if MatchStr(AParam.ParamType.Name, ['TJSONObject']) then
+          Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONObject
+        else if MatchStr(AParam.ParamType.Name, ['TJSONArray']) then
+          Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONArray
+        else if MatchStr(AParam.ParamType.Name, ['TJSONValue']) then
+          Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONValue
+        else
+          raise EMARSServerException.Create(Format('Unsupported class [%s] for param [%s]', [AParam.ParamType.Name, LParamName]), Self.ClassName);
+      end;
+
+      tkMethod: ;
 
       tkLString,
       tkUString,
@@ -532,15 +528,15 @@ begin
 
       tkVariant: Result := TValue.From(LParamValue);
 
-//      tkArray: ;
-//      tkRecord: ;
-//      tkInterface: ;
-//      tkDynArray: ;
-//      tkClassRef: ;
-//      tkPointer: ;
-//      tkProcedure: ;
-      else
-        raise EMARSServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
+      tkArray: ;
+      tkRecord: ;
+      tkInterface: ;
+      tkDynArray: ;
+      tkClassRef: ;
+      tkPointer: ;
+      tkProcedure: ;
+    else
+      raise EMARSServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
     end;
   end;
 end;
@@ -609,6 +605,38 @@ end;
 
 procedure TMARSApplication.HandleRequest(ARequest: TWebRequest; AResponse:
     TWebResponse; const AURL: TMARSURL);
+begin
+  FToken := GetNewToken(ARequest);
+  try
+    InternalHandleRequest(ARequest, AResponse, AURL);
+  finally
+    FToken.Free;
+  end;
+end;
+
+function TMARSApplication.GetNewToken(ARequest: TWebRequest): TMARSAuthContext;
+var
+  LAuth: string;
+  LAuthParts: TArray<string>;
+begin
+  { TODO -opaolo -c : Parametrize with the right ClaimsClass 11/07/2016 16:30:45 }
+  Result := TMARSAuthContext.Create;
+
+  LAuth := string(ARequest.Authorization);
+
+  if LAuth = '' then
+    Exit;
+
+  LAuthParts := LAuth.Split([#32]);
+  if Length(LAuthParts) < 2 then
+    Exit;
+
+  if SameText(LAuthParts[0], 'Bearer') then
+    Result.Verify(LAuthParts[1], FSecret);
+end;
+
+procedure TMARSApplication.InternalHandleRequest(ARequest: TWebRequest;
+  AResponse: TWebResponse; const AURL: TMARSURL);
 var
   LInfo: TMARSConstructorInfo;
   LMethod: TRttiMethod;
@@ -630,7 +658,7 @@ begin
       Self.ClassName, 'HandleRequest'
     );
 
-  CheckAuthorization(LMethod, TMARSTokenList.Instance.GetToken(Request));
+  CheckAuthorization(LMethod, FToken);
 
   LInstance := LInfo.ConstructorFunc();
   try
@@ -655,10 +683,10 @@ procedure TMARSApplication.InvokeResourceMethod(AInstance: TObject;
   ARequest: TWebRequest; AMediaType: TMediaType);
 var
   LMethodResult: TValue;
-  LArgument :TValue;
+  LArgument: TValue;
   LArgumentArray: TArgumentArray;
   LMARSResponse: TMARSResponse;
-  LStream: TStringStream;
+  LStream: TMemoryStream;
   LContentType: AnsiString;
 begin
   // The returned object MUST be initially nil (needs to be consistent with the Free method)
@@ -675,25 +703,20 @@ begin
     end
     else if Assigned(AWriter) then // MessageBodyWriters mechanism
     begin
-      {
-        If the ContentType has been already changed (i.e., using the Context DI mechanism),
-        we should not override the new value.
-        This means the application developer has more power than the MBW developer in order
-        to determine the ContentType.
-        
-        Andrea Magni, 19/11/2015
-      }
       if Response.ContentType = LContentType then
         Response.ContentType := AnsiString(AMediaType.ToString);
 
-      LStream := TStringStream.Create();
+      LStream := TMemoryStream.Create;
       try
         AWriter.WriteTo(LMethodResult, AMethod.GetAttributes, AMediaType, Response.CustomHeaders, LStream);
         LStream.Position := 0;
-
-        Response.Content := LStream.DataString;
-      finally
-        LStream.Free;
+        Response.ContentStream := LStream;
+      except
+        on E: Exception do
+        begin
+          LStream.Free;
+          raise EMARSServerException.Create(E.Message, 'TMARSApplication', 'InvokeResourceMethod');
+        end;
       end;
     end
     else // fallback (no MBW, no TMARSResponse)
@@ -701,8 +724,8 @@ begin
       // handle result
       case LMethodResult.Kind of
 
-        tkString, tkLString, tkUString, tkWString // string types
-        , tkInteger, tkInt64, tkFloat, tkVariant: // Threated as string, nothing more
+        tkString, tkLString, tkUString, tkWString, // string types
+        tkInteger, tkInt64, tkFloat, tkVariant:    // Treated as string, nothing more
         begin
           Response.Content := LMethodResult.AsString;
           if (Response.ContentType = LContentType) then
@@ -720,9 +743,7 @@ begin
       end;
     end;
   finally
-    // ResultIsReference is for compatibility only
-    if (not AMethod.HasAttribute<SingletonAttribute>) and
-       (not AMethod.HasAttribute<ResultIsReference>) then
+    if (not AMethod.HasAttribute<SingletonAttribute>) then
       CollectGarbage(LMethodResult);
     for LArgument in LArgumentArray do
       CollectGarbage(LArgument);
@@ -771,6 +792,12 @@ begin
   end);
 
   Result := LParamIndex;
+end;
+
+procedure TMARSApplication.SetSecret(ASecretGen: TSecretGenerator);
+begin
+  if Assigned(ASecretGen) then
+    FSecret := ASecretGen;
 end;
 
 end.

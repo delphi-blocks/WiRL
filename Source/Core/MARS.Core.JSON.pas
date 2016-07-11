@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -16,7 +16,7 @@ uses
 {$else}
   DBXJSON,
 {$endif}
-  SysUtils;
+  System.SysUtils, System.Generics.Collections;
 
 type
   TJSONAncestor = {$ifdef DelphiXE6_UP}JSON.TJSONAncestor{$else}DBXJSON.TJSONAncestor{$endif};
@@ -71,7 +71,7 @@ type
     function ReadIntegerValue(const AName: string; const ADefault: Integer = 0): Integer;
     function ReadBoolValue(const AName: string): Boolean;
     function ReadDateTimeValue(const AName: string): TDateTime;
-
+    procedure CopyFrom(AJSON: TJSONObject);
     property Values[const name: string]: Variant read GetValue; default;
   end;
 
@@ -173,6 +173,14 @@ end;
 {$endif}
 
 { TJSONObjectHelper }
+
+procedure TJSONObjectHelper.CopyFrom(AJSON: TJSONObject);
+var
+  LPair: TJSONPair;
+begin
+  for LPair in AJSON do
+    Self.AddPair(TJSONPair(LPair.Clone));
+end;
 
 function TJSONObjectHelper.GetValue(const name: string): Variant;
 var

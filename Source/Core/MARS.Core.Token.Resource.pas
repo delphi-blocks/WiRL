@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -25,10 +25,11 @@ uses
   ;
 
 type
-  TMARSTokenResource = class
+  TMARSAuthResource = class
   private
   protected
-    [Context] Token: TMARSToken;
+    FAuthContext: TMARSAuthContext;
+
     function Authenticate(const AUserName, APassword: string): Boolean; virtual;
     procedure BeforeLogin(const AUserName, APassword: string); virtual;
     procedure AfterLogin(const AUserName, APassword: string); virtual;
@@ -52,54 +53,54 @@ implementation
 uses
   DateUtils;
 
-{ TMARSTokenResource }
+{ TMARSAuthResource }
 
-procedure TMARSTokenResource.AfterLogin(const AUserName, APassword: string);
+procedure TMARSAuthResource.AfterLogin(const AUserName, APassword: string);
 begin
 
 end;
 
-function TMARSTokenResource.Authenticate(const AUserName, APassword: string): Boolean;
+function TMARSAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
 begin
   Result := SameText(APassword, IntToStr(HourOf(Now)));
 
   if Result then // authenticated, set user roles
   begin
     if SameText(AUserName, 'admin') then
-      Token.SetUserNameAndRoles(AUserName, TArray<string>.Create('standard', 'admin'))
+      FAuthContext.Subject.SetUserNameAndRoles(AUserName, TArray<string>.Create('standard', 'admin'))
     else
-      Token.SetUserNameAndRoles(AUserName, TArray<string>.Create('standard'));
+      FAuthContext.Subject.SetUserNameAndRoles(AUserName, TArray<string>.Create('standard'));
   end
   else // not authenticated, clear user roles and username
-    Token.SetUserNameAndRoles('', nil);
+    FAuthContext.Subject.SetUserNameAndRoles('', nil);
 end;
 
-procedure TMARSTokenResource.BeforeLogin(const AUserName, APassword: string);
+procedure TMARSAuthResource.BeforeLogin(const AUserName, APassword: string);
 begin
 
 end;
 
-function TMARSTokenResource.DoLogin(const AUsername, APassword: string): TJSONObject;
+function TMARSAuthResource.DoLogin(const AUsername, APassword: string): TJSONObject;
 begin
+  Result := nil;
   BeforeLogin(AUserName, APassword);
   try
-    Token.Authenticated := Authenticate(AUserName, APassword);
+    if Authenticate(AUserName, APassword) then
     Result := GetCurrent;
   finally
     AfterLogin(AUserName, APassword);
   end;
 end;
 
-function TMARSTokenResource.GetCurrent: TJSONObject;
+function TMARSAuthResource.GetCurrent: TJSONObject;
 begin
-  Result := Token.ToJSON;
+  Result := FAuthContext.Subject.JSON;
 end;
 
-function TMARSTokenResource.Logout: TJSONObject;
+function TMARSAuthResource.Logout: TJSONObject;
 begin
-  Token.Authenticated := False;
-  Token.SetUserNameAndRoles('', nil);
-  // Token.End;
+  FAuthContext.Authenticated := False;
+  FAuthContext.Subject.SetUserNameAndRoles('', nil);
 
   Result := GetCurrent;
 end;

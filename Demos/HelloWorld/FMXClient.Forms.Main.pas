@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -11,9 +11,9 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.TabControl,
-  FMX.StdCtrls, FMX.Layouts, FMX.ListBox, FMX.MultiView
-  , Generics.Collections, FMX.Memo, FMX.Controls.Presentation, FMX.Edit,
-  FMX.ScrollBox;
+  FMX.StdCtrls, FMX.Layouts, FMX.ListBox, FMX.MultiView, FMX.Memo,
+  FMX.Controls.Presentation, FMX.Edit, FMX.ScrollBox,
+  Generics.Collections;
 
 type
   TMainForm = class(TForm)
@@ -56,11 +56,11 @@ implementation
 {$R *.fmx}
 
 uses
-   FMXClient.DataModules.Main
-  , MARS.Rtti.Utils
-  , MARS.Client.Utils
-  , MARS.Core.JSON
-  ;
+  FMXClient.DataModules.Main,
+  MARS.Core.Utils,
+  MARS.Rtti.Utils,
+  MARS.Client.Utils,
+  MARS.Core.JSON;
 
 procedure TMainForm.Button1Click(Sender: TObject);
 begin

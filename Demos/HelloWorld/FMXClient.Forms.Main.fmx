@@ -27,21 +27,24 @@ object MainForm: TMainForm
         item
         end>
       IsSelected = True
-      Size.Width = 123.000000000000000000
-      Size.Height = 24.000000000000000000
+      Size.Width = 121.000000000000000000
+      Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
+      StyleLookup = ''
       TabOrder = 0
       Text = 'HelloWorldTabItem'
+      ExplicitSize.cx = 123.000000000000000000
+      ExplicitSize.cy = 24.000000000000000000
       object Memo1: TMemo
         Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
         DataDetectorTypes = []
         Align = Client
         Size.Width = 640.000000000000000000
-        Size.Height = 366.000000000000000000
+        Size.Height = 364.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         Viewport.Width = 636.000000000000000000
-        Viewport.Height = 362.000000000000000000
+        Viewport.Height = 360.000000000000000000
       end
       object Layout1: TLayout
         Align = Top
@@ -68,14 +71,17 @@ object MainForm: TMainForm
         item
         end>
       IsSelected = False
-      Size.Width = 131.000000000000000000
-      Size.Height = 24.000000000000000000
+      Size.Width = 130.000000000000000000
+      Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
+      StyleLookup = ''
       TabOrder = 0
       Text = 'StringDemosTabItem'
+      ExplicitSize.cx = 131.000000000000000000
+      ExplicitSize.cy = 24.000000000000000000
       object Layout2: TLayout
         Align = Top
-        Size.Width = 640.000000000000000000
+        Size.Width = 50.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
@@ -129,7 +135,7 @@ object MainForm: TMainForm
       object Layout3: TLayout
         Align = Top
         Position.Y = 50.000000000000000000
-        Size.Width = 640.000000000000000000
+        Size.Width = 50.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0

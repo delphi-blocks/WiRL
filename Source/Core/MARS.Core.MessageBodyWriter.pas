@@ -1,47 +1,30 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
 *)
 unit MARS.Core.MessageBodyWriter;
 
+{$I MARS.inc}
+
 interface
 
 uses
-    Classes
-  , SysUtils
-  , Rtti
-  , Generics.Defaults
-  , Generics.Collections
-  , MARS.Core.Singleton
-  , MARS.Core.MediaType
-  , MARS.Core.Declarations
-  , MARS.Core.Classes
-  , MARS.Core.Attributes
-  ;
+  System.Classes, System.SysUtils, System.Rtti,
+  System.Generics.Defaults, System.Generics.Collections,
+  MARS.Core.Singleton,
+  MARS.Core.MediaType,
+  MARS.Core.Declarations,
+  MARS.Core.Classes,
+  MARS.Core.Attributes;
 
 type
-  IMessageBodyWriterOld = interface
-  ['{C23E02D3-489B-4DEE-B6AF-952504BD71AB}']
-    procedure WriteTo(AEntityStream: TStream);
-  end;
-
   IMessageBodyWriter = interface
   ['{C22068E1-3085-482D-9EAB-4829C7AE87C0}']
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
-//    function AsObject: TObject;
   end;
-
-  {
-  TMBWriter = class
-    function IsWritable(AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean;
-    procedure WriteTo(AValue: TValue; AAttributes: TAttributeArray; AMediaType: TMediaType;
-      AResponseHeaders: TStringList; AEntityStream: TStream);
-
-  end;
-  }
 
   TIsWritableFunction = reference to function(AType: TRttiType;
     const AAttributes: TAttributeArray; AMediaType: string): Boolean;
@@ -103,9 +86,8 @@ type
 implementation
 
 uses
-    MARS.Core.Utils
-  , MARS.Rtti.Utils
-  ;
+  MARS.Core.Utils,
+  MARS.Rtti.Utils;
 
 { TMARSMessageBodyRegistry }
 
@@ -151,7 +133,6 @@ var
   LMediaType: string;
   LCandidateMediaType: string;
   LCandidateQualityFactor: Double;
-
 begin
   AWriter := nil;
   LFound := False;
@@ -275,15 +256,16 @@ procedure TMARSMessageBodyRegistry.RegisterWriter(const AWriterClass: TClass;
 begin
   RegisterWriter(
     function : IMessageBodyWriter
-    var LInstance: TObject;
+    var
+      LInstance: TObject;
     begin
       LInstance := AWriterClass.Create;
       if not Supports(LInstance, IMessageBodyWriter, Result) then
         raise Exception.Create('Interface IMessageBodyWriter not implemented');
-    end
-    , AIsWritable
-    , AGetAffinity
-    , TRttiContext.Create.GetType(AWriterClass)
+    end,
+    AIsWritable,
+    AGetAffinity,
+    TRttiContext.Create.GetType(AWriterClass)
   );
 end;
 
@@ -303,12 +285,12 @@ end;
 procedure TMARSMessageBodyRegistry.RegisterWriter<T>(const AWriterClass: TClass);
 begin
   RegisterWriter(
-    AWriterClass
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and AType.IsObjectOfType<T>;
-      end
-    , Self.GetDefaultClassAffinityFunc<T>()
+    AWriterClass,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and AType.IsObjectOfType<T>;
+    end,
+    Self.GetDefaultClassAffinityFunc<T>()
   );
 end;
 

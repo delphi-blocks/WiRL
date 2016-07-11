@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -149,7 +149,6 @@ end;
 
 function Pair.ToJSONValue: TJSONValue;
 var
-  LData: TJSONObject;
   LDate: Double;
 begin
   Result := nil;

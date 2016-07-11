@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -11,22 +11,24 @@ unit MARS.Core.MessageBodyReader;
 interface
 
 uses
-    Classes
-  , SysUtils
-  , Rtti
-  , Generics.Defaults
-  , Generics.Collections
-  , MARS.Core.Singleton
-  , MARS.Core.MediaType
-  , MARS.Core.Declarations
-  , MARS.Core.Classes
-  ;
+  System.Classes, System.SysUtils, System.Rtti, System.Generics.Defaults,
+  System.Generics.Collections,
+  MARS.Core.Singleton,
+  MARS.Core.MediaType,
+  MARS.Core.Declarations,
+  MARS.Core.Classes,
+  MARS.Core.Attributes;
 
 type
-  IMessageBodyReader = interface
+  IMessageBodyReader<T> = interface
   ['{472A6C22-F4AF-4E77-B6BB-B1085A63504D}']
-    procedure ReadFrom(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+    function ReadFrom(
+      AType: T;
+      const AAttributes: TAttributeArray;
+      AMediaType: TMediaType;
+      AResponseHeaders: TStrings;
+      AInputStream: TStream
+    ): T;
   end;
 
   TGetAffinityFunction = reference to function(AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Integer;
@@ -37,7 +39,7 @@ type
       TMARSRegistrySingleton = TMARSSingleton<TMessageBodyReaderRegistry>;
       TEntryInfo = record
         TypeMetadata: TRttiType;
-        CreateInstance: TFunc<IMessageBodyReader>;
+        CreateInstance: TFunc<IMessageBodyReader<T>>;
         IsReadable: TFunc<TRttiType, TAttributeArray, TMediaType, Boolean>;
         GetAffinity: TGetAffinityFunction;
       end;
@@ -72,9 +74,8 @@ type
 implementation
 
 uses
-    MARS.Rtti.Utils
-  , MARS.Core.Attributes
-  ;
+  MARS.Rtti.Utils,
+  MARS.Core.Attributes;
 
 { TMessageBodyReaderRegistry }
 
@@ -169,7 +170,7 @@ procedure TMessageBodyReaderRegistry.RegisterReader(const AReaderClass: TClass;
   const AGetAffinity: TGetAffinityFunction);
 begin
   RegisterReader(
-    function : IMessageBodyReader
+    function : IMessageBodyReader<T>
     var LInstance: TObject;
     begin
       LInstance := AReaderClass.Create;

@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -9,24 +9,15 @@ unit Server.Resources;
 interface
 
 uses
-  Classes, SysUtils
-
-  , MARS.Core.JSON
-  , Rtti
-  , Generics.Collections
-  , HTTPApp
-
-  , MARS.Core.Registry
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.URL
-  , MARS.Core.MessageBodyWriters
-  , MARS.Core.Token
-
-  , MARS.Core.Response
-
-
-  ;
+  System.Classes, System.SysUtils, System.Rtti, Web.HTTPApp, Generics.Collections,
+  MARS.Core.JSON,
+  MARS.Core.Registry,
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.URL,
+  MARS.Core.MessageBodyWriters,
+  MARS.Core.Token,
+  MARS.Core.Response;
 
 type
   [Path('/helloworld')]
@@ -36,7 +27,7 @@ type
     [Context] URL: TMARSURL;
     [Context] Request: TWebRequest;
     [Context] Response: TWebResponse;
-    [Context] Token: TMARSToken;
+    [Context] Token: TMARSAuthContext;
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN)]
@@ -72,7 +63,7 @@ type
     function PostExample([BodyParam] AContent: string): string;
 
     [GET, Path('/image')]
-    [Produces('image/jpg')]
+    [Produces('image/png')]
     function GetImage: TStream;
 
     [GET, Path('/pdf')]
@@ -83,9 +74,7 @@ type
 implementation
 
 uses
-  DateUtils
-  , StrUtils
-  ;
+  System.DateUtils, System.StrUtils, System.IOUtils;
 
 { THelloWorldResource }
 
@@ -100,24 +89,37 @@ begin
 end;
 
 function THelloWorldResource.GetImage: TStream;
+var
+  LFileName: string;
 begin
-  Result := TFileStream.Create('C:\Users\Andrea Magni\Pictures\Wallpaper.jpg', fmOpenRead or fmShareDenyWrite);
+  LFileName := IncludeTrailingPathDelimiter(
+    TDirectory.GetParent(
+      TDirectory.GetParent(
+        TDirectory.GetParent(WebApplicationDirectory)))) +
+    'mars-logo.png';
+  Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
 
 function THelloWorldResource.GetPDF: TStream;
+var
+  LFileName: string;
 begin
-  Result := TFileStream.Create('C:\temp\test.pdf', fmOpenRead or fmShareDenyWrite);
+  LFileName := IncludeTrailingPathDelimiter(
+    TDirectory.GetParent(
+      TDirectory.GetParent(
+        TDirectory.GetParent(WebApplicationDirectory)))) +
+    'mars.pdf';
+  Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
 
 function THelloWorldResource.GetSessionInfo: string;
 begin
-  Result := 'ID: ' + Token.Token
-    + ' Data start: ' + DateTimeToStr(Token.StartTime);
+
 end;
 
 function THelloWorldResource.HelloWorld(): string;
 begin
-  Result := 'Hello, World!';
+  Result := 'Hello, ' + Token.Subject.DisplayName;
 end;
 
 function THelloWorldResource.Params(AOne, ATwo: string): string;
@@ -147,7 +149,7 @@ end;
 
 function THelloWorldResource.ReverseString(AString: string): string;
 begin
-  Result := StrUtils.ReverseString(AString);
+  Result := System.StrUtils.ReverseString(AString);
 end;
 
 function THelloWorldResource.Somma(Addendo1, Addendo2: Integer): Integer;

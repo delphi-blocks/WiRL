@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -26,7 +26,7 @@ type
   TItemResource = class
   private
   protected
-    [Context] Token: TMARSToken;
+    [Context] Token: TMARSAuthContext;
   public
     [GET, Path('/{id}'), RolesAllowed('user')]
     function Retrieve([PathParam] id: Integer): TToDoItem;
@@ -45,7 +45,7 @@ type
   end;
 
   [Path('/token')]
-  TTokenResource = class(TMARSTokenResource)
+  TTokenResource = class(TMARSAuthResource)
   private
   protected
     function Authenticate(const AUserName: string; const APassword: string): Boolean; override;
@@ -85,7 +85,7 @@ begin
   try
     Result := TToDoItem.Create;
     try
-      Result.Owner := Token.UserName;
+      Result.Owner := Token.Subject.UserName;
       Result.Text := AText;
       LAccessor.New(Result);
     except
@@ -138,7 +138,7 @@ begin
         'OWNER = :OWNER'
       , procedure(AQuery: {$if CompilerVersion > 24}TFDQuery{$else}TSQLQuery{$ifend})
         begin
-          AQuery.ParamByName('OWNER').AsString := Token.UserName;
+          AQuery.ParamByName('OWNER').AsString := Token.Subject.UserName;
         end
       , procedure(AQuery: {$if CompilerVersion > 24}TFDQuery{$else}TSQLQuery{$ifend})
         begin
@@ -187,7 +187,7 @@ begin
   try
     LUserName := AUserName;
     Result := LAccessor.Authenticate(LUserName, APassword, LRoles);
-    Token.SetUserNameAndRoles(LUserName, TArray<string>.Create(LRoles));
+    FAuthContext.Subject.SetUserNameAndRoles(LUserName, TArray<string>.Create(LRoles));
   finally
     LAccessor.Free;
   end;

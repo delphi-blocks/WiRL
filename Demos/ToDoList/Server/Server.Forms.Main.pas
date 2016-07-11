@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -8,16 +8,15 @@ unit Server.Forms.Main;
 
 interface
 
-uses Classes, SysUtils, Forms, ActnList, ComCtrls, StdCtrls, Controls, ExtCtrls
-  , Diagnostics
+uses
+  Classes, Windows, SysUtils, Forms, ActnList, ComCtrls, StdCtrls, Controls, ExtCtrls,
+  System.Diagnostics, System.Actions,
 
-  , MARS.Core.Engine
-  , MARS.http.Server.Indy
-
-  , MARS.Core.Application
-  , MARS.Diagnostics.Manager
-  , MARS.Diagnostics.Resources, System.Actions
-  ;
+  MARS.Core.Engine,
+  MARS.http.Server.Indy,
+  MARS.Core.Application,
+  MARS.Diagnostics.Manager,
+  MARS.Diagnostics.Resources;
 
 type
   TMainForm = class(TForm)
@@ -49,11 +48,10 @@ implementation
 {$R *.dfm}
 
 uses
-  MARS.Core.JSON
-  , MARS.Rtti.Utils
-  , MARS.Core.MessageBodyWriter
-  , MARS.Core.MessageBodyWriters
-  ;
+  MARS.Core.JSON,
+  MARS.Rtti.Utils,
+  MARS.Core.MessageBodyWriter,
+  MARS.Core.MessageBodyWriters;
 
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);

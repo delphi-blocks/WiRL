@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -9,14 +9,13 @@ unit MARS.Core.MessageBodyWriters;
 interface
 
 uses
-  Classes, SysUtils, Rtti
+  System.Classes, System.SysUtils, System.Rtti,
 
-  , MARS.Core.Attributes
-  , MARS.Core.Declarations
-  , MARS.Core.MediaType
-  , MARS.Core.MessageBodyWriter
-  , MARS.Core.Exceptions
-  ;
+  MARS.Core.Attributes,
+  MARS.Core.Declarations,
+  MARS.Core.MediaType,
+  MARS.Core.MessageBodyWriter,
+  MARS.Core.Exceptions;
 
 type
   [Produces(TMediaType.APPLICATION_JSON)]
@@ -48,10 +47,9 @@ type
 implementation
 
 uses
-    MARS.Core.JSON
-  , MARS.Core.Utils
-  , MARS.Rtti.Utils
-  ;
+  MARS.Core.JSON,
+  MARS.Core.Utils,
+  MARS.Rtti.Utils;
 
 { TObjectWriter }
 
@@ -66,7 +64,6 @@ begin
   try
     LObj := ObjectToJSON(AValue.AsObject);
     try
-//      LObj.AddPair('Writer', ClassName);
       LStreamWriter.Write(LObj.ToJSON);
     finally
       LObj.Free;
@@ -198,39 +195,39 @@ begin
   TMARSMessageBodyRegistry.Instance.RegisterWriter<TJSONValue>(TJSONValueWriter);
 
   TMARSMessageBodyRegistry.Instance.RegisterWriter(
-    TStreamValueWriter
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and AType.IsObjectOfType<TStream>(True);
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMARSMessageBodyRegistry.AFFINITY_HIGH;
-      end
+    TStreamValueWriter,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and AType.IsObjectOfType<TStream>(True);
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMARSMessageBodyRegistry.AFFINITY_HIGH;
+    end
   );
 
   TMARSMessageBodyRegistry.Instance.RegisterWriter(
-    TObjectWriter
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and AType.IsInstance;
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMARSMessageBodyRegistry.AFFINITY_VERY_LOW;
-      end
+    TObjectWriter,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and AType.IsInstance;
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMARSMessageBodyRegistry.AFFINITY_VERY_LOW;
+    end
   );
 
   TMARSMessageBodyRegistry.Instance.RegisterWriter(
-    TWildCardMediaTypeWriter
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := True;
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMARSMessageBodyRegistry.AFFINITY_VERY_LOW;
-      end
+    TWildCardMediaTypeWriter,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := True;
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMARSMessageBodyRegistry.AFFINITY_VERY_LOW;
+    end
   );
 end;
 

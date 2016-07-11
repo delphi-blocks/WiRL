@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -29,7 +29,6 @@ implementation
 {$R *.fmx}
 
 uses
-  FMXClient.DataModules.Main
-  ;
+  FMXClient.DataModules.Main;
 
 end.

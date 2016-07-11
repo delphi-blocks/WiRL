@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -9,17 +9,15 @@ unit MARS.Core.Engine;
 interface
 
 uses
-  SysUtils, HTTPApp, Classes, Generics.Collections
-  , SyncObjs
-  , Diagnostics
+  System.SysUtils, Web.HTTPApp, System.Classes, System.Generics.Collections,
+  System.SyncObjs, System.Diagnostics,
 
-  , MARS.Core.Classes
-  , MARS.Core.MediaType
-  , MARS.Core.Exceptions
-  , MARS.Core.Registry
-  , MARS.Core.Application
-  , MARS.Core.URL
-  ;
+  MARS.Core.Classes,
+  MARS.Core.MediaType,
+  MARS.Core.Exceptions,
+  MARS.Core.Registry,
+  MARS.Core.Application,
+  MARS.Core.URL;
 
 {$M+}
 
@@ -51,18 +49,17 @@ type
 
   TMARSEngine = class
   private
+    class threadvar FWebRequest: TWebRequest;
+    class threadvar FWebResponse: TWebResponse;
+    class threadvar FURL: TMARSURL;
+  private
     FApplications: TMARSApplicationDictionary;
     FSubscribers: TList<IMARSHandleListener>;
     FCriticalSection: TCriticalSection;
     FBasePath: string;
-    FSessionTimeOut: Integer;
     FPort: Integer;
     FThreadPoolSize: Integer;
     FName: string;
-  class threadvar
-    FWebRequest: TWebRequest;
-    FWebResponse: TWebResponse;
-    FURL: TMARSURL;
 
     function GetCurrentRequest: TWebRequest;
     function GetCurrentResponse: TWebResponse;
@@ -89,7 +86,6 @@ type
     property BasePath: string read FBasePath write FBasePath;
     property Name: string read FName write FName;
     property Port: Integer read FPort write FPort;
-    property SessionTimeOut: Integer read FSessionTimeOut write FSessionTimeOut;
     property ThreadPoolSize: Integer read FThreadPoolSize write FThreadPoolSize;
 
     // Transient properties
@@ -101,8 +97,7 @@ type
 implementation
 
 uses
-  MARS.Core.Utils
-  ;
+  MARS.Core.Utils;
 
 function TMARSEngine.AddApplication(const AName, ABasePath: string;
   const AResources: array of string): TMARSApplication;
@@ -136,7 +131,6 @@ begin
   FApplications := TMARSApplicationDictionary.Create([doOwnsValues]);
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IMARSHandleListener>.Create;
-  FSessionTimeOut := 1200000;
   FPort := 8080;
   FThreadPoolSize := 75;
   FBasePath := '/rest';

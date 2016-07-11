@@ -1,5 +1,5 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
 
@@ -9,25 +9,21 @@ unit MARS.http.Server.Indy;
 interface
 
 uses
-  Classes, SysUtils
-  , SyncObjs
-  , IdContext, IdCustomHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket
-  , IdSchedulerOfThreadPool
-
-  , MARS.Core.Engine
-  , MARS.Core.Token
-  ;
+  System.Classes, System.SysUtils, System.SyncObjs,
+  IdContext, IdCustomHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
+  IdSchedulerOfThreadPool,
+  //MARS.http.Server.Authentication,
+  MARS.Core.Engine,
+  MARS.Core.Token;
 
 type
   TMARShttpServerIndy = class(TIdCustomHTTPServer)
   private
     FEngine: TMARSEngine;
-    FTokenList: TMARSTokenList;
   protected
-    procedure DoOnCreateSession(AContext: TIdContext;
-      var VNewSession: TIdHTTPSession); override;
-    procedure DoSessionEnd(Sender: TIdHTTPSession); override;
-    procedure DoSessionStart(Sender: TIdHTTPSession); override;
+    procedure ParseAuthorizationHeader(AContext: TIdContext; const AAuthType,
+        AAuthData: string; var VUsername, VPassword: string; var VHandled: Boolean);
+
     procedure Startup; override;
     procedure Shutdown; override;
     procedure DoCommandGet(AContext: TIdContext;
@@ -45,10 +41,8 @@ type
 implementation
 
 uses
-  StrUtils
-  , idHTTPWebBrokerBridge
-  , MARS.Core.Utils
-  ;
+  System.StrUtils, IdHTTPWebBrokerBridge,
+  MARS.Core.Utils;
 
 { TMARShttpServerIndy }
 
@@ -56,6 +50,7 @@ constructor TMARShttpServerIndy.Create(AEngine: TMARSEngine);
 begin
   inherited Create(nil);
   FEngine := AEngine;
+  OnParseAuthentication := ParseAuthorizationHeader;
 end;
 
 procedure TMARShttpServerIndy.DoCommandGet(AContext: TIdContext;
@@ -63,7 +58,6 @@ procedure TMARShttpServerIndy.DoCommandGet(AContext: TIdContext;
 var
   LRequest: TIdHTTPAppRequest;
   LResponse: TIdHTTPAppResponse;
-  LToken: TMARSToken;
 begin
   inherited;
 
@@ -77,10 +71,6 @@ begin
       // skip browser requests (can be dangerous since it is a bit wide as approach)
       if not EndsText('favicon.ico', string(LRequest.PathInfo)) then
       begin
-        LToken := FTokenList.GetToken(LRequest);
-        if Assigned(LToken) then
-          LToken.LastRequest := string(LRequest.PathInfo);
-
         FEngine.HandleRequest(LRequest, LResponse);
       end;
       AResponseInfo.CustomHeaders.AddStrings(LResponse.CustomHeaders);
@@ -99,37 +89,16 @@ begin
   DoCommandGet(AContext, ARequestInfo, AResponseInfo);
 end;
 
-procedure TMARShttpServerIndy.DoOnCreateSession(AContext: TIdContext;
-  var VNewSession: TIdHTTPSession);
-var
-  LTokenID: string;
-begin
-  inherited;
-
-  LTokenID := CreateCompactGuidStr;
-  MARS.Core.Token._TOKEN := LTokenID;
-
-  VNewSession := TIdHTTPSession.CreateInitialized(SessionList, LTokenID, AContext.Connection.Socket.Binding.PeerIP);
-end;
-
-procedure TMARShttpServerIndy.DoSessionEnd(Sender: TIdHTTPSession);
-begin
-  inherited;
-
-  FTokenList.RemoveToken(Sender.SessionID);
-end;
-
-procedure TMARShttpServerIndy.DoSessionStart(Sender: TIdHTTPSession);
-begin
-  inherited;
-
-  FTokenList.AddToken(Sender.SessionID);
-  end;
-
 procedure TMARShttpServerIndy.InitComponent;
 begin
   inherited;
-  FTokenList := TMARSTokenList.Instance;
+end;
+
+procedure TMARShttpServerIndy.ParseAuthorizationHeader(AContext: TIdContext;
+    const AAuthType, AAuthData: string; var VUsername, VPassword: string; var
+    VHandled: Boolean);
+begin
+  VHandled := True;
 end;
 
 procedure TMARShttpServerIndy.SetupThreadPooling(const APoolSize: Integer);
@@ -158,10 +127,6 @@ procedure TMARShttpServerIndy.Startup;
 begin
   Bindings.Clear;
   DefaultPort := FEngine.Port;
-
-  AutoStartSession := True;
-  SessionTimeOut := FEngine.SessionTimeout;
-  SessionState := True;
 
   inherited;
 end;
