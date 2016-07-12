@@ -17,17 +17,16 @@ uses
   MARS.Core.URL,
   MARS.Core.MessageBodyWriters,
   MARS.Core.Token,
-  MARS.Core.Response;
+  MARS.Core.Response, System.JSON;
 
 type
   [Path('/helloworld')]
   THelloWorldResource = class
   private
   protected
-    [Context] URL: TMARSURL;
     [Context] Request: TWebRequest;
     [Context] Response: TWebResponse;
-    [Context] Token: TMARSAuthContext;
+    [Context] AuthContext: TMARSAuthContext;
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN)]
@@ -44,12 +43,8 @@ type
     [Produces(TMediaType.TEXT_PLAIN)]
     function Params([PathParam] AOne: string; [PathParam] ATwo: string): string;
 
-    [GET, Path('/echourl')]
-    [Produces(TMediaType.APPLICATION_JSON)]
-    function EchoURL: TJSONObject;
-
-    [GET, Path('/sessioninfo')]
-    function GetSessionInfo: string;
+    [GET, Path('/authinfo'), Produces(TMediaType.APPLICATION_JSON)]
+    function GetAuthInfo: string;
 
     [GET, Path('/somma/{Addendo1}/{Addendo2}')]
     function Somma(
@@ -61,6 +56,16 @@ type
 
     [POST, Path('/postexample'), Produces(TMediaType.TEXT_PLAIN)]
     function PostExample([BodyParam] AContent: string): string;
+  end;
+
+  [Path('/entity')]
+  TEntityResource = class
+  private
+    [Context] URL: TMARSURL;
+  public
+    [GET, Path('/url')]
+    [Produces(TMediaType.APPLICATION_JSON)]
+    function EchoURL: TJSONObject;
 
     [GET, Path('/image')]
     [Produces('image/png')]
@@ -70,6 +75,7 @@ type
     [Produces('application/pdf')]
     function GetPDF: TStream;
   end;
+
 
 implementation
 
@@ -83,43 +89,14 @@ begin
   Result := AString;
 end;
 
-function THelloWorldResource.EchoURL: TJSONObject;
+function THelloWorldResource.GetAuthInfo: string;
 begin
-  Result := URL.ToJSONObject;
-end;
-
-function THelloWorldResource.GetImage: TStream;
-var
-  LFileName: string;
-begin
-  LFileName := IncludeTrailingPathDelimiter(
-    TDirectory.GetParent(
-      TDirectory.GetParent(
-        TDirectory.GetParent(WebApplicationDirectory)))) +
-    'mars-logo.png';
-  Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
-end;
-
-function THelloWorldResource.GetPDF: TStream;
-var
-  LFileName: string;
-begin
-  LFileName := IncludeTrailingPathDelimiter(
-    TDirectory.GetParent(
-      TDirectory.GetParent(
-        TDirectory.GetParent(WebApplicationDirectory)))) +
-    'mars.pdf';
-  Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
-end;
-
-function THelloWorldResource.GetSessionInfo: string;
-begin
-
+  Result := AuthContext.Subject.JSON.ToJSON;
 end;
 
 function THelloWorldResource.HelloWorld(): string;
 begin
-  Result := 'Hello, ' + Token.Subject.DisplayName;
+  Result := 'Hello World!';
 end;
 
 function THelloWorldResource.Params(AOne, ATwo: string): string;
@@ -162,7 +139,37 @@ begin
   raise Exception.Create('User Error Message');
 end;
 
+function TEntityResource.EchoURL: TJSONObject;
+begin
+  Result := URL.ToJSONObject;
+end;
+
+function TEntityResource.GetImage: TStream;
+var
+  LFileName: string;
+begin
+  LFileName := IncludeTrailingPathDelimiter(
+    TDirectory.GetParent(
+      TDirectory.GetParent(
+        TDirectory.GetParent(WebApplicationDirectory)))) +
+    'mars-logo.png';
+  Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
+end;
+
+function TEntityResource.GetPDF: TStream;
+var
+  LFileName: string;
+begin
+  LFileName := IncludeTrailingPathDelimiter(
+    TDirectory.GetParent(
+      TDirectory.GetParent(
+        TDirectory.GetParent(WebApplicationDirectory)))) +
+    'mars.pdf';
+  Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
+end;
+
 initialization
   TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TMARSResourceRegistry.Instance.RegisterResource<TEntityResource>;
 
 end.

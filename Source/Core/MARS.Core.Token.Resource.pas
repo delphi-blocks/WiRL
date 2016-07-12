@@ -67,12 +67,12 @@ begin
   if Result then // authenticated, set user roles
   begin
     if SameText(AUserName, 'admin') then
-      FAuthContext.Subject.SetUserNameAndRoles(AUserName, TArray<string>.Create('standard', 'admin'))
+      FAuthContext.Subject.SetUserAndRoles(AUserName, TArray<string>.Create('standard', 'admin'))
     else
-      FAuthContext.Subject.SetUserNameAndRoles(AUserName, TArray<string>.Create('standard'));
+      FAuthContext.Subject.SetUserAndRoles(AUserName, TArray<string>.Create('standard'));
   end
   else // not authenticated, clear user roles and username
-    FAuthContext.Subject.SetUserNameAndRoles('', nil);
+    FAuthContext.Subject.SetUserAndRoles('', nil);
 end;
 
 procedure TMARSAuthResource.BeforeLogin(const AUserName, APassword: string);
@@ -100,7 +100,7 @@ end;
 function TMARSAuthResource.Logout: TJSONObject;
 begin
   FAuthContext.Authenticated := False;
-  FAuthContext.Subject.SetUserNameAndRoles('', nil);
+  FAuthContext.Subject.SetUserAndRoles('', nil);
 
   Result := GetCurrent;
 end;

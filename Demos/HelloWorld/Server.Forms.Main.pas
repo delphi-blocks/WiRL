@@ -27,6 +27,7 @@ type
     PortNumberEdit: TEdit;
     Label1: TLabel;
     Edit1: TEdit;
+    Button1: TButton;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -73,9 +74,10 @@ begin
   FEngine.Name := 'MARS HelloWorld';
   FEngine.BasePath := '/rest';
 
-  LApp := FEngine.AddApplication('Default', '/default',
-    ['Server.Resources.THelloWorldResource']
-  );
+  LApp := FEngine.AddApplication('Default', '/app', [
+    'Server.Resources.THelloWorldResource',
+    'Server.Resources.TEntityResource'
+  ]);
 
   LApp.SetSecret(
     function (): TBytes

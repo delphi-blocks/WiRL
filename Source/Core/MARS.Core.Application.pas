@@ -34,7 +34,9 @@ type
   private
     const SCRT_PREFIX = 'bWFycy5zZWNyZXQu';
   private
-    class threadvar FToken: TMARSAuthContext;
+    class threadvar FWebRequest: TWebRequest;
+    class threadvar FWebResponse: TWebResponse;
+    class threadvar FAuthContext: TMARSAuthContext;
   private
     FSecret: TBytes;
     FRttiContext: TRttiContext;
@@ -290,10 +292,10 @@ begin
   Result := True;
   // AuthContext
   if (AType.InheritsFrom(TMARSAuthContext)) then
-    AValue := FToken
+    AValue := FAuthContext
   // Claims (Subject)
   else if (AType.InheritsFrom(TMARSSubject)) then
-    AValue := FToken.Subject
+    AValue := FAuthContext.Subject
   // HTTP request
   else if (AType.InheritsFrom(TWebRequest)) then
     AValue := Request
@@ -381,7 +383,7 @@ end;
 
 function TMARSApplication.GetRequest: TWebRequest;
 begin
-  Result := TMARSEngine(Engine).CurrentRequest;
+  Result := FWebRequest;
 end;
 
 function TMARSApplication.GetResources: TArray<string>;
@@ -391,7 +393,7 @@ end;
 
 function TMARSApplication.GetResponse: TWebResponse;
 begin
-  Result := TMARSEngine(Engine).CurrentResponse;
+  Result := FWebResponse;
 end;
 
 function TMARSApplication.GetURL: TMARSURL;
@@ -606,11 +608,14 @@ end;
 procedure TMARSApplication.HandleRequest(ARequest: TWebRequest; AResponse:
     TWebResponse; const AURL: TMARSURL);
 begin
-  FToken := GetNewToken(ARequest);
+  FWebRequest := ARequest;
+  FWebResponse := AResponse;
+
+  FAuthContext := GetNewToken(ARequest);
   try
     InternalHandleRequest(ARequest, AResponse, AURL);
   finally
-    FToken.Free;
+    FAuthContext.Free;
   end;
 end;
 
@@ -658,7 +663,7 @@ begin
       Self.ClassName, 'HandleRequest'
     );
 
-  CheckAuthorization(LMethod, FToken);
+  CheckAuthorization(LMethod, FAuthContext);
 
   LInstance := LInfo.ConstructorFunc();
   try

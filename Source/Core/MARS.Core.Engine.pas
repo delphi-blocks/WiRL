@@ -49,8 +49,6 @@ type
 
   TMARSEngine = class
   private
-    class threadvar FWebRequest: TWebRequest;
-    class threadvar FWebResponse: TWebResponse;
     class threadvar FURL: TMARSURL;
   private
     FApplications: TMARSApplicationDictionary;
@@ -61,8 +59,6 @@ type
     FThreadPoolSize: Integer;
     FName: string;
 
-    function GetCurrentRequest: TWebRequest;
-    function GetCurrentResponse: TWebResponse;
     function GetURL: TMARSURL;
   protected
     procedure DoBeforeHandleRequest(const AApplication: TMARSApplication); virtual;
@@ -90,8 +86,6 @@ type
 
     // Transient properties
     property CurrentURL: TMARSURL read GetURL;
-    property CurrentRequest: TWebRequest read GetCurrentRequest;
-    property CurrentResponse: TWebResponse read GetCurrentResponse;
   end;
 
 implementation
@@ -229,8 +223,6 @@ var
   LStopWatch: TStopWatch;
   LStopWatchEx: TStopWatch;
 begin
-  FWebRequest := ARequest;
-  FWebResponse := AResponse;
   LStopWatchEx := TStopwatch.StartNew;
   if not DoBeforeRequestStart() then
   try
@@ -291,16 +283,6 @@ procedure TMARSEngine.RemoveSubscriber(
   const ASubscriber: IMARSHandleListener);
 begin
   FSubscribers.Remove(ASubscriber);
-end;
-
-function TMARSEngine.GetCurrentRequest: TWebRequest;
-begin
-  Result := FWebRequest;
-end;
-
-function TMARSEngine.GetCurrentResponse: TWebResponse;
-begin
-  Result := FWebResponse;
 end;
 
 function TMARSEngine.GetURL: TMARSURL;

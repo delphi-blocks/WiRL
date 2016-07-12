@@ -187,7 +187,7 @@ begin
   try
     LUserName := AUserName;
     Result := LAccessor.Authenticate(LUserName, APassword, LRoles);
-    FAuthContext.Subject.SetUserNameAndRoles(LUserName, TArray<string>.Create(LRoles));
+    FAuthContext.Subject.SetUserAndRoles(LUserName, TArray<string>.Create(LRoles));
   finally
     LAccessor.Free;
   end;

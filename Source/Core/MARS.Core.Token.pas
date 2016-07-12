@@ -39,30 +39,31 @@ type
     function GetDisplayName: string;
     procedure SetDisplayName(const Value: string);
   public
-    constructor Create;
-    destructor Destroy; override;
-
+    constructor Create; override;
     function HasRole(const ARole: string): Boolean; virtual;
-    procedure SetUserNameAndRoles(const AUserName: string; const ARoles: TArray<string>); virtual;
+    procedure SetUserAndRoles(const AUserName: string; const ARoles: TArray<string>); virtual;
 
     property Roles: string read GetRoles write SetRoles;
     property UserName: string read GetUserName write SetUserName;
     property DisplayName: string read GetDisplayName write SetDisplayName;
   end;
 
+  TMARSSubjectClass = class of TMARSSubject;
+
   TMARSAuthContext = class
   private
     FAuthenticated: Boolean;
-    FClaimsClass: TJWTClaimsClass;
+    FSubjectClass: TMARSSubjectClass;
     FCompactToken: string;
     FVerified: Boolean;
     FSubject: TMARSSubject;
-
   public
+    {$IF CompilerVersion < 30}
     class constructor Create;
+    {$ENDIF}
 
     constructor Create; overload;
-    constructor Create(AClaimsClass: TJWTClaimsClass); overload;
+    constructor Create(ASubjectClass: TMARSSubjectClass); overload;
     destructor Destroy; override;
 
     procedure Clear;
@@ -71,8 +72,6 @@ type
 
     property Authenticated: Boolean read FAuthenticated write FAuthenticated;
     property Subject: TMARSSubject read FSubject write FSubject;
-    //property CompactToken: string read FCompactToken;
-    //property Verified: Boolean read FVerified;
   end;
 
 implementation
@@ -83,6 +82,7 @@ uses
 
 { TMARSAuthContext }
 
+{$IF CompilerVersion < 30}
 class constructor TMARSAuthContext.Create;
 var
   LToken: TMARSAuthContext;
@@ -94,22 +94,22 @@ begin
     LToken.Free;
   end;
 end;
+{$ENDIF}
 
 procedure TMARSAuthContext.Clear;
 begin
   FVerified := False;
 end;
 
-constructor TMARSAuthContext.Create(AClaimsClass: TJWTClaimsClass);
+constructor TMARSAuthContext.Create(ASubjectClass: TMARSSubjectClass);
 begin
-  FClaimsClass := AClaimsClass;
-  FSubject := TMARSSubject.Create;
+  FSubjectClass := ASubjectClass;
+  FSubject := FSubjectClass.Create;
 end;
 
 constructor TMARSAuthContext.Create;
 begin
-  FClaimsClass := TMARSSubject;
-  FSubject := TMARSSubject.Create;
+  Create(TMARSSubject);
 end;
 
 procedure TMARSAuthContext.Generate(const ASecret: TBytes);
@@ -118,7 +118,7 @@ var
   LSigner: TJWS;
   LKey: TJWK;
 begin
-  LJWT := TJWT.Create(FClaimsClass);
+  LJWT := TJWT.Create(FSubjectClass);
   try
     LJWT.Claims.JSON.CopyFrom(FSubject.JSON);
 
@@ -149,7 +149,7 @@ begin
     FCompactToken := ACompactToken;
     LKey := TJWK.Create(ASecret);
     try
-      LJWT := TJOSE.Verify(LKey, FCompactToken, TMARSSubject);
+      LJWT := TJOSE.Verify(LKey, FCompactToken, FSubjectClass);
       if Assigned(LJWT) then
       begin
         try
@@ -172,14 +172,7 @@ begin
   inherited;
 end;
 
-{ TMARSSubject }
-
 constructor TMARSSubject.Create;
-begin
-  inherited Create;
-end;
-
-destructor TMARSSubject.Destroy;
 begin
   inherited;
 end;
@@ -234,7 +227,7 @@ begin
     TJSONUtils.SetJSONValueFrom<string>(CLAIM_USERNAME, Value, FJSON);
 end;
 
-procedure TMARSSubject.SetUserNameAndRoles(const AUserName: string; const ARoles: TArray<string>);
+procedure TMARSSubject.SetUserAndRoles(const AUserName: string; const ARoles: TArray<string>);
 begin
   UserName := AUserName;
   Roles.Join(',', ARoles);
