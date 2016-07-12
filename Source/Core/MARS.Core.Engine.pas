@@ -246,8 +246,11 @@ begin
         FURL := LURL;
         DoBeforeHandleRequest(LApplication);
         LStopWatch := TStopwatch.StartNew;
-        LApplication.HandleRequest(ARequest, AResponse, LURL);
-        LStopWatch.Stop;
+        try
+          LApplication.HandleRequest(ARequest, AResponse, LURL);
+        finally
+          LStopWatch.Stop;
+        end;
         DoAfterHandleRequest(LApplication, LStopWatch);
       end
       else

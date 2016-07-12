@@ -13,8 +13,8 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.SyncObjs, System.Rtti, Web.HTTPApp, IdGlobal,
-  MARS.Core.JSON,
-  MARS.Core.Singleton,
+
+  MARS.Core.JSON, // To be removed
 
   JOSE.Types.Bytes,
   JOSE.Types.JSON,
@@ -77,8 +77,7 @@ type
 implementation
 
 uses
-  System.DateUtils, System.NetEncoding,
-  MARS.Core.Utils;
+  System.DateUtils, System.NetEncoding;
 
 { TMARSAuthContext }
 

@@ -164,7 +164,7 @@ begin
     TDirectory.GetParent(
       TDirectory.GetParent(
         TDirectory.GetParent(WebApplicationDirectory)))) +
-    'mars.pdf';
+    'mars-doc.pdf';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
 
