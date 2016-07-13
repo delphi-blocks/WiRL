@@ -9,11 +9,8 @@ unit MARS.Core.MediaType;
 interface
 
 uses
-  SysUtils
-  , Classes
-  , Generics.Defaults
-  , Generics.Collections
-  , MARS.Core.Declarations;
+  System.SysUtils, System.Classes, System.Generics.Defaults, System.Generics.Collections,
+  MARS.Core.Declarations;
 
 type
   {$SCOPEDENUMS ON}
@@ -32,10 +29,6 @@ type
     Wildcard
   );
   {$SCOPEDENUMS OFF}
-
-//  MediaTypeHelper = record helper for MediaType
-//    function ToString: string;
-//  end;
 
   TMediaTypeParams = TDictionary<string, string>;
 
@@ -117,8 +110,6 @@ type
   end;
 
   TMediaTypeList = class(TObjectList<TMediaType>)
-  private
-  protected
   public
     constructor Create; virtual;
 
@@ -152,30 +143,7 @@ type
 implementation
 
 uses
-  StrUtils;
-
-{ MediaTypeHelper }
-
-//function MediaTypeHelper.ToString: string;
-//begin
-//  case Self of
-//    MediaType.Text_Plain: Result := 'text/plain';
-//    MediaType.Text_XML: Result := 'text/xml';
-//    MediaType.Text_HTML: Result := 'text/html';
-//
-//    MediaType.Application_XML: Result := 'application/xml';
-//    MediaType.Application_JSON: Result := 'application/json';
-//    MediaType.Application_XHTML_XML: Result := 'application/xhtml+xml';
-//    MediaType.Application_SVG_XML: Result := 'application/svg+xml';
-//    MediaType.Application_Atom_XML: Result := 'application/atom+xml';
-//    MediaType.Application_Octet_Stream: Result := 'application/octet-stream';
-//    MediaType.Application_Form_Encoded: Result := 'application/x-www-form-urlencoded';
-//
-//    MediaType.Multipart_Form_Data: Result := 'multipart/form-data';
-//
-//    MediaType.Wildcard: Result := '*/*';
-//  end;
-//end;
+  System.StrUtils;
 
 { TMediaType }
 
@@ -299,17 +267,12 @@ begin
 end;
 
 function TMediaType.ToString: string;
-//var
-//  LIndex: Integer;
 begin
   Result := FMediaType + DELIM_MEDIA + FMediaSubType;
   if FDialect <> '' then
     Result := Result + DELIM_PARAMS + DIALECT_NAME + '=' + FDialect;
   if FCharset <> '' then
     Result := Result + DELIM_PARAMS + CHARSET_NAME + '=' + FCharset;
-
-//  for LIndex := 0 to FMediaParameters.Count - 1 do
-//    Result := Result + DELIM_PARAMS + FMediaParameters[LIndex];
 end;
 
 function TMediaType.ToStringDebug: string;
