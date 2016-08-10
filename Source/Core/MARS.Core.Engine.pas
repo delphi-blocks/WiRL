@@ -9,7 +9,7 @@ unit MARS.Core.Engine;
 interface
 
 uses
-  System.SysUtils, Web.HTTPApp, System.Classes, System.Generics.Collections,
+  System.SysUtils, System.Classes, System.Generics.Collections,
   System.SyncObjs, System.Diagnostics,
 
   MARS.Core.Classes,
@@ -17,7 +17,9 @@ uses
   MARS.Core.Exceptions,
   MARS.Core.Registry,
   MARS.Core.Application,
-  MARS.Core.URL;
+  MARS.Core.URL,
+  MARS.Core.Request,
+  MARS.Core.Response;
 
 {$M+}
 
@@ -70,7 +72,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse);
+    procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse);
 
     function AddApplication(const AName, ABasePath: string; const AResources: array of string): TMARSApplication; virtual;
     procedure AddSubscriber(const ASubscriber: IMARSHandleListener);
@@ -215,7 +217,7 @@ begin
   end;
 end;
 
-procedure TMARSEngine.HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse);
+procedure TMARSEngine.HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse);
 var
   LApplication: TMARSApplication;
   LURL: TMARSURL;

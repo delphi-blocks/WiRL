@@ -9,29 +9,65 @@ unit MARS.Core.Request;
 interface
 
 uses
-  Classes, SysUtils, Generics.Collections, HTTPApp;
+  System.Classes, System.SysUtils;
 
 type
-  // TMARSRequest is a mere container for TWebRequest
-  //
-  // !!!!! This is only a temporary solution !!!!!
-  // The TMARSRequest class must replicate the functionality of TWebRequest
-  // so we can remove dependencies on communication frameworks
-  TMARSRequest = class
-  private
-    FHTTPRequest: TWebRequest;
-  public
-    constructor Create(AHTTPRequest: TWebRequest); virtual;
+  TMARSMethod = class
+  const
+    GET = 'GET';
+    PUT = 'PUT';
+    POST = 'POST';
+    HEAD = 'HEAD';
+    DELETE = 'DELETE';
+    PATCH = 'PATCH';
+    OPTIONS = 'OPTIONS';
+    TRACE = 'TRACE';
+    CONNECT = 'CONNECT';
+  end;
 
-    property HTTPRequest: TWebRequest read FHTTPRequest;
+  TMARSRequest = class
+  protected
+    function GetPathInfo: string; virtual; abstract;
+    function GetQuery: string; virtual; abstract;
+    function GetHost: string; virtual; abstract;
+    function GetServerPort: Integer; virtual; abstract;
+    function GetMethod: string; virtual; abstract;
+    function GetQueryFields: TStrings; virtual; abstract;
+    function GetContentFields: TStrings; virtual; abstract;
+    function GetCookieFields: TStrings; virtual; abstract;
+    function GetContent: string; virtual; abstract;
+    function GetAuthorization: string; virtual; abstract;
+    function GetAccept: string; virtual; abstract;
+    function GetContentType: string; virtual; abstract;
+    function GetContentLength: Integer; virtual; abstract;
+    function GetContentVersion: string; virtual; abstract;
+    function DoGetFieldByName(const Name: string): string; virtual; abstract;
+  public
+    property PathInfo: string read GetPathInfo;
+    property Query: string read GetQuery;
+    property Method: string read GetMethod;
+    property Host: string read GetHost;
+    property ServerPort: Integer read GetServerPort;
+    property QueryFields: TStrings read GetQueryFields;
+    property ContentFields: TStrings read GetContentFields;
+    property CookieFields: TStrings read GetCookieFields;
+    property Content: string read GetContent;
+    property ContentType: string read GetContentType;
+    property ContentLength: Integer read GetContentLength;
+    property ContentVersion: string read GetContentVersion;
+    property Authorization: string read GetAuthorization;
+    property Accept: string read GetAccept;
+
+    function GetFieldByName(const Name: string): string;
   end;
 
 implementation
 
-constructor TMARSRequest.Create(AHTTPRequest: TWebRequest);
+{ TMARSRequest }
+
+function TMARSRequest.GetFieldByName(const Name: string): string;
 begin
-  inherited Create;
-  FHTTPRequest := AHTTPRequest;
+  Result := DoGetFieldByName(Name);
 end;
 
 end.

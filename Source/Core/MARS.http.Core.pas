@@ -8,14 +8,8 @@ unit MARS.http.Core;
 
 interface
 
-type
-  IMARSHttpRequest = interface
-
-  end;
-
-  IMARSHttpResponse = interface
-
-  end;
+uses
+  System.SysUtils, System.Classes;
 
 implementation
 

@@ -12,7 +12,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  System.SyncObjs, System.Rtti, Web.HTTPApp, IdGlobal,
+  System.SyncObjs, System.Rtti,
 
   MARS.Core.JSON, // To be removed
 

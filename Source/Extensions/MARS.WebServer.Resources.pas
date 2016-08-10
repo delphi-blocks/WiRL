@@ -79,6 +79,7 @@ type
     FIndexFileNames: TStringList;
   protected
     [Context] URL: TMARSURL;
+    [Context] FResponse: TMARSResponse;
     procedure Init; virtual;
     procedure InitContentTypesForExt; virtual;
     procedure InitIndexFileNames; virtual;
@@ -91,7 +92,8 @@ type
     destructor Destroy; override;
 
     // REST METHODS
-    [GET, Path('/{*}')]
+    // Must use singleton to prevent the garbage collector to free TMARSResponse
+    [GET, Singleton, Path('/{*}')]
     function GetContent: TMARSResponse; virtual;
 
     // PROPERTIES
@@ -185,13 +187,13 @@ begin
   end;
 end;
 
-function TFileSystemResource.GetContent: TMARSResponse;
+function TFileSystemResource.GetContent :TMARSResponse;
 var
   LRelativePath: string;
   LFullPath: string;
   LIndexFileFullPath: string;
 begin
-  Result := TMARSResponse.Create;
+  Result := FResponse;
   Result.StatusCode := 404;
 
   LRelativePath := SmartConcat(URL.SubResourcesToArray, PathDelim);
@@ -287,7 +289,7 @@ begin
   AResponse.ContentStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
   if not ContentTypesForExt.TryGetValue(LFileExt, LContentType) then
     LContentType := TMediaType.APPLICATION_OCTET_STREAM;  // default = binary
-  AResponse.ContentType := AnsiString(LContentType);
+  AResponse.ContentType := LContentType;
 end;
 
 { RootFolderAttribute }
