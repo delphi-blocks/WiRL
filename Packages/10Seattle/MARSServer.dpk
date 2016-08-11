@@ -25,18 +25,15 @@ package MARSServer;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'MARS REST Library'}
+{$DESCRIPTION 'MARS Server Package'}
 {$LIBSUFFIX '230'}
 {$RUNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,
   inet,
-  xmlrtl,
-  DbxCommonDriver,
   dbrtl,
-  fmx,
   FireDAC,
   FireDACCommonDriver,
   FireDACCommon,
@@ -57,7 +54,6 @@ contains
   MARS.Core.Exceptions in '..\..\Source\Core\MARS.Core.Exceptions.pas',
   MARS.Core.JSON in '..\..\Source\Core\MARS.Core.JSON.pas',
   MARS.Core.MediaType in '..\..\Source\Core\MARS.Core.MediaType.pas',
-  MARS.Core.MessageBodyReader in '..\..\Source\Core\MARS.Core.MessageBodyReader.pas',
   MARS.Core.MessageBodyWriter in '..\..\Source\Core\MARS.Core.MessageBodyWriter.pas',
   MARS.Core.MessageBodyWriters in '..\..\Source\Core\MARS.Core.MessageBodyWriters.pas',
   MARS.Core.Registry in '..\..\Source\Core\MARS.Core.Registry.pas',
@@ -80,11 +76,19 @@ contains
   MARS.Stateful.Dictionary in '..\..\Source\Extensions\MARS.Stateful.Dictionary.pas',
   MARS.Stateful.WrappedResource in '..\..\Source\Extensions\MARS.Stateful.WrappedResource.pas',
   MARS.WebServer.Resources in '..\..\Source\Extensions\MARS.WebServer.Resources.pas',
-  MARS.Messaging.Dispatcher in '..\..\Source\Messaging\MARS.Messaging.Dispatcher.pas',
-  MARS.Messaging.Message in '..\..\Source\Messaging\MARS.Messaging.Message.pas',
-  MARS.Messaging.Queue in '..\..\Source\Messaging\MARS.Messaging.Queue.pas',
-  MARS.Messaging.Resource in '..\..\Source\Messaging\MARS.Messaging.Resource.pas',
-  MARS.Messaging.Subscriber in '..\..\Source\Messaging\MARS.Messaging.Subscriber.pas';
+  JOSE.Cryptography.RSA in '..\..\Libs\JWT\Source\Common\JOSE.Cryptography.RSA.pas',
+  JOSE.Encoding.Base64 in '..\..\Libs\JWT\Source\Common\JOSE.Encoding.Base64.pas',
+  JOSE.Hashing.HMAC in '..\..\Libs\JWT\Source\Common\JOSE.Hashing.HMAC.pas',
+  JOSE.Types.Bytes in '..\..\Libs\JWT\Source\Common\JOSE.Types.Bytes.pas',
+  JOSE.Types.JSON in '..\..\Libs\JWT\Source\Common\JOSE.Types.JSON.pas',
+  JOSE.Core.Base in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Base.pas',
+  JOSE.Core.Builder in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Builder.pas',
+  JOSE.Core.JWA in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.pas',
+  JOSE.Core.JWE in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWE.pas',
+  JOSE.Core.JWK in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWK.pas',
+  JOSE.Core.JWS in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWS.pas',
+  JOSE.Core.JWT in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWT.pas',
+  JOSE.Core.Parts in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas';
 
 end.
 
