@@ -93,8 +93,8 @@ type
 
     // REST METHODS
     // Must use singleton to prevent the garbage collector to free TMARSResponse
-    [GET, Singleton, Path('/{*}')]
-    function GetContent: TMARSResponse; virtual;
+    [GET, Path('/{*}')]
+    procedure GetContent; virtual;
 
     // PROPERTIES
     property RootFolder: string read FRootFolder write FRootFolder;
@@ -187,14 +187,13 @@ begin
   end;
 end;
 
-function TFileSystemResource.GetContent :TMARSResponse;
+procedure TFileSystemResource.GetContent;
 var
   LRelativePath: string;
   LFullPath: string;
   LIndexFileFullPath: string;
 begin
-  Result := FResponse;
-  Result.StatusCode := 404;
+  FResponse.StatusCode := 404;
 
   LRelativePath := SmartConcat(URL.SubResourcesToArray, PathDelim);
   LFullPath := TPath.Combine(RootFolder, LRelativePath);
@@ -202,13 +201,13 @@ begin
   if CheckFilters(LFullPath) then
   begin
     if FileExists(LFullPath) then
-      ServeFileContent(LFullPath, Result)
+      ServeFileContent(LFullPath, FResponse)
     else if TDirectory.Exists(LFullPath) then
     begin
       if DirectoryHasIndexFile(LFullPath, LIndexFileFullPath) then
-        ServeFileContent(LIndexFileFullPath, Result)
+        ServeFileContent(LIndexFileFullPath, FResponse)
       else
-        ServeDirectoryContent(LFullPath, Result);
+        ServeDirectoryContent(LFullPath, FResponse);
     end;
   end;
 end;
