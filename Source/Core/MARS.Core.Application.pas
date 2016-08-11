@@ -264,7 +264,7 @@ begin
         LFieldClassType := TRttiInstanceType(AField.FieldType).MetaclassType;
 
         if not ContextInjectionByType(LFieldClassType, LValue) then
-          raise Exception.CreateFmt('[ContextInjection] Unable to inject class "%s" in resource "%s"', [LFieldClassType.ClassName, AInstance.ClassName]);
+          raise EMARSServerException.CreateFmt('[ContextInjection] Unable to inject class "%s" in resource "%s"', [LFieldClassType.ClassName, AInstance.ClassName]);
         AField.SetValue(AInstance, LValue);
 
       end;
