@@ -11,7 +11,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.SyncObjs,
   IdContext, IdCustomHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
-  IdSchedulerOfThreadPool, idGlobal,
+  IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
   //MARS.http.Server.Authentication,
   MARS.Core.Engine,
 //  MARS.http.Core,
@@ -72,6 +72,10 @@ type
   private
     FContext: TIdContext;
     FRequestInfo: TIdHTTPRequestInfo;
+    FCookieFields: TStrings;
+    FQueryFields: TStrings;
+    FContentFields: TStrings;
+    procedure ParseParams(Params :TStrings; const AValue: String);
   protected
     function GetPathInfo: string; override;
     function GetQuery: string; override;
@@ -90,6 +94,7 @@ type
     function DoGetFieldByName(const Name: string): string; override;
   public
     constructor Create(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
+    destructor Destroy; override;
   end;
 
 var
@@ -145,6 +150,7 @@ constructor TMARShttpServerIndy.Create(AEngine: TMARSEngine);
 begin
   inherited Create(nil);
   FEngine := AEngine;
+  ParseParams := False;
   OnParseAuthentication := ParseAuthorizationHeader;
 end;
 
@@ -234,6 +240,46 @@ begin
   FRequestInfo := ARequestInfo;
 end;
 
+destructor TMARSHttpRequestIndy.Destroy;
+begin
+  FCookieFields.Free;
+  FQueryFields.Free;
+  FContentFields.Free;
+  inherited;
+end;
+
+procedure TMARSHttpRequestIndy.ParseParams(Params :TStrings; const AValue: String);
+var
+  i, j : Integer;
+  s: string;
+  LEncoding: IIdTextEncoding;
+begin
+  Params.BeginUpdate;
+  try
+    Params.Clear;
+
+    if FRequestInfo.CharSet <> '' then
+      LEncoding := CharsetToEncoding(FRequestInfo.CharSet)
+    else
+      LEncoding := IndyTextEncoding_UTF8;
+    i := 1;
+    while i <= Length(AValue) do
+    begin
+      j := i;
+      while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
+      begin
+        Inc(j);
+      end;
+      s := Copy(AValue, i, j-i);
+      s := ReplaceAll(s, '+', ' ');
+      Params.Add(TIdURI.URLDecode(s, LEncoding));
+      i := j + 1;
+    end;
+  finally
+    Params.EndUpdate;
+  end;
+end;
+
 function TMARSHttpRequestIndy.DoGetFieldByName(const Name: string): string;
 begin
   Result := FRequestInfo.RawHeaders.Values[Name];
@@ -271,7 +317,12 @@ end;
 
 function TMARSHttpRequestIndy.GetContentFields: TStrings;
 begin
-  Result := FRequestInfo.Params;
+  if not Assigned(FContentFields) then
+  begin
+    FContentFields := TStringList.Create;
+    ParseParams(FContentFields, FRequestInfo.FormParams);
+  end;
+  Result := FContentFields;
 end;
 
 function TMARSHttpRequestIndy.GetContentLength: Integer;
@@ -290,8 +341,18 @@ begin
 end;
 
 function TMARSHttpRequestIndy.GetCookieFields: TStrings;
+var
+  i :Integer;
 begin
-  raise Exception.Create('TMARSHttpRequestIndy.GetCookieFields: not yet implemented');
+  if not Assigned(FCookieFields) then
+  begin
+    FCookieFields := TStringList.Create;
+    for i := 0 to FRequestInfo.Cookies.Count - 1 do
+    begin
+      CookieFields.Add(FRequestInfo.Cookies[i].ClientCookie);
+    end;
+  end;
+  Result := FCookieFields;
 end;
 
 function TMARSHttpRequestIndy.GetHost: string;
@@ -315,8 +376,15 @@ begin
 end;
 
 function TMARSHttpRequestIndy.GetQueryFields: TStrings;
+//const
+//  ContentTypeFormUrlencoded = 'application/x-www-form-urlencoded';
 begin
-  raise Exception.Create('TMARSHttpRequestIndy.GetQueryFields: not yet implemented');
+  if not Assigned(FQueryFields) then
+  begin
+    FQueryFields := TStringList.Create;
+    ParseParams(FQueryFields, FRequestInfo.QueryParams);
+  end;
+  Result := FQueryFields;
 end;
 
 function TMARSHttpRequestIndy.GetServerPort: Integer;
