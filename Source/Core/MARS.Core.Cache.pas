@@ -54,12 +54,7 @@ type
     function Use(const AName: string; const ADoSomething: TProc<TValue>): Boolean;
   end;
 
-   TCriticalSectionHelper = class helper for TCriticalSection
-     procedure AcquireAndDo(const ADoSomething: TProc);
-   end;
-
-
-   function CacheManager: TMARSCache;
+  function CacheManager: TMARSCache;
 
 implementation
 
@@ -68,6 +63,17 @@ uses
 
 var
   _Cache: TMARSCache;
+
+procedure AcquireAndDo(ACRiticalSection: TCriticalSection; const ADoSomething: TProc);
+begin
+  ACRiticalSection.Enter;
+  try
+    ADoSomething();
+  finally
+    ACRiticalSection.Leave;
+  end;
+end;
+
 
 function CacheManager: TMARSCache;
 begin
@@ -84,14 +90,14 @@ var
 begin
   LValue := AValue;
 
-  FCriticalSection.AcquireAndDo(
+  AcquireAndDo(FCriticalSection,
     procedure
     var
       LItem: TMARSCacheItem;
     begin
       if FStorage.TryGetValue(AName, LItem) then
       begin
-        LItem.CriticalSection.AcquireAndDo(
+        AcquireAndDo(LItem.CriticalSection,
           procedure
           begin
             LItem.Value := LValue;
@@ -131,7 +137,7 @@ begin
   begin
     Result := True;
 
-    LItem.CriticalSection.AcquireAndDo(
+    AcquireAndDo(LItem.CriticalSection,
       procedure
       begin
         ADoSomething(LItem.Value);
@@ -143,7 +149,7 @@ function TMARSCache.Contains(const AName: string): Boolean;
 var
   LResult: Boolean;
 begin
-  FCriticalSection.AcquireAndDo(
+  AcquireAndDo(FCriticalSection,
     procedure
     begin
       LResult := FStorage.ContainsKey(AName);
@@ -172,12 +178,12 @@ var
 begin
   Result := TValue.Empty;
 
-  FCriticalSection.AcquireAndDo(
+  AcquireAndDo(FCriticalSection,
     procedure
     begin
       if FStorage.TryGetValue(AName, LItem) then
       begin
-        LItem.CriticalSection.AcquireAndDo(
+        AcquireAndDo(LItem.CriticalSection,
           procedure
           begin
             LResult := LItem.Value;
@@ -226,18 +232,6 @@ procedure TMARSCacheItem.SetValue(const Value: TValue);
 begin
   FValue := Value;
   FLastWriteAccess := Now;
-end;
-
-{ TCriticalSectionHelper }
-
-procedure TCriticalSectionHelper.AcquireAndDo(const ADoSomething: TProc);
-begin
-  Self.Enter;
-  try
-    ADoSomething();
-  finally
-    Self.Leave;
-  end;
 end;
 
 end.

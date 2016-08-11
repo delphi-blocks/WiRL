@@ -9,15 +9,11 @@ unit MARS.WebServer.Resources;
 interface
 
 uses
-  SysUtils, Classes, Generics.Collections
-
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.URL
-  , MARS.Core.Response
-
-  , Web.HttpApp
-  ;
+  System.SysUtils, System.Classes, System.Generics.Collections, Web.HttpApp,
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.URL,
+  MARS.Core.Response;
 
 type
   TFileSystemResource = class; // FWD
@@ -112,11 +108,10 @@ function AtLeastOneMatch(const ASample: string; const AValues: TStringList): Boo
 implementation
 
 uses
-  System.Types, IOUtils, Masks, StrUtils
-  , MARS.Core.Utils
-  , MARS.Rtti.Utils
-  , MARS.Core.Exceptions
-  ;
+  System.Types, System.IOUtils, System.Masks, System.StrUtils,
+  MARS.Core.Utils,
+  MARS.Rtti.Utils,
+  MARS.Core.Exceptions;
 
 function AtLeastOneMatch(const ASample: string; const AValues: TStringList): Boolean;
 var
@@ -132,7 +127,6 @@ begin
     end;
   end;
 end;
-
 
 { TFileSystemResource }
 

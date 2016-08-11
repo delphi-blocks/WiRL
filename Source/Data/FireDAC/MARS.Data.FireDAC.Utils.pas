@@ -9,18 +9,21 @@ unit MARS.Data.FireDAC.Utils;
 interface
 
 uses
-  Classes, SysUtils
-  , MARS.Core.JSON
-  , FireDACJSONReflect
-  , FireDAC.Comp.Client
-  , FireDAC.Stan.StorageBin;
+  System.Classes, System.SysUtils,
+  FireDACJSONReflect,
+  FireDAC.Comp.Client,
+  FireDAC.Stan.StorageBin,
+  MARS.Core.JSON;
 
-procedure FireDACJSONToMemTable(const AJSONContent: string; ADataSetName: string;
-  AMemTable: TFDMemTable);
+type
+  TFireDACUtils = class
+    class procedure FDJSONToMemTable(const AJSONContent: string; ADataSetName: string;
+      AMemTable: TFDMemTable); static;
+  end;
 
 implementation
 
-procedure FireDACJSONToMemTable(const AJSONContent: string; ADataSetName: string;
+class procedure TFireDACUtils.FDJSONToMemTable(const AJSONContent: string; ADataSetName: string;
   AMemTable: TFDMemTable);
 var
   LJSONObj: TJSONObject;

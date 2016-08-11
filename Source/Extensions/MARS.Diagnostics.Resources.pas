@@ -11,22 +11,20 @@ unit MARS.Diagnostics.Resources;
 interface
 
 uses
-  Classes, SysUtils
+  System.Classes, System.SysUtils,
 
-  , MARS.Core.JSON
-  , MARS.Core.Registry
-  , MARS.Core.Classes
-  , MARS.Core.Application
-  , MARS.Core.Declarations
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.MessageBodyWriter
-  , MARS.Core.Token
-  , MARS.Core.URL
-  , MARS.Core.Engine
-
-  , MARS.Diagnostics.Manager
-  ;
+  MARS.Core.JSON,
+  MARS.Core.Registry,
+  MARS.Core.Classes,
+  MARS.Core.Application,
+  MARS.Core.Declarations,
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.MessageBodyWriter,
+  MARS.Core.Token,
+  MARS.Core.URL,
+  MARS.Core.Engine,
+  MARS.Diagnostics.Manager;
 
 type
   [Path('manager')]

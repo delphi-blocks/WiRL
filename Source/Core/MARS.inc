@@ -89,3 +89,28 @@
   {$define DelphiXE7_UP}
   {$define DelphiXE8_UP}
 {$ifend}
+
+{$if compilerversion >= 30}
+  {$define DelphiXE_UP}
+  {$define DelphiXE2_UP}
+  {$define DelphiXE3_UP}
+  {$define DelphiXE4_UP}
+  {$define DelphiXE5_UP}
+  {$define DelphiXE6_UP}
+  {$define DelphiXE7_UP}
+  {$define DelphiXE8_UP}
+  {$define DelphiSeattle_UP}
+{$ifend}
+
+{$if compilerversion >= 31}
+  {$define DelphiXE_UP}
+  {$define DelphiXE2_UP}
+  {$define DelphiXE3_UP}
+  {$define DelphiXE4_UP}
+  {$define DelphiXE5_UP}
+  {$define DelphiXE6_UP}
+  {$define DelphiXE7_UP}
+  {$define DelphiXE8_UP}
+  {$define DelphiSeattle_UP}
+  {$define DelphiBerlin_UP}
+{$ifend}

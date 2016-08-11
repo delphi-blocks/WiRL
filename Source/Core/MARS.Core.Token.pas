@@ -70,6 +70,7 @@ type
     procedure Generate(const ASecret: TBytes);
     procedure Verify(const ACompactToken: string; ASecret: TBytes);
 
+    property CompactToken: string read FCompactToken;
     property Authenticated: Boolean read FAuthenticated write FAuthenticated;
     property Subject: TMARSSubject read FSubject write FSubject;
   end;
@@ -77,7 +78,10 @@ type
 implementation
 
 uses
-  System.DateUtils, System.NetEncoding;
+  {$IFDEF DelphiXE8_UP}
+  System.NetEncoding,
+  {$ENDIF}
+  System.DateUtils;
 
 { TMARSAuthContext }
 
@@ -85,10 +89,18 @@ uses
 class constructor TMARSAuthContext.Create;
 var
   LToken: TMARSAuthContext;
+  LBytes: TBytes;
 begin
   LToken := TMARSAuthContext.Create;
   try
-    LToken.Generate([10, 20, 30, 40]);
+    SetLength(LBytes, 5);
+    LBytes[0] := 10;
+    LBytes[1] := 20;
+    LBytes[2] := 30;
+    LBytes[3] := 40;
+    LBytes[4] := 50;
+
+    LToken.Generate(LBytes);
   finally
     LToken.Free;
   end;
@@ -119,7 +131,7 @@ var
 begin
   LJWT := TJWT.Create(FSubjectClass);
   try
-    LJWT.Claims.JSON.CopyFrom(FSubject.JSON);
+    TJSONHelper.JSONCopyFrom(FSubject.JSON, LJWT.Claims.JSON);
 
     LSigner := TJWS.Create(LJWT);
     LKey := TJWK.Create(ASecret);
@@ -154,7 +166,7 @@ begin
         try
           FVerified := LJWT.Verified;
           if FVerified then
-            FSubject.JSON.CopyFrom(LJWT.Claims.JSON);
+            TJSONHelper.JSONCopyFrom(LJWT.Claims.JSON, FSubject.JSON);
         finally
           LJWT.Free;
         end;

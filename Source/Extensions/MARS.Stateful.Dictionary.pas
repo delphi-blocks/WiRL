@@ -1,4 +1,4 @@
-(*
+﻿(*
   Copyright 2015-2016, MARS - REST Library
 
   Home: https://github.com/MARS-library
@@ -9,17 +9,13 @@ unit MARS.Stateful.Dictionary;
 interface
 
 uses
-  Classes, SysUtils
-
-  , Generics.Collections
-  , SyncObjs
-
-  , MARS.Core.Classes
-  , MARS.Core.Attributes
-  , MARS.Core.Token
-  , MARS.Core.Singleton
-  , MARS.Core.Utils
-  ;
+  System.Classes, System.SysUtils, System.SyncObjs,
+  System.Generics.Collections,
+  MARS.Core.Classes,
+  MARS.Core.Attributes,
+  MARS.Core.Token,
+  MARS.Core.Singleton,
+  MARS.Core.Utils;
 
 type
   TMARSStatefulDictionary = class
@@ -37,7 +33,7 @@ type
 
   end;
 
-  TMARSStatefulDictionaryRegistry = class(TNonInterfacedObject, IMARSTokenEventListener)
+  TMARSStatefulDictionaryRegistry = class(TNonInterfacedObject)
   private
     type TMARSStatefulDictionaryRegistrySingleton = TMARSSingleton<TMARSStatefulDictionaryRegistry>;
   private
@@ -49,10 +45,8 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
 
-    {
-      Returns the TMARSStatefulDictionary associated to AToken. Create if not exists yet.
-    }
-    function GetDictionaryForToken(AToken: TMARSToken): TMARSStatefulDictionary; virtual;
+    // Returns the TMARSStatefulDictionary associated to AToken. Create if not exists yet.
+    function GetDictionaryForToken(AToken: TMARSAuthContext): TMARSStatefulDictionary; virtual;
 
     procedure OnTokenStart(const AToken: string);
     procedure OnTokenEnd(const AToken: string);
@@ -191,29 +185,24 @@ begin
   inherited Create;
   FCriticalSection := TCriticalSection.Create;
   FDictionary := TObjectDictionary<string, TMARSStatefulDictionary>.Create([doOwnsValues]);
-
-  TMARSTokenList.Instance.AddSubscriber(Self);
 end;
 
 destructor TMARSStatefulDictionaryRegistry.Destroy;
 begin
-  TMARSTokenList.Instance.RemoveSubscriber(Self);
-
   FCriticalSection.Free;
   FDictionary.Free;
   inherited;
 end;
 
-function TMARSStatefulDictionaryRegistry.GetDictionaryForToken(
-  AToken: TMARSToken): TMARSStatefulDictionary;
+function TMARSStatefulDictionaryRegistry.GetDictionaryForToken(AToken: TMARSAuthContext): TMARSStatefulDictionary;
 begin
   Result := nil;
   FCriticalSection.Enter;
   try
-    if not FDictionary.TryGetValue(AToken.Token, Result) then
+    if not FDictionary.TryGetValue(AToken.CompactToken, Result) then
     begin
       Result := TMARSStatefulDictionary.Create;
-      FDictionary.Add(AToken.Token, Result);
+      FDictionary.Add(AToken.CompactToken, Result);
     end;
   finally
     FCriticalSection.Leave;

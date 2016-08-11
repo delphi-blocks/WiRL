@@ -81,7 +81,7 @@ begin
             raise Exception.Create('Error serializing datasets to JSON');
         end;
 
-        LStreamWriter.Write(LResult.ToJSON);
+        LStreamWriter.Write(TJSONHelper.ToJSON(LResult));
       finally
         LDatasetList.Free;
       end;
@@ -103,6 +103,7 @@ var
   LStorageFormat: TFDStorageFormat;
 begin
   LDataset := AValue.AsType<TFDAdaptedDataSet>;
+
   if AMediaType.Matches(TMediaType.APPLICATION_XML) then
     LStorageFormat := sfXML
   else if AMediaType.Matches(TMediaType.APPLICATION_JSON) then
@@ -118,27 +119,27 @@ end;
 procedure RegisterWriters;
 begin
   TMARSMessageBodyRegistry.Instance.RegisterWriter(
-    TFDAdaptedDataSetWriter
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and AType.IsObjectOfType<TFDAdaptedDataSet>; // and AMediaType = application/json;dialect=FireDAC
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMARSMessageBodyRegistry.AFFINITY_HIGH;
-      end
+    TFDAdaptedDataSetWriter,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TFDAdaptedDataSet>(AType); // and AMediaType = application/json;dialect=FireDAC
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMARSMessageBodyRegistry.AFFINITY_HIGH;
+    end
   );
 
   TMARSMessageBodyRegistry.Instance.RegisterWriter(
-    TArrayFDCustomQueryWriter
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and AType.IsDynamicArrayOf<TFDCustomQuery>; // and AMediaType = application/json;dialect=FireDAC
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMARSMessageBodyRegistry.AFFINITY_HIGH
-      end
+    TArrayFDCustomQueryWriter,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TFDCustomQuery>(AType); // and AMediaType = application/json;dialect=FireDAC
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMARSMessageBodyRegistry.AFFINITY_HIGH
+    end
   );
 end;
 

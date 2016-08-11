@@ -11,11 +11,8 @@ unit MARS.Core.Registry;
 interface
 
 uses
-  SysUtils, Classes
-  , Generics.Collections
-
-  , MARS.Core.Singleton
-;
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  MARS.Core.Singleton;
 
 type
   TMARSConstructorInfo = class
@@ -47,28 +44,7 @@ type
     class property Instance: TMARSResourceRegistry read GetInstance;
   end;
 
-{$ifdef DelphiXE}
-type
-  TObjectHelper = class helper for TObject
-    class function QualifiedClassName: string;
-  end;
-{$endif}
-
 implementation
-
-{$ifdef DelphiXE}
-class function TObjectHelper.QualifiedClassName: string;
-var
-  LScope: string;
-begin
-  LScope := UnitName;
-  if LScope = '' then
-    Result := ClassName
-  else
-    Result := LScope + '.' + ClassName;
-end;
-{$endif}
-
 
 { TMARSResourceRegistry }
 

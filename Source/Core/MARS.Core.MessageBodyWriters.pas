@@ -47,6 +47,7 @@ type
 implementation
 
 uses
+  System.TypInfo,
   MARS.Core.JSON,
   MARS.Core.Utils,
   MARS.Rtti.Utils;
@@ -64,7 +65,7 @@ begin
   try
     LObj := ObjectToJSON(AValue.AsObject);
     try
-      LStreamWriter.Write(LObj.ToJSON);
+      LStreamWriter.Write(TJSONHelper.ToJSON(LObj));
     finally
       LObj.Free;
     end;
@@ -91,7 +92,7 @@ begin
   try
     LJSONValue := AValue.AsObject as TJSONValue;
     if Assigned(LJSONValue) then
-      LStreamWriter.Write(LJSONValue.ToJSON);
+      LStreamWriter.Write(TJSONHelper.ToJSON(LJSONValue));
   finally
     LStreamWriter.Free;
   end;
@@ -198,7 +199,7 @@ begin
     TStreamValueWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
-      Result := Assigned(AType) and AType.IsObjectOfType<TStream>(True);
+      Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TStream>(AType, True);
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin

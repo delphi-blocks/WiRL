@@ -11,11 +11,8 @@ unit MARS.Core.Utils;
 interface
 
 uses
-  SysUtils, Classes
-  , RTTI
-  , MARS.Core.JSON
-  , SyncObjs
-  ;
+  System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
+  MARS.Core.JSON;
 
 type
   TDataFolderType = (dftCustom, dftAppData, dftLocalAppData, dftCommonAppData, dftMyDocuments, dftCommonDocuments);
@@ -31,7 +28,7 @@ type
   /// <summary>
   ///   Returns th efile name without the extension
   /// </summary>
-  function ExtractFileNameOnly(const filename: string): string;
+  function ExtractFileNameOnly(const AFileName: string): string;
 
   /// <summary>
   ///   Returns the directory up (1) level
@@ -72,13 +69,8 @@ function ISO8601ToDate(const AISODate: string; AReturnUTC: Boolean = True): TDat
 implementation
 
 uses
-  TypInfo
-{$ifndef DelphiXE6_UP}
-  , XSBuiltIns
-{$endif}
-  , StrUtils, DateUtils
-  , Masks
-  ;
+  System.TypInfo, System.StrUtils, System.DateUtils, System.Masks;
+
 
 function StreamToString(AStream: TStream): string;
 var
@@ -93,10 +85,8 @@ begin
   end;
 end;
 
-
 function IsMask(const AString: string): Boolean;
 begin
-
   Result := ContainsStr(AString, '*') // wildcard
     or ContainsStr(AString, '?') // jolly
     or (ContainsStr(AString, '[') and ContainsStr(AString, ']')); // range
@@ -104,7 +94,7 @@ end;
 
 function MatchesMask(const AString, AMask: string): Boolean;
 begin
-  Result := Masks.MatchesMask(AString, AMask);
+  Result := System.Masks.MatchesMask(AString, AMask);
 end;
 
 function DateToJSON(const ADate: TDateTime; AInputIsUTC: Boolean = True): string;
@@ -121,18 +111,6 @@ begin
     Result := ISO8601ToDate(ADate, AReturnUTC);
 end;
 
-{$ifndef DelphiXE6_UP}
-function DateToISO8601(const ADate: TDateTime; AInputIsUTC: Boolean = True): string;
-begin
-  Result := DateTimeToXMLTime(ADate, not AInputIsUTC);
-end;
-
-function ISO8601ToDate(const AISODate: string; AReturnUTC: Boolean = True): TDateTime;
-begin
-  Result := XMLTimeToDateTime(AISODate, AReturnUTC);
-end;
-{$endif}
-
 procedure CopyStream(ASourceStream, ADestStream: TStream;
   AOverWriteDest: Boolean = True; AThenResetDestPosition: Boolean = True);
 begin
@@ -142,7 +120,6 @@ begin
   if AThenResetDestPosition then
     ADestStream.Position := 0;
 end;
-
 
 function StreamToJSONValue(const AStream: TStream; const AEncoding: TEncoding): TJSONValue;
 var
@@ -236,8 +213,6 @@ begin
     Result := TJSONFalse.Create;
 end;
 
-
-
 function DateToString(ADate: TDateTime; const AZeroDateAsEmptyString: Boolean = True): string;
 begin
   Result := DateToStr(ADate);
@@ -261,13 +236,13 @@ end;
 
 function CreateCompactGuidStr: string;
 var
-  I: Integer;
+  LIndex: Integer;
   LBuffer: array[0..15] of Byte;
 begin
   CreateGUID(TGUID(LBuffer));
   Result := '';
-  for I := 0 to 15 do
-    Result := Result + IntToHex(LBuffer[I], 2);
+  for LIndex := 0 to 15 do
+    Result := Result + IntToHex(LBuffer[LIndex], 2);
 end;
 
 function ObjectToJSON(const AObject: TObject): TJSONObject;
@@ -301,19 +276,17 @@ var
 begin
   LObj := ObjectToJSON(AObject);
   try
-    Result := LObj.ToJSON;
+    Result := TJSONHelper.ToJSON(LObj);
   finally
     LObj.Free;
   end;
 end;
 
-{==============================================================================}
-function ExtractFileNameOnly(const filename: string): string;
+function ExtractFileNameOnly(const AFileName: string): string;
 begin
-  Result := ExtractFileName(ChangeFileExt(filename, ''));
+  Result := ExtractFileName(ChangeFileExt(AFileName, ''));
 end;
 
-{==============================================================================}
 function DirectoryUp(const APath: string; ALevel: Integer = 1): string;
 var
   LIndexLevel: Integer;

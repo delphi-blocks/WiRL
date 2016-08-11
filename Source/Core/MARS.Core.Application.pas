@@ -116,7 +116,7 @@ function TMARSApplication.AddResource(AResource: string): Boolean;
   begin
     LResult := False;
     LClass := AInfo.TypeTClass;
-    FRttiContext.GetType(LClass).HasAttribute<PathAttribute>(
+    TRttiHelper.HasAttribute<PathAttribute>(FRttiContext.GetType(LClass),
       procedure (AAttribute: PathAttribute)
       var
         LURL: TMARSURL;
@@ -176,7 +176,7 @@ begin
     LAllowedRoles.Sorted := True;
     LAllowedRoles.Duplicates := TDuplicates.dupIgnore;
 
-    AMethod.ForEachAttribute<AuthorizationAttribute>(
+    TRttiHelper.ForEachAttribute<AuthorizationAttribute>(AMethod,
       procedure (AAttribute: AuthorizationAttribute)
       begin
         if AAttribute is DenyAllAttribute then
@@ -251,7 +251,7 @@ var
 begin
   LType := FRttiContext.GetType(AInstance.ClassType);
   // Context injection
-  LType.ForEachFieldWithAttribute<ContextAttribute>(
+  TRttiHelper.ForEachFieldWithAttribute<ContextAttribute>(LType,
     function (AField: TRttiField; AAttrib: ContextAttribute): Boolean
     var
       LFieldClassType: TClass;
@@ -269,7 +269,7 @@ begin
   );
 
   // properties
-  LType.ForEachPropertyWithAttribute<ContextAttribute>(
+  TRttiHelper.ForEachPropertyWithAttribute<ContextAttribute>(LType,
     function (AProperty: TRttiProperty; AAttrib: ContextAttribute): Boolean
     var
       LPropertyClassType: TClass;
@@ -342,7 +342,7 @@ begin
   Result := nil;
   LResourcePath := '';
 
-  LResourceType.HasAttribute<PathAttribute>(
+  TRttiHelper.HasAttribute<PathAttribute>(LResourceType,
     procedure (APathAttribute: PathAttribute)
     begin
       LResourcePath := APathAttribute.Value;
@@ -597,10 +597,11 @@ begin
     on E: Exception do
     begin
       raise EMARSWebApplicationException.Create(E, 400,
-        [
+        TValuesUtil.MakeValueArray(
           Pair.S('issuer', Self.ClassName),
           Pair.S('method', 'FillResourceMethodParameters')
-        ]);
+         )
+        );
      end;
   end;
 end;
@@ -748,7 +749,7 @@ begin
       end;
     end;
   finally
-    if (not AMethod.HasAttribute<SingletonAttribute>) then
+    if (not TRttiHelper.HasAttribute<SingletonAttribute>(AMethod)) then
       CollectGarbage(LMethodResult);
     for LArgument in LArgumentArray do
       CollectGarbage(LArgument);
@@ -774,7 +775,7 @@ begin
     end;
   end;
 
-  FRttiContext.GetType(AResourceInstance.ClassType).HasAttribute<PathAttribute>(
+  TRttiHelper.HasAttribute<PathAttribute>(FRttiContext.GetType(AResourceInstance.ClassType),
   procedure (AResourcePathAttrib: PathAttribute)
   var
     LResURL: TMARSURL;

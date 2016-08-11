@@ -84,7 +84,7 @@ function TMARSClientResourceJSON.GetResponseAsString: string;
 begin
   Result := '';
   if Assigned(FResponse) then
-    Result := FResponse.ToJSON;
+    Result := TJSONHelper.ToJSON(FResponse);
 end;
 
 end.

@@ -13,6 +13,7 @@ uses
   MARS.Core.Declarations;
 
 type
+(*
   {$SCOPEDENUMS ON}
   MediaType = (
     Text_Plain,
@@ -29,6 +30,7 @@ type
     Wildcard
   );
   {$SCOPEDENUMS OFF}
+*)
 
   TMediaTypeParams = TDictionary<string, string>;
 
@@ -47,34 +49,21 @@ type
   public
     const DELIM_MEDIA = '/';
     const DELIM_PARAMS = ';';
+    const DELIM_VALUE = '=';
     const QFACTOR_NAME = 'q';
     const VERSION_NAME = 'version';
     const DIALECT_NAME = 'dialect';
     const CHARSET_NAME = 'charset';
 
-    const CHARSET_ISO_8859_1 = 'iso-8859-1';
-    const CHARSET_UTF8 = 'utf-8';
-    const CHARSET_UTF16 = 'utf-16';
-
-    const CHARSET_ISO_8859_1_DEF = CHARSET_NAME + '=' +  CHARSET_ISO_8859_1;
-    const CHARSET_UTF8_DEF = CHARSET_NAME + '=' +  CHARSET_UTF8;
-    const CHARSET_UTF16_DEF = CHARSET_NAME + '=' +  CHARSET_UTF16;
+    const CHARSET_ISO_8859_1 = 'charset=iso-8859-1';
+    const CHARSET_UTF8 = 'charset=utf-8';
+    const CHARSET_UTF16 = 'charset=utf-16';
 
     const TEXT_PLAIN = 'text/plain';
-    const TEXT_PLAIN_UTF8 = TEXT_PLAIN + DELIM_PARAMS + CHARSET_UTF8_DEF;
-    const TEXT_PLAIN_UTF16 = TEXT_PLAIN + DELIM_PARAMS + CHARSET_UTF16_DEF;
     const TEXT_XML = 'text/xml';
-    const TEXT_XML_UTF8 = TEXT_XML + DELIM_PARAMS + CHARSET_UTF8_DEF;
-    const TEXT_XML_UTF16 = TEXT_XML + DELIM_PARAMS + CHARSET_UTF16_DEF;
     const TEXT_HTML = 'text/html';
-    const TEXT_HTML_UTF8 = TEXT_HTML + DELIM_PARAMS + CHARSET_UTF8_DEF;
-    const TEXT_HTML_UTF16 = TEXT_HTML + DELIM_PARAMS + CHARSET_UTF16_DEF;
     const APPLICATION_XML = 'application/xml';
-    const APPLICATION_XML_UTF8 = APPLICATION_XML + DELIM_PARAMS + CHARSET_UTF8_DEF;
-    const APPLICATION_XML_UTF16 = APPLICATION_XML + DELIM_PARAMS + CHARSET_UTF16_DEF;
     const APPLICATION_JSON = 'application/json';
-    const APPLICATION_JSON_UTF8 = APPLICATION_JSON + DELIM_PARAMS + CHARSET_UTF8_DEF;
-    const APPLICATION_JSON_FireDAC = 'application/json;dialect=FireDAC';
     const APPLICATION_XHTML_XML = 'application/xhtml+xml';
     const APPLICATION_SVG_XML = 'application/svg+xml';
     const APPLICATION_ATOM_XML = 'application/atom+xml';

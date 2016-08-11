@@ -9,21 +9,17 @@ unit MARS.Data.FireDAC.DataModule;
 interface
 
 uses
-  System.SysUtils, System.Classes
-  , Web.HTTPApp
-  , Data.FireDACJSONReflect
+  System.SysUtils, System.Classes, Web.HTTPApp,
+  Data.FireDACJSONReflect, FireDAC.Comp.Client,
 
-  , MARS.Core.JSON
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.URL
+  MARS.Core.JSON,
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.URL,
 
-  , MARS.Data.FireDAC
-  , MARS.Data.MessageBodyWriters
-  , MARS.Data.FireDAC.MessageBodyWriters
-
-  , FireDAC.Comp.Client
-  ;
+  MARS.Data.FireDAC,
+  MARS.Data.MessageBodyWriters,
+  MARS.Data.FireDAC.MessageBodyWriters;
 
 type
   RESTIncludeDefault = class(TCustomAttribute)
@@ -63,15 +59,11 @@ type
 
 implementation
 
-{%CLASSGROUP 'System.Classes.TPersistent'}
-
 {$R *.dfm}
 
 uses
-    Generics.Collections
-  , MARS.Rtti.Utils
-  , Rtti, TypInfo
-  ;
+  System.Rtti, System.TypInfo, System.Generics.Collections,
+  MARS.Rtti.Utils;
 
 { TDataModule1 }
 
@@ -135,17 +127,20 @@ begin
     end
   );
 
-  LDataSets := [];
+  SetLength(LDataSets, 0);
   TRttiHelper.ForEachField(Self
     , function(AField: TRttiField): Boolean
       begin
         if (AField.Visibility >= TMemberVisibility.mvPublic)
-          and (AField.FieldType.IsObjectOfType(TFDCustomQuery)) then
+          and (TRttiHelper.IsObjectOfType(AField.FieldType, TFDCustomQuery)) then
         begin
-          if (LIncludeDefault or AField.HasAttribute<RESTInclude>)
-             and (not AField.HasAttribute<RESTExclude>)
+          if (LIncludeDefault or TRttiHelper.HasAttribute<RESTInclude>(AField))
+             and (not TRttiHelper.HasAttribute<RESTExclude>(AField))
           then
-            LDataSets := LDataSets + [AField.GetValue(Self).AsObject as TFDCustomQuery]
+          begin
+            SetLength(LDataSets, Length(LDataSets) + 1);
+            LDataSets[Length(LDataSets) - 1] := AField.GetValue(Self).AsObject as TFDCustomQuery;
+          end;
         end;
 
         Result := True;

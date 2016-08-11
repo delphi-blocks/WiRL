@@ -12,6 +12,8 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
+  MARS.Stateful.Dictionary,
+  MARS.Stateful.WrappedResource,
   MARS.Core.Engine,
   MARS.Core.Application,
   MARS.http.Server.Indy;

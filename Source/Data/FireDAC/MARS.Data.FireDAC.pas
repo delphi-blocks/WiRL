@@ -9,31 +9,23 @@ unit MARS.Data.FireDAC;
 interface
 
 uses
-    System.Classes
-  , System.SysUtils
+  System.Classes, System.SysUtils, System.Generics.Collections, Web.HTTPApp,
 
-  , Generics.Collections
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
+  FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, Data.DB, FireDAC.Comp.Client, FireDAC.FMXUI.Wait,
+  FireDAC.Stan.StorageXML, FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageBin,
+  FireDAC.Comp.UI, FireDAC.DApt, FireDACJSONReflect,
 
-  , Web.HTTPApp
-
-  , FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf
-  , FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async
-  , FireDAC.Phys, Data.DB, FireDAC.Comp.Client, FireDAC.FMXUI.Wait
-  , FireDAC.Stan.StorageXML, FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageBin
-  , FireDAC.Comp.UI
-  , FireDAC.DApt
-
-  , FireDACJSONReflect
-
-  , MARS.Core.JSON
-  , MARS.Core.Registry
-  , MARS.Core.Classes
-  , MARS.Core.Application
-  , MARS.Core.Declarations
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.Token
-  , MARS.Core.URL;
+  MARS.Core.JSON,
+  MARS.Core.Registry,
+  MARS.Core.Classes,
+  MARS.Core.Application,
+  MARS.Core.Declarations,
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.Token,
+  MARS.Core.URL;
 
 type
   ConnectionAttribute = class(TCustomAttribute)
@@ -90,16 +82,15 @@ type
     function Update: string; virtual;
   end;
 
-
   function CreateConnectionByDefName(const AConnectionDefName: string): TFDConnection;
 
 implementation
 
 uses
-  System.Rtti
-  , MARS.Core.Utils
-  , MARS.Data.Utils
-  , MARS.Rtti.Utils;
+  System.Rtti,
+  MARS.Core.Utils,
+  MARS.Data.Utils,
+  MARS.Rtti.Utils;
 
 function CreateConnectionByDefName(const AConnectionDefName: string): TFDConnection;
 begin
@@ -209,19 +200,23 @@ var
 begin
   CheckConnection;
 
-  LData := [];
+  SetLength(LData, 0);
+  //LData := [];
   try
     // load dataset(s)
     SetupStatements;
     for LStatement in Statements do
-      LData := LData + [ReadDataSet(LStatement.Key, LStatement.Value)];
+    begin
+      SetLength(LData, Length(LData) + 1);
+      LData[Length(LData) - 1] := ReadDataSet(LStatement.Key, LStatement.Value);
+    end;
 
     Result := LData;
   except
     // clean up
     for LCurrent in LData do
       LCurrent.Free;
-    LData := [];
+    SetLength(LData, 0);
     raise;
   end;
 end;
@@ -302,7 +297,7 @@ begin
           end
         );
 
-        Result := LResult.ToJSON;
+        Result := TJSONHelper.ToJSON(LResult);
       finally
         LResult.Free;
       end;

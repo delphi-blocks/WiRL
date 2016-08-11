@@ -192,7 +192,7 @@ begin
 
       LWriter := TStreamWriter.Create(AContent);
       try
-        LWriter.Write(LJSONObj.ToJSON);
+        LWriter.Write(TJSONHelper.ToJSON(LJSONObj));
       finally
         LWriter.Free;
       end;

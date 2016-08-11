@@ -31,6 +31,12 @@ type
   end;
   TExceptionValues = array of Pair;
 
+  TValuesUtil = class
+    class function MakeValueArray(APair1: Pair): TExceptionValues; overload; static;
+    class function MakeValueArray(APair1, APair2: Pair): TExceptionValues; overload; static;
+    class function MakeValueArray(APair1, APair2, APair3: Pair): TExceptionValues; overload; static;
+  end;
+
   EMARSException = class(Exception);
 
   /// <summary>
@@ -70,8 +76,7 @@ type
     /// <param name="AInnerException">The inner exception object</param>
     /// <param name="AStatus">The HTTP status</param>
     /// <param name="AValues">Optional values (will be put in "data" sub-section)</param>
-    constructor Create(AInnerException: Exception; AStatus: Integer; AValues:
-        TExceptionValues); overload;
+    constructor Create(AInnerException: Exception; AStatus: Integer; AValues: TExceptionValues); overload;
 
     /// <summary>
     ///   Construct a web exception with optional values
@@ -109,6 +114,9 @@ type
   end;
 
 implementation
+
+uses
+  System.TypInfo;
 
 { Pair }
 
@@ -270,7 +278,7 @@ begin
     LJSON.AddPair(TJSONPair.Create('status', TJSONNumber.Create(500)));
     LJSON.AddPair(TJSONPair.Create('exception', TJSONString.Create(E.ClassName)));
     LJSON.AddPair(TJSONPair.Create('message', TJSONString.Create(E.Message)));
-    Result := LJSON.ToJSON;
+    Result := TJSONHelper.ToJSON(LJSON);
   finally
     LJSON.Free;
   end;
@@ -278,7 +286,7 @@ end;
 
 function EMARSWebApplicationException.ToJSON: string;
 begin
-  Result := FValues.ToJSON;
+  Result := TJSONHelper.ToJSON(FValues);
 end;
 
 { EMARSNotFoundException }
@@ -363,6 +371,29 @@ begin
   end;
 
   inherited Create(AMessage, 500, LPairArray);
+end;
+
+{ TValuesUtil }
+
+class function TValuesUtil.MakeValueArray(APair1: Pair): TExceptionValues;
+begin
+  SetLength(Result, 1);
+  Result[0] := APair1;
+end;
+
+class function TValuesUtil.MakeValueArray(APair1, APair2: Pair): TExceptionValues;
+begin
+  SetLength(Result, 2);
+  Result[0] := APair1;
+  Result[1] := APair2;
+end;
+
+class function TValuesUtil.MakeValueArray(APair1, APair2, APair3: Pair): TExceptionValues;
+begin
+  SetLength(Result, 3);
+  Result[0] := APair1;
+  Result[1] := APair2;
+  Result[2] := APair3;
 end;
 
 end.

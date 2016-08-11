@@ -9,18 +9,12 @@ unit Server.Forms.Main;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics,
-  Controls, Forms, Dialogs, ActnList, StdCtrls, ExtCtrls
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
+  Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
 
-  , Diagnostics
-  , IdContext
-
-  , MARS.Core.Engine
-  , MARS.http.Server.Indy
-
-
-  , MARS.Core.Application, System.Actions
-  ;
+  MARS.Core.Engine,
+  MARS.http.Server.Indy,
+  MARS.Core.Application;
 
 type
   TMainForm = class(TForm)
@@ -51,11 +45,6 @@ implementation
 
 {$R *.dfm}
 
-uses
-   MARS.Core.MessageBodyWriter
-  , MARS.Core.MessageBodyWriters
-  ;
-
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   StopServerAction.Execute;
@@ -73,14 +62,14 @@ begin
   // Engine configuration
   FEngine.Port := StrToIntDef(PortNumberEdit.Text, 8080);
   FEngine.ThreadPoolSize := 75;
-  FEngine.Name := 'MARS HelloWorld';
+  FEngine.Name := 'MARS Auth Demo';
   FEngine.BasePath := '/rest';
 
   FEngine.AddApplication(
-      'Default'
-    , '/default'
+      'Auth Application'
+    , '/app'
     , ['Server.Resources.TFirstResource',
-       'Server.Resources.TTokenResource'
+       'Server.Resources.TAuthResource'
       ]
   );
 

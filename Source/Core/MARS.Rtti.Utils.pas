@@ -11,40 +11,45 @@ unit MARS.Rtti.Utils;
 interface
 
 uses
-  SysUtils, Classes, RTTI, TypInfo
-  , MARS.Core.JSON
-  , DB;
+  System.SysUtils, System.Classes, System.Rtti, System.TypInfo,
+  MARS.Core.JSON;
 
 type
-  TRttiObjectHelper = class helper for TRttiObject
-  public
-    function HasAttribute<T: TCustomAttribute>: Boolean; overload;
-    function HasAttribute<T: TCustomAttribute>(
-      const ADoSomething: TProc<T>): Boolean; overload;
-    function ForEachAttribute<T: TCustomAttribute>(
-      const ADoSomething: TProc<T>): Integer;
-  end;
-
-  TRttiTypeHelper = class helper(TRttiObjectHelper) for TRttiType
-  public
-    function ForEachMethodWithAttribute<T: TCustomAttribute>(
-      const ADoSomething: TFunc<TRttiMethod, T, Boolean>): Integer;
-
-    function ForEachFieldWithAttribute<T: TCustomAttribute>(
-      const ADoSomething: TFunc<TRttiField, T, Boolean>): Integer;
-
-    function ForEachPropertyWithAttribute<T: TCustomAttribute>(
-      const ADoSomething: TFunc<TRttiProperty, T, Boolean>): Integer;
-
-    function IsDynamicArrayOf<T: class>(const AAllowInherithance: Boolean = True): Boolean; overload;
-    function IsDynamicArrayOf(const AClass: TClass; const AAllowInherithance: Boolean = True): Boolean; overload;
-
-    function IsObjectOfType<T: class>(const AAllowInherithance: Boolean = True): Boolean; overload;
-    function IsObjectOfType(const AClass: TClass; const AAllowInherithance: Boolean = True): Boolean; overload;
-  end;
-
   TRttiHelper = class
   public
+    // TRttiObject helpers functions
+    class function HasAttribute<T: TCustomAttribute>(
+      ARttiObj: TRttiObject): Boolean; overload; static;
+
+    class function HasAttribute<T: TCustomAttribute>(
+      ARttiObj: TRttiObject; const ADoSomething: TProc<T>): Boolean; overload; static;
+
+    class function ForEachAttribute<T: TCustomAttribute>(
+      ARttiObj: TRttiObject; const ADoSomething: TProc<T>): Integer; overload; static;
+
+    // TRttiType helpers functions
+    class function ForEachMethodWithAttribute<T: TCustomAttribute>(
+      ARttiType: TRttiType; const ADoSomething: TFunc<TRttiMethod, T, Boolean>): Integer; static;
+
+    class function ForEachFieldWithAttribute<T: TCustomAttribute>(
+      ARttiType: TRttiType; const ADoSomething: TFunc<TRttiField, T, Boolean>): Integer; overload; static;
+
+    class function ForEachPropertyWithAttribute<T: TCustomAttribute>(
+      ARttiType: TRttiType; const ADoSomething: TFunc<TRttiProperty, T, Boolean>): Integer; overload; static;
+
+    class function IsDynamicArrayOf<T: class>(ARttiType: TRttiType;
+      const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
+    class function IsDynamicArrayOf(ARttiType: TRttiType; const AClass: TClass;
+      const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
+    class function IsObjectOfType<T: class>(ARttiType: TRttiType;
+      const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
+    class function IsObjectOfType(ARttiType: TRttiType; const AClass: TClass;
+      const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
+    // Rtti general helper functions
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject): Boolean; overload;
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject; const ADoSomething: TProc<T>): Boolean; overload;
 
@@ -68,8 +73,8 @@ function TValueToJSONObject(AObject: TJSONObject; const AName: string; const AVa
 implementation
 
 uses
-  MARS.Core.Utils
-  , DateUtils;
+  System.DateUtils,
+  MARS.Core.Utils;
 
 function TValueToJSONObject(AObject: TJSONObject; const AName: string; const AValue: TValue): TJSONObject;
 begin
@@ -142,6 +147,7 @@ var
   LMethod: TRttiMethod;
 begin
   Result := False;
+
   LType := LContext.GetType(AInstance.TypeInfo);
   if Assigned(LType) then
   begin
@@ -149,168 +155,6 @@ begin
     if Assigned(LMethod) then
       Result := ExecuteMethod(AInstance, LMethod, AArguments, ABeforeExecuteProc, AAfterExecuteProc);
   end;
-end;
-
-{ TRttiObjectHelper }
-
-function TRttiObjectHelper.ForEachAttribute<T>(
-  const ADoSomething: TProc<T>): Integer;
-var
-  LAttribute: TCustomAttribute;
-begin
-  Result := 0;
-  for LAttribute in Self.GetAttributes do
-  begin
-    if LAttribute.InheritsFrom(TClass(T)) then
-    begin
-      if Assigned(ADoSomething) then
-        ADoSomething(T(LAttribute));
-      Inc(Result);
-    end;
-  end;
-end;
-
-function TRttiObjectHelper.HasAttribute<T>: Boolean;
-begin
-  Result := HasAttribute<T>(nil);
-end;
-
-function TRttiObjectHelper.HasAttribute<T>(
-  const ADoSomething: TProc<T>): Boolean;
-var
-  LAttribute: TCustomAttribute;
-begin
-  Result := False;
-  for LAttribute in Self.GetAttributes do
-  begin
-    if LAttribute.InheritsFrom(TClass(T)) then
-    begin
-      Result := True;
-
-      if Assigned(ADoSomething) then
-        ADoSomething(T(LAttribute));
-
-      Break;
-    end;
-  end;
-end;
-
-{ TRttiTypeHelper }
-
-function TRttiTypeHelper.ForEachFieldWithAttribute<T>(
-  const ADoSomething: TFunc<TRttiField, T, Boolean>): Integer;
-var
-  LField: TRttiField;
-  LBreak: Boolean;
-begin
-  for LField in Self.GetFields do
-  begin
-    LBreak := False;
-    if LField.HasAttribute<T>(
-         procedure (AAttrib: T)
-         begin
-           if Assigned(ADoSomething) then
-           begin
-             if not ADoSomething(LField, AAttrib) then
-               LBreak := True;
-           end;
-         end
-       )
-    then
-      Inc(Result);
-
-    if LBreak then
-      Break;
-  end;
-end;
-
-function TRttiTypeHelper.ForEachMethodWithAttribute<T>(
-  const ADoSomething: TFunc<TRttiMethod, T, Boolean>): Integer;
-var
-  LMethod: TRttiMethod;
-  LBreak: Boolean;
-begin
-  Result := 0;
-  for LMethod in Self.GetMethods do
-  begin
-    LBreak := False;
-    if LMethod.HasAttribute<T>(
-         procedure (AAttrib: T)
-         begin
-           if Assigned(ADoSomething) then
-           begin
-             if not ADoSomething(LMethod, AAttrib) then
-               LBreak := True;
-           end;
-         end
-       )
-    then
-      Inc(Result);
-
-    if LBreak then
-      Break;
-  end;
-end;
-
-function TRttiTypeHelper.ForEachPropertyWithAttribute<T>(
-  const ADoSomething: TFunc<TRttiProperty, T, Boolean>): Integer;
-var
-  LProperty: TRttiProperty;
-  LBreak: Boolean;
-begin
-  Result := 0;
-  for LProperty in Self.GetProperties do
-  begin
-    LBreak := False;
-    if LProperty.HasAttribute<T>(
-         procedure (AAttrib: T)
-         begin
-           if Assigned(ADoSomething) then
-           begin
-             if not ADoSomething(LProperty, AAttrib) then
-               LBreak := True;
-           end;
-         end
-       )
-    then
-      Inc(Result);
-
-    if LBreak then
-      Break;
-  end;
-end;
-
-function TRttiTypeHelper.IsDynamicArrayOf(const AClass: TClass;
-  const AAllowInherithance: Boolean): Boolean;
-begin
-  Result := False;
-  if Self is TRttiDynamicArrayType then
-    Result := TRttiDynamicArrayType(Self).ElementType.IsObjectOfType(AClass, AAllowInherithance);
-end;
-
-function TRttiTypeHelper.IsDynamicArrayOf<T>(
-  const AAllowInherithance: Boolean): Boolean;
-begin
-  Result := IsDynamicArrayOf(TClass(T), AAllowInherithance);
-end;
-
-function TRttiTypeHelper.IsObjectOfType(const AClass: TClass;
-  const AAllowInherithance: Boolean): Boolean;
-begin
-  Result := False;
-  if Self is TRttiInstanceType then
-  begin
-    if AAllowInherithance then
-      Result := TRttiInstanceType(Self).MetaclassType.InheritsFrom(AClass)
-    else
-      Result := TRttiInstanceType(Self).MetaclassType = AClass;
-  end;
-end;
-
-function TRttiTypeHelper.IsObjectOfType<T>(
-  const AAllowInherithance: Boolean): Boolean;
-begin
-  Result := IsObjectOfType(TClass(T), AAllowInherithance);
 end;
 
 { TRttiHelper }
@@ -324,7 +168,7 @@ begin
   Result := 0;
   LType := LContext.GetType(AInstance.ClassType);
   if Assigned(LType) then
-    Result := LType.ForEachAttribute<T>(ADoSomething);
+    Result := TRttiHelper.ForEachAttribute<T>(LType, ADoSomething);
 end;
 
 class function TRttiHelper.ForEachField(AInstance: TObject;
@@ -363,12 +207,12 @@ begin
   Result := 0;
   LType := LContext.GetType(AInstance.ClassType);
   if Assigned(LType) then
-    Result := LType.ForEachFieldWithAttribute<T>(ADoSomething);
+    Result := TRttiHelper.ForEachFieldWithAttribute<T>(LType, ADoSomething);
 end;
 
 class function TRttiHelper.IfHasAttribute<T>(AInstance: TObject): Boolean;
 begin
-  Result := IfHasAttribute<T>(AInstance, nil);
+  Result := TRttiHelper.IfHasAttribute<T>(AInstance, nil);
 end;
 
 class function TRttiHelper.IfHasAttribute<T>(AInstance: TObject;
@@ -380,7 +224,166 @@ begin
   Result := False;
   LType := LContext.GetType(AInstance.ClassType);
   if Assigned(LType) then
-    Result := LType.HasAttribute<T>(ADoSomething);
+    Result := TRttiHelper.HasAttribute<T>(LType, ADoSomething);
+end;
+
+class function TRttiHelper.ForEachAttribute<T>(ARttiObj: TRttiObject;
+    const ADoSomething: TProc<T>): Integer;
+var
+  LAttribute: TCustomAttribute;
+begin
+  Result := 0;
+  for LAttribute in ARttiObj.GetAttributes do
+  begin
+    if LAttribute.InheritsFrom(TClass(T)) then
+    begin
+      if Assigned(ADoSomething) then
+        ADoSomething(T(LAttribute));
+      Inc(Result);
+    end;
+  end;
+end;
+
+class function TRttiHelper.HasAttribute<T>(ARttiObj: TRttiObject): Boolean;
+begin
+  Result := HasAttribute<T>(ARttiObj, nil);
+end;
+
+class function TRttiHelper.HasAttribute<T>(ARttiObj: TRttiObject; const
+    ADoSomething: TProc<T>): Boolean;
+var
+  LAttribute: TCustomAttribute;
+begin
+  Result := False;
+  for LAttribute in ARttiObj.GetAttributes do
+  begin
+    if LAttribute.InheritsFrom(TClass(T)) then
+    begin
+      Result := True;
+
+      if Assigned(ADoSomething) then
+        ADoSomething(T(LAttribute));
+
+      Break;
+    end;
+  end;
+end;
+
+class function TRttiHelper.ForEachFieldWithAttribute<T>(ARttiType: TRttiType;
+  const ADoSomething: TFunc<TRttiField, T, Boolean>): Integer;
+var
+  LField: TRttiField;
+  LBreak: Boolean;
+begin
+  for LField in ARttiType.GetFields do
+  begin
+    LBreak := False;
+    if TRttiHelper.HasAttribute<T>(LField,
+       procedure (AAttrib: T)
+       begin
+         if Assigned(ADoSomething) then
+         begin
+           if not ADoSomething(LField, AAttrib) then
+             LBreak := True;
+         end;
+       end
+    )
+    then
+      Inc(Result);
+
+    if LBreak then
+      Break;
+  end;
+end;
+
+class function TRttiHelper.ForEachMethodWithAttribute<T>(ARttiType: TRttiType;
+  const ADoSomething: TFunc<TRttiMethod, T, Boolean>): Integer;
+var
+  LMethod: TRttiMethod;
+  LBreak: Boolean;
+begin
+  Result := 0;
+  for LMethod in ARttiType.GetMethods do
+  begin
+    LBreak := False;
+    if TRttiHelper.HasAttribute<T>(LMethod,
+       procedure (AAttrib: T)
+       begin
+         if Assigned(ADoSomething) then
+         begin
+           if not ADoSomething(LMethod, AAttrib) then
+             LBreak := True;
+         end;
+       end
+    )
+    then
+      Inc(Result);
+
+    if LBreak then
+      Break;
+  end;
+end;
+
+class function TRttiHelper.ForEachPropertyWithAttribute<T>(ARttiType: TRttiType;
+  const ADoSomething: TFunc<TRttiProperty, T, Boolean>): Integer;
+var
+  LProperty: TRttiProperty;
+  LBreak: Boolean;
+begin
+  Result := 0;
+  for LProperty in ARttiType.GetProperties do
+  begin
+    LBreak := False;
+    if TRttiHelper.HasAttribute<T>(LProperty,
+       procedure (AAttrib: T)
+       begin
+         if Assigned(ADoSomething) then
+         begin
+           if not ADoSomething(LProperty, AAttrib) then
+             LBreak := True;
+         end;
+       end
+    )
+    then
+      Inc(Result);
+
+    if LBreak then
+      Break;
+  end;
+end;
+
+class function TRttiHelper.IsDynamicArrayOf(ARttiType: TRttiType;
+  const AClass: TClass; const AAllowInherithance: Boolean): Boolean;
+begin
+  Result := False;
+  if ARttiType is TRttiDynamicArrayType then
+    Result := TRttiHelper.IsObjectOfType(
+      TRttiDynamicArrayType(ARttiType).ElementType, AClass, AAllowInherithance);
+end;
+
+class function TRttiHelper.IsDynamicArrayOf<T>(ARttiType: TRttiType;
+  const AAllowInherithance: Boolean): Boolean;
+begin
+  Result := TRttiHelper.IsDynamicArrayOf(ARttiType, TClass(T), AAllowInherithance);
+end;
+
+class function TRttiHelper.IsObjectOfType(ARttiType: TRttiType;
+  const AClass: TClass; const AAllowInherithance: Boolean): Boolean;
+begin
+  Result := False;
+  if ARttiType is TRttiInstanceType then
+  begin
+    if AAllowInherithance then
+      Result := TRttiInstanceType(ARttiType).MetaclassType.InheritsFrom(AClass)
+    else
+      Result := TRttiInstanceType(ARttiType).MetaclassType = AClass;
+  end;
+end;
+
+class function TRttiHelper.IsObjectOfType<T>(ARttiType: TRttiType;
+  const AAllowInherithance: Boolean): Boolean;
+begin
+  Result := TRttiHelper.IsObjectOfType(ARttiType, TClass(T), AAllowInherithance);
 end;
 
 end.

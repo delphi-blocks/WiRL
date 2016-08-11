@@ -11,12 +11,10 @@ unit MARS.Client.Token;
 interface
 
 uses
-  SysUtils, Classes
-  , MARS.Core.JSON
-
-  , MARS.Client.Resource
-  , MARS.Client.Client
-  ;
+  System.SysUtils, System.Classes,
+  MARS.Core.JSON,
+  MARS.Client.Resource,
+  MARS.Client.Client;
 
 type
   {$ifdef DelphiXE2_UP}
@@ -25,12 +23,9 @@ type
   TMARSClientToken = class(TMARSClientResource)
   private
     FData: TJSONObject;
-    FAuthenticated: Boolean;
-    FUserRoles: TStrings;
-    FStartTime: TDateTime;
-    FToken: string;
     FPassword: string;
-    FUserName: string;
+    FUsername: string;
+    FUserRoles: TStringList;
   protected
     procedure AfterGET(); override;
 
@@ -43,16 +38,10 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-
   published
     property Data: TJSONObject read FData;
-
-    property UserName: string read FUserName write FUserName;
     property Password: string read FPassword write FPassword;
-    property Token: string read FToken;
-    property Authenticated: Boolean read FAuthenticated;
-    property UserRoles: TStrings read FUserRoles;
-    property StartTime: TDateTime read FStartTime;
+    property Username: string read FUsername write FUsername;
   end;
 
 procedure Register;
@@ -60,8 +49,8 @@ procedure Register;
 implementation
 
 uses
-    MARS.Core.Utils
-  , MARS.Rtti.Utils;
+  MARS.Core.Utils,
+  MARS.Rtti.Utils;
 
 procedure Register;
 begin
@@ -129,11 +118,7 @@ end;
 
 procedure TMARSClientToken.ParseData;
 begin
-  FUserName := FData.ReadStringValue('UserName');
-  FToken := FData.ReadStringValue('Token');
-  FAuthenticated := FData.ReadBoolValue('Authenticated');
-  FStartTime := FData.ReadDateTimeValue('StartTime');
-  FUserRoles.Text := FData.ReadStringValue('UserRoles');
+
 end;
 
 end.

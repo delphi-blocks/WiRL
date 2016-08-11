@@ -11,7 +11,7 @@ interface
 // Current limitation: The class must have a default non-parameters constructor
 
 uses
-  SysUtils, SyncObjs;
+  System.SysUtils, System.SyncObjs;
 
 type
   EMARSSingletonException = class(Exception);

@@ -9,10 +9,8 @@ unit MARS.Core.Classes;
 interface
 
 uses
-  SysUtils
-  , Generics.Collections
-  , Classes
-  , MARS.Core.Declarations;
+  System.SysUtils, System.Generics.Collections, System.Classes,
+  MARS.Core.Declarations;
 
 type
   TNonInterfacedObject = class(TObject, IInterface)

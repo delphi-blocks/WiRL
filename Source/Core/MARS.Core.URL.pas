@@ -378,7 +378,7 @@ var
 begin
   LObj := ToJSONObject;
   try
-    Result := LObj.ToJSON;
+    Result := TJSONHelper.ToJSON(LObj);
   finally
     LObj.Free;
   end;

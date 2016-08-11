@@ -9,9 +9,7 @@ unit MARS.Core.Declarations;
 interface
 
 uses
-    SysUtils
-  , Rtti
-  ;
+  System.SysUtils, System.Rtti;
 
 type
   TAttributeArray = TArray<TCustomAttribute>;

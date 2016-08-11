@@ -220,9 +220,9 @@ begin
   Result :=
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      if Assigned(AType) and AType.IsObjectOfType<T>(False) then
+      if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType, False) then
         Result := 100
-      else if Assigned(AType) and AType.IsObjectOfType<T> then
+      else if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType) then
         Result := 99
       else
         Result := 0;
@@ -241,7 +241,7 @@ var
 begin
   LList := TMediaTypeList.Create;
 
-  AObject.ForEachAttribute<ProducesAttribute>(
+  TRttiHelper.ForEachAttribute<ProducesAttribute>(AObject,
     procedure (AProduces: ProducesAttribute)
     begin
       LList.Add( TMediaType.Create(AProduces.Value) );
@@ -276,7 +276,7 @@ begin
     AWriterClass,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
-      Result := Assigned(AType) and AType.IsObjectOfType(ASubjectClass);
+      Result := Assigned(AType) and TRttiHelper.IsObjectOfType(AType, ASubjectClass);
     end,
     AGetAffinity
   );
@@ -288,7 +288,7 @@ begin
     AWriterClass,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
-      Result := Assigned(AType) and AType.IsObjectOfType<T>;
+      Result := Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType);
     end,
     Self.GetDefaultClassAffinityFunc<T>()
   );

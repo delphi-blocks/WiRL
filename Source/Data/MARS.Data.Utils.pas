@@ -16,15 +16,21 @@ uses
   , MARS.Core.JSON
   , DB;
 
+type
+  TDataUtils = class
+  private
+    class function RecordToXML(const ADataSet: TDataSet; const ARootPath: string = ''): string; static;
+  public
+    class function RecordToJSONObject(const ADataSet: TDataSet; const ARootPath: string = ''): TJSONObject; static;
+    class function DataSetToJSONArray(const ADataSet: TDataSet): TJSONArray; overload; static;
+    class function DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): TJSONArray; overload; static;
 
-function RecordToJSONObject(const ADataSet: TDataSet; const ARootPath: string = ''): TJSONObject;
-function DataSetToJSONArray(const ADataSet: TDataSet): TJSONArray; overload;
-function DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): TJSONArray; overload;
+    class function DataSetToXML(const ADataSet: TDataSet): string; overload; static;
+    class function DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): string; overload; static;
 
-function DataSetToXML(const ADataSet: TDataSet): string; overload;
-function DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): string; overload;
+    class function DatasetMetadataToJSONObject(const ADataSet: TDataSet): TJSONObject; static;
+  end;
 
-function DatasetMetadataToJSONObject(const ADataSet: TDataSet): TJSONObject;
 
 implementation
 
@@ -37,7 +43,7 @@ uses
 type
   TJSONFieldType = (NestedObject, NestedArray, SimpleValue);
 
-function RecordToJSONObject(const ADataSet: TDataSet; const ARootPath: string = ''): TJSONObject;
+class function TDataUtils.RecordToJSONObject(const ADataSet: TDataSet; const ARootPath: string = ''): TJSONObject;
 var
   LField: TField;
   LPairName: string;
@@ -121,7 +127,7 @@ begin
   end;
 end;
 
-function RecordToXML(const ADataSet: TDataSet; const ARootPath: string = ''): string;
+class function TDataUtils.RecordToXML(const ADataSet: TDataSet; const ARootPath: string = ''): string;
 var
   LField: TField;
 begin
@@ -140,12 +146,12 @@ begin
   end;
 end;
 
-function DataSetToJSONArray(const ADataSet: TDataSet): TJSONArray; overload;
+class function TDataUtils.DataSetToJSONArray(const ADataSet: TDataSet): TJSONArray;
 begin
   Result := DataSetToJSONArray(ADataSet, nil);
 end;
 
-function DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): TJSONArray;
+class function TDataUtils.DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): TJSONArray;
 var
   LBookmark: TBookmark;
 begin
@@ -176,12 +182,12 @@ begin
   end;
 end;
 
-function DataSetToXML(const ADataSet: TDataSet): string; overload;
+class function TDataUtils.DataSetToXML(const ADataSet: TDataSet): string;
 begin
   Result := DataSetToXML(ADataSet, nil);
 end;
 
-function DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): string;
+class function TDataUtils.DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): string;
 var
   LBookmark: TBookmark;
 begin
@@ -212,7 +218,7 @@ begin
   end;
 end;
 
-function DatasetMetadataToJSONObject(const ADataSet: TDataSet): TJSONObject;
+class function TDataUtils.DatasetMetadataToJSONObject(const ADataSet: TDataSet): TJSONObject;
   procedure AddPropertyValue(APropertyName: string);
   begin
     TValueToJSONObject(Result, APropertyName, ReadPropertyValue(ADataSet, APropertyName));

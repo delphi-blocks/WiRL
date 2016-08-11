@@ -9,21 +9,17 @@ unit Server.Resources;
 interface
 
 uses
-  Classes, SysUtils
+  System.Classes, System.SysUtils, System.Rtti, Web.HTTPApp,
 
-  , MARS.Core.JSON
-  , Rtti
-  , HTTPApp
+  MARS.Core.JSON,
+  MARS.Core.Registry,
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.URL,
+  MARS.Core.MessageBodyWriters,
+  MARS.Core.Token,
+  MARS.Core.Token.Resource;
 
-  , MARS.Core.Registry
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.URL
-  , MARS.Core.MessageBodyWriters
-
-  , MARS.Core.Token
-  , MARS.Core.Token.Resource
-  ;
 
 type
   [Path('first')]
@@ -52,10 +48,6 @@ type
   end;
 
 implementation
-
-{ TFirstResource }
-
-
 
 { TFirstResource }
 

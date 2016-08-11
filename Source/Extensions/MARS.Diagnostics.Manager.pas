@@ -11,20 +11,16 @@ unit MARS.Diagnostics.Manager;
 interface
 
 uses
-  Classes, SysUtils, StrUtils
-  , Generics.Collections
+  System.Classes, System.SysUtils, System.StrUtils, System.Generics.Collections,
+  System.SyncObjs, System.Diagnostics,
 
-  , SyncObjs
-  , MARS.Core.JSON
-  , Diagnostics
-
-  , MARS.Core.Classes
-  , MARS.Core.Singleton
-  , MARS.Core.URL
-  , MARS.Core.Token
-  , MARS.Core.Engine
-  , MARS.Core.Application
-  ;
+  MARS.Core.JSON,
+  MARS.Core.Classes,
+  MARS.Core.Singleton,
+  MARS.Core.URL,
+  MARS.Core.Token,
+  MARS.Core.Engine,
+  MARS.Core.Application;
 
 type
   TMARSDiagnosticInfo = class
@@ -61,7 +57,6 @@ type
     FLastSessionStart: TDateTime;
   public
     constructor Create;
-    destructor Destroy; override;
 
     procedure AcquireNewSession();
     procedure AcquireEndSession();
@@ -108,14 +103,10 @@ type
 implementation
 
 uses
-    Math
-  , DateUtils
-  , MARS.Core.Utils
-
-  ;
+  System.Math, System.DateUtils,
+  MARS.Core.Utils;
 
 { TMARSDiagnosticsManager }
-
 
 procedure TMARSDiagnosticsManager.AfterHandleRequest(const ASender: TMARSEngine;
   const AApplication: TMARSApplication; const AStopWatch: TStopWatch);
@@ -342,13 +333,6 @@ begin
   FSessionCount := 0;
   FLastSessionStart := 0;
   FActiveSessionCount := 0;
-
-end;
-
-destructor TMARSDiagnosticEngineInfo.Destroy;
-begin
-
-  inherited;
 end;
 
 function TMARSDiagnosticEngineInfo.ToJSON: TJSONObject;

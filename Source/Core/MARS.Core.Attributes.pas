@@ -11,10 +11,10 @@ unit MARS.Core.Attributes;
 interface
 
 uses
-  Classes, SysUtils, RTTI, Generics.Collections
-  , HttpApp
-  , MARS.Core.Declarations
-  , MARS.Core.Utils;
+  System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
+  Web.HTTPApp,
+  MARS.Core.Declarations,
+  MARS.Core.Utils;
 
 type
 

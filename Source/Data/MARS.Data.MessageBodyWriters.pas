@@ -56,9 +56,9 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AOutputStream);
   try
-    LResult := DataSetToJSONArray(AValue.AsObject as TDataSet);
+    LResult := TDataUtils.DataSetToJSONArray(AValue.AsObject as TDataSet);
     try
-      LStreamWriter.Write(LResult.ToJSON);
+      LStreamWriter.Write(TJSONHelper.ToJSON(LResult));
     finally
       LResult.Free;
     end;
@@ -80,7 +80,7 @@ begin
     if AValue.AsObject is TClientDataSet then // CDS
       LStreamWriter.Write(TClientDataSet(AValue.AsObject).XMLData)
     else // default
-      LStreamWriter.Write(DataSetToXML(Avalue.AsObject as TDataSet));
+      LStreamWriter.Write(TDataUtils.DataSetToXML(Avalue.AsObject as TDataSet));
   finally
     LStreamWriter.Free;
   end;
@@ -103,9 +103,9 @@ begin
     LResult := TJSONObject.Create;
     try
       for LCurrent in LData do
-        LResult.AddPair(LCurrent.Name, DataSetToJSONArray(LCurrent));
+        LResult.AddPair(LCurrent.Name, TDataUtils.DataSetToJSONArray(LCurrent));
 
-      LStreamWriter.Write(LResult.ToJSON);
+      LStreamWriter.Write(TJSONHelper.ToJSON(LResult));
     finally
       LResult.Free;
     end;
@@ -120,7 +120,7 @@ begin
     TDataSetWriterJSON
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
-        Result := Assigned(AType) and  AType.IsObjectOfType<TDataSet>; // and AMediaType = application/json
+        Result := Assigned(AType) and  TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/json
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
@@ -132,7 +132,7 @@ begin
     TArrayDataSetWriter
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
-        Result := Assigned(AType) and AType.IsDynamicArrayOf<TDataSet>; // and AMediaType = application/json
+        Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TDataSet>(AType); // and AMediaType = application/json
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
@@ -144,7 +144,7 @@ begin
     TDataSetWriterXML
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
-        Result := Assigned(AType) and AType.IsObjectOfType<TDataSet>; // and AMediaType = application/xml
+        Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/xml
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin

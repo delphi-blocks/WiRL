@@ -9,12 +9,10 @@ unit MARS.Stateful.WrappedResource;
 interface
 
 uses
-  Classes, SysUtils
-
-  , MARS.Core.Attributes
-  , MARS.Core.Token
-  , MARS.Stateful.Dictionary
-  ;
+  System.Classes, System.SysUtils,
+  MARS.Core.Token,
+  MARS.Core.Attributes,
+  MARS.Stateful.Dictionary;
 
 type
   PerSessionAttribute = class(TCustomAttribute)
@@ -31,7 +29,7 @@ type
   TWrappedResource<T: class, constructor> = class
   protected
     [Context]
-    Token: TMARSToken;
+    Token: TMARSAuthContext;
 
     FInstance: T;
     function CreateInstance: T; virtual;
@@ -46,8 +44,7 @@ type
 implementation
 
 uses
-  MARS.Rtti.Utils
-  ;
+  MARS.Rtti.Utils;
 
 { TWrappedResource<T> }
 

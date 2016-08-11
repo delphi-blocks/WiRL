@@ -9,26 +9,23 @@ unit MARS.Core.Token.Resource;
 interface
 
 uses
-  Classes, SysUtils
+  System.Classes, System.SysUtils,
 
-  , MARS.Core.JSON
-  , MARS.Core.Registry
-  , MARS.Core.Classes
-  , MARS.Core.Application
-  , MARS.Core.Declarations
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.MessageBodyWriter
-  , MARS.Core.Token
-  , MARS.Core.URL
-
-  ;
+  MARS.Core.JSON,
+  MARS.Core.Registry,
+  MARS.Core.Classes,
+  MARS.Core.Application,
+  MARS.Core.Declarations,
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.MessageBodyWriter,
+  MARS.Core.Token,
+  MARS.Core.URL;
 
 type
   TMARSAuthResource = class
-  private
   protected
-    FAuthContext: TMARSAuthContext;
+    [Context] FAuthContext: TMARSAuthContext;
 
     function Authenticate(const AUserName, APassword: string): Boolean; virtual;
     procedure BeforeLogin(const AUserName, APassword: string); virtual;
@@ -94,7 +91,7 @@ end;
 
 function TMARSAuthResource.GetCurrent: TJSONObject;
 begin
-  Result := FAuthContext.Subject.JSON;
+  Result := FAuthContext.Subject.JSON.Clone as TJSONObject;
 end;
 
 function TMARSAuthResource.Logout: TJSONObject;

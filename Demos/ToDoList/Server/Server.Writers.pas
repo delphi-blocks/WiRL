@@ -160,7 +160,7 @@ initialization
     TArrayToDoItemWriter
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
-        Result := Assigned(AType) and AType.IsDynamicArrayOf<TToDoItem>;
+        Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TToDoItem>(AType);
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
@@ -172,7 +172,7 @@ initialization
     TArrayToDoItemWriterXML
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
-        Result := Assigned(AType) and AType.IsDynamicArrayOf<TToDoItem>;
+        Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TToDoItem>(AType);
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
