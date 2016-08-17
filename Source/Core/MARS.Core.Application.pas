@@ -16,8 +16,10 @@ interface
 // http://www.mkyong.com/webservices/jax-rs/jax-rs-path-uri-matching-example/
 
 uses
-  System.SysUtils, System.Classes, Web.HTTPApp, System.Rtti,
+  System.SysUtils, System.Classes, System.Rtti,
   System.Generics.Collections,
+  MARS.Core.Request,
+  MARS.Core.Response,
   MARS.Core.Classes,
   MARS.Core.URL,
   MARS.Core.MessageBodyWriter,
@@ -34,8 +36,8 @@ type
   private
     const SCRT_PREFIX = 'bWFycy5zZWNyZXQu';
   private
-    class threadvar FWebRequest: TWebRequest;
-    class threadvar FWebResponse: TWebResponse;
+    class threadvar FRequest: TMARSRequest;
+    class threadvar FResponse: TMARSResponse;
     class threadvar FAuthContext: TMARSAuthContext;
   private
     FSecret: TBytes;
@@ -46,11 +48,11 @@ type
     FEngine: TObject;
     FSystem: Boolean;
     function GetResources: TArray<string>;
-    function GetRequest: TWebRequest;
-    function GetResponse: TWebResponse;
+    function GetRequest: TMARSRequest;
+    function GetResponse: TMARSResponse;
     function GetURL: TMARSURL;
   protected
-    procedure InternalHandleRequest(ARequest: TWebRequest; AResponse: TWebResponse; const AURL: TMARSURL);
+    procedure InternalHandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     function FindMethodToInvoke(const AURL: TMARSURL;
       const AInfo: TMARSConstructorInfo): TRttiMethod; virtual;
 
@@ -59,10 +61,10 @@ type
     function FillNonAnnotatedParam(AParam: TRttiParameter): TValue;
     procedure FillResourceMethodParameters(AInstance: TObject; AMethod: TRttiMethod; var AArgumentArray: TArgumentArray);
     procedure InvokeResourceMethod(AInstance: TObject; AMethod: TRttiMethod;
-      const AWriter: IMessageBodyWriter; ARequest: TWebRequest;
+      const AWriter: IMessageBodyWriter; ARequest: TMARSRequest;
       AMediaType: TMediaType); virtual;
 
-    function GetNewToken(ARequest: TWebRequest): TMARSAuthContext;
+    function GetNewToken(ARequest: TMARSRequest): TMARSAuthContext;
     procedure CheckAuthorization(const AMethod: TRttiMethod; const AToken: TMARSAuthContext);
     procedure ContextInjection(AInstance: TObject);
     function ContextInjectionByType(const AType: TClass; out AValue: TValue): Boolean;
@@ -70,8 +72,8 @@ type
     function ParamNameToParamIndex(AResourceInstance: TObject; const AParamName: string; AMethod: TRttiMethod): Integer;
 
     property Engine: TObject read FEngine;
-    property Request: TWebRequest read GetRequest;
-    property Response: TWebResponse read GetResponse;
+    property Request: TMARSRequest read GetRequest;
+    property Response: TMARSResponse read GetResponse;
     property URL: TMARSURL read GetURL;
   public
     constructor Create(const AEngine: TObject);
@@ -80,7 +82,7 @@ type
     procedure SetSecret(ASecretGen: TSecretGenerator);
     function AddResource(AResource: string): Boolean;
 
-    procedure HandleRequest(ARequest: TWebRequest; AResponse: TWebResponse; const AURL: TMARSURL);
+    procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     procedure CollectGarbage(const AValue: TValue);
 
     property Name: string read FName write FName;
@@ -99,7 +101,6 @@ uses
   MARS.Core.Exceptions,
   MARS.Core.Utils,
   MARS.Rtti.Utils,
-  MARS.Core.Response,
   MARS.Core.Attributes,
   MARS.Core.Engine,
   MARS.Core.JSON;
@@ -262,8 +263,10 @@ begin
       begin
         LFieldClassType := TRttiInstanceType(AField.FieldType).MetaclassType;
 
-        if ContextInjectionByType(LFieldClassType, LValue) then
-          AField.SetValue(AInstance, LValue);
+        if not ContextInjectionByType(LFieldClassType, LValue) then
+          raise EMARSServerException.CreateFmt('[ContextInjection] Unable to inject class "%s" in resource "%s"', [LFieldClassType.ClassName, AInstance.ClassName]);
+        AField.SetValue(AInstance, LValue);
+
       end;
     end
   );
@@ -297,10 +300,10 @@ begin
   else if (AType.InheritsFrom(TMARSSubject)) then
     AValue := FAuthContext.Subject
   // HTTP request
-  else if (AType.InheritsFrom(TWebRequest)) then
+  else if (AType.InheritsFrom(TMARSRequest)) then
     AValue := Request
   // HTTP response
-  else if (AType.InheritsFrom(TWebResponse)) then
+  else if (AType.InheritsFrom(TMARSResponse)) then
     AValue := Response
   // URL info
   else if (AType.InheritsFrom(TMARSURL)) then
@@ -381,19 +384,19 @@ begin
   end;
 end;
 
-function TMARSApplication.GetRequest: TWebRequest;
+function TMARSApplication.GetRequest: TMARSRequest;
 begin
-  Result := FWebRequest;
+  Result := FRequest;
+end;
+
+function TMARSApplication.GetResponse: TMARSResponse;
+begin
+  Result := FResponse;
 end;
 
 function TMARSApplication.GetResources: TArray<string>;
 begin
   Result := FResourceRegistry.Keys.ToArray;
-end;
-
-function TMARSApplication.GetResponse: TWebResponse;
-begin
-  Result := FWebResponse;
 end;
 
 function TMARSApplication.GetURL: TMARSURL;
@@ -489,7 +492,7 @@ begin
         LParamName := AParam.Name;
 
       // Prendere il valore (come stringa) dagli Header HTTP
-      LParamValue := string(Request.GetFieldByName(AnsiString(LParamName)));
+      LParamValue := string(Request.GetFieldByName(LParamName));
     end
     else
     if LAttr is BodyParamAttribute then
@@ -551,7 +554,7 @@ begin
   if AParam.ParamType.IsInstance then
   begin
     LClass := AParam.ParamType.AsInstance.MetaclassType;
-    if LClass.InheritsFrom(TWebRequest) then
+    if LClass.InheritsFrom(TMARSRequest) then
       Result := TValue.From(Request)
     else
       Result := TValue.From(nil);
@@ -606,11 +609,10 @@ begin
   end;
 end;
 
-procedure TMARSApplication.HandleRequest(ARequest: TWebRequest; AResponse:
-    TWebResponse; const AURL: TMARSURL);
+procedure TMARSApplication.HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
 begin
-  FWebRequest := ARequest;
-  FWebResponse := AResponse;
+  FRequest := ARequest;
+  FResponse := AResponse;
 
   FAuthContext := GetNewToken(ARequest);
   try
@@ -620,7 +622,7 @@ begin
   end;
 end;
 
-function TMARSApplication.GetNewToken(ARequest: TWebRequest): TMARSAuthContext;
+function TMARSApplication.GetNewToken(ARequest: TMARSRequest): TMARSAuthContext;
 var
   LAuth: string;
   LAuthParts: TArray<string>;
@@ -641,8 +643,8 @@ begin
     Result.Verify(LAuthParts[1], FSecret);
 end;
 
-procedure TMARSApplication.InternalHandleRequest(ARequest: TWebRequest;
-  AResponse: TWebResponse; const AURL: TMARSURL);
+procedure TMARSApplication.InternalHandleRequest{(ARequest: TMARSRequest;
+  AResponse: TMARSResponse; const AURL: TMARSURL)};
 var
   LInfo: TMARSConstructorInfo;
   LMethod: TRttiMethod;
@@ -660,7 +662,7 @@ begin
 
   if not Assigned(LMethod) then
     raise EMARSNotFoundException.Create(
-      Format('Resource''s method [%s] not found to handle resource [%s]', [GetEnumName(TypeInfo(TMethodType), Ord(ARequest.MethodType)), URL.Resource + URL.SubResources.ToString]),
+      Format('Resource''s method [%s] not found to handle resource [%s]', [ARequest.Method, URL.Resource + URL.SubResources.ToString]),
       Self.ClassName, 'HandleRequest'
     );
 
@@ -686,14 +688,13 @@ end;
 
 procedure TMARSApplication.InvokeResourceMethod(AInstance: TObject;
   AMethod: TRttiMethod; const AWriter: IMessageBodyWriter;
-  ARequest: TWebRequest; AMediaType: TMediaType);
+  ARequest: TMARSRequest; AMediaType: TMediaType);
 var
   LMethodResult: TValue;
   LArgument: TValue;
   LArgumentArray: TArgumentArray;
-  LMARSResponse: TMARSResponse;
   LStream: TMemoryStream;
-  LContentType: AnsiString;
+  LContentType: string;
 begin
   // The returned object MUST be initially nil (needs to be consistent with the Free method)
   LMethodResult := nil;
@@ -702,15 +703,14 @@ begin
     FillResourceMethodParameters(AInstance, AMethod, LArgumentArray);
     LMethodResult := AMethod.Invoke(AInstance, LArgumentArray);
 
-    if LMethodResult.IsInstanceOf(TMARSResponse) then // Response Object
+    if LMethodResult.IsInstanceOf(TMARSResponse) then
     begin
-      LMARSResponse := TMARSResponse(LMethodResult.AsObject);
-      LMARSResponse.CopyTo(Response);
+      // Request is already done
     end
     else if Assigned(AWriter) then // MessageBodyWriters mechanism
     begin
       if Response.ContentType = LContentType then
-        Response.ContentType := AnsiString(AMediaType.ToString);
+        Response.ContentType := AMediaType.ToString;
 
       LStream := TMemoryStream.Create;
       try

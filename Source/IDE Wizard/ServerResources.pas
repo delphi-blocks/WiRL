@@ -5,7 +5,6 @@ interface
 uses
   MARS.Core.Attributes,
   MARS.Core.MediaType,
-  Web.HttpApp,
   SysUtils,
   Classes;
 

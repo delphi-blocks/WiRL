@@ -12,8 +12,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
-  Web.HTTPApp,
-  MARS.Core.Declarations,
+  MARS.Core.Declarations, MARS.Core.Request,
   MARS.Core.Utils;
 
 type
@@ -32,42 +31,42 @@ type
   private
   protected
   public
-    function Matches(const ARequest: TWebRequest): Boolean; virtual;
+    function Matches(const ARequest: TMARSRequest): Boolean; virtual;
   end;
 
   GETAttribute     = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWebRequest): Boolean; override;
+    function Matches(const ARequest: TMARSRequest): Boolean; override;
   end;
 
   POSTAttribute    = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWebRequest): Boolean; override;
+    function Matches(const ARequest: TMARSRequest): Boolean; override;
   end;
 
   PUTAttribute     = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWebRequest): Boolean; override;
+    function Matches(const ARequest: TMARSRequest): Boolean; override;
   end;
 
   DELETEAttribute  = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWebRequest): Boolean; override;
+    function Matches(const ARequest: TMARSRequest): Boolean; override;
   end;
 
   PATCHAttribute   = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWebRequest): Boolean; override;
+    function Matches(const ARequest: TMARSRequest): Boolean; override;
   end;
 
   HEADAttribute    = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWebRequest): Boolean; override;
+    function Matches(const ARequest: TMARSRequest): Boolean; override;
   end;
 
   OPTIONSAttribute = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWebRequest): Boolean; override;
+    function Matches(const ARequest: TMARSRequest): Boolean; override;
   end;
 
   /// <summary>
@@ -298,64 +297,56 @@ end;
 
 { HttpMethodAttribute }
 
-function HttpMethodAttribute.Matches(const ARequest: TWebRequest): Boolean;
+function HttpMethodAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
   Result := False;
 end;
 
 { GETAttribute }
 
-function GETAttribute.Matches(const ARequest: TWebRequest): Boolean;
+function GETAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
-  Result := ARequest.MethodType = TMethodType.mtGet;
+  Result := ARequest.Method = TMARSMethod.GET;
 end;
 
 { POSTAttribute }
 
-function POSTAttribute.Matches(const ARequest: TWebRequest): Boolean;
+function POSTAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
-  Result := ARequest.MethodType = TMethodType.mtPost;
+  Result := ARequest.Method = TMARSMethod.POST;
 end;
 
 { PUTAttribute }
 
-function PUTAttribute.Matches(const ARequest: TWebRequest): Boolean;
+function PUTAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
-  Result := ARequest.MethodType = TMethodType.mtPut;
+  Result := ARequest.Method = TMARSMethod.PUT;
 end;
 
 { DELETEAttribute }
 
-function DELETEAttribute.Matches(const ARequest: TWebRequest): Boolean;
+function DELETEAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
-{$ifdef DelphiXE7_UP}
-  Result := ARequest.MethodType = TMethodType.mtDelete;
-{$else}
-  Result := SameText(string(ARequest.Method), 'Delete');
-{$endif}
+  Result := ARequest.Method = TMARSMethod.DELETE;
 end;
 
 { PATCHAttribute }
 
-function PATCHAttribute.Matches(const ARequest: TWebRequest): Boolean;
+function PATCHAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
-{$ifdef DelphiXE7_UP}
-  Result := ARequest.MethodType = TMethodType.mtPatch;
-{$else}
-  Result := SameText(string(ARequest.Method), 'Patch');
-{$endif}
+  Result := ARequest.Method = TMARSMethod.PATCH;
 end;
 
 { HEADAttribute }
 
-function HEADAttribute.Matches(const ARequest: TWebRequest): Boolean;
+function HEADAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
-  Result := ARequest.MethodType = TMethodType.mtHead;
+  Result := ARequest.Method = TMARSMethod.HEAD;
 end;
 
 { OPTIONSAttribute }
 
-function OPTIONSAttribute.Matches(const ARequest: TWebRequest): Boolean;
+function OPTIONSAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
   Result := ARequest.Method = 'OPTIONS';
 end;

@@ -11,8 +11,8 @@ unit MARS.Core.URL;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections, Web.HTTPApp,
-  MARS.Core.JSON;
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  MARS.Core.JSON, MARS.Core.Request, MARS.Core.Response;
 
 type
   TMARSURLDictionary = class(TDictionary<Integer, string>)
@@ -57,7 +57,7 @@ type
     constructor Create(const AURL: string); overload; virtual;
     constructor CreateDummy(const APath: string; const ABaseURL: string = DUMMY_URL); overload; virtual;
     constructor CreateDummy(const APaths: array of string; const ABaseURL: string = DUMMY_URL); overload; virtual;
-    constructor Create(AWebRequest: TWebRequest); overload; virtual;
+    constructor Create(ARequest: TMARSRequest); overload; virtual;
     destructor Destroy; override;
 
     function MatchPath(AOtherURL: TMARSURL): Boolean; overload; virtual;
@@ -190,16 +190,16 @@ begin
     Result := EnsureLastPathDelimiter(Result);
 end;
 
-constructor TMARSURL.Create(AWebRequest: TWebRequest);
+constructor TMARSURL.Create(ARequest: TMARSRequest);
 var
   LQuery: string;
 begin
-  LQuery := string(AWebRequest.Query);
+  LQuery := string(ARequest.Query);
   if LQuery <> '' then
     LQuery := '?' + LQuery;
 
   // Add the protocol in order to make Parse work.
-  Create('http://' + string(AWebRequest.Host) + ':' + IntToStr(AWebRequest.ServerPort) + string(AWebRequest.PathInfo) + LQuery);
+  Create('http://' + string(ARequest.Host) + ':' + IntToStr(ARequest.ServerPort) + string(ARequest.PathInfo) + LQuery);
 end;
 
 constructor TMARSURL.CreateDummy(const APaths: array of string; const ABaseURL: string);

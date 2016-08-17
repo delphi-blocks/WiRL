@@ -135,6 +135,7 @@ var
   LCandidateQualityFactor: Double;
 begin
   AWriter := nil;
+  AMediaType := nil;
   LFound := False;
   LCandidateAffinity := -1;
   LCandidateMediaType := '';
