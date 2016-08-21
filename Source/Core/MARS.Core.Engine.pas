@@ -74,7 +74,9 @@ type
 
     procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse);
 
-    function AddApplication(const AName, ABasePath: string; const AResources: array of string): TMARSApplication; virtual;
+    function AddApplication(const AName, ABasePath: string): TMARSApplication; overload; virtual;
+    function AddApplication(const AName, ABasePath: string; const AResources: array of string): TMARSApplication; overload; virtual;
+
     procedure AddSubscriber(const ASubscriber: IMARSHandleListener);
     procedure RemoveSubscriber(const ASubscriber: IMARSHandleListener);
 
@@ -86,7 +88,6 @@ type
     property Port: Integer read FPort write FPort;
     property ThreadPoolSize: Integer read FThreadPoolSize write FThreadPoolSize;
 
-    // Transient properties
     property CurrentURL: TMARSURL read GetURL;
   end;
 
@@ -107,10 +108,22 @@ begin
     for LResource in AResources do
       Result.AddResource(LResource);
 
-    Applications.Add(
-      TMARSURL.CombinePath([BasePath, ABasePath])
-      , Result
-    );
+    Applications.Add(TMARSURL.CombinePath([BasePath, ABasePath]), Result);
+  except
+    Result.Free;
+    raise
+  end;
+end;
+
+function TMARSEngine.AddApplication(const AName,
+  ABasePath: string): TMARSApplication;
+begin
+  Result := TMARSApplication.Create(Self);
+  try
+    Result.Name := AName;
+    Result.BasePath := ABasePath;
+
+    Applications.Add(TMARSURL.CombinePath([BasePath, ABasePath]), Result);
   except
     Result.Free;
     raise

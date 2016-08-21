@@ -46,7 +46,6 @@ type
     FBasePath: string;
     FName: string;
     FEngine: TObject;
-    FSystem: Boolean;
     function GetResources: TArray<string>;
     function GetRequest: TMARSRequest;
     function GetResponse: TMARSResponse;
@@ -79,15 +78,16 @@ type
     constructor Create(const AEngine: TObject);
     destructor Destroy; override;
 
-    procedure SetSecret(ASecretGen: TSecretGenerator);
-    function AddResource(AResource: string): Boolean;
+    // Fluent-like configuration methods
+    function SetResources(const AResources: array of string): TMARSApplication;
+    function SetSecret(ASecretGen: TSecretGenerator): TMARSApplication;
 
+    function AddResource(AResource: string): Boolean;
     procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     procedure CollectGarbage(const AValue: TValue);
 
     property Name: string read FName write FName;
     property BasePath: string read FBasePath write FBasePath;
-    property System: Boolean read FSystem write FSystem;
     property Resources: TArray<string> read GetResources;
   end;
 
@@ -105,8 +105,6 @@ uses
   MARS.Core.Engine,
   MARS.Core.JSON;
 
-
-{ TMARSApplication }
 
 function TMARSApplication.AddResource(AResource: string): Boolean;
 
@@ -159,6 +157,15 @@ begin
   else // exact match
     if LRegistry.TryGetValue(AResource, LInfo) then
       Result := AddResourceToApplicationRegistry(LInfo);
+end;
+
+function TMARSApplication.SetResources(const AResources: array of string): TMARSApplication;
+var
+  LResource: string;
+begin
+  Result := Self;
+  for LResource in AResources do
+    Self.AddResource(LResource);
 end;
 
 procedure TMARSApplication.CheckAuthorization(const AMethod: TRttiMethod; const
@@ -800,8 +807,9 @@ begin
   Result := LParamIndex;
 end;
 
-procedure TMARSApplication.SetSecret(ASecretGen: TSecretGenerator);
+function TMARSApplication.SetSecret(ASecretGen: TSecretGenerator): TMARSApplication;
 begin
+  Result := Self;
   if Assigned(ASecretGen) then
     FSecret := ASecretGen;
 end;

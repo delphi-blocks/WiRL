@@ -65,8 +65,6 @@ begin
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
-var
-  LApp: TMARSApplication;
 begin
   FEngine := TMARSEngine.Create;
 
@@ -76,17 +74,19 @@ begin
   FEngine.Name := 'MARS HelloWorld';
   FEngine.BasePath := '/rest';
 
-  LApp := FEngine.AddApplication('Default', '/app', [
-    'Server.Resources.THelloWorldResource',
-    'Server.Resources.TEntityResource'
-  ]);
-
-  LApp.SetSecret(
-    function (): TBytes
-    begin
-      Result := TEncoding.UTF8.GetBytes(Edit1.Text);
-    end
-  );
+  // New app definition and configuration
+  FEngine.AddApplication('Default', '/app')
+    .SetResources([
+      'Server.Resources.THelloWorldResource',
+      'Server.Resources.TEntityResource'
+    ])
+    .SetSecret(
+      function (): TBytes
+      begin
+        Result := TEncoding.UTF8.GetBytes(Edit1.Text);
+      end
+    )
+  ;
 
   // Create http server
   FServer := TMARShttpServerIndy.Create(FEngine);
