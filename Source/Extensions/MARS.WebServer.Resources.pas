@@ -9,7 +9,7 @@ unit MARS.WebServer.Resources;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections, Web.HttpApp,
+  System.SysUtils, System.Classes, System.Generics.Collections,
   MARS.Core.Attributes,
   MARS.Core.MediaType,
   MARS.Core.URL,
@@ -91,8 +91,6 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
 
-    // REST METHODS
-    // Must use singleton to prevent the garbage collector to free TMARSResponse
     [GET, Path('/{*}')]
     procedure GetContent; virtual;
 

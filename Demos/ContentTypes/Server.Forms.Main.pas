@@ -49,8 +49,7 @@ uses
   MARS.Rtti.Utils,
   MARS.Core.MessageBodyWriter,
   MARS.Core.MessageBodyWriters,
-  MARS.Data.MessageBodyWriters,
-  MARS.Data.FireDAC.MessageBodyWriters;
+  MARS.Data.MessageBodyWriters;
 
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);

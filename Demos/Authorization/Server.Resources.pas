@@ -9,7 +9,7 @@ unit Server.Resources;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, Web.HTTPApp,
+  System.Classes, System.SysUtils, System.Rtti,
 
   MARS.Core.JSON,
   MARS.Core.Registry,
@@ -17,6 +17,8 @@ uses
   MARS.Core.MediaType,
   MARS.Core.URL,
   MARS.Core.MessageBodyWriters,
+  MARS.Core.Request,
+  MARS.Core.Response,
   MARS.Core.Token,
   MARS.Core.Token.Resource;
 
@@ -27,8 +29,8 @@ type
   private
   protected
     [Context] URL: TMARSURL;
-    [Context] Request: TWebRequest;
-    [Context] Response: TWebResponse;
+    [Context] Request: TMARSRequest;
+    [Context] Response: TMARSResponse;
   public
     [GET, PermitAll]
     [Produces(TMediaType.TEXT_PLAIN)]

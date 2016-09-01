@@ -9,13 +9,15 @@ unit MARS.Data.FireDAC.DataModule;
 interface
 
 uses
-  System.SysUtils, System.Classes, Web.HTTPApp,
+  System.SysUtils, System.Classes,
   Data.FireDACJSONReflect, FireDAC.Comp.Client,
 
   MARS.Core.JSON,
   MARS.Core.Attributes,
   MARS.Core.MediaType,
   MARS.Core.URL,
+  MARS.Core.Request,
+  MARS.Core.Response,
 
   MARS.Data.FireDAC,
   MARS.Data.MessageBodyWriters,
@@ -38,7 +40,7 @@ type
   private
     function GetResourceName: string;
   protected
-    [Context] Request: TWebRequest;
+    [Context] Request: TMARSRequest;
     [Context] URL: TMARSURL;
 
     procedure BeforeApplyUpdates(ADeltas: TFDJSONDeltas; ADelta: TFDMemTable;
