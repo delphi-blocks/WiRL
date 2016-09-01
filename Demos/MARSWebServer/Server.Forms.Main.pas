@@ -9,8 +9,8 @@ unit Server.Forms.Main;
 interface
 
 uses
-  Classes, SysUtils, Forms, ActnList, ComCtrls, StdCtrls, Controls, ExtCtrls,
-  System.Diagnostics, System.Actions,
+  Classes, SysUtils, Windows, Forms, ActnList, ComCtrls, StdCtrls, Controls, ExtCtrls,
+  System.Diagnostics, System.Actions, ShellAPI,
 
   MARS.Core.Engine,
   MARS.http.Server.Indy,
@@ -26,11 +26,15 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
+    Button1: TButton;
+    TestAction: TAction;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
     procedure StopServerActionUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure TestActionExecute(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     FServer: TMARShttpServerIndy;
     FEngine: TMARSEngine;
@@ -54,6 +58,11 @@ uses
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   StartServerAction.Execute;
+end;
+
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  StopServerAction.Execute;
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
@@ -100,6 +109,13 @@ end;
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
   StopServerAction.Enabled := Assigned(FServer) and (FServer.Active = True);
+end;
+
+procedure TMainForm.TestActionExecute(Sender: TObject);
+const
+  TemplateUrl = 'http://localhost:%d/rest/default/helloworld/';
+begin
+  ShellExecute(Handle, 'open', PChar(Format(TemplateUrl, [FEngine.Port])), '', '', SW_NORMAL);
 end;
 
 initialization
