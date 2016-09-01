@@ -14,6 +14,7 @@ object MainForm: TMainForm
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object TopPanel: TPanel
@@ -56,6 +57,14 @@ object MainForm: TMainForm
       Text = '8080'
     end
   end
+  object Button1: TButton
+    Left = 16
+    Top = 96
+    Width = 163
+    Height = 25
+    Action = TestAction
+    TabOrder = 1
+  end
   object MainActionList: TActionList
     Left = 384
     Top = 24
@@ -68,6 +77,10 @@ object MainForm: TMainForm
       Caption = 'Stop Server'
       OnExecute = StopServerActionExecute
       OnUpdate = StopServerActionUpdate
+    end
+    object TestAction: TAction
+      Caption = 'Test'
+      OnExecute = TestActionExecute
     end
   end
 end

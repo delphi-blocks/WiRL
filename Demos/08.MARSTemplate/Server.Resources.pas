@@ -9,20 +9,19 @@ unit Server.Resources;
 interface
 
 uses
-  SysUtils, Classes
+  SysUtils, Classes,
 
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-
-  , Web.HttpApp
-  ;
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.Request,
+  MARS.Core.Response;
 
 type
   [Path('helloworld')]
   THelloWorldResource = class
   private
   protected
-    [Context] Req: TWebRequest;
+    [Context] Req: TMARSRequest;
   public
 
     [GET, Produces(TMediaType.TEXT_PLAIN)]

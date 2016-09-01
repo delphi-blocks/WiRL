@@ -9,29 +9,39 @@ unit Server.Resources;
 interface
 
 uses
-  SysUtils, Classes
+  SysUtils, Classes, IOUtils
 
   , MARS.Core.Attributes
   , MARS.Core.MediaType
   , MARS.Core.Response
 
-  , Web.HttpApp
-  , Server.Resources.Web
+  , MARS.WebServer.Resources
   ;
 
 type
-  [
-     Path('helloworld')
-   , RootFolder('C:\Temp', True)
-  ]
+  [Path('helloworld')]
   THelloWorldResource = class(TFileSystemResource)
+  public
+    constructor Create; override;
   end;
 
 implementation
 
 uses
-    MARS.Core.Registry
-  ;
+    MARS.Core.Registry;
+
+{ THelloWorldResource }
+
+constructor THelloWorldResource.Create;
+begin
+  inherited;
+  RootFolder := TDirectory.GetParent(
+    TDirectory.GetParent(
+      TPath.GetDirectoryName(ParamStr(0))
+    )
+  ) + PathDelim + 'www';
+  IncludeSubFolders := True;
+end;
 
 initialization
   TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>(
@@ -40,6 +50,5 @@ initialization
       Result := THelloWorldResource.Create;
     end
   );
-
 
 end.

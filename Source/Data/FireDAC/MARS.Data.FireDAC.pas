@@ -9,7 +9,7 @@ unit MARS.Data.FireDAC;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections, Web.HTTPApp,
+  System.Classes, System.SysUtils, System.Generics.Collections,
 
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
   FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
@@ -20,6 +20,8 @@ uses
   MARS.Core.JSON,
   MARS.Core.Registry,
   MARS.Core.Classes,
+  MARS.Core.Request,
+  MARS.Core.Response,
   MARS.Core.Application,
   MARS.Core.Declarations,
   MARS.Core.Attributes,
@@ -52,7 +54,7 @@ type
     FStatements: TDictionary<string, string>;
     FOwnsConnection: Boolean;
   protected
-    [Context] Request: TWebRequest;
+    [Context] Request: TMARSRequest;
 
     procedure SetupConnection; virtual;
     procedure TeardownConnection; virtual;

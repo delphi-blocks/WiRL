@@ -9,7 +9,7 @@ unit Server.Resources;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, Web.HTTPApp, Generics.Collections,
+  System.Classes, System.SysUtils, System.Rtti, Generics.Collections,
   MARS.Core.JSON,
   MARS.Core.Registry,
   MARS.Core.Attributes,
@@ -17,15 +17,17 @@ uses
   MARS.Core.URL,
   MARS.Core.MessageBodyWriters,
   MARS.Core.Token,
-  MARS.Core.Response, System.JSON;
+  MARS.Core.Request,
+  MARS.Core.Response,
+  System.JSON;
 
 type
   [Path('/helloworld')]
   THelloWorldResource = class
   private
   protected
-    [Context] Request: TWebRequest;
-    [Context] Response: TWebResponse;
+    [Context] Request: TMARSRequest;
+    [Context] Response: TMARSResponse;
     [Context] AuthContext: TMARSAuthContext;
   public
     [GET]
@@ -151,7 +153,7 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(WebApplicationDirectory)))) +
+        TDirectory.GetParent(ParamStr(0))))) +
     'mars-logo.png';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
@@ -163,7 +165,7 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(WebApplicationDirectory)))) +
+        TDirectory.GetParent(ParamStr(0))))) +
     'mars-doc.pdf';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
