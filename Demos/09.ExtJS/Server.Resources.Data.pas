@@ -22,17 +22,15 @@ uses
   , MARS.Core.MessageBodyWriters
   , MARS.Core.Token
   , MARS.Core.Token.Resource
+  , MARS.Core.Exceptions
   , MARS.Data.Resolver
   ;
 
 
 type
-
-// http://localhost:8080/rest/default/main/employee
-
   [Path('/main')]
   TMainModule = class(TDataModule)
-    FBConnection: TFDConnection;
+    FDConnection: TFDConnection;
     qryEmployee: TFDQuery;
     qryEmployeeEMP_NO: TSmallintField;
     qryEmployeeFIRST_NAME: TStringField;
@@ -46,6 +44,7 @@ type
     qryEmployeeSALARY: TBCDField;
     FDGUIxWaitCursor1: TFDGUIxWaitCursor;
     qryEmpNoGen: TFDQuery;
+    procedure DataModuleCreate(Sender: TObject);
   public
     [GET, Path('/employee/'){, RolesAllowed('standard')}]
     function Employee(): TDataSet;
@@ -78,7 +77,18 @@ end;
 
 function TMainModule.InsertEmployee(Json: TJSONValue): TJSONObject;
 begin
-  raise Exception.Create('Not yet implemented');
+  raise EMARSNotSupportedException.Create('Not yet implemented');
+end;
+
+procedure TMainModule.DataModuleCreate(Sender: TObject);
+const
+  DatabaseName = 'data.db';
+begin
+  inherited;
+  FDConnection.DriverName := 'SQLite';
+  FDConnection.Params.Add('Database=' + DatabaseName);
+  FDConnection.Params.Add('SQLiteAdvanced=page_size=4096');
+  FDConnection.Connected := True;
 end;
 
 function TMainModule.DeleteEmployee(Id: Integer; Json: TJSONValue): TJSONObject;

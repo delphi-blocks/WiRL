@@ -6,7 +6,6 @@ object DatabaseBuilder: TDatabaseBuilder
     Params.Strings = (
       'DriverID=SQLite')
     ConnectedStoredUsage = []
-    Connected = True
     LoginPrompt = False
     Left = 64
     Top = 56

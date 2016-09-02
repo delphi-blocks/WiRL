@@ -1,10 +1,10 @@
 object MainModule: TMainModule
   OldCreateOrder = False
+  OnCreate = DataModuleCreate
   Height = 284
   Width = 341
-  object FBConnection: TFDConnection
+  object FDConnection: TFDConnection
     Params.Strings = (
-      'Database=C:\Progetti\MARS\Demos\09.ExtJS\data.db'
       'DriverID=SQLite')
     ConnectedStoredUsage = []
     LoginPrompt = False
@@ -12,7 +12,7 @@ object MainModule: TMainModule
     Top = 32
   end
   object qryEmployee: TFDQuery
-    Connection = FBConnection
+    Connection = FDConnection
     SQL.Strings = (
       'select * from EMPLOYEE &filter')
     Left = 48
@@ -87,7 +87,7 @@ object MainModule: TMainModule
     Top = 24
   end
   object qryEmpNoGen: TFDQuery
-    Connection = FBConnection
+    Connection = FDConnection
     SQL.Strings = (
       'SELECT GEN_ID(&name, 1) FROM RDB$DATABASE')
     Left = 184
