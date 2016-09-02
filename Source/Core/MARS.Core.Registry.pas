@@ -46,6 +46,9 @@ type
 
 implementation
 
+uses
+  System.Rtti;
+
 { TMARSResourceRegistry }
 
 function TMARSResourceRegistry.GetResourceInstance<T>: T;
@@ -108,12 +111,18 @@ begin
   FConstructorFunc := AConstructorFunc;
   FTypeTClass := AClass;
 
-  // provide a default constructor function
+  // Default constructor function
   if not Assigned(FConstructorFunc) then
     FConstructorFunc :=
       function: TObject
+      var
+        LContext: TRttiContext;
+        LType: TRttiType;
+        LValue: TValue;
       begin
-        Result := FTypeTClass.Create as TObject;
+        LType := LContext.GetType(FTypeTClass);
+        LValue := LType.GetMethod('Create').Invoke(LType.AsInstance.MetaclassType, []);
+        Result := LValue.AsObject;
       end;
 end;
 

@@ -9,12 +9,11 @@ unit Server.Forms.Main;
 interface
 
 uses
-  Classes, SysUtils, Windows, Forms, ActnList, ComCtrls, StdCtrls, Controls, ExtCtrls,
-  System.Diagnostics, System.Actions, ShellAPI,
+  System.Classes, System.SysUtils, Winapi.Windows, Vcl.Forms, Vcl.ActnList,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
+  System.Diagnostics, System.Actions, Winapi.ShellAPI,
 
-  MARS.Core.Engine,
-  MARS.http.Server.Indy,
-  MARS.Core.Application;
+  MARS.http.Server.Indy;
 
 type
   TMainForm = class(TForm)
@@ -37,7 +36,6 @@ type
     procedure FormDestroy(Sender: TObject);
   private
     FServer: TMARShttpServerIndy;
-    FEngine: TMARSEngine;
   public
   end;
 
@@ -56,7 +54,6 @@ uses
   MARS.Data.MessageBodyWriters,
   Server.Database.Builder;
 
-
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   StartServerAction.Execute;
@@ -70,27 +67,22 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TMARSEngine.Create;
+  // Create http server
+  FServer := TMARShttpServerIndy.Create;
 
   // Engine configuration
-  FEngine.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  FEngine.Name := 'MARS Template';
-  FEngine.BasePath := '/rest';
-  FEngine.ThreadPoolSize := 5;
+  FServer.ConfigureEngine('/rest')
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    .SetName('MARS Template')
+    .SetThreadPoolSize(5)
 
-  // Application configuration
-
-  FEngine.AddApplication(
-    'Default',
-    '/default',
-    [
-      'Server.Resources.StaticFiles.TStaticFileResources',
-      'Server.Resources.Data.TMainModule'
-    ]
-  );
-
-  // Create http server
-  FServer := TMARShttpServerIndy.Create(FEngine);
+    // Application configuration
+    .AddApplication('/default')
+      .SetName('Default')
+      .SetResources([
+        'Server.Resources.StaticFiles.TStaticFileResources',
+        'Server.Resources.Data.TMainModule'
+      ]);
 
   if not FServer.Active then
     FServer.Active := True;
@@ -104,11 +96,7 @@ end;
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
   FServer.Active := False;
-  FServer.Free;
-  FServer := nil;
-
-  FEngine.Free;
-  FEngine := nil;
+  FreeAndNil(FServer);
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
@@ -118,9 +106,9 @@ end;
 
 procedure TMainForm.TestActionExecute(Sender: TObject);
 const
-  TemplateUrl = 'http://localhost:%d/rest/default/static/';
+  LTemplateUrl = 'http://localhost:%d/rest/default/static/';
 begin
-  ShellExecute(Handle, 'open', PChar(Format(TemplateUrl, [FEngine.Port])), '', '', SW_NORMAL);
+  ShellExecute(Handle, 'open', PChar(Format(LTemplateUrl, [Fserver.Engine.Port])), '', '', SW_NORMAL);
 end;
 
 initialization

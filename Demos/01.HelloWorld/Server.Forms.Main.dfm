@@ -63,14 +63,6 @@ object MainForm: TMainForm
       Text = 'secret'
     end
   end
-  object Button1: TButton
-    Left = 160
-    Top = 176
-    Width = 75
-    Height = 25
-    Caption = 'Button1'
-    TabOrder = 1
-  end
   object MainActionList: TActionList
     Left = 104
     Top = 96

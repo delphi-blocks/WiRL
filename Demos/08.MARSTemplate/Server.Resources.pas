@@ -9,7 +9,7 @@ unit Server.Resources;
 interface
 
 uses
-  SysUtils, Classes,
+  System.SysUtils, System.Classes,
 
   MARS.Core.Attributes,
   MARS.Core.MediaType,
@@ -19,22 +19,17 @@ uses
 type
   [Path('helloworld')]
   THelloWorldResource = class
-  private
   protected
     [Context] Req: TMARSRequest;
   public
-
     [GET, Produces(TMediaType.TEXT_PLAIN)]
     function SayHelloWorld: string;
-
   end;
 
 implementation
 
 uses
-    MARS.Core.Registry
-  ;
-
+  MARS.Core.Registry;
 
 { THelloWorldResource }
 
@@ -45,6 +40,5 @@ end;
 
 initialization
   TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
-
 
 end.

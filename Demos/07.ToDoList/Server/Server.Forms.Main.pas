@@ -9,7 +9,8 @@ unit Server.Forms.Main;
 interface
 
 uses
-  Classes, Windows, SysUtils, Forms, ActnList, ComCtrls, StdCtrls, Controls, ExtCtrls,
+  System.Classes, Winapi.Windows, System.SysUtils, Vcl.Forms, Vcl.ActnList,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   System.Diagnostics, System.Actions,
 
   MARS.Core.Engine,
@@ -36,7 +37,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FServer: TMARShttpServerIndy;
-    FEngine: TMARSEngine;
   public
   end;
 
@@ -53,7 +53,6 @@ uses
   MARS.Core.MessageBodyWriter,
   MARS.Core.MessageBodyWriters;
 
-
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   StopServerAction.Execute;
@@ -66,25 +65,29 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TMARSEngine.Create;
+  // Create http server
+  FServer := TMARShttpServerIndy.Create;
 
   // Engine configuration
-  FEngine.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  FEngine.Name := 'MARS ToDo List';
-  FEngine.BasePath := '/rest';
-  FEngine.ThreadPoolSize := 5;
+  FServer.ConfigureEngine('/rest')
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    .SetName('MARS ToDo List')
+    .SetThreadPoolSize(5);
 
-  // Application configuration
+  // Add and configure an application
+  FServer.Engine
+    .AddApplication('/todo')
+      .SetName('ToDoList')
+      .SetResources(['Server.Resources*']);
 
-  FEngine.AddApplication('ToDoList', '/todo', [ 'Server.Resources*' ]);
+  // Add and configure the diagnostic application
+  FServer.Engine
+    .AddApplication('/diagnostics')
+    .SetName('Diagnostics')
+    .SetResources(['*']);
 
-  FEngine.AddApplication('diagnostics', '/diagnostics', ['*']);
-  TMARSDiagnosticsManager.FEngine := FEngine; // TODO: REMOVE!!!
+  TMARSDiagnosticsManager.FEngine := FServer.Engine; // TODO: REMOVE!!!
   TMARSDiagnosticsManager.Instance;
-
-
-  // Create http server
-  FServer := TMARShttpServerIndy.Create(FEngine);
 
   if not FServer.Active then
     FServer.Active := True;
@@ -98,11 +101,7 @@ end;
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
   FServer.Active := False;
-  FServer.Free;
-  FServer := nil;
-
-  FEngine.Free;
-  FEngine := nil;
+  FreeAndNil(FServer);
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);

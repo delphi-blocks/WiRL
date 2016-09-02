@@ -33,7 +33,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FServer: TMARShttpServerIndy;
-    FEngine: TMARSEngine;
   public
   end;
 
@@ -64,25 +63,22 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TMARSEngine.Create;
+  // Create http server
+  FServer := TMARShttpServerIndy.Create;
 
   // Engine configuration
-  FEngine.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  FEngine.Name := 'MARS Template';
-  FEngine.BasePath := '/rest';
-  FEngine.ThreadPoolSize := 5;
+  FServer.ConfigureEngine('/rest')
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    .SetName('MARS Template')
+    .SetThreadPoolSize(5)
 
-  // Application configuration
-
-  FEngine.AddApplication(
-      'Default'
-    , '/default'
-    , [ 'Server.Resources.THelloWorldResource'
-      ]
-  );
-
-  // Create http server
-  FServer := TMARShttpServerIndy.Create(FEngine);
+    // Application configuration
+    .AddApplication('/default')
+      .SetName('Default App')
+      .SetResources([
+        'Server.Resources.THelloWorldResource'
+      ])
+  ;
 
   if not FServer.Active then
     FServer.Active := True;
@@ -97,10 +93,6 @@ procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
   FServer.Active := False;
   FServer.Free;
-  FServer := nil;
-
-  FEngine.Free;
-  FEngine := nil;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);

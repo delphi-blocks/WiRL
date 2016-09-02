@@ -9,7 +9,8 @@ unit Server.Forms.Main;
 interface
 
 uses
-  Classes, SysUtils, Forms, ActnList, ComCtrls, StdCtrls, Controls, ExtCtrls,
+  System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
+  Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   System.Diagnostics, System.Actions,
 
   MARS.Core.Engine,
@@ -33,7 +34,6 @@ type
     procedure FormCreate(Sender: TObject);
   private
     FServer: TMARShttpServerIndy;
-    FEngine: TMARSEngine;
   public
   end;
 
@@ -50,7 +50,6 @@ uses
   MARS.Core.MessageBodyWriter,
   MARS.Core.MessageBodyWriters;
 
-
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   StartServerAction.Execute;
@@ -58,25 +57,21 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TMARSEngine.Create;
+  // Create http server
+  FServer := TMARShttpServerIndy.Create;
 
   // Engine configuration
-  FEngine.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  FEngine.Name := 'MARS Template';
-  FEngine.BasePath := '/rest';
-  FEngine.ThreadPoolSize := 5;
+  FServer.ConfigureEngine('/rest')
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    .SetName('MARS Template')
+    .SetThreadPoolSize(5);
 
   // Application configuration
-
-  FEngine.AddApplication(
-      'Default'
-    , '/default'
-    , [ 'Server.Resources.THelloWorldResource'
-      ]
-  );
-
-  // Create http server
-  FServer := TMARShttpServerIndy.Create(FEngine);
+  FServer.Engine.AddApplication('/default')
+    .SetName('Default')
+    .SetResources([
+      'Server.Resources.THelloWorldResource'
+    ]);
 
   if not FServer.Active then
     FServer.Active := True;
@@ -90,11 +85,7 @@ end;
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
   FServer.Active := False;
-  FServer.Free;
-  FServer := nil;
-
-  FEngine.Free;
-  FEngine := nil;
+  FreeAndNil(FServer);
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);

@@ -53,6 +53,11 @@ type
   private
     class threadvar FURL: TMARSURL;
   private
+    class var FServerFileName: string;
+    class var FServerDirectory: string;
+    class function GetServerDirectory: string; static;
+    class function GetServerFileName: string; static;
+  private
     FApplications: TMARSApplicationDictionary;
     FSubscribers: TList<IMARSHandleListener>;
     FCriticalSection: TCriticalSection;
@@ -74,13 +79,18 @@ type
 
     procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse);
 
-    function AddApplication(const AName, ABasePath: string): TMARSApplication; overload; virtual;
-    function AddApplication(const AName, ABasePath: string; const AResources: array of string): TMARSApplication; overload; virtual;
+    function AddApplication(const ABasePath: string): TMARSApplication; overload; virtual;
+    function AddApplication(const AName, ABasePath: string; const AResources: array of string): TMARSApplication; overload; virtual; deprecated;
 
     procedure AddSubscriber(const ASubscriber: IMARSHandleListener);
     procedure RemoveSubscriber(const ASubscriber: IMARSHandleListener);
 
     procedure EnumerateApplications(const ADoSomething: TProc<string, TMARSApplication>);
+
+    function SetName(const AName: string): TMARSEngine;
+    function SetBasePath(const ABasePath: string): TMARSEngine;
+    function SetPort(APort: Integer): TMARSEngine;
+    function SetThreadPoolSize(AThreadPoolSize: Integer): TMARSEngine;
 
     property Applications: TMARSApplicationDictionary read FApplications;
     property BasePath: string read FBasePath write FBasePath;
@@ -89,40 +99,29 @@ type
     property ThreadPoolSize: Integer read FThreadPoolSize write FThreadPoolSize;
 
     property CurrentURL: TMARSURL read GetURL;
+
+    class property ServerFileName: string read GetServerFileName;
+    class property ServerDirectory: string read GetServerDirectory;
   end;
 
 implementation
 
 uses
-  MARS.Core.Utils;
+  System.StrUtils, MARS.Core.Utils;
 
 function TMARSEngine.AddApplication(const AName, ABasePath: string;
   const AResources: array of string): TMARSApplication;
-var
-  LResource: string;
 begin
-  Result := TMARSApplication.Create(Self);
-  try
-    Result.Name := AName;
-    Result.BasePath := ABasePath;
-    for LResource in AResources do
-      Result.AddResource(LResource);
-
-    Applications.Add(TMARSURL.CombinePath([BasePath, ABasePath]), Result);
-  except
-    Result.Free;
-    raise
-  end;
+  Result := Self.AddApplication(ABasePath)
+    .SetName(AName)
+    .SetResources(AResources);
 end;
 
-function TMARSEngine.AddApplication(const AName,
-  ABasePath: string): TMARSApplication;
+function TMARSEngine.AddApplication(const ABasePath: string): TMARSApplication;
 begin
   Result := TMARSApplication.Create(Self);
+  Result.SetBasePath(ABasePath);
   try
-    Result.Name := AName;
-    Result.BasePath := ABasePath;
-
     Applications.Add(TMARSURL.CombinePath([BasePath, ABasePath]), Result);
   except
     Result.Free;
@@ -141,7 +140,7 @@ begin
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IMARSHandleListener>.Create;
   FPort := 8080;
-  FThreadPoolSize := 75;
+  FThreadPoolSize := 50;
   FBasePath := '/rest';
   FName := 'MARS Engine';
 
@@ -297,10 +296,51 @@ begin
   DoAfterRequestEnd(LStopWatchEx);
 end;
 
-procedure TMARSEngine.RemoveSubscriber(
-  const ASubscriber: IMARSHandleListener);
+procedure TMARSEngine.RemoveSubscriber(const ASubscriber: IMARSHandleListener);
 begin
   FSubscribers.Remove(ASubscriber);
+end;
+
+function TMARSEngine.SetBasePath(const ABasePath: string): TMARSEngine;
+begin
+  if StartsText('/', ABasePath) then
+    FBasePath := ABasePath
+  else
+    FBasePath := '/' + ABasePath;
+
+  Result := Self;
+end;
+
+function TMARSEngine.SetName(const AName: string): TMARSEngine;
+begin
+  FName := AName;
+  Result := Self;
+end;
+
+function TMARSEngine.SetPort(APort: Integer): TMARSEngine;
+begin
+  FPort := APort;
+  Result := Self;
+end;
+
+function TMARSEngine.SetThreadPoolSize(AThreadPoolSize: Integer): TMARSEngine;
+begin
+  FThreadPoolSize := AThreadPoolSize;
+  Result := Self;
+end;
+
+class function TMARSEngine.GetServerDirectory: string;
+begin
+  if FServerDirectory = '' then
+    FServerDirectory := ExtractFilePath(ServerFileName);
+  Result := FServerDirectory;
+end;
+
+class function TMARSEngine.GetServerFileName: string;
+begin
+  if FServerFileName = '' then
+    FServerFileName := GetModuleName(MainInstance);
+  Result := FServerFileName;
 end;
 
 function TMARSEngine.GetURL: TMARSURL;

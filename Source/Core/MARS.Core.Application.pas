@@ -46,6 +46,7 @@ type
     FBasePath: string;
     FName: string;
     FEngine: TObject;
+    FSystemApp: Boolean;
     function GetResources: TArray<string>;
     function GetRequest: TMARSRequest;
     function GetResponse: TMARSResponse;
@@ -81,13 +82,17 @@ type
     // Fluent-like configuration methods
     function SetResources(const AResources: array of string): TMARSApplication;
     function SetSecret(ASecretGen: TSecretGenerator): TMARSApplication;
+    function SetBasePath(const ABasePath: string): TMARSApplication;
+    function SetName(const AName: string): TMARSApplication;
+    function SetSystemApp(ASystem: Boolean): TMARSApplication;
 
     function AddResource(AResource: string): Boolean;
     procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     procedure CollectGarbage(const AValue: TValue);
 
-    property Name: string read FName write FName;
-    property BasePath: string read FBasePath write FBasePath;
+    property Name: string read FName;
+    property BasePath: string read FBasePath;
+    property SystemApp: Boolean read FSystemApp;
     property Resources: TArray<string> read GetResources;
   end;
 
@@ -157,6 +162,18 @@ begin
   else // exact match
     if LRegistry.TryGetValue(AResource, LInfo) then
       Result := AddResourceToApplicationRegistry(LInfo);
+end;
+
+function TMARSApplication.SetBasePath(const ABasePath: string): TMARSApplication;
+begin
+  FBasePath := ABasePath;
+  Result := Self;
+end;
+
+function TMARSApplication.SetName(const AName: string): TMARSApplication;
+begin
+  FName := AName;
+  Result := Self;
 end;
 
 function TMARSApplication.SetResources(const AResources: array of string): TMARSApplication;
@@ -809,9 +826,15 @@ end;
 
 function TMARSApplication.SetSecret(ASecretGen: TSecretGenerator): TMARSApplication;
 begin
-  Result := Self;
   if Assigned(ASecretGen) then
     FSecret := ASecretGen;
+  Result := Self;
+end;
+
+function TMARSApplication.SetSystemApp(ASystem: Boolean): TMARSApplication;
+begin
+  FSystemApp := ASystem;
+  Result := Self;
 end;
 
 end.

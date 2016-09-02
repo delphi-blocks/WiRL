@@ -17,14 +17,14 @@ uses
 
 type
   TFireDACUtils = class
-    class procedure FDJSONToMemTable(const AJSONContent: string; ADataSetName: string;
-      AMemTable: TFDMemTable); static;
+    class procedure FDJSONToMemTable(const AJSONContent: string;
+      ADataSetName: string; AMemTable: TFDMemTable); static;
   end;
 
 implementation
 
-class procedure TFireDACUtils.FDJSONToMemTable(const AJSONContent: string; ADataSetName: string;
-  AMemTable: TFDMemTable);
+class procedure TFireDACUtils.FDJSONToMemTable(const AJSONContent: string;
+  ADataSetName: string; AMemTable: TFDMemTable);
 var
   LJSONObj: TJSONObject;
   LDataSets: TFDJSONDataSets;

@@ -43,7 +43,7 @@ type
     FName: string;
     FSQLStatement: string;
   public
-    constructor Create(AName, ASQLStatement: string);
+    constructor Create(const AName, ASQLStatement: string);
     property Name: string read FName;
     property SQLStatement: string read FSQLStatement;
   end;
@@ -322,7 +322,7 @@ end;
 
 { SQLStatementAttribute }
 
-constructor SQLStatementAttribute.Create(AName, ASQLStatement: string);
+constructor SQLStatementAttribute.Create(const AName, ASQLStatement: string);
 begin
   inherited Create;
   FName := AName;

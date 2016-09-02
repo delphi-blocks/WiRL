@@ -12,8 +12,6 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
-  MARS.Stateful.Dictionary,
-  MARS.Stateful.WrappedResource,
   MARS.Core.Engine,
   MARS.Core.Application,
   MARS.http.Server.Indy;
@@ -29,7 +27,6 @@ type
     PortNumberEdit: TEdit;
     Label1: TLabel;
     Edit1: TEdit;
-    Button1: TButton;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -38,7 +35,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FServer: TMARShttpServerIndy;
-    FEngine: TMARSEngine;
   public
   end;
 
@@ -66,30 +62,27 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TMARSEngine.Create;
-
-  // Engine configuration
-  FEngine.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  FEngine.ThreadPoolSize := 10;
-  FEngine.Name := 'MARS HelloWorld';
-  FEngine.BasePath := '/rest';
-
-  // New app definition and configuration
-  FEngine.AddApplication('Default', '/app')
-    .SetResources([
-      'Server.Resources.THelloWorldResource',
-      'Server.Resources.TEntityResource'
-    ])
-    .SetSecret(
-      function (): TBytes
-      begin
-        Result := TEncoding.UTF8.GetBytes(Edit1.Text);
-      end
-    )
-  ;
-
   // Create http server
-  FServer := TMARShttpServerIndy.Create(FEngine);
+  FServer := TMARShttpServerIndy.Create;
+
+  FServer.ConfigureEngine('/rest')
+    .SetName('MARS HelloWorld')
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    .SetThreadPoolSize(10)
+
+    // Adds and configures an application
+    .AddApplication('/app')
+      .SetResources([
+        'Server.Resources.THelloWorldResource',
+        'Server.Resources.TEntityResource'
+      ])
+      .SetSecret(
+        function (): TBytes
+        begin
+          Result := TEncoding.UTF8.GetBytes(Edit1.Text);
+        end
+      )
+  ;
 
   if not FServer.Active then
     FServer.Active := True;
@@ -103,11 +96,7 @@ end;
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
   FServer.Active := False;
-  FServer.Free;
-  FServer := nil;
-
-  FEngine.Free;
-  FEngine := nil;
+  FreeAndNil(FServer);
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);

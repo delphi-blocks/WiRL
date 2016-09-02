@@ -9,9 +9,9 @@ unit FMXClient.DataModules.Main;
 interface
 
 uses
-  System.SysUtils, System.Classes, MARS.Client.Application,
-  MARS.Client.Client
-  ;
+  System.SysUtils, System.Classes,
+  MARS.Client.Application,
+  MARS.Client.Client;
 
 type
   TMainDataModule = class(TDataModule)

@@ -9,14 +9,12 @@ unit Server.Resources;
 interface
 
 uses
-  SysUtils, Classes, IOUtils
+  System.SysUtils, System.Classes, System.IOUtils,
 
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.Response
-
-  , MARS.WebServer.Resources
-  ;
+  MARS.Core.Attributes,
+  MARS.Core.MediaType,
+  MARS.Core.Response,
+  MARS.WebServer.Resources;
 
 type
   [Path('helloworld')]
@@ -28,7 +26,7 @@ type
 implementation
 
 uses
-    MARS.Core.Registry;
+  MARS.Core.Registry;
 
 { THelloWorldResource }
 
@@ -43,12 +41,8 @@ begin
   IncludeSubFolders := True;
 end;
 
+
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>(
-    function: TObject
-    begin
-      Result := THelloWorldResource.Create;
-    end
-  );
+  TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
 
 end.

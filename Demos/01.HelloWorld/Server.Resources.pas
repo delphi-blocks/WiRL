@@ -10,6 +10,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Rtti, Generics.Collections,
+  MARS.Core.Engine,
   MARS.Core.JSON,
   MARS.Core.Registry,
   MARS.Core.Attributes,
@@ -18,7 +19,7 @@ uses
   MARS.Core.MessageBodyWriters,
   MARS.Core.Token,
   MARS.Core.Request,
-  MARS.Core.Response,
+  MARS.Core.Response, 
   System.JSON;
 
 type
@@ -153,7 +154,7 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(ParamStr(0))))) +
+        TDirectory.GetParent(TMARSEngine.ServerDirectory)))) +
     'mars-logo.png';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
@@ -165,7 +166,7 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(ParamStr(0))))) +
+        TDirectory.GetParent(TMARSEngine.ServerDirectory)))) +
     'mars-doc.pdf';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;

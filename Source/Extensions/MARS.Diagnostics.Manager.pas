@@ -171,7 +171,7 @@ begin
   try
     if FEngine.Applications.TryGetValue(App, LMARSApp) then // real application
     begin
-      if not LMARSApp.System then // skip system app
+      if not LMARSApp.SystemApp then // skip system app
       begin
         if not FAppDictionary.TryGetValue(App, LInfo) then // find or create
         begin

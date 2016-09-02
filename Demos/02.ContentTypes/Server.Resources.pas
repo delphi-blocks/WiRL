@@ -10,12 +10,10 @@ interface
 
 uses
   SysUtils, Classes, DB,
-
   FireDAC.Comp.Client,
 
   MARS.Core.Attributes,
   MARS.Core.MediaType,
-
   MARS.Core.JSON;
 
 type
@@ -64,7 +62,8 @@ type
 implementation
 
 uses
-  MARS.Core.Registry, DBClient;
+  Datasnap.DBClient,
+  MARS.Core.Registry;
 
 
 { THelloWorldResource }
@@ -80,9 +79,10 @@ begin
   LCDS.Open;
 
   Result := LCDS;
-  Result.AppendRecord(['Andrea', 'Magni']);
+  Result.AppendRecord(['Luca', 'Minuti']);
+  Result.AppendRecord(['Alberto', 'Dal Dosso']);
   Result.AppendRecord(['Paolo', 'Rossi']);
-  Result.AppendRecord(['Mario', 'Bianchi']);
+
 end;
 
 function THelloWorldResource.DataSet2: TFDMemTable;
@@ -91,9 +91,9 @@ begin
   Result.FieldDefs.Add('Name', ftString, 100);
   Result.FieldDefs.Add('Surname', ftString, 100);
   Result.CreateDataSet;
-  Result.AppendRecord(['Andrea', 'Magni']);
+  Result.AppendRecord(['Alberto', 'Dal Dosso']);
   Result.AppendRecord(['Paolo', 'Rossi']);
-  Result.AppendRecord(['Mario', 'Bianchi']);
+  Result.AppendRecord(['Luca', 'Minuti']);
 end;
 
 function THelloWorldResource.DataSet3: TDataset;
@@ -103,10 +103,11 @@ end;
 
 function THelloWorldResource.HtmlDocument: string;
 begin
-  Result := '<html><body>'
-    + '<h2>Hello World!</h2>'
-    + '<p>This is only a test.</p>'
-    + '</body></html>';
+  Result :=
+    '<html><body>' +
+    '<h2>Hello World!</h2>' +
+    '<p>This is only a test.</p>' +
+    '</body></html>';
 end;
 
 function THelloWorldResource.JpegImage: TStream;

@@ -14,12 +14,13 @@ uses
   IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
   //MARS.http.Server.Authentication,
   MARS.Core.Engine,
-//  MARS.http.Core,
   MARS.Core.Response,
   MARS.Core.Request,
   MARS.Core.Token;
 
 type
+  TMARSEngines = TArray<TMARSEngine>;
+
   TMARShttpServerIndy = class(TIdCustomHTTPServer)
   private
     FEngine: TMARSEngine;
@@ -37,7 +38,10 @@ type
     procedure InitComponent; override;
     procedure SetupThreadPooling(const APoolSize: Integer = 25);
   public
-    constructor Create(AEngine: TMARSEngine); virtual;
+    constructor Create; virtual;
+    destructor Destroy; override;
+
+    function ConfigureEngine(const ABasePath: string): TMARSEngine;
     property Engine: TMARSEngine read FEngine;
   end;
 
@@ -144,14 +148,24 @@ begin
   Result := Encoding.GetString(AValue);
 end;
 
-{ TMARShttpServerIndy }
+function TMARShttpServerIndy.ConfigureEngine(const ABasePath: string): TMARSEngine;
+begin
+  FEngine.SetBasePath(ABasePath);
+  Result := FEngine;
+end;
 
-constructor TMARShttpServerIndy.Create(AEngine: TMARSEngine);
+constructor TMARShttpServerIndy.Create;
 begin
   inherited Create(nil);
-  FEngine := AEngine;
+  FEngine := TMARSEngine.Create;
   ParseParams := False;
   OnParseAuthentication := ParseAuthorizationHeader;
+end;
+
+destructor TMARShttpServerIndy.Destroy;
+begin
+  FEngine.Free;
+  inherited;
 end;
 
 procedure TMARShttpServerIndy.DoCommandGet(AContext: TIdContext;

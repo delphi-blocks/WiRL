@@ -12,15 +12,16 @@ uses
   System.SysUtils, System.Classes,
   Data.FireDACJSONReflect, FireDAC.Comp.Client,
 
+  // MARS Core units
+  MARS.Core.Request,
   MARS.Core.JSON,
   MARS.Core.Attributes,
   MARS.Core.MediaType,
   MARS.Core.URL,
-  MARS.Core.Request,
-  MARS.Core.Response,
-
-  MARS.Data.FireDAC,
+  // MARS Data units
   MARS.Data.MessageBodyWriters,
+  // MARS FireDAC units
+  MARS.Data.FireDAC,
   MARS.Data.FireDAC.MessageBodyWriters;
 
 type
@@ -130,23 +131,23 @@ begin
   );
 
   SetLength(LDataSets, 0);
-  TRttiHelper.ForEachField(Self
-    , function(AField: TRttiField): Boolean
+  TRttiHelper.ForEachField(Self,
+    function(AField: TRttiField): Boolean
+    begin
+      if (AField.Visibility >= TMemberVisibility.mvPublic)
+        and (TRttiHelper.IsObjectOfType(AField.FieldType, TFDCustomQuery)) then
       begin
-        if (AField.Visibility >= TMemberVisibility.mvPublic)
-          and (TRttiHelper.IsObjectOfType(AField.FieldType, TFDCustomQuery)) then
+        if (LIncludeDefault or TRttiHelper.HasAttribute<RESTInclude>(AField))
+           and (not TRttiHelper.HasAttribute<RESTExclude>(AField))
+        then
         begin
-          if (LIncludeDefault or TRttiHelper.HasAttribute<RESTInclude>(AField))
-             and (not TRttiHelper.HasAttribute<RESTExclude>(AField))
-          then
-          begin
-            SetLength(LDataSets, Length(LDataSets) + 1);
-            LDataSets[Length(LDataSets) - 1] := AField.GetValue(Self).AsObject as TFDCustomQuery;
-          end;
+          SetLength(LDataSets, Length(LDataSets) + 1);
+          LDataSets[Length(LDataSets) - 1] := AField.GetValue(Self).AsObject as TFDCustomQuery;
         end;
+      end;
 
-        Result := True;
-      end
+      Result := True;
+    end
   );
 
   Result := LDataSets;

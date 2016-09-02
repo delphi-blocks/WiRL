@@ -9,13 +9,11 @@ unit MARS.Data.MessageBodyWriters;
 interface
 
 uses
-  Classes, SysUtils, Rtti
-
-  , MARS.Core.Attributes
-  , MARS.Core.Declarations
-  , MARS.Core.MediaType
-  , MARS.Core.MessageBodyWriter
-  ;
+  System.Classes, System.SysUtils, System.Rtti,
+  MARS.Core.Attributes,
+  MARS.Core.Declarations,
+  MARS.Core.MediaType,
+  MARS.Core.MessageBodyWriter;
 
 type
   [Produces(TMediaType.APPLICATION_JSON)]
@@ -39,11 +37,10 @@ type
 implementation
 
 uses
-  DB, DBClient
-  , MARS.Core.JSON
-  , MARS.Data.Utils
-  , MARS.Rtti.Utils
-  ;
+  Data.DB, Datasnap.DBClient,
+  MARS.Core.JSON,
+  MARS.Data.Utils,
+  MARS.Rtti.Utils;
 
 { TDataSetWriterJSON }
 

@@ -34,7 +34,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FServer: TMARShttpServerIndy;
-    FEngine: TMARSEngine;
   public
   end;
 
@@ -57,34 +56,22 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TMARSEngine.Create;
+  // Create http server
+  FServer := TMARShttpServerIndy.Create;
 
   // Engine configuration
-  FEngine.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  FEngine.ThreadPoolSize := 75;
-  FEngine.Name := 'MARS Auth Demo';
-  FEngine.BasePath := '/rest';
+  FServer.ConfigureEngine('/rest')
+    .SetName('MARS Auth Demo')
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    .SetThreadPoolSize(75)
 
-  FEngine.AddApplication(
-      'Auth Application'
-    , '/app'
-    , ['Server.Resources.TFirstResource',
+    .AddApplication('/app')
+      .SetSystemApp(True)
+      .SetName('Auth Application')
+      .SetResources([
+       'Server.Resources.TFirstResource',
        'Server.Resources.TAuthResource'
-      ]
-  );
-
-//  FEngine.AddApplication(
-//      'Diagnostics'
-//    , '/diagnostics'
-//    , [ 'MARS.Diagnostics.Resources.TDiagnosticsResource'
-//       ,'MARS.Diagnostics.Resources.TResourcesResource'
-//      ]
-//  ).System := True;
-//  TMARSDiagnosticsManager.FEngine := FEngine;
-//  TMARSDiagnosticsManager.Instance; // force instance creation
-
-  // Create http server
-  FServer := TMARShttpServerIndy.Create(FEngine);
+      ]);
 
   if not FServer.Active then
     FServer.Active := True;
@@ -99,10 +86,6 @@ procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
   FServer.Active := False;
   FServer.Free;
-  FServer := nil;
-
-  FEngine.Free;
-  FEngine := nil;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);

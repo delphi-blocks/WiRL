@@ -42,7 +42,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_UnitSearchPath>..\..\Source\Core;..\..\Libs\JWT\Source\Common;..\..\Libs\JWT\Source\JOSE;..\..\Source\Extensions;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_ExeOutput>./$(Platform)/$(Config)</DCC_ExeOutput>
+        <DCC_DcuOutput>.\lib</DCC_DcuOutput>
+        <DCC_ExeOutput>.\exe</DCC_ExeOutput>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <DCC_K>false</DCC_K>
         <SanitizedProjectName>MARSWebServer</SanitizedProjectName>

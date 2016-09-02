@@ -9,8 +9,9 @@ unit Server.Forms.Main;
 interface
 
 uses
-  Classes, SysUtils, Windows, Forms, ActnList, ComCtrls, StdCtrls, Controls, ExtCtrls,
-  System.Diagnostics, System.Actions, ShellAPI,
+  System.Classes, System.SysUtils, Winapi.Windows, Vcl.Forms, Vcl.ActnList,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
+  System.Diagnostics, System.Actions, Winapi.ShellAPI,
 
   MARS.Core.Engine,
   MARS.http.Server.Indy,
@@ -67,25 +68,19 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TMARSEngine.Create;
-
-  // Engine configuration
-  FEngine.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  FEngine.Name := 'MARS Template';
-  FEngine.BasePath := '/rest';
-  FEngine.ThreadPoolSize := 5;
-
-  // Application configuration
-
-  FEngine.AddApplication(
-      'Default'
-    , '/default'
-    , [ 'Server.Resources.THelloWorldResource'
-      ]
-  );
-
   // Create http server
-  FServer := TMARShttpServerIndy.Create(FEngine);
+  FServer := TMARShttpServerIndy.Create;
+
+  // Configure the engine
+  FServer.ConfigureEngine('/rest')
+    .SetName('MARS Template Demo')
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    .SetThreadPoolSize(5)
+
+    // Add and configure an application
+    .AddApplication('/default')
+      .SetName('Default')
+      .SetResources([ 'Server.Resources.THelloWorldResource']);
 
   if not FServer.Active then
     FServer.Active := True;
@@ -100,10 +95,6 @@ procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
   FServer.Active := False;
   FServer.Free;
-  FServer := nil;
-
-  FEngine.Free;
-  FEngine := nil;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
@@ -113,9 +104,9 @@ end;
 
 procedure TMainForm.TestActionExecute(Sender: TObject);
 const
-  TemplateUrl = 'http://localhost:%d/rest/default/helloworld/';
+  LTemplateURL = 'http://localhost:%d/rest/default/helloworld/';
 begin
-  ShellExecute(Handle, 'open', PChar(Format(TemplateUrl, [FEngine.Port])), '', '', SW_NORMAL);
+  ShellExecute(Handle, 'open', PChar(Format(LTemplateURL, [FEngine.Port])), '', '', SW_NORMAL);
 end;
 
 initialization
