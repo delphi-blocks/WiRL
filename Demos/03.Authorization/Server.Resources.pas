@@ -22,12 +22,12 @@ uses
   MARS.Core.Token,
   MARS.Core.Token.Resource;
 
-
 type
-  [Path('first')]
-  TFirstResource = class
+  [Path('user')]
+  TSecuredResource = class
   private
   protected
+    [Context] Auth: TMARSAuthContext;
     [Context] URL: TMARSURL;
     [Context] Request: TMARSRequest;
     [Context] Response: TMARSResponse;
@@ -36,35 +36,43 @@ type
     [Produces(TMediaType.TEXT_PLAIN)]
     function PublicInfo: string;
 
-
     [GET, Path('/details'), RolesAllowed('admin')]
     [Produces(TMediaType.TEXT_PLAIN)]
-    function DetailsInfo: string;
+    function DetailsInfo: TJSONObject;
   end;
 
-  [Path('token')]
+  [Path('auth')]
   TAuthResource = class(TMARSAuthResource)
-  private
   protected
-  public
+    function Authenticate(const AUserName, APassword: string): Boolean; override;
   end;
 
 implementation
 
-{ TFirstResource }
+{ TSecuredResource }
 
-function TFirstResource.DetailsInfo: string;
+function TSecuredResource.DetailsInfo: TJSONObject;
 begin
-  Result := 'Admin-level access informations here!';
+
+  Result := TJSONObject.Create;
+  Result.AddPair('custom', TJSONString.Create('Admin-level access informations here!'));
+  Result.AddPair('subject', Auth.Subject.Clone);
 end;
 
-function TFirstResource.PublicInfo: string;
+function TSecuredResource.PublicInfo: string;
 begin
-  Result := 'Public informations here!';
+  Result := 'User public informations!' + Auth.Subject.UserName;
+end;
+
+{ TAuthResource }
+
+function TAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
+begin
+  Result := SameText(APassword, 'mypassword');
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TFirstResource>;
+  TMARSResourceRegistry.Instance.RegisterResource<TSecuredResource>;
   TMARSResourceRegistry.Instance.RegisterResource<TAuthResource>;
 
 end.

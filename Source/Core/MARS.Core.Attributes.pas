@@ -12,7 +12,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
-  MARS.Core.Declarations, MARS.Core.Request,
+  
+  MARS.Core.Declarations, 
+  MARS.Core.Request,
   MARS.Core.Utils;
 
 type
@@ -148,12 +150,6 @@ type
 {$ENDREGION}
 
 {$REGION 'MARS-specific Attributes'}
-
-  /// <summary>
-  /// ResultIsReference is for compatibility only, use the standard (JAX-RS defined) Singleton Attribute
-  /// </summary>
-  ResultIsReference = class(TCustomAttribute)
-  end deprecated;
 
   LoginRequiredAttribute = class(TCustomAttribute);
 

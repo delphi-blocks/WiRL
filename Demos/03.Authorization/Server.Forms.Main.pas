@@ -69,8 +69,8 @@ begin
       .SetSystemApp(True)
       .SetName('Auth Application')
       .SetResources([
-       'Server.Resources.TFirstResource',
-       'Server.Resources.TAuthResource'
+       'Server.Resources.TAuthResource',
+       'Server.Resources.TSecuredResource'
       ]);
 
   if not FServer.Active then

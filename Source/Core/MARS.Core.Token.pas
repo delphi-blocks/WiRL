@@ -14,7 +14,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.SyncObjs, System.Rtti,
 
-  MARS.Core.JSON, // To be removed
+  MARS.Core.JSON,
 
   JOSE.Types.Bytes,
   JOSE.Types.JSON,
@@ -40,6 +40,7 @@ type
     procedure SetDisplayName(const Value: string);
   public
     constructor Create; override;
+
     function HasRole(const ARole: string): Boolean; virtual;
     procedure SetUserAndRoles(const AUserName: string; const ARoles: TArray<string>); virtual;
 
@@ -241,7 +242,7 @@ end;
 procedure TMARSSubject.SetUserAndRoles(const AUserName: string; const ARoles: TArray<string>);
 begin
   UserName := AUserName;
-  Roles.Join(',', ARoles);
+  Roles := Roles.Join(',', ARoles);
 end;
 
 end.

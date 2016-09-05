@@ -24,12 +24,13 @@ uses
 
 type
   TMARSAuthResource = class
+  private
+    procedure SetAuthContext(AValidated: Boolean; const AUserName: string);
   protected
     [Context] FAuthContext: TMARSAuthContext;
-
-    function Authenticate(const AUserName, APassword: string): Boolean; virtual;
-    procedure BeforeLogin(const AUserName, APassword: string); virtual;
-    procedure AfterLogin(const AUserName, APassword: string); virtual;
+    [Context] FApplication: TMARSApplication;
+    function Authenticate(const AUserName, APassword: string): Boolean; virtual; abstract;
+    function RolesFromUserName(const AUserName: string): TArray<string>; virtual;
   public
     [GET]
     [Produces(TMediaType.APPLICATION_JSON)]
@@ -50,48 +51,22 @@ implementation
 uses
   DateUtils;
 
-{ TMARSAuthResource }
-
-procedure TMARSAuthResource.AfterLogin(const AUserName, APassword: string);
-begin
-
-end;
-
-function TMARSAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
-begin
-  Result := SameText(APassword, IntToStr(HourOf(Now)));
-
-  if Result then // authenticated, set user roles
-  begin
-    if SameText(AUserName, 'admin') then
-      FAuthContext.Subject.SetUserAndRoles(AUserName, TArray<string>.Create('standard', 'admin'))
-    else
-      FAuthContext.Subject.SetUserAndRoles(AUserName, TArray<string>.Create('standard'));
-  end
-  else // not authenticated, clear user roles and username
-    FAuthContext.Subject.SetUserAndRoles('', nil);
-end;
-
-procedure TMARSAuthResource.BeforeLogin(const AUserName, APassword: string);
-begin
-
-end;
-
 function TMARSAuthResource.DoLogin(const AUsername, APassword: string): TJSONObject;
 begin
-  Result := nil;
-  BeforeLogin(AUserName, APassword);
-  try
-    if Authenticate(AUserName, APassword) then
-    Result := GetCurrent;
-  finally
-    AfterLogin(AUserName, APassword);
-  end;
+  if Authenticate(AUserName, APassword) then
+    SetAuthContext(True, AUserName)
+  else
+    SetAuthContext(False, AUsername);
+
+  FApplication.GenerateToken;
+
+  Result := GetCurrent;
 end;
 
 function TMARSAuthResource.GetCurrent: TJSONObject;
 begin
-  Result := FAuthContext.Subject.JSON.Clone as TJSONObject;
+  Result := TJSONObject.Create;
+  Result.AddPair('token', TJSONString.Create(FAuthContext.CompactToken));
 end;
 
 function TMARSAuthResource.Logout: TJSONObject;
@@ -100,6 +75,24 @@ begin
   FAuthContext.Subject.SetUserAndRoles('', nil);
 
   Result := GetCurrent;
+end;
+
+function TMARSAuthResource.RolesFromUserName(const AUserName: string): TArray<string>;
+begin
+  Result := ['user'];
+  if SameText(AUserName, 'admin') then
+    Result := Result + ['admin'];
+end;
+
+procedure TMARSAuthResource.SetAuthContext(AValidated: Boolean; const AUserName: string);
+begin
+  FAuthContext.Authenticated := AValidated;
+  if AValidated then
+    // User authenticated, set user roles
+    FAuthContext.Subject.SetUserAndRoles(AUserName, RolesFromUserName(AUserName))
+  else
+    // User not authenticated, clear user roles and username
+    FAuthContext.Subject.SetUserAndRoles('', nil);
 end;
 
 end.

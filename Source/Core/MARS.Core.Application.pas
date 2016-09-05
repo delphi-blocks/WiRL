@@ -10,10 +10,6 @@ unit MARS.Core.Application;
 
 interface
 
-// JAX-RS Objects Life-Cycle
-// https://jersey.java.net/documentation/latest/deployment.html
-// https://jersey.java.net/documentation/latest/jaxrs-resources.html
-// http://www.mkyong.com/webservices/jax-rs/jax-rs-path-uri-matching-example/
 
 uses
   System.SysUtils, System.Classes, System.Rtti,
@@ -86,6 +82,7 @@ type
     function SetName(const AName: string): TMARSApplication;
     function SetSystemApp(ASystem: Boolean): TMARSApplication;
 
+    procedure GenerateToken;
     function AddResource(AResource: string): Boolean;
     procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     procedure CollectGarbage(const AValue: TValue);
@@ -335,6 +332,9 @@ begin
   // Engine
   else if (AType.InheritsFrom(TMARSEngine)) then
     AValue := Engine
+  // Application
+  else if (AType.InheritsFrom(TMARSApplication)) then
+    AValue := Self
   else
     Result := False;
 end;
@@ -644,6 +644,11 @@ begin
   finally
     FAuthContext.Free;
   end;
+end;
+
+procedure TMARSApplication.GenerateToken;
+begin
+  FAuthContext.Generate(FSecret);
 end;
 
 function TMARSApplication.GetNewToken(ARequest: TMARSRequest): TMARSAuthContext;
