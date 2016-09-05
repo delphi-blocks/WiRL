@@ -69,7 +69,8 @@ begin
       .SetSystemApp(True)
       .SetName('Auth Application')
       .SetResources([
-       'Server.Resources.TAuthResource',
+       'Server.Resources.TFormAuthResource',
+       'Server.Resources.TBasicAuthResource',
        'Server.Resources.TSecuredResource'
       ]);
 

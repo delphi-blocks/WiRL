@@ -26,23 +26,28 @@ type
   [Path('user')]
   TSecuredResource = class
   private
-  protected
     [Context] Auth: TMARSAuthContext;
-    [Context] URL: TMARSURL;
-    [Context] Request: TMARSRequest;
-    [Context] Response: TMARSResponse;
   public
     [GET, PermitAll]
     [Produces(TMediaType.TEXT_PLAIN)]
     function PublicInfo: string;
 
     [GET, Path('/details'), RolesAllowed('admin')]
-    [Produces(TMediaType.TEXT_PLAIN)]
+    [Produces(TMediaType.APPLICATION_JSON)]
     function DetailsInfo: TJSONObject;
   end;
 
-  [Path('auth')]
-  TAuthResource = class(TMARSAuthResource)
+  // Inherit the Auth resource from the base class you want to use:
+  // 1)
+
+  [Path('basic_auth')]
+  TBasicAuthResource = class(TMARSAuthBasicResource)
+  protected
+    function Authenticate(const AUserName, APassword: string): Boolean; override;
+  end;
+
+  [Path('form_auth')]
+  TFormAuthResource = class(TMARSAuthFormResource)
   protected
     function Authenticate(const AUserName, APassword: string): Boolean; override;
   end;
@@ -53,7 +58,6 @@ implementation
 
 function TSecuredResource.DetailsInfo: TJSONObject;
 begin
-
   Result := TJSONObject.Create;
   Result.AddPair('custom', TJSONString.Create('Admin-level access informations here!'));
   Result.AddPair('subject', Auth.Subject.Clone);
@@ -64,15 +68,26 @@ begin
   Result := 'User public informations!' + Auth.Subject.UserName;
 end;
 
-{ TAuthResource }
+{ TBasicAuthResource }
 
-function TAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
+function TBasicAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
+begin
+  Result := SameText(APassword, 'mypassword');
+end;
+
+{ TFormAuthResource }
+
+function TFormAuthResource.Authenticate(const AUserName,
+  APassword: string): Boolean;
 begin
   Result := SameText(APassword, 'mypassword');
 end;
 
 initialization
   TMARSResourceRegistry.Instance.RegisterResource<TSecuredResource>;
-  TMARSResourceRegistry.Instance.RegisterResource<TAuthResource>;
+
+  // Auth resource
+  TMARSResourceRegistry.Instance.RegisterResource<TFormAuthResource>;
+  TMARSResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
 
 end.
