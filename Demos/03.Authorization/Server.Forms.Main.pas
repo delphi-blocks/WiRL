@@ -11,10 +11,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
-
-  MARS.Core.Engine,
-  MARS.http.Server.Indy,
-  MARS.Core.Application;
+  MARS.http.Server.Indy;
 
 type
   TMainForm = class(TForm)

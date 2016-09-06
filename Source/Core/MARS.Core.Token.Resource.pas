@@ -32,14 +32,12 @@ type
   protected
     [Context] FAuthContext: TMARSAuthContext;
     [Context] FApplication: TMARSApplication;
+
     function Authenticate(const AUserName, APassword: string): Boolean; virtual; abstract;
     function RolesFromUserName(const AUserName: string): TArray<string>; virtual;
   public
     [GET, Produces(TMediaType.APPLICATION_JSON)]
     function GetGeneratedToken: TJSONObject;
-
-    [DELETE]
-    function Logout: TJSONObject;
   end;
 
   /// <summary>
@@ -67,7 +65,6 @@ type
     function DoLogin([HeaderParam('Authorization')] const AAuth: string): TJSONObject;
   end;
 
-
 implementation
 
 uses
@@ -79,14 +76,6 @@ function TMARSAuthResource.GetGeneratedToken: TJSONObject;
 begin
   Result := TJSONObject.Create;
   Result.AddPair('access_token', TJSONString.Create(FAuthContext.CompactToken));
-end;
-
-function TMARSAuthResource.Logout: TJSONObject;
-begin
-  FAuthContext.Authenticated := False;
-  FAuthContext.Subject.SetUserAndRoles('', nil);
-
-  Result := GetGeneratedToken;
 end;
 
 function TMARSAuthResource.RolesFromUserName(const AUserName: string): TArray<string>;

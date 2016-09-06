@@ -15,15 +15,18 @@ uses
   MARS.Core.JSON;
 
 type
-  TDataFolderType = (dftCustom, dftAppData, dftLocalAppData, dftCommonAppData, dftMyDocuments, dftCommonDocuments);
-
   TCustomAttributeClass = class of TCustomAttribute;
 
+  TJSONSerializer = class
+  private
+    class var FContext: TRttiContext;
+  public
+    class function ValueToJSONValue(AValue: TValue): TJSONValue;
+    class function ObjectToJSON(AObject: TObject): TJSONObject;
+    class function ObjectToJSONString(AObject: TObject): string;
+  end;
 
   function CreateCompactGuidStr: string;
-
-  function ObjectToJSON(const AObject: TObject): TJSONObject;
-  function ObjectToJSONString(const AObject: TObject): string;
 
   /// <summary>
   ///   Returns th efile name without the extension
@@ -55,10 +58,10 @@ type
   procedure CopyStream(ASourceStream, ADestStream: TStream;
     AOverWriteDest: Boolean = True; AThenResetDestPosition: Boolean = True);
 
-{$ifndef DelphiXE6_UP}
-function DateToISO8601(const ADate: TDateTime; AInputIsUTC: Boolean = True): string;
-function ISO8601ToDate(const AISODate: string; AReturnUTC: Boolean = True): TDateTime;
-{$endif}
+  {$ifndef DelphiXE6_UP}
+  function DateToISO8601(const ADate: TDateTime; AInputIsUTC: Boolean = True): string;
+  function ISO8601ToDate(const AISODate: string; AReturnUTC: Boolean = True): TDateTime;
+  {$endif}
 
   function DateToJSON(const ADate: TDateTime; AInputIsUTC: Boolean = True): string;
   function JSONToDate(const ADate: string; AReturnUTC: Boolean = True): TDateTime;
@@ -69,7 +72,8 @@ function ISO8601ToDate(const AISODate: string; AReturnUTC: Boolean = True): TDat
 implementation
 
 uses
-  System.TypInfo, System.StrUtils, System.DateUtils, System.Masks;
+  System.TypInfo, System.StrUtils, System.DateUtils, System.Masks,
+  MARS.Core.Exceptions;
 
 
 function StreamToString(AStream: TStream): string;
@@ -245,23 +249,104 @@ begin
     Result := Result + IntToHex(LBuffer[LIndex], 2);
 end;
 
-function ObjectToJSON(const AObject: TObject): TJSONObject;
+{ TJSONSerializer }
+
+class function TJSONSerializer.ValueToJSONValue(AValue: TValue): TJSONValue;
+var
+  LIndex: Integer;
+begin
+  case AValue.Kind of
+    tkChar,
+    tkString,
+    tkWChar,
+    tkLString,
+    tkWString,
+    tkVariant,
+    tkUString:
+    begin
+      Result := TJSONString.Create(AValue.AsString);
+    end;
+
+    tkEnumeration:
+    begin
+      Result := TJSONNumber.Create(AValue.AsOrdinal);
+    end;
+
+    tkInteger,
+    tkInt64:
+    begin
+      Result := TJSONNumber.Create(AValue.AsInt64);
+    end;
+
+    tkFloat:
+    begin
+      Result := TJSONNumber.Create(AValue.AsExtended);
+    end;
+
+    tkClass:
+    begin
+      Result := ObjectToJSON(AValue.AsObject);
+    end;
+
+    tkArray,
+    tkDynArray:
+    begin
+      Result := TJSONArray.Create;
+      for LIndex := 0 to AValue.GetArrayLength - 1 do
+      begin
+        (Result as TJSONArray).AddElement(
+          ValueToJSONValue(AValue.GetArrayElement(LIndex))
+        );
+      end;
+    end;
+
+    tkSet:
+    begin
+      Result := TJSONString.Create(AValue.ToString);
+    end;
+
+    //tkRecord:
+
+    {
+    tkUnknown,
+    tkMethod,
+    tkPointer,
+    tkProcedure,
+    tkInterface,
+    tkClassRef:
+    }
+
+    else
+      Result := nil;
+  end;
+end;
+
+class function TJSONSerializer.ObjectToJSON(AObject: TObject): TJSONObject;
 var
   LType: TRttiType;
   LProperty: TRttiProperty;
+  LJSONValue: TJSONValue;
 begin
   Result := TJSONObject.Create;
   try
     if Assigned(AObject) then
     begin
-      LType := TRttiContext.Create.GetType(AObject.ClassType);
+      LType := FContext.GetType(AObject.ClassType);
       for LProperty in LType.GetProperties do
       begin
-        if (LProperty.IsReadable)
-          and (not ((LProperty.PropertyType.IsInstance) or (LProperty.PropertyType.TypeKind = tkInterface)))
-          and (LProperty.Visibility in [mvPublic, mvPublished])
-        then
-          Result.AddPair(LProperty.Name, LProperty.GetValue(AObject).ToString);
+        if LProperty.IsReadable and (LProperty.Visibility in [mvPublic, mvPublished]) then
+        begin
+          try
+            LJSONValue := ValueToJSONValue(LProperty.GetValue(AObject));
+          except
+            raise Exception.CreateFmt(
+              'Error converting property (%s) of type (%s)',
+                [LProperty.Name, LProperty.PropertyType.Name]
+            );
+          end;
+          if Assigned(LJSONValue) then
+            Result.AddPair(LProperty.Name, LJSONValue);
+        end;
       end;
     end;
   except
@@ -270,7 +355,7 @@ begin
   end;
 end;
 
-function ObjectToJSONString(const AObject: TObject): string;
+class function TJSONSerializer.ObjectToJSONString(AObject: TObject): string;
 var
   LObj: TJSONObject;
 begin

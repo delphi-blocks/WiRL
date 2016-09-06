@@ -63,7 +63,7 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AOutputStream);
   try
-    LObj := ObjectToJSON(AValue.AsObject);
+    LObj := TJSONSerializer.ObjectToJSON(AValue.AsObject);
     try
       LStreamWriter.Write(TJSONHelper.ToJSON(LObj));
     finally
