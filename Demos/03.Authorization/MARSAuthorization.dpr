@@ -9,7 +9,8 @@ program MARSAuthorization;
 uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
-  Server.Resources in 'Server.Resources.pas';
+  Server.Resources in 'Server.Resources.pas',
+  Server.Claims in 'Server.Claims.pas';
 
 {$R *.res}
 

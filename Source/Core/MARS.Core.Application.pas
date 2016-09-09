@@ -41,6 +41,7 @@ type
     FResourceRegistry: TObjectDictionary<string, TMARSConstructorInfo>;
     FBasePath: string;
     FName: string;
+    FClaimClass: TMARSSubjectClass;
     FEngine: TObject;
     FSystemApp: Boolean;
     function GetResources: TArray<string>;
@@ -80,6 +81,7 @@ type
     function SetSecret(ASecretGen: TSecretGenerator): TMARSApplication;
     function SetBasePath(const ABasePath: string): TMARSApplication;
     function SetName(const AName: string): TMARSApplication;
+    function SetClaimsClass(AClaimClass: TMARSSubjectClass): TMARSApplication;
     function SetSystemApp(ASystem: Boolean): TMARSApplication;
 
     procedure GenerateToken;
@@ -90,6 +92,7 @@ type
     property Name: string read FName;
     property BasePath: string read FBasePath;
     property SystemApp: Boolean read FSystemApp;
+    property ClaimClass: TMARSSubjectClass read FClaimClass;
     property Resources: TArray<string> read GetResources;
   end;
 
@@ -170,6 +173,12 @@ end;
 function TMARSApplication.SetName(const AName: string): TMARSApplication;
 begin
   FName := AName;
+  Result := Self;
+end;
+
+function TMARSApplication.SetClaimsClass(AClaimClass: TMARSSubjectClass): TMARSApplication;
+begin
+  FClaimClass := AClaimClass;
   Result := Self;
 end;
 
@@ -656,8 +665,10 @@ var
   LAuth: string;
   LAuthParts: TArray<string>;
 begin
-  { TODO -opaolo -c : Parametrize with the right ClaimsClass 11/07/2016 16:30:45 }
-  Result := TMARSAuthContext.Create;
+  if Assigned(FClaimClass) then
+    Result := TMARSAuthContext.Create(FClaimClass)
+  else
+    Result := TMARSAuthContext.Create;
 
   LAuth := string(ARequest.Authorization);
 

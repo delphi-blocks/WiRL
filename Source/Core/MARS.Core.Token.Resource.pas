@@ -59,7 +59,8 @@ type
   /// HTTP basic authentication resource
   /// </summary>
   TMARSAuthBasicResource = class(TMARSAuthResource)
-  private const AUTH_BASIC = 'Basic ';
+  private
+    const AUTH_BASIC = 'Basic ';
   public
     [POST, Produces(TMediaType.APPLICATION_JSON)]
     function DoLogin([HeaderParam('Authorization')] const AAuth: string): TJSONObject;
@@ -80,9 +81,13 @@ end;
 
 function TMARSAuthResource.RolesFromUserName(const AUserName: string): TArray<string>;
 begin
-  Result := ['user'];
+  SetLength(Result, 1);
+  Result[0] := 'user';
   if SameText(AUserName, 'admin') then
-    Result := Result + ['admin'];
+  begin
+    SetLength(Result, 2);
+    Result[1] := 'admin';
+  end;
 end;
 
 procedure TMARSAuthResource.SetAuthContext(AValidated: Boolean; const AUserName: string);
@@ -130,6 +135,7 @@ begin
 
   SetAuthContext(True, LAuthData[0]);
   FApplication.GenerateToken;
+
   Result := GetGeneratedToken;
 end;
 

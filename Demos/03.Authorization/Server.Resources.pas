@@ -20,7 +20,10 @@ uses
   MARS.Core.Request,
   MARS.Core.Response,
   MARS.Core.Token,
-  MARS.Core.Token.Resource;
+  MARS.Core.Token.Resource,
+
+  // Only if you want to use a custom (claims) class
+  Server.Claims;
 
 type
   TAddress = class
@@ -58,7 +61,10 @@ type
   [Path('user')]
   TSecuredResource = class
   private
+    // Injects the auth context into the "Auth" object
     [Context] Auth: TMARSAuthContext;
+    // Injects the custom claims into "Subject" object
+    [Context] Subject: TServerClaims;
   public
     [GET, PermitAll]
     [Produces(TMediaType.APPLICATION_JSON)]
@@ -73,6 +79,9 @@ type
 
   [Path('basic_auth')]
   TBasicAuthResource = class(TMARSAuthBasicResource)
+  private
+    // Injects the custom claims into "Subject" object
+    [Context] Subject: TServerClaims;
   protected
     function Authenticate(const AUserName, APassword: string): Boolean; override;
   end;
@@ -101,7 +110,7 @@ begin
 
   Result.FullName := 'Paolo Rossi';
   Result.Age := 46;
-  Result.Language := 'it-IT';
+  Result.Language := Subject.Language;
   Result.Group := 10;
 
   Result.AddAddress('Via Castello', 'Piacenza', '29021');
@@ -112,13 +121,17 @@ end;
 
 function TBasicAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
 begin
+  // The line below is only an example, you have to replace with
+  // your (server) authentication code (database, another service, etc...)
   Result := SameText(APassword, 'mypassword');
+
+  // Here you can set all field of your custom claims object
+  Subject.Language := 'en-US';
 end;
 
 { TFormAuthResource }
 
-function TFormAuthResource.Authenticate(const AUserName,
-  APassword: string): Boolean;
+function TFormAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
 begin
   Result := SameText(APassword, 'mypassword');
 end;
@@ -137,7 +150,7 @@ end;
 
 constructor TUserInfo.Create;
 begin
-
+  SetLength(FAddresses, 0);
 end;
 
 destructor TUserInfo.Destroy;
@@ -147,7 +160,7 @@ begin
   for LAddress in FAddresses do
     LAddress.Free;
 
-  FAddresses := [];
+  SetLength(FAddresses, 0);
   inherited;
 end;
 

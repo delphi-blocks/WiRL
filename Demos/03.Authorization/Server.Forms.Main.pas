@@ -39,6 +39,9 @@ var
 
 implementation
 
+uses
+  Server.Claims;
+
 {$R *.dfm}
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -65,6 +68,7 @@ begin
     .AddApplication('/app')
       .SetSystemApp(True)
       .SetName('Auth Application')
+      .SetClaimsClass(TServerClaims)
       .SetResources([
        'Server.Resources.TFormAuthResource',
        'Server.Resources.TBasicAuthResource',
