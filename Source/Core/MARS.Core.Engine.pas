@@ -51,6 +51,8 @@ type
 
   TMARSEngine = class
   private
+    class threadvar FRequest: TMARSRequest;
+    class threadvar FResponse: TMARSResponse;
     class threadvar FURL: TMARSURL;
   private
     class var FServerFileName: string;
@@ -67,6 +69,8 @@ type
     FName: string;
 
     function GetURL: TMARSURL;
+    function GetRequest: TMARSRequest;
+    function GetResponse: TMARSResponse;
   protected
     procedure DoBeforeHandleRequest(const AApplication: TMARSApplication); virtual;
     procedure DoAfterHandleRequest(const AApplication: TMARSApplication; const AStopWatch: TStopWatch); virtual;
@@ -82,8 +86,8 @@ type
     function AddApplication(const ABasePath: string): TMARSApplication; overload; virtual;
     function AddApplication(const AName, ABasePath: string; const AResources: array of string): TMARSApplication; overload; virtual; deprecated;
 
-    procedure AddSubscriber(const ASubscriber: IMARSHandleListener);
-    procedure RemoveSubscriber(const ASubscriber: IMARSHandleListener);
+    function AddSubscriber(const ASubscriber: IMARSHandleListener): TMARSEngine;
+    function RemoveSubscriber(const ASubscriber: IMARSHandleListener): TMARSEngine;
 
     procedure EnumerateApplications(const ADoSomething: TProc<string, TMARSApplication>);
 
@@ -98,6 +102,8 @@ type
     property Port: Integer read FPort write FPort;
     property ThreadPoolSize: Integer read FThreadPoolSize write FThreadPoolSize;
 
+    property CurrentRequest: TMARSRequest read GetRequest;
+    property CurrentResponse: TMARSResponse read GetResponse;
     property CurrentURL: TMARSURL read GetURL;
 
     class property ServerFileName: string read GetServerFileName;
@@ -129,9 +135,10 @@ begin
   end;
 end;
 
-procedure TMARSEngine.AddSubscriber(const ASubscriber: IMARSHandleListener);
+function TMARSEngine.AddSubscriber(const ASubscriber: IMARSHandleListener): TMARSEngine;
 begin
   FSubscribers.Add(ASubscriber);
+  Result := Self;
 end;
 
 constructor TMARSEngine.Create;
@@ -238,6 +245,8 @@ var
   LStopWatchEx: TStopWatch;
 begin
   LStopWatchEx := TStopwatch.StartNew;
+  FRequest := ARequest;
+  FResponse := AResponse;
   if not DoBeforeRequestStart() then
   try
     LURL := TMARSURL.Create(ARequest);
@@ -296,9 +305,10 @@ begin
   DoAfterRequestEnd(LStopWatchEx);
 end;
 
-procedure TMARSEngine.RemoveSubscriber(const ASubscriber: IMARSHandleListener);
+function TMARSEngine.RemoveSubscriber(const ASubscriber: IMARSHandleListener): TMARSEngine;
 begin
   FSubscribers.Remove(ASubscriber);
+  Result := Self;
 end;
 
 function TMARSEngine.SetBasePath(const ABasePath: string): TMARSEngine;
@@ -327,6 +337,16 @@ function TMARSEngine.SetThreadPoolSize(AThreadPoolSize: Integer): TMARSEngine;
 begin
   FThreadPoolSize := AThreadPoolSize;
   Result := Self;
+end;
+
+function TMARSEngine.GetRequest: TMARSRequest;
+begin
+  Result := FRequest;
+end;
+
+function TMARSEngine.GetResponse: TMARSResponse;
+begin
+  Result := FResponse;
 end;
 
 class function TMARSEngine.GetServerDirectory: string;
