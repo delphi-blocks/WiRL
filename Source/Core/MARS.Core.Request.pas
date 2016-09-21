@@ -41,6 +41,7 @@ type
     function GetContentType: string; virtual; abstract;
     function GetContentLength: Integer; virtual; abstract;
     function GetContentVersion: string; virtual; abstract;
+    function GetRawPathInfo: string; virtual; abstract;
     function DoGetFieldByName(const Name: string): string; virtual; abstract;
   public
     property PathInfo: string read GetPathInfo;
@@ -57,6 +58,7 @@ type
     property ContentVersion: string read GetContentVersion;
     property Authorization: string read GetAuthorization;
     property Accept: string read GetAccept;
+    property RawPathInfo: string read GetRawPathInfo;
 
     function GetFieldByName(const Name: string): string;
   end;

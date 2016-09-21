@@ -30,6 +30,10 @@ type
     procedure SetStatusCode(const Value: Integer); virtual; abstract;
     function GetContentType: string; virtual; abstract;
     procedure SetContentType(const Value: string); virtual; abstract;
+    function GetReasonString: string; virtual; abstract;
+    procedure SetReasonString(const Value: string); virtual; abstract;
+    function GetContentLength: Int64; virtual; abstract;
+    procedure SetContentLength(const Value: Int64); virtual; abstract;
   public
     procedure SetCustomHeader(const Name, Value: string);
     property Date: TDateTime read GetDate write SetDate;
@@ -39,7 +43,9 @@ type
     property ContentStream: TStream read GetContentStream write SetContentStream;
     property CustomHeaders: TStrings read GetCustomHeaders write SetCustomHeaders;
     property StatusCode: Integer read GetStatusCode write SetStatusCode;
+    property ReasonString: string read GetReasonString write SetReasonString;
     property ContentType: string read GetContentType write SetContentType;
+    property ContentLength: Int64 read GetContentLength write SetContentLength;
 
   {
     procedure SendRedirect(const URI: string); virtual; abstract;

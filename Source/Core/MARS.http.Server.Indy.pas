@@ -67,6 +67,10 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetContentType: string; override;
     procedure SetContentType(const Value: string); override;
+    function GetReasonString: string; override;
+    procedure SetReasonString(const Value: string); override;
+    function GetContentLength: Int64; override;
+    procedure SetContentLength(const Value: Int64); override;
   public
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
     destructor Destroy; override;
@@ -95,6 +99,7 @@ type
     function GetContentType: string; override;
     function GetContentLength: Integer; override;
     function GetContentVersion: string; override;
+    function GetRawPathInfo: string; override;
     function DoGetFieldByName(const Name: string): string; override;
   public
     constructor Create(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
@@ -401,6 +406,11 @@ begin
   Result := FQueryFields;
 end;
 
+function TMARSHttpRequestIndy.GetRawPathInfo: string;
+begin
+  Result := FRequestInfo.URI;
+end;
+
 function TMARSHttpRequestIndy.GetServerPort: Integer;
 var
   LValue: string;
@@ -437,6 +447,11 @@ begin
   Result := FResponseInfo.ContentText;
 end;
 
+function TMARSHttpResponseIndy.GetContentLength: Int64;
+begin
+  Result := FResponseInfo.ContentLength;
+end;
+
 function TMARSHttpResponseIndy.GetContentStream: TStream;
 begin
   Result := FResponseInfo.ContentStream;
@@ -467,6 +482,11 @@ begin
   Result := FResponseInfo.LastModified;
 end;
 
+function TMARSHttpResponseIndy.GetReasonString: string;
+begin
+  Result := FResponseInfo.ResponseText;
+end;
+
 function TMARSHttpResponseIndy.GetStatusCode: Integer;
 begin
   Result := FResponseInfo.ResponseNo;
@@ -476,6 +496,12 @@ procedure TMARSHttpResponseIndy.SetContent(const Value: string);
 begin
   inherited;
   FResponseInfo.ContentText := Value;
+end;
+
+procedure TMARSHttpResponseIndy.SetContentLength(const Value: Int64);
+begin
+  inherited;
+  FResponseInfo.ContentLength := Value;
 end;
 
 procedure TMARSHttpResponseIndy.SetContentStream(const Value: TStream);
@@ -512,6 +538,12 @@ procedure TMARSHttpResponseIndy.SetLastModified(const Value: TDateTime);
 begin
   inherited;
   FResponseInfo.LastModified := Value;
+end;
+
+procedure TMARSHttpResponseIndy.SetReasonString(const Value: string);
+begin
+  inherited;
+  FResponseInfo.ResponseText := Value;
 end;
 
 procedure TMARSHttpResponseIndy.SetStatusCode(const Value: Integer);
