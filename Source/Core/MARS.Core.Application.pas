@@ -196,25 +196,31 @@ end;
 
 procedure TMARSApplication.ApplyRequestFilters;
 var
+  FilterImpl :TObject;
   RequestFilter :IMARSContainerRequestFilter;
 begin
   TMARSFilterRegistry.Instance.FetchRequestFilter(False, procedure (ConstructorInfo :TMARSConstructorInfo) begin
+    FilterImpl := ConstructorInfo.ConstructorFunc();
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
-      if not Supports(ConstructorInfo.ConstructorFunc(), IMARSContainerRequestFilter, RequestFilter) then
-        raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
-      RequestFilter.Filter(FRequest);
+    if not Supports(FilterImpl, IMARSContainerRequestFilter, RequestFilter) then
+      raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
+    ContextInjection(FilterImpl);
+    RequestFilter.Filter(FRequest);
   end);
 end;
 
 procedure TMARSApplication.ApplyResponseFilters;
 var
+  FilterImpl :TObject;
   ResponseFilter :IMARSContainerResponseFilter;
 begin
   TMARSFilterRegistry.Instance.FetchResponseFilter(procedure (ConstructorInfo :TMARSConstructorInfo) begin
-      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
-      if not Supports(ConstructorInfo.ConstructorFunc(), IMARSContainerResponseFilter, ResponseFilter) then
-        raise ENotSupportedException.CreateFmt('Response Filter [%s] does not implement requested interface [IMARSContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]);
-      ResponseFilter.Filter(FRequest, FResponse);
+    FilterImpl := ConstructorInfo.ConstructorFunc();
+    // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+    if not Supports(FilterImpl, IMARSContainerResponseFilter, ResponseFilter) then
+      raise ENotSupportedException.CreateFmt('Response Filter [%s] does not implement requested interface [IMARSContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]);
+    ContextInjection(FilterImpl);
+    ResponseFilter.Filter(FRequest, FResponse);
   end);
 end;
 
