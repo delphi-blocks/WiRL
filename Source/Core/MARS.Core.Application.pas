@@ -49,8 +49,9 @@ type
     function GetResponse: TMARSResponse;
     function GetURL: TMARSURL;
   protected
-    procedure ApplyRequestFilters;
-    procedure ApplyResponseFilters;
+    function CheckFilterBinding(AFilterClass, AResourceClass :TClass; const AMethod: TRttiMethod) :Boolean;
+    procedure ApplyRequestFilters(AResourceClass: TClass; const AMethod: TRttiMethod);
+    procedure ApplyResponseFilters(AResourceClass: TClass; const AMethod: TRttiMethod);
 
     procedure InternalHandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     function FindMethodToInvoke(const AURL: TMARSURL;
@@ -194,33 +195,40 @@ begin
     Self.AddResource(LResource);
 end;
 
-procedure TMARSApplication.ApplyRequestFilters;
+procedure TMARSApplication.ApplyRequestFilters(AResourceClass: TClass; const AMethod: TRttiMethod);
 var
   FilterImpl :TObject;
   RequestFilter :IMARSContainerRequestFilter;
 begin
   TMARSFilterRegistry.Instance.FetchRequestFilter(False, procedure (ConstructorInfo :TMARSConstructorInfo) begin
-    FilterImpl := ConstructorInfo.ConstructorFunc();
+    if CheckFilterBinding(ConstructorInfo.TypeTClass, AResourceClass, AMethod) then
+    begin
+      FilterImpl := ConstructorInfo.ConstructorFunc();
+
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
-    if not Supports(FilterImpl, IMARSContainerRequestFilter, RequestFilter) then
-      raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
-    ContextInjection(FilterImpl);
-    RequestFilter.Filter(FRequest);
+      if not Supports(FilterImpl, IMARSContainerRequestFilter, RequestFilter) then
+        raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
+      ContextInjection(FilterImpl);
+      RequestFilter.Filter(FRequest);
+    end;
   end);
 end;
 
-procedure TMARSApplication.ApplyResponseFilters;
+procedure TMARSApplication.ApplyResponseFilters(AResourceClass: TClass; const AMethod: TRttiMethod);
 var
   FilterImpl :TObject;
   ResponseFilter :IMARSContainerResponseFilter;
 begin
   TMARSFilterRegistry.Instance.FetchResponseFilter(procedure (ConstructorInfo :TMARSConstructorInfo) begin
-    FilterImpl := ConstructorInfo.ConstructorFunc();
-    // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
-    if not Supports(FilterImpl, IMARSContainerResponseFilter, ResponseFilter) then
-      raise ENotSupportedException.CreateFmt('Response Filter [%s] does not implement requested interface [IMARSContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]);
-    ContextInjection(FilterImpl);
-    ResponseFilter.Filter(FRequest, FResponse);
+    if CheckFilterBinding(ConstructorInfo.TypeTClass, AResourceClass, AMethod) then
+    begin
+      FilterImpl := ConstructorInfo.ConstructorFunc();
+      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+      if not Supports(FilterImpl, IMARSContainerResponseFilter, ResponseFilter) then
+        raise ENotSupportedException.CreateFmt('Response Filter [%s] does not implement requested interface [IMARSContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]);
+      ContextInjection(FilterImpl);
+      ResponseFilter.Filter(FRequest, FResponse);
+    end;
   end);
 end;
 
@@ -280,6 +288,56 @@ begin
   finally
     LAllowedRoles.Free;
   end;
+end;
+
+function HasNameBindingAttribute(AClass :TRttiType; AMethod: TRttiMethod; Attrib :TCustomAttribute) :Boolean;
+var
+  HasAttrib :Boolean;
+begin
+  // First search inside the method attributes
+  HasAttrib := False;
+  TRttiHelper.HasAttribute<TCustomAttribute>(AMethod, procedure (MethodAttrib :TCustomAttribute) begin
+    HasAttrib := MethodAttrib is Attrib.ClassType;
+  end);
+
+  // Then inside the class attributes
+  if not HasAttrib then
+  begin
+    TRttiHelper.HasAttribute<TCustomAttribute>(AClass, procedure (MethodAttrib :TCustomAttribute) begin
+      HasAttrib := MethodAttrib is Attrib.ClassType;
+    end);
+  end;
+
+  Result := HasAttrib;
+end;
+
+function TMARSApplication.CheckFilterBinding(AFilterClass, AResourceClass: TClass;
+  const AMethod: TRttiMethod): Boolean;
+var
+  LFilterType :TRttiType;
+  LResourceType :TRttiType;
+var
+  HasBinding :Boolean;
+begin
+  HasBinding := True;
+  LFilterType := FRttiContext.GetType(AFilterClass);
+  LResourceType := FRttiContext.GetType(AResourceClass);
+
+  // Check for attributes that subclass "NameBindingAttribute"
+  TRttiHelper.HasAttribute<NameBindingAttribute>(LFilterType, procedure (FilterAttrib :NameBindingAttribute) begin
+    HasBinding := HasBinding and HasNameBindingAttribute(LResourceType, AMethod, FilterAttrib);
+  end);
+
+  // Check for attributes annotaded by "NameBinding" attribute
+  TRttiHelper.HasAttribute<TCustomAttribute>(LFilterType, procedure (FilterAttrib :TCustomAttribute)
+  begin
+    if TRttiHelper.HasAttribute<NameBindingAttribute>(FRttiContext.GetType(FilterAttrib.ClassType)) then
+    begin
+      HasBinding := HasBinding and HasNameBindingAttribute(LResourceType, AMethod, FilterAttrib);
+    end;
+  end);
+
+  Result := HasBinding;
 end;
 
 procedure TMARSApplication.CollectGarbage(const AValue: TValue);
@@ -741,7 +799,7 @@ begin
 
   CheckAuthorization(LMethod, FAuthContext);
 
-  ApplyRequestFilters;
+  ApplyRequestFilters(LInfo.TypeTClass, LMethod);
 
   LInstance := LInfo.ConstructorFunc();
   try
@@ -760,7 +818,7 @@ begin
     LInstance.Free;
   end;
 
-  ApplyResponseFilters;
+  ApplyResponseFilters(LInfo.TypeTClass, LMethod);
 end;
 
 procedure TMARSApplication.InvokeResourceMethod(AInstance: TObject;

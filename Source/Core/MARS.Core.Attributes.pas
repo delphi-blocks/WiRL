@@ -149,6 +149,8 @@ type
 
   PreMatchingAttribute = class(TCustomAttribute);
 
+  NameBindingAttribute = class(TCustomAttribute);
+
 {$ENDREGION}
 
 {$REGION 'MARS-specific Attributes'}

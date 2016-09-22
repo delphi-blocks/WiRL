@@ -182,13 +182,11 @@ end;
 procedure TMARSFilterRegistry.FetchResponseFilter(AResponseProc: TProc<TMARSConstructorInfo>);
 var
   Pair: TPair<string, TMARSConstructorInfo>;
-  FilterType :TRttiType;
 begin
   for Pair in Self do
   begin
     if Supports(Pair.Value.TypeTClass, IMARSContainerResponseFilter) then
     begin
-      FilterType := FRttiContext.GetType(Pair.Value.TypeTClass);
       AResponseProc(Pair.Value);
     end;
   end;
