@@ -147,6 +147,8 @@ type
 
   SingletonAttribute = class(TCustomAttribute);
 
+  PreMatchingAttribute = class(TCustomAttribute);
+
 {$ENDREGION}
 
 {$REGION 'MARS-specific Attributes'}

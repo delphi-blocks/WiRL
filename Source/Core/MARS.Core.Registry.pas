@@ -11,8 +11,8 @@ unit MARS.Core.Registry;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections,
-  MARS.Core.Singleton;
+  System.SysUtils, System.Classes, System.Generics.Collections, System.Rtti,
+  MARS.Core.Singleton, MARS.Core.Exceptions, MARS.Core.Attributes;
 
 type
   TMARSConstructorInfo = class
@@ -44,10 +44,31 @@ type
     class property Instance: TMARSResourceRegistry read GetInstance;
   end;
 
+  TMARSFilterRegistry = class(TObjectDictionary<string, TMARSConstructorInfo>)
+  private
+    type
+      TMARSFilterRegistrySingleton = TMARSSingleton<TMARSFilterRegistry>;
+    var
+      FRttiContext: TRttiContext;
+  protected
+    class function GetInstance: TMARSFilterRegistry; static; inline;
+  public
+    constructor Create; virtual;
+    function RegisterFilter<T: class>: TMARSConstructorInfo; overload;
+    function RegisterFilter<T: class>(const AConstructorFunc: TFunc<TObject>): TMARSConstructorInfo; overload;
+
+    function GetFilterClass(const AResource: string; out Value: TClass): Boolean;
+    function GetFilterInstance<T: class>: T;
+    procedure FetchRequestFilter(const PreMatching :Boolean; ARequestProc: TProc<TMARSConstructorInfo>);
+    procedure FetchResponseFilter(AResponseProc: TProc<TMARSConstructorInfo>);
+
+    class property Instance: TMARSFilterRegistry read GetInstance;
+  end;
+
 implementation
 
 uses
-  System.Rtti;
+  MARS.http.Filters, MARS.Rtti.Utils;
 
 { TMARSResourceRegistry }
 
@@ -124,6 +145,95 @@ begin
         LValue := LType.GetMethod('Create').Invoke(LType.AsInstance.MetaclassType, []);
         Result := LValue.AsObject;
       end;
+end;
+
+{ TMARSFilterRegistry }
+
+constructor TMARSFilterRegistry.Create;
+begin
+  TMARSFilterRegistrySingleton.CheckInstance(Self);
+  FRttiContext := TRttiContext.Create;
+
+  inherited Create([doOwnsValues]);
+end;
+
+procedure TMARSFilterRegistry.FetchRequestFilter(const PreMatching: Boolean;
+  ARequestProc: TProc<TMARSConstructorInfo>);
+var
+  Pair: TPair<string, TMARSConstructorInfo>;
+  FilterType :TRttiType;
+  IsPreMatching :Boolean;
+begin
+  for Pair in Self do
+  begin
+    if Supports(Pair.Value.TypeTClass, IMARSContainerRequestFilter) then
+    begin
+      FilterType := FRttiContext.GetType(Pair.Value.TypeTClass);
+      IsPreMatching := TRttiHelper.HasAttribute<PreMatchingAttribute>(FilterType);
+
+      if PreMatching and IsPreMatching then
+        ARequestProc(Pair.Value)
+      else if not PreMatching and not IsPreMatching then
+        ARequestProc(Pair.Value);
+    end;
+  end;
+end;
+
+procedure TMARSFilterRegistry.FetchResponseFilter(AResponseProc: TProc<TMARSConstructorInfo>);
+var
+  Pair: TPair<string, TMARSConstructorInfo>;
+  FilterType :TRttiType;
+begin
+  for Pair in Self do
+  begin
+    if Supports(Pair.Value.TypeTClass, IMARSContainerResponseFilter) then
+    begin
+      FilterType := FRttiContext.GetType(Pair.Value.TypeTClass);
+      AResponseProc(Pair.Value);
+    end;
+  end;
+end;
+
+function TMARSFilterRegistry.GetFilterClass(const AResource: string;
+  out Value: TClass): Boolean;
+var
+  LInfo: TMARSConstructorInfo;
+begin
+  Value := nil;
+  Result := Self.TryGetValue(AResource, LInfo);
+  if Result then
+    Value := LInfo.TypeTClass;
+end;
+
+function TMARSFilterRegistry.GetFilterInstance<T>: T;
+var
+  LInfo: TMARSConstructorInfo;
+begin
+  if Self.TryGetValue(T.ClassName, LInfo) then
+  begin
+    if LInfo.ConstructorFunc <> nil then
+      Result := LInfo.ConstructorFunc() as T;
+  end;
+end;
+
+class function TMARSFilterRegistry.GetInstance: TMARSFilterRegistry;
+begin
+  Result := TMARSFilterRegistrySingleton.Instance;
+end;
+
+function TMARSFilterRegistry.RegisterFilter<T>(
+  const AConstructorFunc: TFunc<TObject>): TMARSConstructorInfo;
+begin
+  if not Supports(TClass(T), IMARSContainerRequestFilter) and not Supports(TClass(T), IMARSContainerResponseFilter) then
+    raise EMARSException.CreateFmt('Filter registration error: [%s] should be a valid filter', [TClass(T).QualifiedClassName]);
+
+  Result := TMARSConstructorInfo.Create(TClass(T), AConstructorFunc);
+  Self.Add(T.QualifiedClassName, Result);
+end;
+
+function TMARSFilterRegistry.RegisterFilter<T>: TMARSConstructorInfo;
+begin
+  Result := RegisterFilter<T>(nil);
 end;
 
 end.

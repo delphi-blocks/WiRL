@@ -49,6 +49,9 @@ type
     function GetResponse: TMARSResponse;
     function GetURL: TMARSURL;
   protected
+    procedure ApplyRequestFilters;
+    procedure ApplyResponseFilters;
+
     procedure InternalHandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     function FindMethodToInvoke(const AURL: TMARSURL;
       const AInfo: TMARSConstructorInfo): TRttiMethod; virtual;
@@ -108,8 +111,8 @@ uses
   MARS.Rtti.Utils,
   MARS.Core.Attributes,
   MARS.Core.Engine,
-  MARS.Core.JSON;
-
+  MARS.Core.JSON,
+  MARS.http.Filters;
 
 function TMARSApplication.AddResource(AResource: string): Boolean;
 
@@ -189,6 +192,30 @@ begin
   Result := Self;
   for LResource in AResources do
     Self.AddResource(LResource);
+end;
+
+procedure TMARSApplication.ApplyRequestFilters;
+var
+  RequestFilter :IMARSContainerRequestFilter;
+begin
+  TMARSFilterRegistry.Instance.FetchRequestFilter(False, procedure (ConstructorInfo :TMARSConstructorInfo) begin
+      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+      if not Supports(ConstructorInfo.ConstructorFunc(), IMARSContainerRequestFilter, RequestFilter) then
+        raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
+      RequestFilter.Filter(FRequest);
+  end);
+end;
+
+procedure TMARSApplication.ApplyResponseFilters;
+var
+  ResponseFilter :IMARSContainerResponseFilter;
+begin
+  TMARSFilterRegistry.Instance.FetchResponseFilter(procedure (ConstructorInfo :TMARSConstructorInfo) begin
+      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+      if not Supports(ConstructorInfo.ConstructorFunc(), IMARSContainerResponseFilter, ResponseFilter) then
+        raise ENotSupportedException.CreateFmt('Response Filter [%s] does not implement requested interface [IMARSContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]);
+      ResponseFilter.Filter(FRequest, FResponse);
+  end);
 end;
 
 procedure TMARSApplication.CheckAuthorization(const AMethod: TRttiMethod; const
@@ -708,6 +735,8 @@ begin
 
   CheckAuthorization(LMethod, FAuthContext);
 
+  ApplyRequestFilters;
+
   LInstance := LInfo.ConstructorFunc();
   try
     TMARSMessageBodyRegistry.Instance.FindWriter(LMethod, string(Request.Accept),
@@ -724,6 +753,8 @@ begin
   finally
     LInstance.Free;
   end;
+
+  ApplyResponseFilters;
 end;
 
 procedure TMARSApplication.InvokeResourceMethod(AInstance: TObject;

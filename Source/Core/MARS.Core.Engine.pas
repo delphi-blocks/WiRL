@@ -10,16 +10,19 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  System.SyncObjs, System.Diagnostics,
+  System.SyncObjs, System.Diagnostics, System.Rtti,
 
   MARS.Core.Classes,
+  MARS.Rtti.Utils,
   MARS.Core.MediaType,
   MARS.Core.Exceptions,
   MARS.Core.Registry,
   MARS.Core.Application,
   MARS.Core.URL,
   MARS.Core.Request,
-  MARS.Core.Response;
+  MARS.Core.Response,
+  MARS.Core.Attributes,
+  MARS.http.Filters;
 
 {$M+}
 
@@ -60,6 +63,7 @@ type
     class function GetServerDirectory: string; static;
     class function GetServerFileName: string; static;
   private
+    FRttiContext: TRttiContext;
     FApplications: TMARSApplicationDictionary;
     FSubscribers: TList<IMARSHandleListener>;
     FCriticalSection: TCriticalSection;
@@ -71,6 +75,10 @@ type
     function GetURL: TMARSURL;
     function GetRequest: TMARSRequest;
     function GetResponse: TMARSResponse;
+
+    // Filter handling
+    procedure ApplyPreMatchingFilters;
+
   protected
     procedure DoBeforeHandleRequest(const AApplication: TMARSApplication); virtual;
     procedure DoAfterHandleRequest(const AApplication: TMARSApplication; const AStopWatch: TStopWatch); virtual;
@@ -141,8 +149,21 @@ begin
   Result := Self;
 end;
 
+procedure TMARSEngine.ApplyPreMatchingFilters;
+var
+  RequestFilter :IMARSContainerRequestFilter;
+begin
+  TMARSFilterRegistry.Instance.FetchRequestFilter(True, procedure (ConstructorInfo :TMARSConstructorInfo) begin
+      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+      if not Supports(ConstructorInfo.ConstructorFunc(), IMARSContainerRequestFilter, RequestFilter) then
+        raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
+      RequestFilter.Filter(FRequest);
+  end);
+end;
+
 constructor TMARSEngine.Create;
 begin
+  FRttiContext := TRttiContext.Create;
   FApplications := TMARSApplicationDictionary.Create([doOwnsValues]);
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IMARSHandleListener>.Create;
@@ -206,6 +227,8 @@ begin
       if Result then
         Break;
     end;
+
+  ApplyPreMatchingFilters;
 end;
 
 procedure TMARSEngine.DoHandleException(const AApplication: TMARSApplication;
@@ -247,42 +270,44 @@ begin
   LStopWatchEx := TStopwatch.StartNew;
   FRequest := ARequest;
   FResponse := AResponse;
-  if not DoBeforeRequestStart() then
   try
-    LURL := TMARSURL.Create(ARequest);
-    try
-      LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0]]);
-      if (BasePath <> '') and (BasePath <> TMARSURL.URL_PATH_SEPARATOR) then
-      begin
-        if not LURL.MatchPath(BasePath + TMARSURL.URL_PATH_SEPARATOR) then
+    if not DoBeforeRequestStart() then
+    begin
+      LURL := TMARSURL.Create(ARequest);
+      try
+        LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0]]);
+        if (BasePath <> '') and (BasePath <> TMARSURL.URL_PATH_SEPARATOR) then
+        begin
+          if not LURL.MatchPath(BasePath + TMARSURL.URL_PATH_SEPARATOR) then
+            raise EMARSNotFoundException.Create(
+              Format('Requested URL [%s] does not match base engine URL [%s]', [LURL.URL, BasePath]),
+              Self.ClassName, 'HandleRequest'
+            );
+
+          LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0], LURL.PathTokens[1]]);
+        end;
+
+        if FApplications.TryGetValue(LApplicationPath, LApplication) then
+        begin
+          LURL.BasePath := LApplicationPath;
+          FURL := LURL;
+          DoBeforeHandleRequest(LApplication);
+          LStopWatch := TStopwatch.StartNew;
+          try
+            LApplication.HandleRequest(ARequest, AResponse, LURL);
+          finally
+            LStopWatch.Stop;
+          end;
+          DoAfterHandleRequest(LApplication, LStopWatch);
+        end
+        else
           raise EMARSNotFoundException.Create(
-            Format('Requested URL [%s] does not match base engine URL [%s]', [LURL.URL, BasePath]),
+            Format('Application [%s] not found, please check the URL [%s]', [LApplicationPath, LURL.URL]),
             Self.ClassName, 'HandleRequest'
           );
-
-        LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0], LURL.PathTokens[1]]);
+      finally
+        LURL.Free;
       end;
-
-      if FApplications.TryGetValue(LApplicationPath, LApplication) then
-      begin
-        LURL.BasePath := LApplicationPath;
-        FURL := LURL;
-        DoBeforeHandleRequest(LApplication);
-        LStopWatch := TStopwatch.StartNew;
-        try
-          LApplication.HandleRequest(ARequest, AResponse, LURL);
-        finally
-          LStopWatch.Stop;
-        end;
-        DoAfterHandleRequest(LApplication, LStopWatch);
-      end
-      else
-        raise EMARSNotFoundException.Create(
-          Format('Application [%s] not found, please check the URL [%s]', [LApplicationPath, LURL.URL]),
-          Self.ClassName, 'HandleRequest'
-        );
-    finally
-      LURL.Free;
     end;
   except
     on E: EMARSWebApplicationException do
