@@ -153,7 +153,7 @@ procedure TMARSEngine.ApplyPreMatchingFilters;
 var
   RequestFilter :IMARSContainerRequestFilter;
 begin
-  TMARSFilterRegistry.Instance.FetchRequestFilter(True, procedure (ConstructorInfo :TMARSConstructorInfo) begin
+  TMARSFilterRegistry.Instance.FetchRequestFilter(True, procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
       if not Supports(ConstructorInfo.ConstructorFunc(), IMARSContainerRequestFilter, RequestFilter) then
         raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);

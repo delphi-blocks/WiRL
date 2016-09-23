@@ -200,7 +200,7 @@ var
   FilterImpl :TObject;
   RequestFilter :IMARSContainerRequestFilter;
 begin
-  TMARSFilterRegistry.Instance.FetchRequestFilter(False, procedure (ConstructorInfo :TMARSConstructorInfo) begin
+  TMARSFilterRegistry.Instance.FetchRequestFilter(False, procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
     if CheckFilterBinding(ConstructorInfo.TypeTClass, AResourceClass, AMethod) then
     begin
       FilterImpl := ConstructorInfo.ConstructorFunc();
@@ -219,7 +219,7 @@ var
   FilterImpl :TObject;
   ResponseFilter :IMARSContainerResponseFilter;
 begin
-  TMARSFilterRegistry.Instance.FetchResponseFilter(procedure (ConstructorInfo :TMARSConstructorInfo) begin
+  TMARSFilterRegistry.Instance.FetchResponseFilter(procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
     if CheckFilterBinding(ConstructorInfo.TypeTClass, AResourceClass, AMethod) then
     begin
       FilterImpl := ConstructorInfo.ConstructorFunc();

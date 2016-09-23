@@ -151,6 +151,14 @@ type
 
   NameBindingAttribute = class(TCustomAttribute);
 
+  PriorityAttribute = class(TCustomAttribute)
+  private
+    FValue: Integer;
+  public
+    constructor Create(Value: Integer);
+    property Value: Integer read FValue write FValue;
+  end;
+
 {$ENDREGION}
 
 {$REGION 'MARS-specific Attributes'}
@@ -349,6 +357,13 @@ end;
 function OPTIONSAttribute.Matches(const ARequest: TMARSRequest): Boolean;
 begin
   Result := ARequest.Method = 'OPTIONS';
+end;
+
+{ PriorityAttribute }
+
+constructor PriorityAttribute.Create(Value: Integer);
+begin
+  FValue := Value;
 end;
 
 end.
