@@ -338,15 +338,17 @@ var
 begin
   // First search inside the method attributes
   HasAttrib := False;
-  TRttiHelper.HasAttribute<TCustomAttribute>(AMethod, procedure (MethodAttrib :TCustomAttribute) begin
-    HasAttrib := MethodAttrib is Attrib.ClassType;
+  TRttiHelper.ForEachAttribute<TCustomAttribute>(AMethod, procedure (MethodAttrib :TCustomAttribute) begin
+    if MethodAttrib is Attrib.ClassType then
+      HasAttrib := True;
   end);
 
   // Then inside the class attributes
   if not HasAttrib then
   begin
-    TRttiHelper.HasAttribute<TCustomAttribute>(AClass, procedure (MethodAttrib :TCustomAttribute) begin
-      HasAttrib := MethodAttrib is Attrib.ClassType;
+    TRttiHelper.ForEachAttribute<TCustomAttribute>(AClass, procedure (MethodAttrib :TCustomAttribute) begin
+      if MethodAttrib is Attrib.ClassType then
+        HasAttrib := True;
     end);
   end;
 
@@ -366,12 +368,12 @@ begin
   LResourceType := FRttiContext.GetType(AResourceClass);
 
   // Check for attributes that subclass "NameBindingAttribute"
-  TRttiHelper.HasAttribute<NameBindingAttribute>(LFilterType, procedure (FilterAttrib :NameBindingAttribute) begin
+  TRttiHelper.ForEachAttribute<NameBindingAttribute>(LFilterType, procedure (FilterAttrib :NameBindingAttribute) begin
     HasBinding := HasBinding and HasNameBindingAttribute(LResourceType, AMethod, FilterAttrib);
   end);
 
   // Check for attributes annotaded by "NameBinding" attribute
-  TRttiHelper.HasAttribute<TCustomAttribute>(LFilterType, procedure (FilterAttrib :TCustomAttribute)
+  TRttiHelper.ForEachAttribute<TCustomAttribute>(LFilterType, procedure (FilterAttrib :TCustomAttribute)
   begin
     if TRttiHelper.HasAttribute<NameBindingAttribute>(FRttiContext.GetType(FilterAttrib.ClassType)) then
     begin
