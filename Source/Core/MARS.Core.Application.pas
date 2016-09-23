@@ -21,7 +21,8 @@ uses
   MARS.Core.MessageBodyWriter,
   MARS.Core.Registry,
   MARS.Core.MediaType,
-  MARS.Core.Token;
+  MARS.Core.Token,
+  MARS.http.Filters;
 
 type
   TSecretGenerator = reference to function(): TBytes;
@@ -39,6 +40,7 @@ type
     FSecret: TBytes;
     FRttiContext: TRttiContext;
     FResourceRegistry: TObjectDictionary<string, TMARSConstructorInfo>;
+    FFilterRegistry :TMARSFilterRegistry;
     FBasePath: string;
     FName: string;
     FClaimClass: TMARSSubjectClass;
@@ -82,6 +84,7 @@ type
 
     // Fluent-like configuration methods
     function SetResources(const AResources: array of string): TMARSApplication;
+    function SetFilters(const AFilters: array of string): TMARSApplication;
     function SetSecret(ASecretGen: TSecretGenerator): TMARSApplication;
     function SetBasePath(const ABasePath: string): TMARSApplication;
     function SetName(const AName: string): TMARSApplication;
@@ -90,6 +93,7 @@ type
 
     procedure GenerateToken;
     function AddResource(AResource: string): Boolean;
+    function AddFilter(AFilter: string): Boolean;
     procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     procedure CollectGarbage(const AValue: TValue);
 
@@ -112,8 +116,36 @@ uses
   MARS.Rtti.Utils,
   MARS.Core.Attributes,
   MARS.Core.Engine,
-  MARS.Core.JSON,
-  MARS.http.Filters;
+  MARS.Core.JSON;
+
+function TMARSApplication.AddFilter(AFilter: string): Boolean;
+var
+  LRegistry: TMARSFilterRegistry;
+  LInfo: TMARSFilterConstructorInfo;
+begin
+  Result := False;
+  LRegistry := TMARSFilterRegistry.Instance;
+
+  if IsMask(AFilter) then // has wildcards and so on...
+  begin
+    for LInfo in LRegistry do
+    begin
+      if MatchesMask(LInfo.TypeTClass.QualifiedClassName, AFilter) then
+      begin
+        FFilterRegistry.Add(LInfo);
+        Result := True;
+      end;
+    end;
+  end
+  else // exact match
+  begin
+    if LRegistry.FilterByClassName(AFilter, LInfo) then
+    begin
+      FFilterRegistry.Add(LInfo);
+      Result := True;
+    end;
+  end;
+end;
 
 function TMARSApplication.AddResource(AResource: string): Boolean;
 
@@ -186,6 +218,16 @@ begin
   Result := Self;
 end;
 
+function TMARSApplication.SetFilters(
+  const AFilters: array of string): TMARSApplication;
+var
+  LFilter: string;
+begin
+  Result := Self;
+  for LFilter in AFilters do
+    Self.AddFilter(LFilter);
+end;
+
 function TMARSApplication.SetResources(const AResources: array of string): TMARSApplication;
 var
   LResource: string;
@@ -200,7 +242,7 @@ var
   FilterImpl :TObject;
   RequestFilter :IMARSContainerRequestFilter;
 begin
-  TMARSFilterRegistry.Instance.FetchRequestFilter(False, procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
+  FFilterRegistry.FetchRequestFilter(False, procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
     if CheckFilterBinding(ConstructorInfo.TypeTClass, AResourceClass, AMethod) then
     begin
       FilterImpl := ConstructorInfo.ConstructorFunc();
@@ -219,7 +261,7 @@ var
   FilterImpl :TObject;
   ResponseFilter :IMARSContainerResponseFilter;
 begin
-  TMARSFilterRegistry.Instance.FetchResponseFilter(procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
+  FFilterRegistry.FetchResponseFilter(procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
     if CheckFilterBinding(ConstructorInfo.TypeTClass, AResourceClass, AMethod) then
     begin
       FilterImpl := ConstructorInfo.ConstructorFunc();
@@ -445,11 +487,14 @@ begin
   FEngine := AEngine;
   FRttiContext := TRttiContext.Create;
   FResourceRegistry := TObjectDictionary<string, TMARSConstructorInfo>.Create([doOwnsValues]);
+  FFilterRegistry := TMARSFilterRegistry.Create;
+  FFilterRegistry.OwnsObjects := False;
 end;
 
 destructor TMARSApplication.Destroy;
 begin
   FResourceRegistry.Free;
+  FFilterRegistry.Free;
   inherited;
 end;
 

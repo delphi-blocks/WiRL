@@ -66,6 +66,7 @@ type
 
     procedure Sort;
 
+    function FilterByClassName(const AClassName :string; out AConstructorInfo :TMARSFilterConstructorInfo) :Boolean;
     function RegisterFilter<T: class>: TMARSFilterConstructorInfo; overload;
     function RegisterFilter<T: class>(const AConstructorFunc: TFunc<TObject>): TMARSFilterConstructorInfo; overload;
 
@@ -121,7 +122,7 @@ begin
     end
   );
 
-  TMARSFilterRegistrySingleton.CheckInstance(Self);
+  //TMARSFilterRegistrySingleton.CheckInstance(Self);
   FRttiContext := TRttiContext.Create;
 
   inherited Create(Comparer, True);
@@ -160,6 +161,22 @@ begin
     if Supports(ConstructorInfo.TypeTClass, IMARSContainerResponseFilter) then
     begin
       AResponseProc(ConstructorInfo);
+    end;
+  end;
+end;
+
+function TMARSFilterRegistry.FilterByClassName(const AClassName: string;
+  out AConstructorInfo: TMARSFilterConstructorInfo): Boolean;
+var
+  Item: TMARSFilterConstructorInfo;
+begin
+  Result := False;
+  for Item in Self do
+  begin
+    if CompareText(Item.TypeTClass.QualifiedClassName, AClassName) = 0 then
+    begin
+      AConstructorInfo := Item;
+      Exit(True);
     end;
   end;
 end;
