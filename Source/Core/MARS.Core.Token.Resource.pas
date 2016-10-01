@@ -23,18 +23,28 @@ uses
   MARS.Core.URL, System.JSON;
 
 type
+  TMARSAuthPrincipal = class
+  public
+    UserName: string;
+    Password: string;
+  end;
+
+  TMARSAuthResult = record
+  public
+    Success: Boolean;
+    Roles: TArray<string>;
+    function RolesAsString: string;
+  end;
+
   /// <summary>
   /// Base class for the authentication resource
   /// </summary>
   TMARSAuthResource = class
-  private
-    procedure SetAuthContext(AValidated: Boolean; const AUserName: string);
   protected
     [Context] FAuthContext: TMARSAuthContext;
     [Context] FApplication: TMARSApplication;
 
-    function Authenticate(const AUserName, APassword: string): Boolean; virtual; abstract;
-    function RolesFromUserName(const AUserName: string): TArray<string>; virtual;
+    function Authenticate(const AUserName, APassword: string): TMARSAuthResult; virtual; abstract;
   public
     [GET, Produces(TMediaType.APPLICATION_JSON)]
     function GetGeneratedToken: TJSONObject;
@@ -79,35 +89,24 @@ begin
   Result.AddPair('access_token', TJSONString.Create(FAuthContext.CompactToken));
 end;
 
-function TMARSAuthResource.RolesFromUserName(const AUserName: string): TArray<string>;
-begin
-  SetLength(Result, 1);
-  Result[0] := 'user';
-  if SameText(AUserName, 'admin') then
-  begin
-    SetLength(Result, 2);
-    Result[1] := 'admin';
-  end;
-end;
-
-procedure TMARSAuthResource.SetAuthContext(AValidated: Boolean; const AUserName: string);
-begin
-  FAuthContext.Authenticated := AValidated;
-  if AValidated then
-    // User authenticated, set user roles
-    FAuthContext.Subject.SetUserAndRoles(AUserName, RolesFromUserName(AUserName))
-  else
-    // User not authenticated, clear user roles and username
-    FAuthContext.Subject.SetUserAndRoles('', nil);
-end;
+{ TMARSAuthFormResource }
 
 function TMARSAuthFormResource.DoLogin(const AUsername, APassword: string): TJSONObject;
+var
+  LAuthOperation: TMARSAuthResult;
 begin
-  SetAuthContext(False, AUsername);
-  if not Authenticate(AUserName, APassword) then
+  FAuthContext.Clear;
+  LAuthOperation := Authenticate(AUserName, APassword);
+
+  FAuthContext.Authenticated := LAuthOperation.Success;
+  //FAuthContext.Subject.Roles := LAuthOperation.Roles;
+  FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
+
+  FAuthContext.Subject.UserName := AUsername;
+
+  if not LAuthOperation.Success then
     raise EMARSNotAuthorizedException.Create('Invalid username or password', 'TMARSAuthFormResource', 'DoLogin');
 
-  SetAuthContext(True, AUserName);
   FApplication.GenerateToken;
   Result := GetGeneratedToken;
 end;
@@ -116,27 +115,39 @@ end;
 
 function TMARSAuthBasicResource.DoLogin(const AAuth: string): TJSONObject;
 var
-  LAuth: string;
+  LAuthField: string;
+  LAuthOperation: TMARSAuthResult;
   LAuthData: TArray<string>;
 begin
   if not AAuth.StartsWith(AUTH_BASIC) then
     raise EMARSNotAuthorizedException.Create('Auhtorization header incorrect');
 
-  LAuth := AAuth.Substring(AUTH_BASIC.Length);
-  LAuth := TBase64.Decode(LAuth);
-  LAuthData := LAuth.Split([':']);
+  LAuthField := AAuth.Substring(AUTH_BASIC.Length);
+  LAuthField := TBase64.Decode(LAuthField);
+  LAuthData := LAuthField.Split([':']);
 
   if Length(LAuthData) < 2 then
-    raise EMARSNotAuthorizedException.Create('Invalid (basic) credentials');
+    raise EMARSNotAuthorizedException.Create('Malformed (basic) credentials');
 
-  SetAuthContext(False, LAuthData[0]);
-  if not Authenticate(LAuthData[0], LAuthData[1]) then
-    raise EMARSNotAuthorizedException.Create('Invalid (basic) credentials', 'TMARSAuthFormResource', 'DoLogin');
+  FAuthContext.Clear;
+  LAuthOperation := Authenticate(LAuthData[0], LAuthData[1]);
 
-  SetAuthContext(True, LAuthData[0]);
+  FAuthContext.Authenticated := LAuthOperation.Success;
+  FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
+  FAuthContext.Subject.UserName := LAuthData[0];
+
+  if not LAuthOperation.Success then
+    raise EMARSNotAuthorizedException.Create('Invalid (basic) credentials', 'TMARSAuthBasicResource', 'DoLogin');
+
   FApplication.GenerateToken;
-
   Result := GetGeneratedToken;
+end;
+
+{ TMARSAuthResult }
+
+function TMARSAuthResult.RolesAsString: string;
+begin
+
 end;
 
 end.
