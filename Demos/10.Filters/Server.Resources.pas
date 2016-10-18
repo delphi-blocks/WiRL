@@ -19,17 +19,20 @@ uses
 
 type
   [Path('helloworld')]
+  [PoweredByMARS]
   THelloWorldResource = class
   private
   protected
   public
     [GET]
-    [PoweredByMARS]
     [Produces(TMediaType.TEXT_PLAIN)]
     function HelloWorld(): string;
 
     [GET, Path('/echostring/{AString}')]
     function EchoString([PathParam] AString: string): string;
+
+    [GET, Path('/raise/')]
+    function RaiseTest: string;
   end;
 
 implementation
@@ -48,6 +51,11 @@ end;
 function THelloWorldResource.HelloWorld(): string;
 begin
   Result := 'Hello World!';
+end;
+
+function THelloWorldResource.RaiseTest: string;
+begin
+  raise Exception.Create('Test error!');
 end;
 
 initialization

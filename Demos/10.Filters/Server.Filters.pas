@@ -59,14 +59,18 @@ begin
 end;
 
 procedure TRequestLoggerFilter.Filter(Request: TMARSRequest);
+var
+  LMessage: string;
 begin
-  FMainForm.Log(DateTimeToStr(Now) + ' - ' + Request.Method + ' ' + Request.RawPathInfo + '?' + Request.Query);
+  LMessage := DateTimeToStr(Now) + ' - ' + Request.Method + ' ' + Request.RawPathInfo;
+  if Request.Query <> '' then
+    LMessage := LMessage + '?' + Request.Query;
+  FMainForm.Log(LMessage);
 end;
 
 { TResponsePoweredByFilter }
 
-procedure TResponsePoweredByFilter.Filter(Request: TMARSRequest;
-  Response: TMARSResponse);
+procedure TResponsePoweredByFilter.Filter(Request: TMARSRequest; Response: TMARSResponse);
 begin
   Response.SetCustomHeader('X-Powered-By', 'MARS');
 end;

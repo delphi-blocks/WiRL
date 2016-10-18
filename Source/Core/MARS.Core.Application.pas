@@ -33,8 +33,8 @@ type
   private
     const SCRT_PREFIX = 'bWFycy5zZWNyZXQu';
   private
-    class threadvar FRequest: TMARSRequest;
-    class threadvar FResponse: TMARSResponse;
+//    class threadvar FRequest: TMARSRequest;
+//    class threadvar FResponse: TMARSResponse;
     class threadvar FAuthContext: TMARSAuthContext;
   private
     FSecret: TBytes;
@@ -52,8 +52,6 @@ type
     function GetURL: TMARSURL;
   protected
     function CheckFilterBinding(AFilterClass, AResourceClass :TClass; const AMethod: TRttiMethod) :Boolean;
-    procedure ApplyRequestFilters(AResourceClass: TClass; const AMethod: TRttiMethod);
-    procedure ApplyResponseFilters(AResourceClass: TClass; const AMethod: TRttiMethod);
 
     procedure InternalHandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     function FindMethodToInvoke(const AURL: TMARSURL;
@@ -96,6 +94,10 @@ type
     function AddFilter(AFilter: string): Boolean;
     procedure HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
     procedure CollectGarbage(const AValue: TValue);
+
+    // Filters handler
+    procedure ApplyRequestFilters;
+    procedure ApplyResponseFilters;
 
     property Name: string read FName;
     property BasePath: string read FBasePath;
@@ -237,13 +239,25 @@ begin
     Self.AddResource(LResource);
 end;
 
-procedure TMARSApplication.ApplyRequestFilters(AResourceClass: TClass; const AMethod: TRttiMethod);
+procedure TMARSApplication.ApplyRequestFilters;
 var
+  LInfo: TMARSConstructorInfo;
+  LMethod: TRttiMethod;
   FilterImpl :TObject;
   RequestFilter :IMARSContainerRequestFilter;
 begin
+  // Find resource method
+  if not FResourceRegistry.TryGetValue(URL.Resource, LInfo) then
+    Exit;
+
+  LMethod := FindMethodToInvoke(URL, LInfo);
+  if not Assigned(LMethod) then
+    Exit;
+
+  // Run filters
+
   FFilterRegistry.FetchRequestFilter(False, procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
-    if CheckFilterBinding(ConstructorInfo.TypeTClass, AResourceClass, AMethod) then
+    if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass, LMethod) then
     begin
       FilterImpl := ConstructorInfo.ConstructorFunc();
 
@@ -251,25 +265,37 @@ begin
       if not Supports(FilterImpl, IMARSContainerRequestFilter, RequestFilter) then
         raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
       ContextInjection(FilterImpl);
-      RequestFilter.Filter(FRequest);
+      RequestFilter.Filter(Request);
     end;
   end);
 end;
 
-procedure TMARSApplication.ApplyResponseFilters(AResourceClass: TClass; const AMethod: TRttiMethod);
+procedure TMARSApplication.ApplyResponseFilters;
 var
+  LInfo: TMARSConstructorInfo;
+  LMethod: TRttiMethod;
   FilterImpl :TObject;
   ResponseFilter :IMARSContainerResponseFilter;
 begin
+  // Find resource method
+  if not FResourceRegistry.TryGetValue(URL.Resource, LInfo) then
+    Exit;
+
+  LMethod := FindMethodToInvoke(URL, LInfo);
+  if not Assigned(LMethod) then
+    Exit;
+
+  // Run filters
+
   FFilterRegistry.FetchResponseFilter(procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
-    if CheckFilterBinding(ConstructorInfo.TypeTClass, AResourceClass, AMethod) then
+    if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass, LMethod) then
     begin
       FilterImpl := ConstructorInfo.ConstructorFunc();
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
       if not Supports(FilterImpl, IMARSContainerResponseFilter, ResponseFilter) then
         raise ENotSupportedException.CreateFmt('Response Filter [%s] does not implement requested interface [IMARSContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]);
       ContextInjection(FilterImpl);
-      ResponseFilter.Filter(FRequest, FResponse);
+      ResponseFilter.Filter(Request, Response);
     end;
   end);
 end;
@@ -557,12 +583,12 @@ end;
 
 function TMARSApplication.GetRequest: TMARSRequest;
 begin
-  Result := FRequest;
+  Result := TMARSEngine(Engine).CurrentRequest;
 end;
 
 function TMARSApplication.GetResponse: TMARSResponse;
 begin
-  Result := FResponse;
+  Result := TMARSEngine(Engine).CurrentResponse;
 end;
 
 function TMARSApplication.GetResources: TArray<string>;
@@ -782,9 +808,6 @@ end;
 
 procedure TMARSApplication.HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse; const AURL: TMARSURL);
 begin
-  FRequest := ARequest;
-  FResponse := AResponse;
-
   FAuthContext := GetNewToken(ARequest);
   try
     InternalHandleRequest(ARequest, AResponse, AURL);
@@ -846,8 +869,6 @@ begin
 
   CheckAuthorization(LMethod, FAuthContext);
 
-  ApplyRequestFilters(LInfo.TypeTClass, LMethod);
-
   LInstance := LInfo.ConstructorFunc();
   try
     TMARSMessageBodyRegistry.Instance.FindWriter(LMethod, string(Request.Accept),
@@ -864,8 +885,6 @@ begin
   finally
     LInstance.Free;
   end;
-
-  ApplyResponseFilters(LInfo.TypeTClass, LMethod);
 end;
 
 procedure TMARSApplication.InvokeResourceMethod(AInstance: TObject;

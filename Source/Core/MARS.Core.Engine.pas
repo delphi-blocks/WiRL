@@ -227,8 +227,6 @@ begin
       if Result then
         Break;
     end;
-
-  ApplyPreMatchingFilters;
 end;
 
 procedure TMARSEngine.DoHandleException(const AApplication: TMARSApplication;
@@ -262,39 +260,41 @@ end;
 procedure TMARSEngine.HandleRequest(ARequest: TMARSRequest; AResponse: TMARSResponse);
 var
   LApplication: TMARSApplication;
-  LURL: TMARSURL;
   LApplicationPath: string;
   LStopWatch: TStopWatch;
   LStopWatchEx: TStopWatch;
 begin
-  LStopWatchEx := TStopwatch.StartNew;
-  FRequest := ARequest;
-  FResponse := AResponse;
+  FURL := nil;
   try
-    if not DoBeforeRequestStart() then
-    begin
-      LURL := TMARSURL.Create(ARequest);
-      try
-        LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0]]);
+    LApplication := nil;
+    LStopWatchEx := TStopwatch.StartNew;
+    FRequest := ARequest;
+    FResponse := AResponse;
+    try
+      ApplyPreMatchingFilters;
+      if not DoBeforeRequestStart() then
+      begin
+        FURL := TMARSURL.Create(ARequest); // The object must exists until the end of this procedure
+        LApplicationPath := TMARSURL.CombinePath([FURL.PathTokens[0]]);
         if (BasePath <> '') and (BasePath <> TMARSURL.URL_PATH_SEPARATOR) then
         begin
-          if not LURL.MatchPath(BasePath + TMARSURL.URL_PATH_SEPARATOR) then
+          if not FURL.MatchPath(BasePath + TMARSURL.URL_PATH_SEPARATOR) then
             raise EMARSNotFoundException.Create(
-              Format('Requested URL [%s] does not match base engine URL [%s]', [LURL.URL, BasePath]),
+              Format('Requested URL [%s] does not match base engine URL [%s]', [FURL.URL, BasePath]),
               Self.ClassName, 'HandleRequest'
             );
 
-          LApplicationPath := TMARSURL.CombinePath([LURL.PathTokens[0], LURL.PathTokens[1]]);
+          LApplicationPath := TMARSURL.CombinePath([FURL.PathTokens[0], FURL.PathTokens[1]]);
         end;
 
         if FApplications.TryGetValue(LApplicationPath, LApplication) then
         begin
-          LURL.BasePath := LApplicationPath;
-          FURL := LURL;
+          FURL.BasePath := LApplicationPath;
           DoBeforeHandleRequest(LApplication);
+          LApplication.ApplyRequestFilters;
           LStopWatch := TStopwatch.StartNew;
           try
-            LApplication.HandleRequest(ARequest, AResponse, LURL);
+            LApplication.HandleRequest(ARequest, AResponse, FURL);
           finally
             LStopWatch.Stop;
           end;
@@ -302,32 +302,35 @@ begin
         end
         else
           raise EMARSNotFoundException.Create(
-            Format('Application [%s] not found, please check the URL [%s]', [LApplicationPath, LURL.URL]),
+            Format('Application [%s] not found, please check the URL [%s]', [LApplicationPath, FURL.URL]),
             Self.ClassName, 'HandleRequest'
           );
-      finally
-        LURL.Free;
       end;
-    end;
-  except
-    on E: EMARSWebApplicationException do
-    begin
-      AResponse.StatusCode := E.Status;
-      AResponse.Content := E.ToJSON;
-      AResponse.ContentType := TMediaType.APPLICATION_JSON;
-      DoHandleException(LApplication, E);
-    end;
+    except
+      on E: EMARSWebApplicationException do
+      begin
+        AResponse.StatusCode := E.Status;
+        AResponse.Content := E.ToJSON;
+        AResponse.ContentType := TMediaType.APPLICATION_JSON;
+        DoHandleException(LApplication, E);
+      end;
 
-    on E: Exception do
-    begin
-      AResponse.StatusCode := 500;
-      AResponse.Content := EMARSWebApplicationException.ExceptionToJSON(E);
-      AResponse.ContentType := TMediaType.APPLICATION_JSON;
-      DoHandleException(LApplication, E);
-    end
+      on E: Exception do
+      begin
+        AResponse.StatusCode := 500;
+        AResponse.Content := EMARSWebApplicationException.ExceptionToJSON(E);
+        AResponse.ContentType := TMediaType.APPLICATION_JSON;
+        DoHandleException(LApplication, E);
+      end
+    end;
+    LStopWatchEx.Stop;
+    if Assigned(LApplication) then
+      LApplication.ApplyResponseFilters;
+
+    DoAfterRequestEnd(LStopWatchEx);
+  finally
+    FreeAndNil(FURL);
   end;
-  LStopWatchEx.Stop;
-  DoAfterRequestEnd(LStopWatchEx);
 end;
 
 function TMARSEngine.RemoveSubscriber(const ASubscriber: IMARSHandleListener): TMARSEngine;
