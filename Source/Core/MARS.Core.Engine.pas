@@ -235,6 +235,19 @@ var
   LSubscriber: IMARSHandleListener;
   LHandleExceptionListener: IMARSHandleExceptionListener;
 begin
+  if E is EMARSWebApplicationException then
+  begin
+    FResponse.StatusCode := EMARSWebApplicationException(E).Status;
+    FResponse.Content := EMARSWebApplicationException(E).ToJSON;
+    FResponse.ContentType := TMediaType.APPLICATION_JSON;
+  end
+  else if E is Exception then
+  begin
+    FResponse.StatusCode := 500;
+    FResponse.Content := EMARSWebApplicationException.ExceptionToJSON(E);
+    FResponse.ContentType := TMediaType.APPLICATION_JSON;
+  end;
+
   for LSubscriber in FSubscribers do
     if Supports(LSubscriber, IMARSHandleExceptionListener, LHandleExceptionListener) then
       LHandleExceptionListener.HandleException(Self, AApplication, E);
@@ -307,25 +320,20 @@ begin
           );
       end;
     except
-      on E: EMARSWebApplicationException do
-      begin
-        AResponse.StatusCode := E.Status;
-        AResponse.Content := E.ToJSON;
-        AResponse.ContentType := TMediaType.APPLICATION_JSON;
+      on E: Exception do
         DoHandleException(LApplication, E);
-      end;
+    end;
+    LStopWatchEx.Stop;
 
+    try
+      if Assigned(LApplication) then
+        LApplication.ApplyResponseFilters;
+    except
       on E: Exception do
       begin
-        AResponse.StatusCode := 500;
-        AResponse.Content := EMARSWebApplicationException.ExceptionToJSON(E);
-        AResponse.ContentType := TMediaType.APPLICATION_JSON;
         DoHandleException(LApplication, E);
       end
     end;
-    LStopWatchEx.Stop;
-    if Assigned(LApplication) then
-      LApplication.ApplyResponseFilters;
 
     DoAfterRequestEnd(LStopWatchEx);
   finally
