@@ -41,6 +41,8 @@ type
   public
     constructor Create; override;
 
+    procedure Clear; virtual;
+
     function HasRole(const ARole: string): Boolean; virtual;
     procedure SetUserAndRoles(const AUserName: string; const ARoles: TArray<string>); virtual;
 
@@ -111,6 +113,8 @@ end;
 procedure TMARSAuthContext.Clear;
 begin
   FVerified := False;
+  FAuthenticated := False;
+  FSubject.Clear;
 end;
 
 constructor TMARSAuthContext.Create(ASubjectClass: TMARSSubjectClass);
@@ -182,6 +186,13 @@ destructor TMARSAuthContext.Destroy;
 begin
   FSubject.Free;
   inherited;
+end;
+
+procedure TMARSSubject.Clear;
+begin
+  Roles := '';
+  UserName := '';
+  DisplayName := '';
 end;
 
 constructor TMARSSubject.Create;

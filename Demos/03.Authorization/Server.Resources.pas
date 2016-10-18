@@ -83,13 +83,13 @@ type
     // Injects the custom claims into "Subject" object
     [Context] Subject: TServerClaims;
   protected
-    function Authenticate(const AUserName, APassword: string): Boolean; override;
+    function Authenticate(const AUserName, APassword: string): TMARSAuthResult; override;
   end;
 
   [Path('form_auth')]
   TFormAuthResource = class(TMARSAuthFormResource)
   protected
-    function Authenticate(const AUserName, APassword: string): Boolean; override;
+    function Authenticate(const AUserName, APassword: string): TMARSAuthResult; override;
   end;
 
 implementation
@@ -119,11 +119,18 @@ end;
 
 { TBasicAuthResource }
 
-function TBasicAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
+function TBasicAuthResource.Authenticate(const AUserName, APassword: string): TMARSAuthResult;
 begin
   // The line below is only an example, you have to replace with
   // your (server) authentication code (database, another service, etc...)
-  Result := SameText(APassword, 'mypassword');
+  Result.Success := SameText(APassword, 'mypassword');
+
+  // The line below is only an example, you have to replace with roles
+  // retrieved from the server
+  if SameText(AUserName, 'admin') or SameText(AUserName, 'paolo') then
+    Result.Roles := 'user,manager,admin'.Split([','])
+  else
+    Result.Roles := 'user,manager'.Split([',']);
 
   // Here you can set all field of your custom claims object
   Subject.Language := 'en-US';
@@ -131,9 +138,18 @@ end;
 
 { TFormAuthResource }
 
-function TFormAuthResource.Authenticate(const AUserName, APassword: string): Boolean;
+function TFormAuthResource.Authenticate(const AUserName, APassword: string): TMARSAuthResult;
 begin
-  Result := SameText(APassword, 'mypassword');
+  // The line below is only an example, you have to replace with
+  // your (server) authentication code (database, another service, etc...)
+  Result.Success := SameText(APassword, 'mypassword');
+
+  // The line below is only an example, you have to replace with roles
+  // retrieved from the server
+  if SameText(AUserName, 'admin') or SameText(AUserName, 'paolo') then
+    Result.Roles := 'user,manager,admin'.Split([','])
+  else
+    Result.Roles := 'user,manager'.Split([',']);
 end;
 
 { TUserInfo }
