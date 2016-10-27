@@ -57,7 +57,7 @@ type
     var
       FRttiContext: TRttiContext;
       // True if the list has been sorted since the first item was added
-      FSorted :Boolean;
+      FSorted: Boolean;
     function GetPriority(FilterClass: TClass) :Integer;
   protected
     class function GetInstance: TMARSFilterRegistry; static; inline;
@@ -90,6 +90,7 @@ constructor TMARSFilterConstructorInfo.Create(AClass: TClass;
   const AConstructorFunc: TFunc<TObject>; APriority :Integer);
 begin
   inherited Create;
+
   FConstructorFunc := AConstructorFunc;
   FTypeTClass := AClass;
   FPriority := APriority;
@@ -106,16 +107,17 @@ begin
         LType := LContext.GetType(FTypeTClass);
         LValue := LType.GetMethod('Create').Invoke(LType.AsInstance.MetaclassType, []);
         Result := LValue.AsObject;
-      end;
+      end
+    ;
 end;
 
 { TMARSFilterRegistry }
 
 constructor TMARSFilterRegistry.Create;
 var
-  Comparer: IComparer<TMARSFilterConstructorInfo>;
+  LComparer: IComparer<TMARSFilterConstructorInfo>;
 begin
-  Comparer := TDelegatedComparer<TMARSFilterConstructorInfo>.Create(
+  LComparer := TDelegatedComparer<TMARSFilterConstructorInfo>.Create(
     function(const Left, Right: TMARSFilterConstructorInfo): Integer
     begin
       Result := Left.Priority - Right.Priority;
@@ -125,42 +127,42 @@ begin
   //TMARSFilterRegistrySingleton.CheckInstance(Self);
   FRttiContext := TRttiContext.Create;
 
-  inherited Create(Comparer, True);
+  inherited Create(LComparer, True);
 end;
 
 procedure TMARSFilterRegistry.FetchRequestFilter(const PreMatching: Boolean;
   ARequestProc: TProc<TMARSFilterConstructorInfo>);
 var
-  ConstructorInfo: TMARSFilterConstructorInfo;
-  FilterType :TRttiType;
-  IsPreMatching :Boolean;
+  LConstructorInfo: TMARSFilterConstructorInfo;
+  LFilterType: TRttiType;
+  LIsPreMatching: Boolean;
 begin
   Sort;
-  for ConstructorInfo in Self do
+  for LConstructorInfo in Self do
   begin
-    if Supports(ConstructorInfo.TypeTClass, IMARSContainerRequestFilter) then
+    if Supports(LConstructorInfo.TypeTClass, IMARSContainerRequestFilter) then
     begin
-      FilterType := FRttiContext.GetType(ConstructorInfo.TypeTClass);
-      IsPreMatching := TRttiHelper.HasAttribute<PreMatchingAttribute>(FilterType);
+      LFilterType := FRttiContext.GetType(LConstructorInfo.TypeTClass);
+      LIsPreMatching := TRttiHelper.HasAttribute<PreMatchingAttribute>(LFilterType);
 
-      if PreMatching and IsPreMatching then
-        ARequestProc(ConstructorInfo)
-      else if not PreMatching and not IsPreMatching then
-        ARequestProc(ConstructorInfo);
+      if PreMatching and LIsPreMatching then
+        ARequestProc(LConstructorInfo)
+      else if not PreMatching and not LIsPreMatching then
+        ARequestProc(LConstructorInfo);
     end;
   end;
 end;
 
 procedure TMARSFilterRegistry.FetchResponseFilter(AResponseProc: TProc<TMARSFilterConstructorInfo>);
 var
-  ConstructorInfo :TMARSFilterConstructorInfo;
+  LConstructorInfo: TMARSFilterConstructorInfo;
 begin
   Sort;
-  for ConstructorInfo in Self do
+  for LConstructorInfo in Self do
   begin
-    if Supports(ConstructorInfo.TypeTClass, IMARSContainerResponseFilter) then
+    if Supports(LConstructorInfo.TypeTClass, IMARSContainerResponseFilter) then
     begin
-      AResponseProc(ConstructorInfo);
+      AResponseProc(LConstructorInfo);
     end;
   end;
 end;
@@ -168,14 +170,14 @@ end;
 function TMARSFilterRegistry.FilterByClassName(const AClassName: string;
   out AConstructorInfo: TMARSFilterConstructorInfo): Boolean;
 var
-  Item: TMARSFilterConstructorInfo;
+  LItem: TMARSFilterConstructorInfo;
 begin
   Result := False;
-  for Item in Self do
+  for LItem in Self do
   begin
-    if CompareText(Item.TypeTClass.QualifiedClassName, AClassName) = 0 then
+    if CompareText(LItem.TypeTClass.QualifiedClassName, AClassName) = 0 then
     begin
-      AConstructorInfo := Item;
+      AConstructorInfo := LItem;
       Exit(True);
     end;
   end;
@@ -188,20 +190,26 @@ end;
 
 function TMARSFilterRegistry.GetPriority(FilterClass: TClass): Integer;
 var
-  Priority :Integer;
+  LPriority: Integer;
 begin
-  Priority := TMARSPriorities.USER;
-  TRttiHelper.HasAttribute<PriorityAttribute>(FRttiContext.GetType(FilterClass), procedure (Attrib: PriorityAttribute) begin
-    Priority := Attrib.Value;
-  end);
-  Result := Priority;
+  LPriority := TMARSPriorities.USER;
+  TRttiHelper.HasAttribute<PriorityAttribute>(FRttiContext.GetType(FilterClass),
+    procedure (Attrib: PriorityAttribute)
+    begin
+      LPriority := Attrib.Value;
+    end
+  );
+  Result := LPriority;
 end;
 
 function TMARSFilterRegistry.RegisterFilter<T>(
   const AConstructorFunc: TFunc<TObject>): TMARSFilterConstructorInfo;
 begin
   if not Supports(TClass(T), IMARSContainerRequestFilter) and not Supports(TClass(T), IMARSContainerResponseFilter) then
-    raise EMARSException.CreateFmt('Filter registration error: [%s] should be a valid filter', [TClass(T).QualifiedClassName]);
+    raise EMARSServerException.Create(
+      Format('Filter registration error: [%s] should be a valid filter', [TClass(T).QualifiedClassName]),
+      Self.ClassName, 'RegisterFilter',
+    );
 
   Result := TMARSFilterConstructorInfo.Create(TClass(T), AConstructorFunc, GetPriority(TClass(T)));
   Add(Result);

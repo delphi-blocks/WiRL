@@ -11,17 +11,15 @@ unit MARS.Data.FireDAC.MessageBodyWriters;
 interface
 
 uses
-  Classes, SysUtils, Rtti
+  System.Classes, System.SysUtils, System.Rtti, Data.DB,
 
-  , DB
-
-  , MARS.Core.Attributes
-  , MARS.Core.Declarations
-  , MARS.Core.MediaType
-  , MARS.Core.Classes
-  , MARS.Core.MessageBodyWriter
-  , MARS.Core.Utils
-  , MARS.Data.Utils;
+  MARS.Core.Attributes,
+  MARS.Core.Declarations,
+  MARS.Core.MediaType,
+  MARS.Core.Classes,
+  MARS.Core.MessageBodyWriter,
+  MARS.Core.Utils,
+  MARS.Data.Utils;
 
 type
   [Produces(TMediaType.APPLICATION_XML), Produces(TMediaType.APPLICATION_JSON)]
@@ -40,17 +38,12 @@ type
 implementation
 
 uses
-  FireDAC.Comp.Client
-  , FireDAC.Stan.Intf
-  , FireDACJSONReflect
+  FireDAC.Comp.Client, FireDAC.Stan.Intf, FireDACJSONReflect,
+  FireDAC.Stan.StorageBIN, FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageXML,
 
-  , FireDAC.Stan.StorageBIN
-  , FireDAC.Stan.StorageJSON
-  , FireDAC.Stan.StorageXML
-
-  , MARS.Core.JSON
-  , MARS.Rtti.Utils
-  ;
+  MARS.Core.Exceptions,
+  MARS.Core.JSON,
+  MARS.Rtti.Utils;
 
 { TArrayFDCustomQueryWriter }
 
@@ -63,7 +56,6 @@ var
   LCurrent: TFDCustomQuery;
   LResult: TJSONObject;
   LData: TArray<TFDCustomQuery>;
-
 begin
   LStreamWriter := TStreamWriter.Create(AOutputStream);
   try
@@ -111,7 +103,10 @@ begin
   else if AMediaType.Matches(TMediaType.APPLICATION_OCTET_STREAM) then
     LStorageFormat := sfBinary
   else
-    raise Exception.CreateFmt('Unsupported media type: %s', [AMediaType.ToString]);
+    raise EMARSUnsupportedMediaTypeException.Create(
+      Format('Unsupported media type [%s]', [AMediaType.ToString]),
+      Self.ClassName, 'WriteTo'
+    );
 
   LDataSet.SaveToStream(AOutputStream, LStorageFormat);
 end;

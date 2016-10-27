@@ -165,7 +165,10 @@ begin
         tkRecord,
         tkInterface,
         tkDynArray:
-          raise EMARSNotSupportedException.Create('Resource''s returned type not supported', Self.ClassName, 'WriteTo');
+          raise EMARSNotImplementedException.Create(
+            'Resource''s returned type not supported',
+            Self.ClassName, 'WriteTo'
+          );
 		  
       end;
 

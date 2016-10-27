@@ -72,7 +72,7 @@ begin
       .SetResources([
        'Server.Resources.TFormAuthResource',
        'Server.Resources.TBasicAuthResource',
-       'Server.Resources.TSecuredResource'
+       'Server.Resources.TUserResource'
       ]);
 
   if not FServer.Active then

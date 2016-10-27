@@ -121,12 +121,14 @@ type
 implementation
 
 uses
-  System.StrUtils, MARS.Core.Utils;
+  System.StrUtils,
+  MARS.Core.Utils;
 
 function TMARSEngine.AddApplication(const AName, ABasePath: string;
   const AResources: array of string): TMARSApplication;
 begin
-  Result := Self.AddApplication(ABasePath)
+  Result := Self
+    .AddApplication(ABasePath)
     .SetName(AName)
     .SetResources(AResources);
 end;
@@ -151,14 +153,20 @@ end;
 
 procedure TMARSEngine.ApplyPreMatchingFilters;
 var
-  RequestFilter :IMARSContainerRequestFilter;
+  LRequestFilter: IMARSContainerRequestFilter;
 begin
-  TMARSFilterRegistry.Instance.FetchRequestFilter(True, procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
+  TMARSFilterRegistry.Instance.FetchRequestFilter(True,
+    procedure (ConstructorInfo :TMARSFilterConstructorInfo)
+    begin
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
-      if not Supports(ConstructorInfo.ConstructorFunc(), IMARSContainerRequestFilter, RequestFilter) then
-        raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
-      RequestFilter.Filter(FRequest);
-  end);
+      if not Supports(ConstructorInfo.ConstructorFunc(), IMARSContainerRequestFilter, LRequestFilter) then
+        raise EMARSNotImplementedException.Create(
+          Format('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]),
+          Self.ClassName, 'ApplyPreMatchingFilters'
+        );
+      LRequestFilter.Filter(FRequest);
+    end
+  );
 end;
 
 constructor TMARSEngine.Create;

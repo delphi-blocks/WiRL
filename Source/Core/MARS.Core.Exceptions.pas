@@ -46,6 +46,8 @@ type
   private
     FValues: TJSONObject;
     FStatus: Integer;
+
+    procedure CreateAndFillValues;
   public
     /// <summary>
     ///   Construct an exception with a blank message and default HTTP status code of 500.
@@ -108,7 +110,12 @@ type
     constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
   end;
 
-  EMARSNotSupportedException = class(EMARSWebApplicationException)
+  EMARSNotImplementedException = class(EMARSWebApplicationException)
+  public
+    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+  end;
+
+  EMARSUnsupportedMediaTypeException = class(EMARSWebApplicationException)
   public
     constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
   end;
@@ -219,12 +226,9 @@ end;
 constructor EMARSWebApplicationException.Create(const AMessage: string; AStatus: Integer);
 begin
   inherited Create(AMessage);
-  FValues := TJSONObject.Create;
   FStatus := AStatus;
 
-  FValues.AddPair(TJSONPair.Create('status', TJSONNumber.Create(AStatus)));
-  FValues.AddPair(TJSONPair.Create('exception', TJSONString.Create(Self.ClassName)));
-  FValues.AddPair(TJSONPair.Create('message', TJSONString.Create(AMessage)));
+  CreateAndFillValues;
 end;
 
 constructor EMARSWebApplicationException.Create(const AMessage: string;
@@ -284,9 +288,20 @@ begin
   end;
 end;
 
+procedure EMARSWebApplicationException.CreateAndFillValues;
+begin
+  FValues := TJSONObject.Create;
+  FValues.AddPair(TJSONPair.Create('status', TJSONNumber.Create(FStatus)));
+  FValues.AddPair(TJSONPair.Create('exception', TJSONString.Create(Self.ClassName)));
+  FValues.AddPair(TJSONPair.Create('message', TJSONString.Create(Self.Message)));
+end;
+
 function EMARSWebApplicationException.ToJSON: string;
 begin
-  Result := TJSONHelper.ToJSON(FValues);
+  if not Assigned(FValues) then
+    CreateAndFillValues;
+
+  Result := TJSONHelper.ToJSON(FValues)
 end;
 
 { EMARSNotFoundException }
@@ -352,10 +367,10 @@ begin
   inherited Create(AMessage, 401, LPairArray);
 end;
 
-{ EMARSNotSupportedException }
+{ EMARSNotImplementedException }
 
-constructor EMARSNotSupportedException.Create(const AMessage: string; const
-    AIssuer: string = ''; const AMethod: string = '');
+constructor EMARSNotImplementedException.Create(
+  const AMessage, AIssuer, AMethod: string);
 var
   LPairArray: TExceptionValues;
 begin
@@ -370,7 +385,28 @@ begin
     LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
   end;
 
-  inherited Create(AMessage, 500, LPairArray);
+  inherited Create(AMessage, 501, LPairArray);
+end;
+
+{ EMARSUnsupportedMediaTypeException }
+
+constructor EMARSUnsupportedMediaTypeException.Create(
+  const AMessage, AIssuer, AMethod: string);
+var
+  LPairArray: TExceptionValues;
+begin
+  if not AIssuer.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
+  end;
+  if not AMethod.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
+  end;
+
+  inherited Create(AMessage, 415, LPairArray);
 end;
 
 { TValuesUtil }

@@ -59,7 +59,7 @@ type
   end;
 
   [Path('user')]
-  TSecuredResource = class
+  TUserResource = class
   private
     // Injects the auth context into the "Auth" object
     [Context] Auth: TMARSAuthContext;
@@ -80,7 +80,7 @@ type
   [Path('basic_auth')]
   TBasicAuthResource = class(TMARSAuthBasicResource)
   private
-    // Injects the custom claims into "Subject" object
+    // Injects the custom claims into "Subject" field
     [Context] Subject: TServerClaims;
   protected
     function Authenticate(const AUserName, APassword: string): TMARSAuthResult; override;
@@ -88,15 +88,18 @@ type
 
   [Path('form_auth')]
   TFormAuthResource = class(TMARSAuthFormResource)
+  private
+    // Injects the custom claims into "Subject" field
+    [Context] Subject: TServerClaims;
   protected
     function Authenticate(const AUserName, APassword: string): TMARSAuthResult; override;
   end;
 
 implementation
 
-{ TSecuredResource }
+{ TUserResource }
 
-function TSecuredResource.DetailsInfo: TJSONObject;
+function TUserResource.DetailsInfo: TJSONObject;
 begin
   Result := TJSONObject.Create;
 
@@ -104,16 +107,16 @@ begin
   Result.AddPair('subject', Auth.Subject.Clone);
 end;
 
-function TSecuredResource.PublicInfo: TUserInfo;
+function TUserResource.PublicInfo: TUserInfo;
 begin
   Result := TUserInfo.Create;
 
   Result.FullName := 'Paolo Rossi';
-  Result.Age := 46;
+  Result.Age := 47;
   Result.Language := Subject.Language;
   Result.Group := 10;
 
-  Result.AddAddress('Via Castello', 'Piacenza', '29021');
+  Result.AddAddress('Via Castello', 'Piacenza', '29121');
   Result.AddAddress('Via Trento', 'Parma', '43122');
 end;
 
@@ -150,6 +153,9 @@ begin
     Result.Roles := 'user,manager,admin'.Split([','])
   else
     Result.Roles := 'user,manager'.Split([',']);
+
+  // Here you can set all field of your custom claims object
+  Subject.Language := 'it-IT';
 end;
 
 { TUserInfo }
@@ -181,9 +187,9 @@ begin
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TSecuredResource>;
+  TMARSResourceRegistry.Instance.RegisterResource<TUserResource>;
 
-  // Auth resource
+  // Auth resources
   TMARSResourceRegistry.Instance.RegisterResource<TFormAuthResource>;
   TMARSResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
 

@@ -263,7 +263,11 @@ begin
 
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
       if not Supports(FilterImpl, IMARSContainerRequestFilter, RequestFilter) then
-        raise ENotSupportedException.CreateFmt('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]);
+        raise EMARSNotImplementedException.Create(
+          Format('Request Filter [%s] does not implement requested interface [IMARSContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]),
+          Self.ClassName,
+          'ApplyRequestFilters'
+        );
       ContextInjection(FilterImpl);
       RequestFilter.Filter(Request);
     end;
@@ -274,8 +278,8 @@ procedure TMARSApplication.ApplyResponseFilters;
 var
   LInfo: TMARSConstructorInfo;
   LMethod: TRttiMethod;
-  FilterImpl :TObject;
-  ResponseFilter :IMARSContainerResponseFilter;
+  LFilterImpl: TObject;
+  LResponseFilter: IMARSContainerResponseFilter;
 begin
   // Find resource method
   if not FResourceRegistry.TryGetValue(URL.Resource, LInfo) then
@@ -286,22 +290,28 @@ begin
     Exit;
 
   // Run filters
-
-  FFilterRegistry.FetchResponseFilter(procedure (ConstructorInfo :TMARSFilterConstructorInfo) begin
-    if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass, LMethod) then
+  FFilterRegistry.FetchResponseFilter(
+    procedure (ConstructorInfo :TMARSFilterConstructorInfo)
     begin
-      FilterImpl := ConstructorInfo.ConstructorFunc();
-      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
-      if not Supports(FilterImpl, IMARSContainerResponseFilter, ResponseFilter) then
-        raise ENotSupportedException.CreateFmt('Response Filter [%s] does not implement requested interface [IMARSContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]);
-      ContextInjection(FilterImpl);
-      ResponseFilter.Filter(Request, Response);
-    end;
-  end);
+      if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass, LMethod) then
+      begin
+        LFilterImpl := ConstructorInfo.ConstructorFunc();
+        // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+        if not Supports(LFilterImpl, IMARSContainerResponseFilter, LResponseFilter) then
+          raise EMARSNotImplementedException.Create(
+            Format('Response Filter [%s] does not implement requested interface [IMARSContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]),
+            Self.ClassName,
+            'ApplyResponseFilters'
+          );
+        ContextInjection(LFilterImpl);
+        LResponseFilter.Filter(Request, Response);
+      end;
+    end
+  );
 end;
 
-procedure TMARSApplication.CheckAuthorization(const AMethod: TRttiMethod; const
-    AToken: TMARSAuthContext);
+procedure TMARSApplication.CheckAuthorization(const AMethod: TRttiMethod;
+  const AToken: TMARSAuthContext);
 var
   LDenyAll, LPermitAll, LRolesAllowed: Boolean;
   LAllowedRoles: TStringList;
@@ -364,18 +374,24 @@ var
 begin
   // First search inside the method attributes
   HasAttrib := False;
-  TRttiHelper.ForEachAttribute<TCustomAttribute>(AMethod, procedure (MethodAttrib :TCustomAttribute) begin
-    if MethodAttrib is Attrib.ClassType then
-      HasAttrib := True;
-  end);
+  TRttiHelper.ForEachAttribute<TCustomAttribute>(AMethod,
+    procedure (AMethodAttrib: TCustomAttribute)
+    begin
+      if AMethodAttrib is Attrib.ClassType then
+        HasAttrib := True;
+    end
+  );
 
   // Then inside the class attributes
   if not HasAttrib then
   begin
-    TRttiHelper.ForEachAttribute<TCustomAttribute>(AClass, procedure (MethodAttrib :TCustomAttribute) begin
-      if MethodAttrib is Attrib.ClassType then
-        HasAttrib := True;
-    end);
+    TRttiHelper.ForEachAttribute<TCustomAttribute>(AClass,
+      procedure (AMethodAttrib: TCustomAttribute)
+      begin
+        if AMethodAttrib is Attrib.ClassType then
+          HasAttrib := True;
+      end
+    );
   end;
 
   Result := HasAttrib;
@@ -384,30 +400,32 @@ end;
 function TMARSApplication.CheckFilterBinding(AFilterClass, AResourceClass: TClass;
   const AMethod: TRttiMethod): Boolean;
 var
-  LFilterType :TRttiType;
-  LResourceType :TRttiType;
-var
-  HasBinding :Boolean;
+  LFilterType: TRttiType;
+  LResourceType: TRttiType;
+  LHasBinding: Boolean;
 begin
-  HasBinding := True;
+  LHasBinding := True;
   LFilterType := FRttiContext.GetType(AFilterClass);
   LResourceType := FRttiContext.GetType(AResourceClass);
 
   // Check for attributes that subclass "NameBindingAttribute"
-  TRttiHelper.ForEachAttribute<NameBindingAttribute>(LFilterType, procedure (FilterAttrib :NameBindingAttribute) begin
-    HasBinding := HasBinding and HasNameBindingAttribute(LResourceType, AMethod, FilterAttrib);
-  end);
+  TRttiHelper.ForEachAttribute<NameBindingAttribute>(LFilterType,
+    procedure (AFilterAttrib: NameBindingAttribute)
+    begin
+      LHasBinding := LHasBinding and HasNameBindingAttribute(LResourceType, AMethod, AFilterAttrib);
+    end
+  );
 
   // Check for attributes annotaded by "NameBinding" attribute
-  TRttiHelper.ForEachAttribute<TCustomAttribute>(LFilterType, procedure (FilterAttrib :TCustomAttribute)
-  begin
-    if TRttiHelper.HasAttribute<NameBindingAttribute>(FRttiContext.GetType(FilterAttrib.ClassType)) then
+  TRttiHelper.ForEachAttribute<TCustomAttribute>(LFilterType,
+    procedure (AFilterAttrib: TCustomAttribute)
     begin
-      HasBinding := HasBinding and HasNameBindingAttribute(LResourceType, AMethod, FilterAttrib);
-    end;
-  end);
+      if TRttiHelper.HasAttribute<NameBindingAttribute>(FRttiContext.GetType(AFilterAttrib.ClassType)) then
+        LHasBinding := LHasBinding and HasNameBindingAttribute(LResourceType, AMethod, AFilterAttrib);
+    end
+  );
 
-  Result := HasBinding;
+  Result := LHasBinding;
 end;
 
 procedure TMARSApplication.CollectGarbage(const AValue: TValue);
@@ -455,9 +473,12 @@ begin
         LFieldClassType := TRttiInstanceType(AField.FieldType).MetaclassType;
 
         if not ContextInjectionByType(LFieldClassType, LValue) then
-          raise EMARSServerException.CreateFmt('[ContextInjection] Unable to inject class "%s" in resource "%s"', [LFieldClassType.ClassName, AInstance.ClassName]);
-        AField.SetValue(AInstance, LValue);
+          raise EMARSServerException.Create(
+            Format('Unable to inject class [%s] in resource [%s]', [LFieldClassType.ClassName, AInstance.ClassName]),
+            Self.ClassName, 'ContextInjection'
+          );
 
+        AField.SetValue(AInstance, LValue);
       end;
     end
   );
@@ -946,7 +967,10 @@ begin
         //tkInterface: ;
         //tkDynArray: ;
         else
-          raise EMARSNotSupportedException.Create('Resource''s returned type not supported', Self.ClassName);
+          raise EMARSNotImplementedException.Create(
+            'Resource''s returned type not supported',
+            Self.ClassName, 'InvokeResourceMethod'
+          );
       end;
     end;
   finally

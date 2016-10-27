@@ -90,6 +90,7 @@ implementation
 
 uses
   System.Rtti,
+  MARS.Core.Exceptions,
   MARS.Core.Utils,
   MARS.Data.Utils,
   MARS.Rtti.Utils;
@@ -150,7 +151,10 @@ begin
         end;
       end
       else
-        raise Exception.CreateFmt('Unable to build update command for delta: %s', [LDelta.Key]);
+        raise EMARSServerException.Create(
+          Format('Unable to build update command for delta: %s', [LDelta.Key]),
+          Self.ClassName, 'ApplyUpdates'
+        );
     end;
   finally
     LApplyUpdates := nil; // it's an interface
@@ -165,7 +169,8 @@ end;
 procedure TMARSFDDatasetResource.CheckConnection;
 begin
   if not Assigned(Connection) then
-    raise Exception.Create('No data connection available');
+    raise EMARSServerException.Create(
+      'No data connection available', Self.ClassName, 'CheckConnection');
 end;
 
 destructor TMARSFDDatasetResource.Destroy;
@@ -237,12 +242,12 @@ end;
 
 procedure TMARSFDDatasetResource.SetupStatements;
 begin
-  TRTTIHelper.ForEachAttribute<SQLStatementAttribute>(
-    Self,
+  TRTTIHelper.ForEachAttribute<SQLStatementAttribute>(Self,
     procedure (AAttrib: SQLStatementAttribute)
     begin
       Statements.Add(AAttrib.Name, AAttrib.SQLStatement);
-    end);
+    end
+  );
 
 end;
 
@@ -275,7 +280,8 @@ begin
     try
       // build FireDAC delta objects
       if not TFDJSONInterceptor.JSONObjectToDataSets(LJSONDeltas, LDeltas) then
-        raise Exception.Create('Error de-serializing deltas');
+        raise EMARSServerException.Create(
+          'Error de-serializing deltas', Self.ClassName, 'Update');
 
       // apply updates
       LResult := TJSONArray.Create;

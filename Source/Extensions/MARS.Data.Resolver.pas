@@ -3,21 +3,23 @@ unit MARS.Data.Resolver;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.DateUtils, Data.DB, Generics.Collections,
-  System.JSON, MARS.Core.JSON;
+  System.SysUtils, System.Classes, System.DateUtils,
+  Data.DB, Generics.Collections, System.JSON,
+
+  MARS.Core.JSON;
 
 type
   TMARSResolverFormats = record
   public
     const
-      UNIX_DATE :string = 'unix';
+      UNIX_DATE: string = 'unix';
     var
-    // Same used in FormatSetting plus "unix" and "ISO"
-    DateFormat: string;
-    DateSeparator: Char;
-    TimeSeparator: Char;
-    // TimestampFormat?
-    // a format for every not trivial Field.DataType?
+      // Same used in FormatSetting plus "unix" and "ISO"
+      DateFormat: string;
+      DateSeparator: Char;
+      TimeSeparator: Char;
+      // TimestampFormat?
+      // a format for every not trivial Field.DataType?
     procedure Reset;
   end;
 
@@ -25,62 +27,63 @@ type
   private
     FDataSet: TDataSet;
     FFormats: TMARSResolverFormats;
-    procedure DoInsertObject(Values :TJSONObject);
-    procedure DoInsertArray(Values :TJSONArray);
-    procedure DoUpdateObject(Values :TJSONObject);
-    procedure DoUpdateArray(Values :TJSONArray);
-    procedure DoDeleteById(Id :Variant);
+    procedure DoInsertObject(AValues: TJSONObject);
+    procedure DoInsertArray(AValues: TJSONArray);
+    procedure DoUpdateObject(AValues: TJSONObject);
+    procedure DoUpdateArray(AValues: TJSONArray);
+    procedure DoDeleteById(AID: Variant);
   public
     constructor Create(AOwner: TComponent); override;
 
     { Basic CRUD operations }
-    procedure InsertDataSet(Values :TJSONValue); overload;
-    procedure UpdateDataSet(Values :TJSONValue); overload;
-    procedure DeleteDataSet(Id: Variant); overload;
+    procedure InsertDataSet(AValues: TJSONValue); overload;
+    procedure UpdateDataSet(AValues: TJSONValue); overload;
+    procedure DeleteDataSet(AID :Variant); overload;
 
-    property Formats :TMARSResolverFormats read FFormats write FFormats;
+    property Formats: TMARSResolverFormats read FFormats write FFormats;
 
     { Static methods }
-    class procedure InsertDataSet(DataSet :TDataSet; Values :TJSONValue; Formats :TMARSResolverFormats); overload;
-    class procedure InsertDataSet(DataSet :TDataSet; Values :TJSONValue); overload;
-    class procedure UpdateDataSet(DataSet :TDataSet; Values :TJSONValue; Formats :TMARSResolverFormats); overload;
-    class procedure UpdateDataSet(DataSet :TDataSet; Values :TJSONValue); overload;
-    class procedure DeleteDataSet(DataSet :TDataSet; Id: Variant; Formats :TMARSResolverFormats); overload;
-    class procedure DeleteDataSet(DataSet :TDataSet; Id: Variant); overload;
+    class procedure InsertDataSet(ADataSet: TDataSet; AValues: TJSONValue; AFormats: TMARSResolverFormats); overload;
+    class procedure InsertDataSet(ADataSet: TDataSet; AValues: TJSONValue); overload;
+    class procedure UpdateDataSet(ADataSet: TDataSet; AValues: TJSONValue; AFormats: TMARSResolverFormats); overload;
+    class procedure UpdateDataSet(ADataSet: TDataSet; AValues: TJSONValue); overload;
+    class procedure DeleteDataSet(ADataSet: TDataSet; AID: Variant; AFormats: TMARSResolverFormats); overload;
+    class procedure DeleteDataSet(ADataSet: TDataSet; AID: Variant); overload;
   published
-    property DataSet :TDataSet read FDataSet write FDataSet;
+    property DataSet: TDataSet read FDataSet write FDataSet;
   end;
 
 var
-  ResolverFormats :TMARSResolverFormats;
+  ResolverFormats: TMARSResolverFormats;
 
 implementation
 
-function MARSStrToDateTime(const Value: string; Formats :TMARSResolverFormats) :TDate;
+function MARSStrToDateTime(const AValue: string; AFormats: TMARSResolverFormats) :TDate;
 var
-  FS :TFormatSettings;
+  LFormat: TFormatSettings;
 begin
-  if Formats.DateFormat = TMARSResolverFormats.UNIX_DATE then
-    Result := UnixToDateTime(StrToInt(Value), False)
+  if AFormats.DateFormat = TMARSResolverFormats.UNIX_DATE then
+    Result := UnixToDateTime(StrToInt(AValue), False)
   else
   begin
-    FS.ShortDateFormat := Formats.DateFormat;
-    FS.DateSeparator := Formats.DateSeparator;
-    FS.TimeSeparator := Formats.TimeSeparator;
-    Result := StrToDate(Value, FS);
+    LFormat.ShortDateFormat := AFormats.DateFormat;
+    LFormat.DateSeparator := AFormats.DateSeparator;
+    LFormat.TimeSeparator := AFormats.TimeSeparator;
+    Result := StrToDate(AValue, LFormat);
   end;
 end;
 
-function MARSStrToDate(const Value: string; Formats :TMARSResolverFormats) :TDate;
+function MARSStrToDate(const AValue: string; AFormats: TMARSResolverFormats): TDate;
 begin
-  Result := Trunc(MARSStrToDateTime(Value, Formats));
+  Result := Trunc(MARSStrToDateTime(AValue, AFormats));
 end;
 
-function ValueToVariant(DataType :TFieldType; Value :TJSONValue; Formats :TMARSResolverFormats) :Variant;
+function ValueToVariant(ADataType: TFieldType; AValue: TJSONValue; AFormats: TMARSResolverFormats): Variant;
 begin
-  if Value.Null then
+  if AValue.Null then
     Exit();
-  case DataType of
+
+  case ADataType of
 //    ftUnknown: ;
 //    ftString: Values.AsVariant;
 //    ftSmallint: ;
@@ -90,9 +93,9 @@ begin
 //    ftFloat: ;
 //    ftCurrency: ;
 //    ftBCD: ;
-    ftDate: Result := MARSStrToDate(Value.Value, Formats);
+    ftDate: Result := MARSStrToDate(AValue.Value, AFormats);
 //    ftTime: ;
-    ftDateTime: Result := MARSStrToDateTime(Value.Value, Formats);
+    ftDateTime: Result := MARSStrToDateTime(AValue.Value, AFormats);
 //    ftBytes: ;
 //    ftVarBytes: ;
 //    ftAutoInc: ;
@@ -117,11 +120,11 @@ begin
 //    ftInterface: ;
 //    ftIDispatch: ;
 //    ftGuid: ;
-    ftTimeStamp: Result := MARSStrToDateTime(Value.Value, Formats);
+    ftTimeStamp: Result := MARSStrToDateTime(AValue.Value, AFormats);
 //    ftFMTBcd: ;
 //    ftFixedWideChar: ;
 //    ftWideMemo: ;
-    ftOraTimeStamp: Result := MARSStrToDateTime(Value.Value, Formats);
+    ftOraTimeStamp: Result := MARSStrToDateTime(AValue.Value, AFormats);
 //    ftOraInterval: ;
 //    ftLongWord: ;
 //    ftShortint: ;
@@ -134,37 +137,37 @@ begin
 //    ftObject: ;
 //    ftSingle: ;
       else
-        Result := Value.Value;
+        Result := AValue.Value;
   end;
 end;
 
-class procedure TMARSResolver.UpdateDataSet(DataSet: TDataSet;
-  Values: TJSONValue; Formats :TMARSResolverFormats);
+class procedure TMARSResolver.UpdateDataSet(ADataSet: TDataSet;
+  AValues: TJSONValue; AFormats: TMARSResolverFormats);
 var
-  Resolver :TMARSResolver;
+  LResolver :TMARSResolver;
 begin
-  Resolver := TMARSResolver.Create(nil);
+  LResolver := TMARSResolver.Create(nil);
   try
-    Resolver.DataSet := DataSet;
-    Resolver.Formats := Formats;
-    Resolver.UpdateDataSet(Values);
+    LResolver.DataSet := DataSet;
+    LResolver.Formats := Formats;
+    LResolver.UpdateDataSet(AValues);
   finally
-    Resolver.Free;
+    LResolver.Free;
   end;
 end;
 
-class procedure TMARSResolver.DeleteDataSet(DataSet: TDataSet; Id: Variant;
-  Formats: TMARSResolverFormats);
+class procedure TMARSResolver.DeleteDataSet(ADataSet: TDataSet; AID: Variant;
+    AFormats: TMARSResolverFormats);
 var
-  Resolver :TMARSResolver;
+  LResolver :TMARSResolver;
 begin
-  Resolver := TMARSResolver.Create(nil);
+  LResolver := TMARSResolver.Create(nil);
   try
-    Resolver.DataSet := DataSet;
-    Resolver.Formats := Formats;
-    Resolver.DeleteDataSet(Id);
+    LResolver.DataSet := DataSet;
+    LResolver.Formats := Formats;
+    LResolver.DeleteDataSet(AID);
   finally
-    Resolver.Free;
+    LResolver.Free;
   end;
 end;
 
@@ -174,86 +177,86 @@ begin
   FFormats := ResolverFormats;
 end;
 
-class procedure TMARSResolver.DeleteDataSet(DataSet: TDataSet; Id: Variant);
+class procedure TMARSResolver.DeleteDataSet(ADataSet: TDataSet; AID: Variant);
 begin
-  TMARSResolver.DeleteDataSet(DataSet, Id, ResolverFormats);
+  TMARSResolver.DeleteDataSet(DataSet, AID, ResolverFormats);
 end;
 
-procedure TMARSResolver.DeleteDataSet(Id: Variant);
+procedure TMARSResolver.DeleteDataSet(AID :Variant);
 begin
-  DoDeleteById(Id);
+  DoDeleteById(AID);
 end;
 
-procedure TMARSResolver.DoDeleteById(Id: Variant);
+procedure TMARSResolver.DoDeleteById(AID: Variant);
 var
-  PSDataSet :IProviderSupportNG;
-  DeleteStatement :string;
-  Params :TParams;
-  KeyFieldName :string;
-  Field :TField;
-  TableName :string;
+  LPSDataSet: IProviderSupportNG;
+  LDeleteStatement: string;
+  LParams: TParams;
+  LKeyFieldName: string;
+  LField: TField;
+  LTableName: string;
 begin
-  if not Supports(DataSet, IProviderSupportNG, PSDataSet) then
+  if not Supports(DataSet, IProviderSupportNG, LPSDataSet) then
     raise Exception.CreateFmt('Cannot apply updates. DataSet [%s] doesn''t implement IProviderSupport', [DataSet.Name]);
 
-  TableName := PSDataSet.PSGetTableName;
-  if TableName = '' then
+  LTableName := LPSDataSet.PSGetTableName;
+  if LTableName = '' then
     raise Exception.CreateFmt('Cannot get Table name from DataSet [%s]', [DataSet.Name]);
 
-  KeyFieldName := PSDataSet.PSGetKeyFields;
-  if KeyFieldName = '' then
+  LKeyFieldName := LPSDataSet.PSGetKeyFields;
+  if LKeyFieldName = '' then
     raise Exception.CreateFmt('Cannot get primary key from DataSet [%s]', [DataSet.Name]);
 
-  DeleteStatement := 'DELETE FROM ' + TableName + ' WHERE ' + KeyFieldName + ' = ?';
+  LDeleteStatement := 'DELETE FROM ' + LTableName + ' WHERE ' + LKeyFieldName + ' = ?';
 
-  Params := TParams.Create(nil);
+  LParams := TParams.Create(nil);
   try
-    Field := DataSet.FindField(KeyFieldName);
-    if not Assigned(Field) then
-      raise Exception.CreateFmt('Cannot find field [%s] in DataSet [%s]', [KeyFieldName, DataSet.Name]);
-    TParam(Params.Add).AssignFieldValue(Field, Id);
+    LField := DataSet.FindField(LKeyFieldName);
+    if not Assigned(LField) then
+      raise Exception.CreateFmt('Cannot find field [%s] in DataSet [%s]', [LKeyFieldName, DataSet.Name]);
+    TParam(LParams.Add).AssignFieldValue(LField, AID);
 
-    PSDataSet.PSStartTransaction;
+    LPSDataSet.PSStartTransaction;
     try
-      PSDataSet.PSExecuteStatement(DeleteStatement, Params);
-      PSDataSet.PSEndTransaction(True);
+      LPSDataSet.PSExecuteStatement(LDeleteStatement, LParams);
+      LPSDataSet.PSEndTransaction(True);
     except
-      PSDataSet.PSEndTransaction(False);
+      LPSDataSet.PSEndTransaction(False);
       raise;
     end;
   finally
-    Params.Free;
+    LParams.Free;
   end;
 end;
 
-procedure TMARSResolver.DoInsertArray(Values: TJSONArray);
+procedure TMARSResolver.DoInsertArray(AValues: TJSONArray);
 var
-  Json :TJSONValue;
+  LJson: TJSONValue;
 begin
-  for Json in Values do
-    DoInsertObject(Json as TJSONObject);
+  for LJson in AValues do
+    DoInsertObject(LJson as TJSONObject);
 end;
 
-procedure TMARSResolver.DoInsertObject(Values: TJSONObject);
+procedure TMARSResolver.DoInsertObject(AValues: TJSONObject);
 const
-  FieldSep = ', ' + sLineBreak;
+  FIELD_SEPARATOR = ', ' + sLineBreak;
 var
-  Pair :TJSONPair;
-  Field :TField;
+  LPair: TJSONPair;
+  LField: TField;
 //  KeyFieldName :string;
 //  KeyValue :string;
-  TableName :string;
-  FieldValue :Variant;
-  PSDataSet :IProviderSupportNG;
-  InsertStatement :string;
-  Params :TParams;
-  StmtFields, StmtValues :string;
+  LTableName: string;
+  LFieldValue: Variant;
+  LPSDataSet: IProviderSupportNG;
+  LInsertStatement: string;
+  LParams: TParams;
+  LStmtFields, LStmtValues: string;
 begin
-  if not Supports(DataSet, IProviderSupportNG, PSDataSet) then
+  if not Supports(DataSet, IProviderSupportNG, LPSDataSet) then
     raise Exception.CreateFmt('Cannot apply updates. DataSet [%s] doesn''t implement IProviderSupport', [DataSet.Name]);
 
-  TableName := PSDataSet.PSGetTableName;
-  if TableName = '' then
+  LTableName := LPSDataSet.PSGetTableName;
+  if LTableName = '' then
     raise Exception.CreateFmt('Cannot get Table name from DataSet [%s]', [DataSet.Name]);
 
 //  KeyFieldName := PSDataSet.PSGetKeyFields;
@@ -262,159 +265,158 @@ begin
 //  KeyValue := Values.GetValue(KeyFieldName).Value;
 
   //InsertStatement := 'UPDATE ' + TableName + ' SET ' + sLineBreak;
-  StmtFields := '';
-  StmtValues := '';
+  LStmtFields := '';
+  LStmtValues := '';
 
-  Params := TParams.Create(nil);
+  LParams := TParams.Create(nil);
   try
-    for Pair in Values do
+    for LPair in AValues do
     begin
-      Field := DataSet.FindField(Pair.JsonString.Value);
-      if not Assigned(Field) then
-        raise Exception.CreateFmt('Cannot find field [%s] in DataSet [%s]', [Pair.JsonString.Value, DataSet.Name]);
+      LField := DataSet.FindField(LPair.JsonString.Value);
+      if not Assigned(LField) then
+        raise Exception.CreateFmt('Cannot find field [%s] in DataSet [%s]', [LPair.JsonString.Value, DataSet.Name]);
 
-      if pfInUpdate in Field.ProviderFlags then
+      if pfInUpdate in LField.ProviderFlags then
       begin
-        StmtFields := StmtFields + Field.FieldName + FieldSep;
-        StmtValues := StmtValues + '?' + FieldSep;
-        FieldValue := ValueToVariant(Field.DataType, Pair.JsonValue, Formats);
+        LStmtFields := LStmtFields + LField.FieldName + FIELD_SEPARATOR;
+        LStmtValues := LStmtValues + '?' + FIELD_SEPARATOR;
+        LFieldValue := ValueToVariant(LField.DataType, LPair.JsonValue, Formats);
         //InsertStatement := InsertStatement + Field.FieldName + ' = ?' + FieldSep;
-        TParam(Params.Add).AssignFieldValue(Field, FieldValue);
+        TParam(LParams.Add).AssignFieldValue(LField, LFieldValue);
       end;
     end;
     // Remove the last ", \n"
-    StmtFields := Copy(StmtFields, 1, Length(StmtFields) - Length(FieldSep));
-    StmtValues := Copy(StmtValues, 1, Length(StmtValues) - Length(FieldSep));
+    LStmtFields := Copy(LStmtFields, 1, Length(LStmtFields) - Length(FIELD_SEPARATOR));
+    LStmtValues := Copy(LStmtValues, 1, Length(LStmtValues) - Length(FIELD_SEPARATOR));
 
-    InsertStatement := 'INSERT INTO ' + TableName + '(' + StmtFields + ') VALUES (' + StmtValues + ')';
+    LInsertStatement := 'INSERT INTO ' + LTableName + '(' + LStmtFields + ') VALUES (' + LStmtValues + ')';
 
-    PSDataSet.PSStartTransaction;
+    LPSDataSet.PSStartTransaction;
     try
-      if PSDataSet.PSExecuteStatement(InsertStatement, Params) < 1 then
+      if LPSDataSet.PSExecuteStatement(LInsertStatement, LParams) < 1 then
         raise Exception.CreateFmt('Cannot find selected record on DataSet [%s]', [DataSet.Name]);
-      PSDataSet.PSEndTransaction(True);
+      LPSDataSet.PSEndTransaction(True);
     except
-      PSDataSet.PSEndTransaction(False);
+      LPSDataSet.PSEndTransaction(False);
       raise;
     end;
   finally
-    Params.Free;
+    LParams.Free;
   end;
 end;
 
-procedure TMARSResolver.DoUpdateArray(Values: TJSONArray);
+procedure TMARSResolver.DoUpdateArray(AValues: TJSONArray);
 var
-  Json :TJSONValue;
+  LJson: TJSONValue;
 begin
-  for Json in Values do
-    DoUpdateObject(Json as TJSONObject);
+  for LJson in AValues do
+    DoUpdateObject(LJson as TJSONObject);
 end;
 
-procedure TMARSResolver.DoUpdateObject(Values: TJSONObject);
+procedure TMARSResolver.DoUpdateObject(AValues: TJSONObject);
 const
-  FieldSep = ', ' + sLineBreak;
+  FIELD_SEPARATOR = ', ' + sLineBreak;
 var
-  Pair :TJSONPair;
-  Field :TField;
-  KeyFieldName :string;
-  KeyValue :string;
-  TableName :string;
-  FieldValue :Variant;
-  PSDataSet :IProviderSupportNG;
-  UpdateStatement :string;
-  Params :TParams;
+  LPair: TJSONPair;
+  LField: TField;
+  LKeyFieldName: string;
+  LKeyValue: string;
+  LTableName: string;
+  LFieldValue: Variant;
+  LPSDataSet: IProviderSupportNG;
+  LUpdateStatement: string;
+  LParams: TParams;
 begin
-  if not Supports(DataSet, IProviderSupportNG, PSDataSet) then
+  if not Supports(DataSet, IProviderSupportNG, LPSDataSet) then
     raise Exception.CreateFmt('Cannot apply updates. DataSet [%s] doesn''t implement IProviderSupport', [DataSet.Name]);
 
-  TableName := PSDataSet.PSGetTableName;
-  if TableName = '' then
+  LTableName := LPSDataSet.PSGetTableName;
+  if LTableName = '' then
     raise Exception.CreateFmt('Cannot get Table name from DataSet [%s]', [DataSet.Name]);
 
-  KeyFieldName := PSDataSet.PSGetKeyFields;
-  if KeyFieldName = '' then
+  LKeyFieldName := LPSDataSet.PSGetKeyFields;
+  if LKeyFieldName = '' then
     raise Exception.CreateFmt('Cannot get primary key from DataSet [%s]', [DataSet.Name]);
-  KeyValue := Values.GetValue(KeyFieldName).Value;
+  LKeyValue := AValues.GetValue(LKeyFieldName).Value;
 
-  UpdateStatement := 'UPDATE ' + TableName + ' SET ' + sLineBreak;
+  LUpdateStatement := 'UPDATE ' + LTableName + ' SET ' + sLineBreak;
 
-  Params := TParams.Create(nil);
+  LParams := TParams.Create(nil);
   try
-    for Pair in Values do
+    for LPair in AValues do
     begin
-      Field := DataSet.FindField(Pair.JsonString.Value);
-      if not Assigned(Field) then
-        raise Exception.CreateFmt('Cannot find field [%s] in DataSet [%s]', [Pair.JsonString.Value, DataSet.Name]);
+      LField := DataSet.FindField(LPair.JsonString.Value);
+      if not Assigned(LField) then
+        raise Exception.CreateFmt('Cannot find field [%s] in DataSet [%s]', [LPair.JsonString.Value, DataSet.Name]);
 
-      if (pfInUpdate in Field.ProviderFlags) and (not (pfInKey in Field.ProviderFlags)) then
+      if (pfInUpdate in LField.ProviderFlags) and (not (pfInKey in LField.ProviderFlags)) then
       begin
-        FieldValue := ValueToVariant(Field.DataType, Pair.JsonValue, Formats);
-        UpdateStatement := UpdateStatement + Field.FieldName + ' = ?' + FieldSep;
-        TParam(Params.Add).AssignFieldValue(Field, FieldValue);
+        LFieldValue := ValueToVariant(LField.DataType, LPair.JsonValue, Formats);
+        LUpdateStatement := LUpdateStatement + LField.FieldName + ' = ?' + FIELD_SEPARATOR;
+        TParam(LParams.Add).AssignFieldValue(LField, LFieldValue);
       end;
     end;
     // Remove the last ", \n"
-    UpdateStatement := Copy(UpdateStatement, 1, Length(UpdateStatement) - Length(FieldSep)) + sLineBreak;
-    UpdateStatement := UpdateStatement + ' WHERE ' + KeyFieldName + ' = ' + QuotedStr(KeyValue);
+    LUpdateStatement := Copy(LUpdateStatement, 1, Length(LUpdateStatement) - Length(FIELD_SEPARATOR)) + sLineBreak;
+    LUpdateStatement := LUpdateStatement + ' WHERE ' + LKeyFieldName + ' = ' + QuotedStr(LKeyValue);
 
-    PSDataSet.PSStartTransaction;
+    LPSDataSet.PSStartTransaction;
     try
-      if PSDataSet.PSExecuteStatement(UpdateStatement, Params) < 1 then
+      if LPSDataSet.PSExecuteStatement(LUpdateStatement, LParams) < 1 then
         raise Exception.CreateFmt('Cannot find selected record on DataSet [%s]', [DataSet.Name]);
-      PSDataSet.PSEndTransaction(True);
+      LPSDataSet.PSEndTransaction(True);
     except
-      PSDataSet.PSEndTransaction(False);
+      LPSDataSet.PSEndTransaction(False);
       raise;
     end;
   finally
-    Params.Free;
+    LParams.Free;
   end;
 end;
 
-class procedure TMARSResolver.InsertDataSet(DataSet: TDataSet; Values :TJSONValue;
-  Formats: TMARSResolverFormats);
+class procedure TMARSResolver.InsertDataSet(ADataSet: TDataSet; AValues:
+    TJSONValue; AFormats: TMARSResolverFormats);
 var
-  Resolver :TMARSResolver;
+  LResolver: TMARSResolver;
 begin
-  Resolver := TMARSResolver.Create(nil);
+  LResolver := TMARSResolver.Create(nil);
   try
-    Resolver.DataSet := DataSet;
-    Resolver.Formats := Formats;
-    Resolver.InsertDataSet(Values);
+    LResolver.DataSet := DataSet;
+    LResolver.Formats := Formats;
+    LResolver.InsertDataSet(AValues);
   finally
-    Resolver.Free;
+    LResolver.Free;
   end;
 end;
 
-class procedure TMARSResolver.InsertDataSet(DataSet: TDataSet; Values :TJSONValue);
+class procedure TMARSResolver.InsertDataSet(ADataSet: TDataSet; AValues: TJSONValue);
 begin
-  InsertDataSet(DataSet, Values, ResolverFormats);
+  InsertDataSet(DataSet, AValues, ResolverFormats);
 end;
 
-procedure TMARSResolver.InsertDataSet(Values: TJSONValue);
+procedure TMARSResolver.InsertDataSet(AValues: TJSONValue);
 begin
-  if Values is TJSONArray then
-    DoInsertArray(Values as TJSONArray)
-  else if Values is TJSONObject then
-    DoInsertObject(Values as TJSONObject)
+  if AValues is TJSONArray then
+    DoInsertArray(AValues as TJSONArray)
+  else if AValues is TJSONObject then
+    DoInsertObject(AValues as TJSONObject)
   else
-    raise Exception.CreateFmt('Cannot insert [%s]', [Values.ClassName]);
+    raise Exception.CreateFmt('Cannot insert [%s]', [AValues.ClassName]);
 end;
 
-class procedure TMARSResolver.UpdateDataSet(DataSet: TDataSet;
-  Values: TJSONValue);
+class procedure TMARSResolver.UpdateDataSet(ADataSet: TDataSet; AValues: TJSONValue);
 begin
-  UpdateDataSet(DataSet, Values, ResolverFormats);
+  UpdateDataSet(DataSet, AValues, ResolverFormats);
 end;
 
-procedure TMARSResolver.UpdateDataSet(Values: TJSONValue);
+procedure TMARSResolver.UpdateDataSet(AValues: TJSONValue);
 begin
-  if Values is TJSONArray then
-    DoUpdateArray(Values as TJSONArray)
-  else if Values is TJSONObject then
-    DoUpdateObject(Values as TJSONObject)
+  if AValues is TJSONArray then
+    DoUpdateArray(AValues as TJSONArray)
+  else if AValues is TJSONObject then
+    DoUpdateObject(AValues as TJSONObject)
   else
-    raise Exception.CreateFmt('Cannot update [%s]', [Values.ClassName]);
+    raise Exception.CreateFmt('Cannot update [%s]', [AValues.ClassName]);
 end;
 
 { TMARSResolverFormats }
