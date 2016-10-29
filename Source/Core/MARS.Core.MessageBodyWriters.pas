@@ -152,15 +152,26 @@ begin
         tkLString,
         tkWString: LStreamWriter.Write(AValue.AsType<string>);
 
-        tkVariant: LStreamWriter.Write(AValue.AsType<string>);
+        tkVariant: LStreamWriter.Write(AValue.ToString);
 
-        tkInteger,
-        tkInt64,
-        tkEnumeration: LStreamWriter.Write(AValue.AsType<Integer>);
+        tkInteger: LStreamWriter.Write(AValue.AsType<Integer>);
 
-        tkFloat: LStreamWriter.Write(AValue.AsType<Currency>);
+        tkInt64: LStreamWriter.Write(AValue.AsType<Int64>);
 
-        tkSet,
+        tkEnumeration: AValue.ToString;
+
+        tkFloat:
+        begin
+          if (AValue.TypeInfo = System.TypeInfo(TDateTime)) or
+             (AValue.TypeInfo = System.TypeInfo(TDate)) or
+             (AValue.TypeInfo = System.TypeInfo(TTime)) then
+            LStreamWriter.Write(DateToJSON(AValue.AsType<TDateTime>))
+          else
+            LStreamWriter.Write(AValue.AsType<Currency>);
+        end;
+
+        tkSet: LStreamWriter.Write(AValue.ToString);
+
         tkArray,
         tkRecord,
         tkInterface,

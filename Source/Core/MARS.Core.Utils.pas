@@ -269,7 +269,15 @@ begin
 
     tkEnumeration:
     begin
-      Result := TJSONNumber.Create(AValue.AsOrdinal);
+      if AValue.TypeInfo = System.TypeInfo(Boolean) then
+      begin
+        if AValue.AsBoolean then
+          Result := TJSONTrue.Create
+        else
+          Result := TJSONFalse.Create;
+      end
+      else
+        Result := TJSONString.Create(GetEnumName(AValue.TypeInfo, AValue.AsOrdinal));
     end;
 
     tkInteger,
@@ -280,7 +288,12 @@ begin
 
     tkFloat:
     begin
-      Result := TJSONNumber.Create(AValue.AsExtended);
+      if (AValue.TypeInfo = System.TypeInfo(TDateTime)) or
+         (AValue.TypeInfo = System.TypeInfo(TDate)) or
+         (AValue.TypeInfo = System.TypeInfo(TTime)) then
+        Result := TJSONString.Create(DateToJSON(AValue.AsType<TDateTime>))
+      else
+        Result := TJSONNumber.Create(AValue.AsExtended);
     end;
 
     tkClass:
