@@ -90,14 +90,14 @@ begin
     Result.AddPair(AName, TJSONNumber.Create(AValue.AsExtended))
 
   else if (AValue.IsType<Boolean>) then
-    Result.AddPair(AName, BooleanToTJSON(AValue.AsType<Boolean>))
+    Result.AddPair(AName, TJSONHelper.BooleanToTJSON(AValue.AsType<Boolean>))
 
   else if (AValue.IsType<TDateTime>) then
-    Result.AddPair(AName, DateToJSON(AValue.AsType<TDateTime>))
+    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TDateTime>))
   else if (AValue.IsType<TDate>) then
-    Result.AddPair(AName, DateToJSON(AValue.AsType<TDate>))
+    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TDate>))
   else if (AValue.IsType<TTime>) then
-    Result.AddPair(AName, DateToJSON(AValue.AsType<TTime>))
+    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TTime>))
 
   else
     Result.AddPair(AName, AValue.ToString);

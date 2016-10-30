@@ -50,7 +50,8 @@ uses
   System.TypInfo,
   MARS.Core.JSON,
   MARS.Core.Utils,
-  MARS.Rtti.Utils;
+  MARS.Rtti.Utils,
+  MARS.Core.Serialization;
 
 { TObjectWriter }
 
@@ -165,7 +166,7 @@ begin
           if (AValue.TypeInfo = System.TypeInfo(TDateTime)) or
              (AValue.TypeInfo = System.TypeInfo(TDate)) or
              (AValue.TypeInfo = System.TypeInfo(TTime)) then
-            LStreamWriter.Write(DateToJSON(AValue.AsType<TDateTime>))
+            LStreamWriter.Write(TJSONHelper.DateToJSON(AValue.AsType<TDateTime>))
           else
             LStreamWriter.Write(AValue.AsType<Currency>);
         end;

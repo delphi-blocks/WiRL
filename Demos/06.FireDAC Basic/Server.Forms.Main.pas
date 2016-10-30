@@ -11,21 +11,13 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.Actions, Vcl.ActnList,
-  Vcl.StdCtrls, Vcl.ExtCtrls
+  Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, IdContext,
 
-  , System.Diagnostics
-  , IdContext
-
-  , MARS.Core.Engine
-  , MARS.http.Server.Indy
-
-
-//  , MARS.Core.Utils
-  , MARS.Core.Application
-  , MARS.Diagnostics.Manager
-  , MARS.Diagnostics.Resources
-//  , MARS.Core.Token
-  ;
+  MARS.Core.Engine,
+  MARS.http.Server.Indy,
+  MARS.Core.Application,
+  MARS.Diagnostics.Manager,
+  MARS.Diagnostics.Resources;
 
 type
   TMainForm = class(TForm)
@@ -56,11 +48,10 @@ implementation
 {$R *.dfm}
 
 uses
-   MARS.Core.MessageBodyWriter
-  , MARS.Core.MessageBodyWriters
-  , MARS.Data.MessageBodyWriters
-  , MARS.Data.FireDAC.MessageBodyWriters
-  ;
+  MARS.Core.MessageBodyWriter,
+  MARS.Core.MessageBodyWriters,
+  MARS.Data.MessageBodyWriters,
+  MARS.Data.FireDAC.MessageBodyWriters;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin

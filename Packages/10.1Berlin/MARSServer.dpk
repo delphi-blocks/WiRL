@@ -84,7 +84,9 @@ contains
   JOSE.Core.JWK in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWK.pas',
   JOSE.Core.JWS in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWS.pas',
   JOSE.Core.JWT in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWT.pas',
-  JOSE.Core.Parts in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas';
+  JOSE.Core.Parts in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas',
+  MARS.Core.Serialization in '..\..\Source\Core\MARS.Core.Serialization.pas',
+  MARS.http.Filters in '..\..\Source\Core\MARS.http.Filters.pas';
 
 end.
 

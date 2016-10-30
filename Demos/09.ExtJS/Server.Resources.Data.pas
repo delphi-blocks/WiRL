@@ -77,7 +77,7 @@ end;
 
 function TMainModule.InsertEmployee(Json: TJSONValue): TJSONObject;
 begin
-  raise EMARSNotSupportedException.Create('Not yet implemented');
+  raise EMARSNotImplementedException.Create('Not yet implemented');
 end;
 
 procedure TMainModule.DataModuleCreate(Sender: TObject);

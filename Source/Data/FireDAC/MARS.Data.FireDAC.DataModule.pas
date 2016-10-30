@@ -68,7 +68,7 @@ uses
   System.Rtti, System.TypInfo, System.Generics.Collections,
   MARS.Rtti.Utils;
 
-{ TDataModule1 }
+{ TMARSFDDataModuleResource }
 
 procedure TMARSFDDataModuleResource.ApplyUpdates(ADeltas: TFDJSONDeltas;
   AOnApplyUpdates: TProc<string, Integer, IFDJSONDeltasApplyUpdates>);

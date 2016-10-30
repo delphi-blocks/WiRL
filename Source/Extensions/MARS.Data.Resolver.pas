@@ -144,12 +144,12 @@ end;
 class procedure TMARSResolver.UpdateDataSet(ADataSet: TDataSet;
   AValues: TJSONValue; AFormats: TMARSResolverFormats);
 var
-  LResolver :TMARSResolver;
+  LResolver: TMARSResolver;
 begin
   LResolver := TMARSResolver.Create(nil);
   try
-    LResolver.DataSet := DataSet;
-    LResolver.Formats := Formats;
+    LResolver.DataSet := ADataSet;
+    LResolver.Formats := AFormats;
     LResolver.UpdateDataSet(AValues);
   finally
     LResolver.Free;
@@ -159,12 +159,12 @@ end;
 class procedure TMARSResolver.DeleteDataSet(ADataSet: TDataSet; AID: Variant;
     AFormats: TMARSResolverFormats);
 var
-  LResolver :TMARSResolver;
+  LResolver: TMARSResolver;
 begin
   LResolver := TMARSResolver.Create(nil);
   try
-    LResolver.DataSet := DataSet;
-    LResolver.Formats := Formats;
+    LResolver.DataSet := ADataSet;
+    LResolver.Formats := AFormats;
     LResolver.DeleteDataSet(AID);
   finally
     LResolver.Free;
@@ -179,7 +179,7 @@ end;
 
 class procedure TMARSResolver.DeleteDataSet(ADataSet: TDataSet; AID: Variant);
 begin
-  TMARSResolver.DeleteDataSet(DataSet, AID, ResolverFormats);
+  TMARSResolver.DeleteDataSet(ADataSet, AID, ResolverFormats);
 end;
 
 procedure TMARSResolver.DeleteDataSet(AID :Variant);
@@ -381,8 +381,8 @@ var
 begin
   LResolver := TMARSResolver.Create(nil);
   try
-    LResolver.DataSet := DataSet;
-    LResolver.Formats := Formats;
+    LResolver.DataSet := ADataSet;
+    LResolver.Formats := AFormats;
     LResolver.InsertDataSet(AValues);
   finally
     LResolver.Free;
@@ -391,7 +391,7 @@ end;
 
 class procedure TMARSResolver.InsertDataSet(ADataSet: TDataSet; AValues: TJSONValue);
 begin
-  InsertDataSet(DataSet, AValues, ResolverFormats);
+  InsertDataSet(ADataSet, AValues, ResolverFormats);
 end;
 
 procedure TMARSResolver.InsertDataSet(AValues: TJSONValue);
@@ -406,7 +406,7 @@ end;
 
 class procedure TMARSResolver.UpdateDataSet(ADataSet: TDataSet; AValues: TJSONValue);
 begin
-  UpdateDataSet(DataSet, AValues, ResolverFormats);
+  UpdateDataSet(ADataSet, AValues, ResolverFormats);
 end;
 
 procedure TMARSResolver.UpdateDataSet(AValues: TJSONValue);

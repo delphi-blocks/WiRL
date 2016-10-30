@@ -11,10 +11,8 @@ unit MARS.Data.Utils;
 interface
 
 uses
-    Classes
-  , SysUtils
-  , MARS.Core.JSON
-  , DB;
+  System.Classes, System.SysUtils, Data.DB,
+  MARS.Core.JSON;
 
 type
   TDataUtils = class
@@ -35,10 +33,10 @@ type
 implementation
 
 uses
-    Rtti
-  , StrUtils, DateUtils
-  , MARS.Rtti.Utils
-  , MARS.Core.Utils;
+  System.Rtti, System.StrUtils, System.DateUtils,
+
+  MARS.Rtti.Utils,
+  MARS.Core.Utils;
 
 type
   TJSONFieldType = (NestedObject, NestedArray, SimpleValue);
@@ -75,13 +73,13 @@ begin
         ftSmallint: Result.AddPair(LPairName, TJSONNumber.Create(LField.AsInteger));
         ftInteger: Result.AddPair(LPairName, TJSONNumber.Create(LField.AsInteger));
         ftWord: Result.AddPair(LPairName, TJSONNumber.Create(LField.AsInteger));
-        ftBoolean: Result.AddPair(LPairName, BooleanToTJSON(LField.AsBoolean));
+        ftBoolean: Result.AddPair(LPairName, TJSONHelper.BooleanToTJSON(LField.AsBoolean));
         ftFloat: Result.AddPair(LPairName, TJSONNumber.Create(LField.AsFloat));
         ftCurrency: Result.AddPair(LPairName, TJSONNumber.Create(LField.AsCurrency));
         ftBCD: Result.AddPair(LPairName, TJSONNumber.Create(LField.AsFloat));
-        ftDate: Result.AddPair(LPairName, DateToJSON(LField.AsDateTime));
-        ftTime: Result.AddPair(LPairName, DateToJSON(LField.AsDateTime));
-        ftDateTime: Result.AddPair(LPairName, DateToJSON(LField.AsDateTime));
+        ftDate: Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime));
+        ftTime: Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime));
+        ftDateTime: Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime));
 //        ftBytes: ;
 //        ftVarBytes: ;
         ftAutoInc: Result.AddPair(LPairName, TJSONNumber.Create(LField.AsInteger));
@@ -106,7 +104,7 @@ begin
 //        ftInterface: ;
 //        ftIDispatch: ;
         ftGuid: Result.AddPair(LPairName, LField.AsString);
-        ftTimeStamp: Result.AddPair(LPairName, DateToJSON(LField.AsDateTime));
+        ftTimeStamp: Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime));
         ftFMTBcd: Result.AddPair(LPairName, TJSONNumber.Create(LField.AsFloat));
         ftFixedWideChar: Result.AddPair(LPairName, LField.AsString);
         ftWideMemo: Result.AddPair(LPairName, LField.AsString);
