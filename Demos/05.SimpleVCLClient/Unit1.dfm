@@ -57,22 +57,22 @@ object Form1: TForm1
     TabOrder = 3
     OnClick = Button1Click
   end
-  object MARSClient1: TMARSClient
-    MARSEngineURL = 'http://localhost:8080/rest'
+  object WiRLClient1: TWiRLClient
+    WiRLEngineURL = 'http://localhost:8080/rest'
     ConnectTimeout = 0
     ReadTimeout = -1
     Left = 48
     Top = 32
   end
-  object MARSClientApplication1: TMARSClientApplication
+  object WiRLClientApplication1: TWiRLClientApplication
     DefaultMediaType = 'application/json'
     AppName = 'default'
-    Client = MARSClient1
+    Client = WiRLClient1
     Left = 48
     Top = 88
   end
-  object MARSDatamoduleResource: TMARSFDResource
-    Application = MARSClientApplication1
+  object WiRLDatamoduleResource: TWiRLFDResource
+    Application = WiRLClientApplication1
     Resource = 'maindata'
     QueryParams.Strings = (
       '')

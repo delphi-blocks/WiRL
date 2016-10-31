@@ -1,7 +1,7 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 program FireDACBasicServer;
@@ -10,7 +10,7 @@ uses
   Vcl.Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
   Server.MainData in 'Server.MainData.pas' {MainDataResource: TDataModule},
-  MARS.Data.FireDAC.DataModule in '..\..\Source\Data\FireDAC\MARS.Data.FireDAC.DataModule.pas' {MARSFDDataModuleResource: TDataModule};
+  WiRL.Data.FireDAC.DataModule in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas' {WiRLFDDataModuleResource: TDataModule};
 
 {$R *.res}
 

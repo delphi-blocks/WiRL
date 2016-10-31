@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Resources;
@@ -13,16 +13,16 @@ uses
 
   , System.Rtti
 
-  , MARS.Core.JSON
-  , MARS.Core.Registry
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
+  , WiRL.Core.JSON
+  , WiRL.Core.Registry
+  , WiRL.Core.Attributes
+  , WiRL.Core.MediaType
 
-  , MARS.Core.Token
-  , MARS.Core.Token.Resource
+  , WiRL.Core.Token
+  , WiRL.Core.Token.Resource
 
-  , MARS.Data.FireDAC
-  , MARS.Data.MessageBodyWriters
+  , WiRL.Data.FireDAC
+  , WiRL.Data.MessageBodyWriters
   , FireDAC.Phys.FB
   ;
 
@@ -32,19 +32,19 @@ type
    , SQLStatement('employee', 'select * from EMPLOYEE order by EMP_NO')
    , Produces(TMediaType.APPLICATION_JSON)
   ]
-  THelloWorldResource = class(TMARSFDDatasetResource)
+  THelloWorldResource = class(TWiRLFDDatasetResource)
   protected
   public
   end;
 
   [Path('token')]
-  TTokenResource = class(TMARSTokenResource);
+  TTokenResource = class(TWiRLTokenResource);
 
 implementation
 
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
-  TMARSResourceRegistry.Instance.RegisterResource<TTokenResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TTokenResource>;
 
 end.

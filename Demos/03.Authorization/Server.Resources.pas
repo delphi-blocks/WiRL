@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Resources;
@@ -11,16 +11,16 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
 
-  MARS.Core.JSON,
-  MARS.Core.Registry,
-  MARS.Core.Attributes,
-  MARS.Core.MediaType,
-  MARS.Core.URL,
-  MARS.Core.MessageBodyWriters,
-  MARS.Core.Request,
-  MARS.Core.Response,
-  MARS.Core.Token,
-  MARS.Core.Token.Resource,
+  WiRL.Core.JSON,
+  WiRL.Core.Registry,
+  WiRL.Core.Attributes,
+  WiRL.Core.MediaType,
+  WiRL.Core.URL,
+  WiRL.Core.MessageBodyWriters,
+  WiRL.Core.Request,
+  WiRL.Core.Response,
+  WiRL.Core.Token,
+  WiRL.Core.Token.Resource,
 
   // Only if you want to use a custom (claims) class
   Server.Claims;
@@ -62,7 +62,7 @@ type
   TUserResource = class
   private
     // Injects the auth context into the "Auth" object
-    [Context] Auth: TMARSAuthContext;
+    [Context] Auth: TWiRLAuthContext;
     // Injects the custom claims into "Subject" object
     [Context] Subject: TServerClaims;
   public
@@ -78,21 +78,21 @@ type
   // Inherit the Auth resource from the base class you want to use:
 
   [Path('basic_auth')]
-  TBasicAuthResource = class(TMARSAuthBasicResource)
+  TBasicAuthResource = class(TWiRLAuthBasicResource)
   private
     // Injects the custom claims into "Subject" field
     [Context] Subject: TServerClaims;
   protected
-    function Authenticate(const AUserName, APassword: string): TMARSAuthResult; override;
+    function Authenticate(const AUserName, APassword: string): TWiRLAuthResult; override;
   end;
 
   [Path('form_auth')]
-  TFormAuthResource = class(TMARSAuthFormResource)
+  TFormAuthResource = class(TWiRLAuthFormResource)
   private
     // Injects the custom claims into "Subject" field
     [Context] Subject: TServerClaims;
   protected
-    function Authenticate(const AUserName, APassword: string): TMARSAuthResult; override;
+    function Authenticate(const AUserName, APassword: string): TWiRLAuthResult; override;
   end;
 
 implementation
@@ -122,7 +122,7 @@ end;
 
 { TBasicAuthResource }
 
-function TBasicAuthResource.Authenticate(const AUserName, APassword: string): TMARSAuthResult;
+function TBasicAuthResource.Authenticate(const AUserName, APassword: string): TWiRLAuthResult;
 begin
   // The line below is only an example, you have to replace with
   // your (server) authentication code (database, another service, etc...)
@@ -141,7 +141,7 @@ end;
 
 { TFormAuthResource }
 
-function TFormAuthResource.Authenticate(const AUserName, APassword: string): TMARSAuthResult;
+function TFormAuthResource.Authenticate(const AUserName, APassword: string): TWiRLAuthResult;
 begin
   // The line below is only an example, you have to replace with
   // your (server) authentication code (database, another service, etc...)
@@ -187,10 +187,10 @@ begin
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TUserResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TUserResource>;
 
   // Auth resources
-  TMARSResourceRegistry.Instance.RegisterResource<TFormAuthResource>;
-  TMARSResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TFormAuthResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
 
 end.

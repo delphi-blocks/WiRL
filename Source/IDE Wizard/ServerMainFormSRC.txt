@@ -3,9 +3,9 @@ unit ServerMainForm;
 interface
 
 uses
-  MARS.Core.Engine,
-  MARS.http.Server.Indy,
-  MARS.Core.Application,
+  WiRL.Core.Engine,
+  WiRL.http.Server.Indy,
+  WiRL.Core.Application,
   Actions,
   Classes,
   Forms,
@@ -29,11 +29,11 @@ type
     procedure StopServerActionExecute(Sender: TObject);
     procedure StopServerActionUpdate(Sender: TObject);
   strict private
-    FServer: TMARShttpServerIndy;
-    FEngine: TMARSEngine;
+    FServer: TWiRLhttpServerIndy;
+    FEngine: TWiRLEngine;
   strict protected
-    property Server: TMARShttpServerIndy read FServer;
-    property Engine: TMARSEngine read FEngine;
+    property Server: TWiRLhttpServerIndy read FServer;
+    property Engine: TWiRLEngine read FEngine;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -47,11 +47,11 @@ implementation
 {$R *.dfm}
 
 uses
-  MARS.Core.JSON,
-  MARS.Rtti.Utils,
-  MARS.Core.MessageBodyWriter,
-  MARS.Core.MessageBodyWriters,
-  MARS.Utils.Parameters.IniFile,
+  WiRL.Core.JSON,
+  WiRL.Rtti.Utils,
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Core.MessageBodyWriters,
+  WiRL.Utils.Parameters.IniFile,
   ServerResources;
 
 constructor TMainForm.Create(AOwner: TComponent);
@@ -68,7 +68,7 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TMARSEngine.Create;
+  FEngine := TWiRLEngine.Create;
 
   // Engine configuration
   FEngine.Parameters.LoadFromIniFile;
@@ -77,7 +77,7 @@ begin
   FEngine.AddApplication('Default', '/default', [ 'ServerResources.*']);
 
   // Create http server
-  FServer := TMARShttpServerIndy.Create(FEngine);
+  FServer := TWiRLhttpServerIndy.Create(FEngine);
 
   if not FServer.Active then
     FServer.Active := True;

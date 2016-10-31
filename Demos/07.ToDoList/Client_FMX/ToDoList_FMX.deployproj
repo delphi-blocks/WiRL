@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <Import Condition="Exists('$(BDS)\bin\CodeGear.Deployment.targets')" Project="$(BDS)\bin\CodeGear.Deployment.targets"/>
     <ProjectExtensions>
         <ProjectFileVersion>12</ProjectFileVersion>
@@ -29,7 +29,7 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="Z:\MARS\Demos\ToDoList\Client_FMX\Android\Debug\classes.dex" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="Z:\WiRL\Demos\ToDoList\Client_FMX\Android\Debug\classes.dex" Condition="'$(Config)'=='Debug'">
             <RemoteDir>ToDoList_FMX\classes\</RemoteDir>
             <RemoteName>classes.dex</RemoteName>
             <Operation>1</Operation>

@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.MainData;
@@ -16,14 +16,14 @@ uses
   FireDAC.Phys.FBDef, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.VCLUI.Wait, FireDAC.Comp.UI,
 
-  MARS.Data.FireDAC.DataModule,
-  MARS.Core.Attributes,
-  MARS.Core.URL,
-  MARS.Core.Token;
+  WiRL.Data.FireDAC.DataModule,
+  WiRL.Core.Attributes,
+  WiRL.Core.URL,
+  WiRL.Core.Token;
 
 type
   [Path('/maindata')]
-  TMainDataResource = class(TMARSFDDataModuleResource)
+  TMainDataResource = class(TWiRLFDDataModuleResource)
     FDConnection1: TFDConnection;
     employee: TFDQuery;
     FDGUIxWaitCursor1: TFDGUIxWaitCursor;
@@ -41,7 +41,7 @@ implementation
 {$R *.dfm}
 
 uses
-  MARS.Core.Registry;
+  WiRL.Core.Registry;
 
 { TMainDataResource }
 
@@ -56,7 +56,7 @@ uses
 //end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TMainDataResource>(
+  TWiRLResourceRegistry.Instance.RegisterResource<TMainDataResource>(
     function: TObject
     begin
       Result := TMainDataResource.Create(nil);

@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Forms.Main;
@@ -11,7 +11,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
-  MARS.http.Server.Indy;
+  WiRL.http.Server.Indy;
 
 type
   TMainForm = class(TForm)
@@ -30,7 +30,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TMARShttpServerIndy;
+    FServer: TWiRLhttpServerIndy;
   public
   end;
 
@@ -57,11 +57,11 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TMARShttpServerIndy.Create;
+  FServer := TWiRLhttpServerIndy.Create;
 
   // Engine configuration
   FServer.ConfigureEngine('/rest')
-    .SetName('MARS Auth Demo')
+    .SetName('WiRL Auth Demo')
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(75)
 

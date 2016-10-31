@@ -4,12 +4,12 @@ interface
 
 uses
   System.Classes,
-  MARS.Core.JSON,
-  MARS.Core.Token;
+  WiRL.Core.JSON,
+  WiRL.Core.Token;
 
 type
   // Custom Claims Class
-  TServerClaims = class(TMARSSubject)
+  TServerClaims = class(TWiRLSubject)
   private
     const CLAIM_GROUP = 'group';
     const CLAIM_LANGUAGE = 'language';

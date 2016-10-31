@@ -4,13 +4,13 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  MARS.Core.Attributes;
+  WiRL.Core.Attributes;
 
 type
   [NameBinding]
-  PoweredByMARSAttribute = class(TCustomAttribute);
+  PoweredByWiRLAttribute = class(TCustomAttribute);
 
-//  PoweredByMARSAttribute = class(NameBindingAttribute);
+//  PoweredByWiRLAttribute = class(NameBindingAttribute);
 
 implementation
 

@@ -1,0 +1,76 @@
+package WiRLClient;
+
+{$R *.res}
+{$R *.dres}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'WiRL REST Library (Client)'}
+{$LIBSUFFIX '230'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  inet,
+  DbxCommonDriver,
+  dbrtl,
+  FireDACCommon,
+  FireDACCommonDriver,
+  FireDAC,
+  DataSnapFireDAC,
+  IndySystem,
+  IndyProtocols,
+  IndyCore,
+  bindengine,
+  bindcomp;
+
+contains
+  WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
+  WiRL.Client.Client in '..\..\Source\Client\WiRL.Client.Client.pas',
+  WiRL.Client.CustomResource.Editor in '..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas',
+  WiRL.Client.CustomResource in '..\..\Source\Client\WiRL.Client.CustomResource.pas',
+  WiRL.Client.FireDAC in '..\..\Source\Client\WiRL.Client.FireDAC.pas',
+  WiRL.Client.Messaging.Resource in '..\..\Source\Client\WiRL.Client.Messaging.Resource.pas',
+  WiRL.Client.Resource.JSON in '..\..\Source\Client\WiRL.Client.Resource.JSON.pas',
+  WiRL.Client.Resource in '..\..\Source\Client\WiRL.Client.Resource.pas',
+  WiRL.Client.Resource.Stream in '..\..\Source\Client\WiRL.Client.Resource.Stream.pas',
+  WiRL.Client.SubResource.JSON in '..\..\Source\Client\WiRL.Client.SubResource.JSON.pas',
+  WiRL.Client.SubResource in '..\..\Source\Client\WiRL.Client.SubResource.pas',
+  WiRL.Client.SubResource.Stream in '..\..\Source\Client\WiRL.Client.SubResource.Stream.pas',
+  WiRL.Client.Token in '..\..\Source\Client\WiRL.Client.Token.pas',
+  WiRL.Client.Utils.LiveBindings in '..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas',
+  WiRL.Client.Utils in '..\..\Source\Client\WiRL.Client.Utils.pas',
+  WiRL.Data.FireDAC.Editor in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas',
+  WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
+  WiRL.Core.URL in '..\..\Source\Core\WiRL.Core.URL.pas',
+  WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
+  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
+  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
+  WiRL.Core.Request in '..\..\Source\Core\WiRL.Core.Request.pas',
+  WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas';
+
+end.
+

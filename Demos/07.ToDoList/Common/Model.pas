@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Model;
@@ -11,8 +11,8 @@ interface
 uses
     Classes, SysUtils
   , DB
-  , MARS.Rtti.Utils
-  , MARS.Core.JSON
+  , WiRL.Rtti.Utils
+  , WiRL.Core.JSON
   ;
 
 type

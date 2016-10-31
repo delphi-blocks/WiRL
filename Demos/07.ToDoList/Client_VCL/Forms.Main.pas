@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Forms.Main;
@@ -10,18 +10,18 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, MARS.Client.CustomResource,
-  MARS.Client.Resource, MARS.Client.FireDAC, MARS.Client.Application,
-  MARS.Client.Client, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, WiRL.Client.CustomResource,
+  WiRL.Client.Resource, WiRL.Client.FireDAC, WiRL.Client.Application,
+  WiRL.Client.Client, FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
   FireDAC.DApt.Intf, Data.DB, Vcl.Grids, Vcl.DBGrids, FireDAC.Comp.DataSet,
   FireDAC.Comp.Client, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.DBCtrls;
 
 type
   TMainForm = class(TForm)
-    MARSClient: TMARSClient;
-    MARSTodoApplication: TMARSClientApplication;
-    MARSAccountsResource: TMARSFDResource;
+    WiRLClient: TWiRLClient;
+    WiRLTodoApplication: TWiRLClientApplication;
+    WiRLAccountsResource: TWiRLFDResource;
     DBGrid1: TDBGrid;
     DBNavigator1: TDBNavigator;
     SendAccountsToServerButton: TButton;
@@ -30,7 +30,7 @@ type
     QueryItems1: TFDMemTable;
     ItemsDataSource: TDataSource;
     AccountsDataSource: TDataSource;
-    MARSItemsResource: TMARSFDResource;
+    WiRLItemsResource: TWiRLFDResource;
     GetItemsButton: TButton;
     DBNavigator2: TDBNavigator;
     SendItemsToServerButton: TButton;
@@ -53,23 +53,23 @@ implementation
 
 procedure TMainForm.GetItemsButtonClick(Sender: TObject);
 begin
-  MARSItemsResource.QueryParams.Values['username'] := QueryAccounts1.FieldByName('USERNAME').AsString;
-  MARSItemsResource.GET();
+  WiRLItemsResource.QueryParams.Values['username'] := QueryAccounts1.FieldByName('USERNAME').AsString;
+  WiRLItemsResource.GET();
 end;
 
 procedure TMainForm.SendAccountsToServerButtonClick(Sender: TObject);
 begin
-  MARSAccountsResource.POST();
+  WiRLAccountsResource.POST();
 end;
 
 procedure TMainForm.SendItemsToServerButtonClick(Sender: TObject);
 begin
-  MARSItemsResource.POST();
+  WiRLItemsResource.POST();
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  MARSAccountsResource.GET();
+  WiRLAccountsResource.GET();
 end;
 
 end.

@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Resources.Datamodule;
@@ -9,8 +9,8 @@ unit Server.Resources.Datamodule;
 interface
 
 uses
-  System.SysUtils, System.Classes, MARS.Data.FireDAC.DataModule
-  , MARS.Core.Attributes, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  System.SysUtils, System.Classes, WiRL.Data.FireDAC.DataModule
+  , WiRL.Core.Attributes, FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.FB,
   FireDAC.Phys.FBDef, Data.DB, FireDAC.Comp.Client, FireDAC.Stan.Param,
@@ -19,7 +19,7 @@ uses
 
 type
   [Path('/datamodule')]
-  TDataResource = class(TMARSFDDataModuleResource)
+  TDataResource = class(TWiRLFDDataModuleResource)
     FDConnection1: TFDConnection;
     QueryItems: TFDQuery;
     QueryAccounts: TFDQuery;
@@ -36,8 +36,8 @@ var
 implementation
 
 uses
-    MARS.Core.Registry
-    , MARS.Data.FireDAC.MessageBodyWriters
+    WiRL.Core.Registry
+    , WiRL.Data.FireDAC.MessageBodyWriters
   ;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -62,7 +62,7 @@ begin
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TDataResource>(
+  TWiRLResourceRegistry.Instance.RegisterResource<TDataResource>(
     function: TObject
     begin
       Result := TDataResource.Create(nil);

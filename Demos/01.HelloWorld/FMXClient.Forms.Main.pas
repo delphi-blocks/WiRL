@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit FMXClient.Forms.Main;
@@ -57,10 +57,10 @@ implementation
 
 uses
   FMXClient.DataModules.Main,
-  MARS.Core.Utils,
-  MARS.Rtti.Utils,
-  MARS.Client.Utils,
-  MARS.Core.JSON;
+  WiRL.Core.Utils,
+  WiRL.Rtti.Utils,
+  WiRL.Client.Utils,
+  WiRL.Core.JSON;
 
 procedure TMainForm.Button1Click(Sender: TObject);
 begin

@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Forms.Main;
@@ -11,8 +11,8 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  MARS.Client.CustomResource, MARS.Client.Resource, MARS.Client.FireDAC,
-  MARS.Client.Application, MARS.Client.Client, FireDAC.Stan.Intf,
+  WiRL.Client.CustomResource, WiRL.Client.Resource, WiRL.Client.FireDAC,
+  WiRL.Client.Application, WiRL.Client.Client, FireDAC.Stan.Intf,
   FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
   FireDAC.Phys.Intf, FireDAC.DApt.Intf, System.Rtti, Data.Bind.EngExt,
   Fmx.Bind.DBEngExt, Fmx.Bind.Grid, System.Bindings.Outputs, Fmx.Bind.Editors,
@@ -23,9 +23,9 @@ uses
 
 type
   TForm1 = class(TForm)
-    MARSClient1: TMARSClient;
-    MARSClientApplication1: TMARSClientApplication;
-    MARSFDResource1: TMARSFDResource;
+    WiRLClient1: TWiRLClient;
+    WiRLClientApplication1: TWiRLClientApplication;
+    WiRLFDResource1: TWiRLFDResource;
     StringGrid1: TStringGrid;
     BindingsList1: TBindingsList;
     ButtonPOST: TButton;
@@ -51,12 +51,12 @@ implementation
 
 procedure TForm1.ButtonPOSTClick(Sender: TObject);
 begin
-  MARSFDResource1.POST();
+  WiRLFDResource1.POST();
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  MARSFDResource1.GET();
+  WiRLFDResource1.GET();
 end;
 
 end.

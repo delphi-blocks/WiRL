@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit FMXClient.DataModules.Main;
@@ -10,13 +10,13 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  MARS.Client.Application,
-  MARS.Client.Client;
+  WiRL.Client.Application,
+  WiRL.Client.Client;
 
 type
   TMainDataModule = class(TDataModule)
-    MARSClient: TMARSClient;
-    MARSApplication: TMARSClientApplication;
+    WiRLClient: TWiRLClient;
+    WiRLApplication: TWiRLClientApplication;
   private
   public
   end;

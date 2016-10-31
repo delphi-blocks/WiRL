@@ -150,22 +150,22 @@ object MainForm: TMainForm
     TabOrder = 6
     OnClick = SendItemsToServerButtonClick
   end
-  object MARSClient: TMARSClient
-    MARSEngineURL = 'http://localhost:8080/rest'
+  object WiRLClient: TWiRLClient
+    WiRLEngineURL = 'http://localhost:8080/rest'
     ConnectTimeout = 0
     ReadTimeout = -1
     Left = 32
     Top = 16
   end
-  object MARSTodoApplication: TMARSClientApplication
+  object WiRLTodoApplication: TWiRLClientApplication
     DefaultMediaType = 'application/json'
     AppName = 'todo'
-    Client = MARSClient
+    Client = WiRLClient
     Left = 88
     Top = 40
   end
-  object MARSAccountsResource: TMARSFDResource
-    Application = MARSTodoApplication
+  object WiRLAccountsResource: TWiRLFDResource
+    Application = WiRLTodoApplication
     Resource = 'datamodule'
     ResourceDataSets = <
       item
@@ -218,8 +218,8 @@ object MainForm: TMainForm
     Left = 112
     Top = 216
   end
-  object MARSItemsResource: TMARSFDResource
-    Application = MARSTodoApplication
+  object WiRLItemsResource: TWiRLFDResource
+    Application = WiRLTodoApplication
     Resource = 'datamodule'
     QueryParams.Strings = (
       'username=andrea')

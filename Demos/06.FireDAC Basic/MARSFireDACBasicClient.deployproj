@@ -1,11 +1,11 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <Import Condition="Exists('$(BDS)\bin\CodeGear.Deployment.targets')" Project="$(BDS)\bin\CodeGear.Deployment.targets"/>
     <ProjectExtensions>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <ItemGroup Condition="'$(Platform)'=='Android'">
         <DeployFile Include="Android\Release\AndroidManifest.xml" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\</RemoteDir>
             <RemoteName>AndroidManifest.xml</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -13,7 +13,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-large\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-large\</RemoteDir>
             <RemoteName>splash_image.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -21,7 +21,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-large\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-large\</RemoteDir>
             <RemoteName>splash_image.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -29,7 +29,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-small\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-small\</RemoteDir>
             <RemoteName>splash_image.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -37,7 +37,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-xxhdpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-xxhdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -45,7 +45,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="Android\Release\splash_image_def.xml" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable\</RemoteDir>
             <RemoteName>splash_image_def.xml</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -53,7 +53,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="Android\Debug\splash_image_def.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable\</RemoteDir>
             <RemoteName>splash_image_def.xml</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -61,15 +61,15 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="c:\program files (x86)\embarcadero\studio\15.0\lib\android\debug\mips\libnative-activity.so" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\mips\</RemoteDir>
-            <RemoteName>libMARSFireDACBasicClient.so</RemoteName>
+            <RemoteDir>DemoFireDACBasicClient\library\lib\mips\</RemoteDir>
+            <RemoteName>libDemoFireDACBasicClient.so</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="c:\program files (x86)\embarcadero\studio\15.0\lib\android\debug\classes.dex" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\classes\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\classes\</RemoteDir>
             <RemoteName>classes.dex</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -77,7 +77,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="C:\Users\Public\Documents\Embarcadero\Studio\15.0\PlatformSDKs\android-ndk-r9c\prebuilt\android-arm\gdbserver\gdbserver" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\library\lib\armeabi-v7a\</RemoteDir>
             <RemoteName>gdbserver</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -85,7 +85,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-small\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-small\</RemoteDir>
             <RemoteName>splash_image.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -93,7 +93,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="c:\program files (x86)\embarcadero\studio\15.0\lib\android\debug\classes.dex" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\classes\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\classes\</RemoteDir>
             <RemoteName>classes.dex</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -101,7 +101,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-xhdpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-xhdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -109,7 +109,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-ldpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-ldpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -117,7 +117,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-ldpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-ldpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -125,15 +125,15 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="c:\program files (x86)\embarcadero\studio\15.0\lib\android\debug\x86\libnative-activity.so" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\x86\</RemoteDir>
-            <RemoteName>libMARSFireDACBasicClient.so</RemoteName>
+            <RemoteDir>DemoFireDACBasicClient\library\lib\x86\</RemoteDir>
+            <RemoteName>libDemoFireDACBasicClient.so</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-hdpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-hdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -141,7 +141,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-normal\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-normal\</RemoteDir>
             <RemoteName>splash_image.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -149,7 +149,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-xlarge\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-xlarge\</RemoteDir>
             <RemoteName>splash_image.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -157,7 +157,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="Android\Release\styles.xml" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\values\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\values\</RemoteDir>
             <RemoteName>styles.xml</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -165,7 +165,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-xxhdpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-xxhdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -173,7 +173,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-xlarge\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-xlarge\</RemoteDir>
             <RemoteName>splash_image.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -181,15 +181,15 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="c:\program files (x86)\embarcadero\studio\15.0\lib\android\debug\armeabi\libnative-activity.so" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\armeabi\</RemoteDir>
-            <RemoteName>libMARSFireDACBasicClient.so</RemoteName>
+            <RemoteDir>DemoFireDACBasicClient\library\lib\armeabi\</RemoteDir>
+            <RemoteName>libDemoFireDACBasicClient.so</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-mdpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-mdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -197,25 +197,25 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-mdpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-mdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="Android\Debug\libMARSFireDACBasicClient.so" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\armeabi-v7a\</RemoteDir>
-            <RemoteName>libMARSFireDACBasicClient.so</RemoteName>
+        <DeployFile Include="Android\Debug\libDemoFireDACBasicClient.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>DemoFireDACBasicClient\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteName>libDemoFireDACBasicClient.so</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="Android\Release\libMARSFireDACBasicClient.so" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\armeabi-v7a\</RemoteDir>
-            <RemoteName>libMARSFireDACBasicClient.so</RemoteName>
+        <DeployFile Include="Android\Release\libDemoFireDACBasicClient.so" Condition="'$(Config)'=='Release'">
+            <RemoteDir>DemoFireDACBasicClient\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteName>libDemoFireDACBasicClient.so</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
@@ -223,7 +223,7 @@
             <Required>True</Required>
         </DeployFile>
         <DeployFile Include="Android\Debug\AndroidManifest.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\</RemoteDir>
             <RemoteName>AndroidManifest.xml</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -231,7 +231,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="Android\Debug\styles.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\res\values\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\values\</RemoteDir>
             <RemoteName>styles.xml</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -239,15 +239,15 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="c:\program files (x86)\embarcadero\studio\15.0\lib\android\debug\armeabi\libnative-activity.so" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\armeabi\</RemoteDir>
-            <RemoteName>libMARSFireDACBasicClient.so</RemoteName>
+            <RemoteDir>DemoFireDACBasicClient\library\lib\armeabi\</RemoteDir>
+            <RemoteName>libDemoFireDACBasicClient.so</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="C:\Users\Public\Documents\Embarcadero\Studio\15.0\PlatformSDKs\android-ndk-r9c\prebuilt\android-arm\gdbserver\gdbserver" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\library\lib\armeabi-v7a\</RemoteDir>
             <RemoteName>gdbserver</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -255,23 +255,23 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="c:\program files (x86)\embarcadero\studio\15.0\lib\android\debug\x86\libnative-activity.so" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\x86\</RemoteDir>
-            <RemoteName>libMARSFireDACBasicClient.so</RemoteName>
+            <RemoteDir>DemoFireDACBasicClient\library\lib\x86\</RemoteDir>
+            <RemoteName>libDemoFireDACBasicClient.so</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="c:\program files (x86)\embarcadero\studio\15.0\lib\android\debug\mips\libnative-activity.so" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\library\lib\mips\</RemoteDir>
-            <RemoteName>libMARSFireDACBasicClient.so</RemoteName>
+            <RemoteDir>DemoFireDACBasicClient\library\lib\mips\</RemoteDir>
+            <RemoteName>libDemoFireDACBasicClient.so</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-hdpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-hdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -279,7 +279,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-xhdpi\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-xhdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -287,7 +287,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>MARSFireDACBasicClient\res\drawable-normal\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient\res\drawable-normal\</RemoteDir>
             <RemoteName>splash_image.png</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -297,9 +297,9 @@
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='iOSDevice'"/>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
-        <DeployFile Include="Win32\Debug\MARSFireDACBasicClient.exe" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>MARSFireDACBasicClient\</RemoteDir>
-            <RemoteName>MARSFireDACBasicClient.exe</RemoteName>
+        <DeployFile Include="Win32\Debug\DemoFireDACBasicClient.exe" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>DemoFireDACBasicClient\</RemoteDir>
+            <RemoteName>DemoFireDACBasicClient.exe</RemoteName>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
@@ -309,7 +309,7 @@
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='OSX32'">
         <DeployFile Include="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib">
-            <RemoteDir>MARSFireDACBasicClient.app\Contents\MacOS\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient.app\Contents\MacOS\</RemoteDir>
             <RemoteName>libcgunwind.1.0.dylib</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>
@@ -319,7 +319,7 @@
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='iOSSimulator'">
         <DeployFile Include="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib">
-            <RemoteDir>MARSFireDACBasicClient.app\</RemoteDir>
+            <RemoteDir>DemoFireDACBasicClient.app\</RemoteDir>
             <RemoteName>libcgunwind.1.0.dylib</RemoteName>
             <Operation>1</Operation>
             <LocalCommand/>

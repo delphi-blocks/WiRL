@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Forms.Main;
@@ -12,9 +12,9 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
-  MARS.Core.Engine,
-  MARS.Core.Application,
-  MARS.http.Server.Indy;
+  WiRL.Core.Engine,
+  WiRL.Core.Application,
+  WiRL.http.Server.Indy;
 
 type
   TMainForm = class(TForm)
@@ -34,7 +34,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TMARShttpServerIndy;
+    FServer: TWiRLhttpServerIndy;
   public
   end;
 
@@ -46,9 +46,9 @@ implementation
 {$R *.dfm}
 
 uses
-  MARS.Core.MessageBodyWriter,
-  MARS.Core.MessageBodyWriters,
-  MARS.Core.URL;
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Core.MessageBodyWriters,
+  WiRL.Core.URL;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -63,10 +63,10 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TMARShttpServerIndy.Create;
+  FServer := TWiRLhttpServerIndy.Create;
 
   FServer.ConfigureEngine('/rest')
-    .SetName('MARS HelloWorld')
+    .SetName('WiRL HelloWorld')
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(10)
 

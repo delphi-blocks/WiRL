@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Resources.StaticFiles;
@@ -11,11 +11,11 @@ interface
 uses
   SysUtils, Classes, IOUtils
 
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.Response
+  , WiRL.Core.Attributes
+  , WiRL.Core.MediaType
+  , WiRL.Core.Response
 
-  , MARS.WebServer.Resources
+  , WiRL.WebServer.Resources
   ;
 
 type
@@ -28,7 +28,7 @@ type
 implementation
 
 uses
-    MARS.Core.Registry;
+    WiRL.Core.Registry;
 
 { THelloWorldResource }
 
@@ -40,7 +40,7 @@ begin
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TStaticFileResources>(
+  TWiRLResourceRegistry.Instance.RegisterResource<TStaticFileResources>(
     function: TObject
     begin
       Result := TStaticFileResources.Create;

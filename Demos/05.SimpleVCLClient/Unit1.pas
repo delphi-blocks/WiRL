@@ -7,14 +7,14 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
   FireDAC.DApt.Intf, Data.DB, Vcl.Grids, Vcl.DBGrids, FireDAC.Comp.DataSet,
-  FireDAC.Comp.Client, MARS.Client.CustomResource, MARS.Client.Resource,
-  MARS.Client.FireDAC, MARS.Client.Application, MARS.Client.Client, Vcl.StdCtrls;
+  FireDAC.Comp.Client, WiRL.Client.CustomResource, WiRL.Client.Resource,
+  WiRL.Client.FireDAC, WiRL.Client.Application, WiRL.Client.Client, Vcl.StdCtrls;
 
 type
   TForm1 = class(TForm)
-    MARSClient1: TMARSClient;
-    MARSClientApplication1: TMARSClientApplication;
-    MARSDatamoduleResource: TMARSFDResource;
+    WiRLClient1: TWiRLClient;
+    WiRLClientApplication1: TWiRLClientApplication;
+    WiRLDatamoduleResource: TWiRLFDResource;
     employee1: TFDMemTable;
     DataSource1: TDataSource;
     DBGrid1: TDBGrid;
@@ -39,18 +39,18 @@ implementation
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  MARSDatamoduleResource.QueryParams.Values['filter'] := FilterEdit.Text;
-  MARSDatamoduleResource.GET();
+  WiRLDatamoduleResource.QueryParams.Values['filter'] := FilterEdit.Text;
+  WiRLDatamoduleResource.GET();
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  MARSDatamoduleResource.GET();
+  WiRLDatamoduleResource.GET();
 end;
 
 procedure TForm1.SendToServerButtonClick(Sender: TObject);
 begin
-  MARSDatamoduleResource.POST();
+  WiRLDatamoduleResource.POST();
 end;
 
 end.

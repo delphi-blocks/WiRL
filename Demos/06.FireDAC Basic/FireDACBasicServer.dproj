@@ -96,8 +96,8 @@
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="..\..\Source\Data\FireDAC\MARS.Data.FireDAC.DataModule.pas">
-            <Form>MARSFDDataModuleResource</Form>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas">
+            <Form>WiRLFDDataModuleResource</Form>
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>

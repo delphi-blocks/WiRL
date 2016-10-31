@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Resources;
@@ -10,16 +10,16 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Rtti, Generics.Collections,
-  MARS.Core.Engine,
-  MARS.Core.JSON,
-  MARS.Core.Registry,
-  MARS.Core.Attributes,
-  MARS.Core.MediaType,
-  MARS.Core.URL,
-  MARS.Core.MessageBodyWriters,
-  MARS.Core.Token,
-  MARS.Core.Request,
-  MARS.Core.Response, 
+  WiRL.Core.Engine,
+  WiRL.Core.JSON,
+  WiRL.Core.Registry,
+  WiRL.Core.Attributes,
+  WiRL.Core.MediaType,
+  WiRL.Core.URL,
+  WiRL.Core.MessageBodyWriters,
+  WiRL.Core.Token,
+  WiRL.Core.Request,
+  WiRL.Core.Response, 
   System.JSON;
 
 type
@@ -27,9 +27,9 @@ type
   THelloWorldResource = class
   private
   protected
-    [Context] Request: TMARSRequest;
-    [Context] Response: TMARSResponse;
-    [Context] AuthContext: TMARSAuthContext;
+    [Context] Request: TWiRLRequest;
+    [Context] Response: TWiRLResponse;
+    [Context] AuthContext: TWiRLAuthContext;
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN)]
@@ -64,7 +64,7 @@ type
   [Path('/entity')]
   TEntityResource = class
   private
-    [Context] URL: TMARSURL;
+    [Context] URL: TWiRLURL;
   public
     [GET, Path('/url')]
     [Produces(TMediaType.APPLICATION_JSON)]
@@ -154,8 +154,8 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(TMARSEngine.ServerDirectory)))) +
-    'mars-logo.png';
+        TDirectory.GetParent(TWiRLEngine.ServerDirectory)))) +
+    'WiRL-logo.png';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
 
@@ -166,13 +166,13 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(TMARSEngine.ServerDirectory)))) +
-    'mars-doc.pdf';
+        TDirectory.GetParent(TWiRLEngine.ServerDirectory)))) +
+    'WiRL-doc.pdf';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
-  TMARSResourceRegistry.Instance.RegisterResource<TEntityResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TEntityResource>;
 
 end.

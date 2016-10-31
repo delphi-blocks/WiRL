@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Resources.Data;
@@ -20,14 +20,14 @@ uses
   , FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt
   , FireDAC.Comp.DataSet
 
-  , MARS.Data.FireDAC.DataModule
-  , MARS.Core.Attributes
-  , MARS.Core.URL
+  , WiRL.Data.FireDAC.DataModule
+  , WiRL.Core.Attributes
+  , WiRL.Core.URL
   ;
 
 type
   [Path('data')]
-  TDataResource = class(TMARSFDDataModuleResource)
+  TDataResource = class(TWiRLFDDataModuleResource)
     DBConnection: TFDConnection;
   private
   public
@@ -40,12 +40,12 @@ implementation
 {$R *.dfm}
 
 uses
-    MARS.Core.Registry
+    WiRL.Core.Registry
   ;
 
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TDataResource>(
+  TWiRLResourceRegistry.Instance.RegisterResource<TDataResource>(
     function:TObject
     begin
       Result := TDataResource.Create(nil);

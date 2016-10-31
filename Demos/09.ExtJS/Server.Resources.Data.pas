@@ -11,19 +11,19 @@ uses
   FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.VCLUI.Wait,
   FireDAC.Comp.UI, FireDAC.Comp.DataSet, FireDAC.Comp.Client
 
-  , MARS.Core.JSON
-  , MARS.Core.Request
-  , MARS.Core.Response
+  , WiRL.Core.JSON
+  , WiRL.Core.Request
+  , WiRL.Core.Response
 
-  , MARS.Core.Registry
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.URL
-  , MARS.Core.MessageBodyWriters
-  , MARS.Core.Token
-  , MARS.Core.Token.Resource
-  , MARS.Core.Exceptions
-  , MARS.Data.Resolver
+  , WiRL.Core.Registry
+  , WiRL.Core.Attributes
+  , WiRL.Core.MediaType
+  , WiRL.Core.URL
+  , WiRL.Core.MessageBodyWriters
+  , WiRL.Core.Token
+  , WiRL.Core.Token.Resource
+  , WiRL.Core.Exceptions
+  , WiRL.Data.Resolver
   ;
 
 
@@ -77,7 +77,7 @@ end;
 
 function TMainModule.InsertEmployee(Json: TJSONValue): TJSONObject;
 begin
-  raise EMARSNotImplementedException.Create('Not yet implemented');
+  raise EWiRLNotImplementedException.Create('Not yet implemented');
 end;
 
 procedure TMainModule.DataModuleCreate(Sender: TObject);
@@ -93,18 +93,18 @@ end;
 
 function TMainModule.DeleteEmployee(Id: Integer; Json: TJSONValue): TJSONObject;
 begin
-  TMARSResolver.DeleteDataSet(qryEmployee, Id);
+  TWiRLResolver.DeleteDataSet(qryEmployee, Id);
   Result := TJSONObject.Create(TJSONPair.Create('success', TJSONBool.Create(True)));
 end;
 
 function TMainModule.UpdateEmployee(Id :Integer; Json: TJSONValue): TJSONObject;
 begin
-  TMARSResolver.UpdateDataSet(qryEmployee, Json);
+  TWiRLResolver.UpdateDataSet(qryEmployee, Json);
   Result := TJSONObject.Create(TJSONPair.Create('success', TJSONBool.Create(True)));
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TMainModule>(
+  TWiRLResourceRegistry.Instance.RegisterResource<TMainModule>(
     function: TObject
     begin
       Result := TMainModule.Create(nil);

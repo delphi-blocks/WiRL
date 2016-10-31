@@ -1,7 +1,7 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'MARS ExtJS Demo'
+  Caption = 'WiRL ExtJS Demo'
   ClientHeight = 201
   ClientWidth = 464
   Color = clBtnFace

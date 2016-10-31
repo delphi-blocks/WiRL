@@ -1,2 +1,2 @@
-# MARS
-## Delphi REST Library
+# WiRL
+## Delphi RESTful Library

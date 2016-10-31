@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Model.Persistence.DBX;
@@ -12,7 +12,7 @@ uses
    Classes, SysUtils
    , DBXFirebird, DB, SqlExpr, FMTBcd
 
-   , MARS.Core.Classes
+   , WiRL.Core.Classes
 
    , Model
 
@@ -152,7 +152,7 @@ begin
     FConnection.Params.Add('VendorLib=fbclient.DLL');
     FConnection.Params.Add('BlobSize=-1');
     FConnection.Params.Add('CommitRetain=False');
-    FConnection.Params.Add('Database=localhost:C:\Sviluppo\MARS_TODOLIST.FDB');
+    FConnection.Params.Add('Database=localhost:C:\Sviluppo\WiRL_TODOLIST.FDB');
     FConnection.Params.Add('ErrorResourceFile=');
     FConnection.Params.Add('LocaleCode=0000');
     FConnection.Params.Add('Password=masterkey');

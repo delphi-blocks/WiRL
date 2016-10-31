@@ -20,7 +20,7 @@ object MainForm: TMainForm
       Size.Height = 16.000000000000000000
       Size.PlatformDefault = False
       TextSettings.WordWrap = False
-      Text = 'MARS ToDo List'
+      Text = 'WiRL ToDo List'
     end
     object Button1: TButton
       Action = NewAction

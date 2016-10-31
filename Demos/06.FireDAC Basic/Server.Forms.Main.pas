@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Forms.Main;
@@ -13,11 +13,11 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.Actions, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, IdContext,
 
-  MARS.Core.Engine,
-  MARS.http.Server.Indy,
-  MARS.Core.Application,
-  MARS.Diagnostics.Manager,
-  MARS.Diagnostics.Resources;
+  WiRL.Core.Engine,
+  WiRL.http.Server.Indy,
+  WiRL.Core.Application,
+  WiRL.Diagnostics.Manager,
+  WiRL.Diagnostics.Resources;
 
 type
   TMainForm = class(TForm)
@@ -36,7 +36,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TMARShttpServerIndy;
+    FServer: TWiRLhttpServerIndy;
   public
   end;
 
@@ -48,10 +48,10 @@ implementation
 {$R *.dfm}
 
 uses
-  MARS.Core.MessageBodyWriter,
-  MARS.Core.MessageBodyWriters,
-  MARS.Data.MessageBodyWriters,
-  MARS.Data.FireDAC.MessageBodyWriters;
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Core.MessageBodyWriters,
+  WiRL.Data.MessageBodyWriters,
+  WiRL.Data.FireDAC.MessageBodyWriters;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -66,11 +66,11 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TMARShttpServerIndy.Create;
+  FServer := TWiRLhttpServerIndy.Create;
 
   FServer.ConfigureEngine('/rest')
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('MARS HelloWorld')
+    .SetName('WiRL HelloWorld')
     .SetThreadPoolSize(5)
 
     // Add and configure an application

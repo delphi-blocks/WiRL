@@ -1,14 +1,14 @@
-﻿[MARSClientApplication1]
+[WiRLClientApplication1]
 Coordinates=216,1,131,33
 
-[MARSFDResource1]
+[WiRLFDResource1]
 Coordinates=216,56,107,33
 
 [StringGrid1]
 Coordinates=196,21,70,51
 Visible=True
 
-[MARSClient1]
+[WiRLClient1]
 Coordinates=117,133,74,33
 
 []

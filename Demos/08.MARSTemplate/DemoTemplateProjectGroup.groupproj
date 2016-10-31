@@ -1,0 +1,48 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{6E23DEFF-F737-42C3-B8AD-2549B8F67C93}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="DemoTemplateServer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DemoTemplateClient.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DemoTemplateServer">
+        <MSBuild Projects="DemoTemplateServer.dproj"/>
+    </Target>
+    <Target Name="DemoTemplateServer:Clean">
+        <MSBuild Projects="DemoTemplateServer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoTemplateServer:Make">
+        <MSBuild Projects="DemoTemplateServer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoTemplateClient">
+        <MSBuild Projects="DemoTemplateClient.dproj"/>
+    </Target>
+    <Target Name="DemoTemplateClient:Clean">
+        <MSBuild Projects="DemoTemplateClient.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoTemplateClient:Make">
+        <MSBuild Projects="DemoTemplateClient.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DemoTemplateServer;DemoTemplateClient"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DemoTemplateServer:Clean;DemoTemplateClient:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DemoTemplateServer:Make;DemoTemplateClient:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

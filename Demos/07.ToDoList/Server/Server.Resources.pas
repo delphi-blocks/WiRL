@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Resources;
@@ -11,12 +11,12 @@ interface
 uses
   SysUtils, Classes
 
-  , MARS.Core.Attributes
-  , MARS.Core.MediaType
-  , MARS.Core.JSON
-  , MARS.Core.Token
-  , MARS.Core.Token.Resource
-  , MARS.WebServer.Resources
+  , WiRL.Core.Attributes
+  , WiRL.Core.MediaType
+  , WiRL.Core.JSON
+  , WiRL.Core.Token
+  , WiRL.Core.Token.Resource
+  , WiRL.WebServer.Resources
 
   , Model
   ;
@@ -26,7 +26,7 @@ type
   TItemResource = class
   private
   protected
-    [Context] Token: TMARSAuthContext;
+    [Context] Token: TWiRLAuthContext;
   public
     [GET, Path('/{id}'), RolesAllowed('user')]
     function Retrieve([PathParam] id: Integer): TToDoItem;
@@ -45,14 +45,14 @@ type
   end;
 
   [Path('/token')]
-  TTokenResource = class(TMARSAuthResource)
+  TTokenResource = class(TWiRLAuthResource)
   private
   protected
     function Authenticate(const AUserName: string; const APassword: string): Boolean; override;
   public
   end;
 
-  [Path('/webapp'), RootFolder('Z:\MARS\Demos\ToDoList\www\todo_angular', True) ]
+  [Path('/webapp'), RootFolder('Z:\WiRL\Demos\ToDoList\www\todo_angular', True) ]
   TWebAppResource = class(TFileSystemResource)
   end;
 
@@ -60,8 +60,8 @@ implementation
 
 uses
   DB
-  , MARS.Core.Registry
-  , MARS.Core.Exceptions
+  , WiRL.Core.Registry
+  , WiRL.Core.Exceptions
 
   {$if CompilerVersion > 24} //XE3
   , FireDAC.Comp.Client
@@ -79,7 +79,7 @@ var
   LAccessor: TDBAccessor;
 begin
   if AText = '' then
-    raise EMARSWebApplicationException.Create('Text cannot be empty', 500);
+    raise EWiRLWebApplicationException.Create('Text cannot be empty', 500);
 
   LAccessor := TDBAccessor.Create;
   try
@@ -118,7 +118,7 @@ begin
   try
     Result := LAccessor.Retrieve(id);
     if not Assigned(Result) then
-      raise EMARSWebApplicationException.Create(
+      raise EWiRLWebApplicationException.Create(
         Format('Item not found: %d', [id]), 404);
   finally
     LAccessor.Free;
@@ -194,9 +194,9 @@ begin
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<TItemResource>;
-  TMARSResourceRegistry.Instance.RegisterResource<TTokenResource>;
-  TMARSResourceRegistry.Instance.RegisterResource<TWebAppResource>(
+  TWiRLResourceRegistry.Instance.RegisterResource<TItemResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TTokenResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TWebAppResource>(
     function: TObject
     begin
       Result := TWebAppResource.Create;

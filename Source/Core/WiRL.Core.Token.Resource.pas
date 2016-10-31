@@ -1,0 +1,153 @@
+(*
+  Copyright 2015-2016, WiRL - REST Library
+
+  Home: https://github.com/WiRL-library
+
+*)
+unit WiRL.Core.Token.Resource;
+
+interface
+
+uses
+  System.Classes, System.SysUtils,
+
+  WiRL.Core.JSON,
+  WiRL.Core.Registry,
+  WiRL.Core.Classes,
+  WiRL.Core.Application,
+  WiRL.Core.Declarations,
+  WiRL.Core.Attributes,
+  WiRL.Core.MediaType,
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Core.Token,
+  WiRL.Core.URL, System.JSON;
+
+type
+  TWiRLAuthPrincipal = class
+  public
+    UserName: string;
+    Password: string;
+  end;
+
+  TWiRLAuthResult = record
+  public
+    Success: Boolean;
+    Roles: TArray<string>;
+    function RolesAsString: string;
+  end;
+
+  /// <summary>
+  /// Base class for the authentication resource
+  /// </summary>
+  TWiRLAuthResource = class
+  protected
+    [Context] FAuthContext: TWiRLAuthContext;
+    [Context] FApplication: TWiRLApplication;
+
+    function Authenticate(const AUserName, APassword: string): TWiRLAuthResult; virtual; abstract;
+  public
+    [GET, Produces(TMediaType.APPLICATION_JSON)]
+    function GetGeneratedToken: TJSONObject;
+  end;
+
+  /// <summary>
+  /// Custom authentication (www-form-urlencoded) resource
+  /// </summary>
+  /// <remarks>
+  /// The field are named "username" and "password". If you want custom field names you must inherit the base class
+  /// </remarks>
+  TWiRLAuthFormResource = class(TWiRLAuthResource)
+  public
+    [POST, Produces(TMediaType.APPLICATION_JSON)]
+    function DoLogin(
+      [FormParam('username')] const AUsername: string;
+      [FormParam('password')] const APassword: string
+    ): TJSONObject;
+  end;
+
+  /// <summary>
+  /// HTTP basic authentication resource
+  /// </summary>
+  TWiRLAuthBasicResource = class(TWiRLAuthResource)
+  private
+    const AUTH_BASIC = 'Basic ';
+  public
+    [POST, Produces(TMediaType.APPLICATION_JSON)]
+    function DoLogin([HeaderParam('Authorization')] const AAuth: string): TJSONObject;
+  end;
+
+implementation
+
+uses
+  System.DateUtils,
+  JOSE.Encoding.Base64,
+  WiRL.Core.Exceptions;
+
+function TWiRLAuthResource.GetGeneratedToken: TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('access_token', TJSONString.Create(FAuthContext.CompactToken));
+end;
+
+{ TWiRLAuthFormResource }
+
+function TWiRLAuthFormResource.DoLogin(const AUsername, APassword: string): TJSONObject;
+var
+  LAuthOperation: TWiRLAuthResult;
+begin
+  FAuthContext.Clear;
+  LAuthOperation := Authenticate(AUserName, APassword);
+
+  FAuthContext.Authenticated := LAuthOperation.Success;
+  //FAuthContext.Subject.Roles := LAuthOperation.Roles;
+  FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
+
+  FAuthContext.Subject.UserName := AUsername;
+
+  if not LAuthOperation.Success then
+    raise EWiRLNotAuthorizedException.Create('Invalid username or password', 'TWiRLAuthFormResource', 'DoLogin');
+
+  FApplication.GenerateToken;
+  Result := GetGeneratedToken;
+end;
+
+{ TWiRLAuthBasicResource }
+
+function TWiRLAuthBasicResource.DoLogin(const AAuth: string): TJSONObject;
+var
+  LAuthField: string;
+  LAuthOperation: TWiRLAuthResult;
+  LAuthData: TArray<string>;
+begin
+  if not AAuth.StartsWith(AUTH_BASIC) then
+    raise EWiRLNotAuthorizedException.Create('Auhtorization header incorrect');
+
+  LAuthField := AAuth.Substring(AUTH_BASIC.Length);
+  LAuthField := TBase64.Decode(LAuthField);
+  LAuthData := LAuthField.Split([':']);
+
+  if Length(LAuthData) < 2 then
+    raise EWiRLNotAuthorizedException.Create('Malformed (basic) credentials');
+
+  FAuthContext.Clear;
+  LAuthOperation := Authenticate(LAuthData[0], LAuthData[1]);
+
+  FAuthContext.Authenticated := LAuthOperation.Success;
+  FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
+  FAuthContext.Subject.UserName := LAuthData[0];
+
+  if not LAuthOperation.Success then
+    raise EWiRLNotAuthorizedException.Create('Invalid (basic) credentials', 'TWiRLAuthBasicResource', 'DoLogin');
+
+  FApplication.GenerateToken;
+  Result := GetGeneratedToken;
+end;
+
+{ TWiRLAuthResult }
+
+function TWiRLAuthResult.RolesAsString: string;
+begin
+
+end;
+
+end.

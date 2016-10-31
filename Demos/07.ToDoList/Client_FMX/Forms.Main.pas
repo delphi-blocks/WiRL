@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Forms.Main;
@@ -67,7 +67,7 @@ implementation
 
 uses
     Data.ToDo
-  , MARS.Core.JSON
+  , WiRL.Core.JSON
   ;
 
 procedure TMainForm.AddActionExecute(Sender: TObject);

@@ -1,7 +1,7 @@
 (*
-  Copyright 2015, MARS - REST Library
+  Copyright 2015, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 program FMXClientProject;

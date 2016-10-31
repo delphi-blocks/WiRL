@@ -21,7 +21,7 @@ object MainForm: TMainForm
       Size.PlatformDefault = False
       StyleLookup = 'toollabel'
       TextSettings.WordWrap = False
-      Text = 'MARS Template Client'
+      Text = 'WiRL Template Client'
     end
   end
 end

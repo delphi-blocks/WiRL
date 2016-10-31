@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Forms.Main;
@@ -13,11 +13,11 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   System.Diagnostics, System.Actions,
 
-  MARS.Core.Engine,
-  MARS.http.Server.Indy,
-  MARS.Core.Application,
-  MARS.Diagnostics.Manager,
-  MARS.Diagnostics.Resources;
+  WiRL.Core.Engine,
+  WiRL.http.Server.Indy,
+  WiRL.Core.Application,
+  WiRL.Diagnostics.Manager,
+  WiRL.Diagnostics.Resources;
 
 type
   TMainForm = class(TForm)
@@ -36,7 +36,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TMARShttpServerIndy;
+    FServer: TWiRLhttpServerIndy;
   public
   end;
 
@@ -48,10 +48,10 @@ implementation
 {$R *.dfm}
 
 uses
-  MARS.Core.JSON,
-  MARS.Rtti.Utils,
-  MARS.Core.MessageBodyWriter,
-  MARS.Core.MessageBodyWriters;
+  WiRL.Core.JSON,
+  WiRL.Rtti.Utils,
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Core.MessageBodyWriters;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -66,12 +66,12 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TMARShttpServerIndy.Create;
+  FServer := TWiRLhttpServerIndy.Create;
 
   // Engine configuration
   FServer.ConfigureEngine('/rest')
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('MARS ToDo List')
+    .SetName('WiRL ToDo List')
     .SetThreadPoolSize(5);
 
   // Add and configure an application
@@ -86,8 +86,8 @@ begin
     .SetName('Diagnostics')
     .SetResources(['*']);
 
-  TMARSDiagnosticsManager.FEngine := FServer.Engine; // TODO: REMOVE!!!
-  TMARSDiagnosticsManager.Instance;
+  TWiRLDiagnosticsManager.FEngine := FServer.Engine; // TODO: REMOVE!!!
+  TWiRLDiagnosticsManager.Instance;
 
   if not FServer.Active then
     FServer.Active := True;

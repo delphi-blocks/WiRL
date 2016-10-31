@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Writers;
@@ -10,10 +10,10 @@ interface
 
 uses
     Classes, SysUtils, Rtti
-  , MARS.Core.Classes
-  , MARS.Core.Attributes
-  , MARS.Core.MessageBodyWriter
-  , MARS.Core.MediaType
+  , WiRL.Core.Classes
+  , WiRL.Core.Attributes
+  , WiRL.Core.MessageBodyWriter
+  , WiRL.Core.MediaType
   ;
 
 type
@@ -58,9 +58,9 @@ type
 implementation
 
 uses
-    MARS.Rtti.Utils
-  , MARS.Core.JSON
-  , MARS.Core.Declarations
+    WiRL.Rtti.Utils
+  , WiRL.Core.JSON
+  , WiRL.Core.Declarations
   , Model
   ;
 
@@ -153,10 +153,10 @@ begin
 end;
 
 initialization
-  TMARSMessageBodyRegistry.Instance.RegisterWriter<TToDoItem>(TToDoItemWriter);
-  TMARSMessageBodyRegistry.Instance.RegisterWriter<TToDoItem>(TToDoItemWriterXML);
+  TWiRLMessageBodyRegistry.Instance.RegisterWriter<TToDoItem>(TToDoItemWriter);
+  TWiRLMessageBodyRegistry.Instance.RegisterWriter<TToDoItem>(TToDoItemWriterXML);
 
-  TMARSMessageBodyRegistry.Instance.RegisterWriter(
+  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
     TArrayToDoItemWriter
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
@@ -164,11 +164,11 @@ initialization
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TMARSMessageBodyRegistry.AFFINITY_HIGH
+        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH
       end
   );
 
-  TMARSMessageBodyRegistry.Instance.RegisterWriter(
+  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
     TArrayToDoItemWriterXML
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
@@ -176,7 +176,7 @@ initialization
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TMARSMessageBodyRegistry.AFFINITY_HIGH
+        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH
       end
   );
 

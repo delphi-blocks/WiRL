@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Model.Persistence.FDAC;
@@ -13,7 +13,7 @@ uses
    , DB
    , FireDAC.Comp.Client
 
-   , MARS.Core.Classes
+   , WiRL.Core.Classes
 
    , Model
    ;
@@ -28,7 +28,7 @@ type
     procedure WithQuery(const ADoSomething: TProc<TFDQuery>);
     property Connection: TFDConnection read GetConnection;
 
-    const CONNECTION_NAME = 'MARS_TODO_LIST';
+    const CONNECTION_NAME = 'WiRL_TODO_LIST';
   public
     function New(const AItem: TToDoItem): Integer;
     function Retrieve(const AID: Integer): TToDoItem;

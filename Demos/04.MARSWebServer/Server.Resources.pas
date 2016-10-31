@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Resources;
@@ -11,10 +11,10 @@ interface
 uses
   System.SysUtils, System.Classes, System.IOUtils,
 
-  MARS.Core.Attributes,
-  MARS.Core.MediaType,
-  MARS.Core.Response,
-  MARS.WebServer.Resources;
+  WiRL.Core.Attributes,
+  WiRL.Core.MediaType,
+  WiRL.Core.Response,
+  WiRL.WebServer.Resources;
 
 type
   [Path('helloworld')]
@@ -26,7 +26,7 @@ type
 implementation
 
 uses
-  MARS.Core.Registry;
+  WiRL.Core.Registry;
 
 { THelloWorldResource }
 
@@ -43,6 +43,6 @@ end;
 
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
 
 end.

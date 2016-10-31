@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Data.ToDo;
@@ -9,18 +9,18 @@ unit Data.ToDo;
 interface
 
 uses
-  System.SysUtils, System.Classes, MARS.Client.CustomResource,
-  MARS.Client.Resource, MARS.Client.Token, MARS.Client.Application,
-  MARS.Client.Client, MARS.Client.SubResource, MARS.Client.SubResource.JSON,
-  MARS.Client.Resource.JSON, MARS.Core.JSON, System.JSON;
+  System.SysUtils, System.Classes, WiRL.Client.CustomResource,
+  WiRL.Client.Resource, WiRL.Client.Token, WiRL.Client.Application,
+  WiRL.Client.Client, WiRL.Client.SubResource, WiRL.Client.SubResource.JSON,
+  WiRL.Client.Resource.JSON, WiRL.Core.JSON, System.JSON;
 
 type
   TTodoDM = class(TDataModule)
-    ToDoClient: TMARSClient;
-    ToDoApplication: TMARSClientApplication;
-    Token: TMARSClientToken;
-    ItemResource: TMARSClientResourceJSON;
-    AllItemsSubResource: TMARSClientSubResourceJSON;
+    ToDoClient: TWiRLClient;
+    ToDoApplication: TWiRLClientApplication;
+    Token: TWiRLClientToken;
+    ItemResource: TWiRLClientResourceJSON;
+    AllItemsSubResource: TWiRLClientSubResourceJSON;
   private
     { Private declarations }
   public

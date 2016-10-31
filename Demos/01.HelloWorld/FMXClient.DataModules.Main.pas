@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit FMXClient.DataModules.Main;
@@ -9,21 +9,21 @@ unit FMXClient.DataModules.Main;
 interface
 
 uses
-  System.SysUtils, System.Classes, MARS.Client.CustomResource,
-  MARS.Client.Resource, MARS.Client.Resource.JSON, MARS.Client.Application,
-  MARS.Client.Client, MARS.Client.SubResource, MARS.Client.SubResource.JSON,
-  MARS.Client.Messaging.Resource, System.JSON;
+  System.SysUtils, System.Classes, WiRL.Client.CustomResource,
+  WiRL.Client.Resource, WiRL.Client.Resource.JSON, WiRL.Client.Application,
+  WiRL.Client.Client, WiRL.Client.SubResource, WiRL.Client.SubResource.JSON,
+  WiRL.Client.Messaging.Resource, System.JSON;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
 
   TMainDataModule = class(TDataModule)
-    MARSClient1: TMARSClient;
-    MARSClientApplication1: TMARSClientApplication;
-    HelloWorldResource: TMARSClientResource;
-    EchoStringResource: TMARSClientSubResource;
-    ReverseStringResource: TMARSClientSubResource;
-    PostExampleResource: TMARSClientSubResourceJSON;
+    WiRLClient1: TWiRLClient;
+    WiRLClientApplication1: TWiRLClientApplication;
+    HelloWorldResource: TWiRLClientResource;
+    EchoStringResource: TWiRLClientSubResource;
+    ReverseStringResource: TWiRLClientSubResource;
+    PostExampleResource: TWiRLClientSubResourceJSON;
   private
     { Private declarations }
   public
@@ -41,8 +41,8 @@ implementation
 
 uses
   FMXClient.Forms.Main
-  , MARS.Rtti.Utils
-  , MARS.Core.JSON
+  , WiRL.Rtti.Utils
+  , WiRL.Core.JSON
   ;
 
 {$R *.dfm}

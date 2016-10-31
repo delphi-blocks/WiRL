@@ -1,7 +1,7 @@
 (*
-  Copyright 2015-2016, MARS - REST Library
+  Copyright 2015-2016, WiRL - REST Library
 
-  Home: https://github.com/MARS-library
+  Home: https://github.com/WiRL-library
 
 *)
 unit Server.Forms.Main;
@@ -13,7 +13,7 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   System.Diagnostics, System.Actions, Winapi.ShellAPI,
 
-  MARS.http.Server.Indy;
+  WiRL.http.Server.Indy;
 
 type
   TMainForm = class(TForm)
@@ -35,7 +35,7 @@ type
     procedure TestActionExecute(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
-    FServer: TMARShttpServerIndy;
+    FServer: TWiRLhttpServerIndy;
   public
   end;
 
@@ -47,11 +47,11 @@ implementation
 {$R *.dfm}
 
 uses
-  MARS.Core.JSON,
-  MARS.Rtti.Utils,
-  MARS.Core.MessageBodyWriter,
-  MARS.Core.MessageBodyWriters,
-  MARS.Data.MessageBodyWriters,
+  WiRL.Core.JSON,
+  WiRL.Rtti.Utils,
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Core.MessageBodyWriters,
+  WiRL.Data.MessageBodyWriters,
   Server.Database.Builder;
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -68,12 +68,12 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TMARShttpServerIndy.Create;
+  FServer := TWiRLhttpServerIndy.Create;
 
   // Engine configuration
   FServer.ConfigureEngine('/rest')
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('MARS Template')
+    .SetName('WiRL Template')
     .SetThreadPoolSize(5)
 
     // Application configuration

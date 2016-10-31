@@ -2,7 +2,7 @@ inherited DataResource: TDataResource
   OldCreateOrder = True
   object FDConnection1: TFDConnection
     Params.Strings = (
-      'ConnectionDef=MARS_TODO_LIST')
+      'ConnectionDef=WiRL_TODO_LIST')
     Connected = True
     Left = 48
     Top = 32

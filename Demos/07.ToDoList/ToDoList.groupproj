@@ -3,7 +3,7 @@
         <ProjectGuid>{76E216A3-C2DE-43E5-B966-CCBE861CAAF6}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="Server\MARSToDoListServer.dproj">
+        <Projects Include="Server\WiRLToDoListServer.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Client_VCL\Client_VCL.dproj">
@@ -20,14 +20,14 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="MARSToDoListServer">
-        <MSBuild Projects="Server\MARSToDoListServer.dproj"/>
+    <Target Name="WiRLToDoListServer">
+        <MSBuild Projects="Server\WiRLToDoListServer.dproj"/>
     </Target>
-    <Target Name="MARSToDoListServer:Clean">
-        <MSBuild Projects="Server\MARSToDoListServer.dproj" Targets="Clean"/>
+    <Target Name="WiRLToDoListServer:Clean">
+        <MSBuild Projects="Server\WiRLToDoListServer.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="MARSToDoListServer:Make">
-        <MSBuild Projects="Server\MARSToDoListServer.dproj" Targets="Make"/>
+    <Target Name="WiRLToDoListServer:Make">
+        <MSBuild Projects="Server\WiRLToDoListServer.dproj" Targets="Make"/>
     </Target>
     <Target Name="Client_VCL">
         <MSBuild Projects="Client_VCL\Client_VCL.dproj"/>
@@ -48,13 +48,13 @@
         <MSBuild Projects="Client_FMX\ToDoList_FMX.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="MARSToDoListServer;Client_VCL;ToDoList_FMX"/>
+        <CallTarget Targets="WiRLToDoListServer;Client_VCL;ToDoList_FMX"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="MARSToDoListServer:Clean;Client_VCL:Clean;ToDoList_FMX:Clean"/>
+        <CallTarget Targets="WiRLToDoListServer:Clean;Client_VCL:Clean;ToDoList_FMX:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="MARSToDoListServer:Make;Client_VCL:Make;ToDoList_FMX:Make"/>
+        <CallTarget Targets="WiRLToDoListServer:Make;Client_VCL:Make;ToDoList_FMX:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -3,8 +3,8 @@ unit ServerResources;
 interface
 
 uses
-  MARS.Core.Attributes,
-  MARS.Core.MediaType,
+  WiRL.Core.Attributes,
+  WiRL.Core.MediaType,
   SysUtils,
   Classes;
 
@@ -19,7 +19,7 @@ type
 implementation
 
 uses
-  MARS.Core.Registry;
+  WiRL.Core.Registry;
 
 { THelloWorldResource }
 
@@ -29,6 +29,6 @@ begin
 end;
 
 initialization
-  TMARSResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
 
 end.
