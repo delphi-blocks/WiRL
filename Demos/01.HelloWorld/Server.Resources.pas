@@ -9,9 +9,8 @@ unit Server.Resources;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, Generics.Collections,
+  System.Classes, System.SysUtils, System.JSON,
   WiRL.Core.Engine,
-  WiRL.Core.JSON,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.Core.MediaType,
@@ -19,8 +18,7 @@ uses
   WiRL.Core.MessageBodyWriters,
   WiRL.Core.Token,
   WiRL.Core.Request,
-  WiRL.Core.Response, 
-  System.JSON;
+  WiRL.Core.Response;
 
 type
   [Path('/helloworld')]

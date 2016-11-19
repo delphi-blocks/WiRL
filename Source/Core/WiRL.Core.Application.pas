@@ -10,7 +10,6 @@ unit WiRL.Core.Application;
 
 interface
 
-
 uses
   System.SysUtils, System.Classes, System.Rtti,
   System.Generics.Collections,
@@ -31,10 +30,9 @@ type
 
   TWiRLApplication = class
   private
-    const SCRT_PREFIX = 'bWFycy5zZWNyZXQu';
+    //256bit encoding key
+    const SCRT_SGN = 'd2lybC5zdXBlcnNlY3JldC5zZWVkLmZvci5zaWduaW5n';
   private
-//    class threadvar FRequest: TWiRLRequest;
-//    class threadvar FResponse: TWiRLResponse;
     class threadvar FAuthContext: TWiRLAuthContext;
   private
     FSecret: TBytes;
@@ -83,7 +81,8 @@ type
     // Fluent-like configuration methods
     function SetResources(const AResources: array of string): TWiRLApplication;
     function SetFilters(const AFilters: array of string): TWiRLApplication;
-    function SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication;
+    function SetSecret(const ASecret: TBytes): TWiRLApplication; overload;
+    function SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication; overload;
     function SetBasePath(const ABasePath: string): TWiRLApplication;
     function SetName(const AName: string): TWiRLApplication;
     function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
@@ -538,6 +537,7 @@ begin
   FResourceRegistry := TObjectDictionary<string, TWiRLConstructorInfo>.Create([doOwnsValues]);
   FFilterRegistry := TWiRLFilterRegistry.Create;
   FFilterRegistry.OwnsObjects := False;
+  FSecret := TEncoding.ANSI.GetBytes(SCRT_SGN);
 end;
 
 destructor TWiRLApplication.Destroy;
@@ -1029,6 +1029,12 @@ function TWiRLApplication.SetSecret(ASecretGen: TSecretGenerator): TWiRLApplicat
 begin
   if Assigned(ASecretGen) then
     FSecret := ASecretGen;
+  Result := Self;
+end;
+
+function TWiRLApplication.SetSecret(const ASecret: TBytes): TWiRLApplication;
+begin
+  FSecret := ASecret;
   Result := Self;
 end;
 

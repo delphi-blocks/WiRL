@@ -18,6 +18,7 @@ type
   TDataUtils = class
   private
     class function RecordToXML(const ADataSet: TDataSet; const ARootPath: string = ''): string; static;
+    class function RecordToCSV(const ADataSet: TDataSet): string; static;
   public
     class function RecordToJSONObject(const ADataSet: TDataSet; const ARootPath: string = ''): TJSONObject; static;
     class function DataSetToJSONArray(const ADataSet: TDataSet): TJSONArray; overload; static;
@@ -25,6 +26,8 @@ type
 
     class function DataSetToXML(const ADataSet: TDataSet): string; overload; static;
     class function DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): string; overload; static;
+
+    class function DataSetToCSV(const ADataSet: TDataSet): string; static;
 
     class function DatasetMetadataToJSONObject(const ADataSet: TDataSet): TJSONObject; static;
   end;
@@ -40,6 +43,25 @@ uses
 
 type
   TJSONFieldType = (NestedObject, NestedArray, SimpleValue);
+
+class function TDataUtils.RecordToCSV(const ADataSet: TDataSet): string;
+var
+  LField: TField;
+begin
+  if not Assigned(ADataSet) then
+    raise Exception.Create('DataSet not assigned');
+  if not ADataSet.Active then
+    raise Exception.Create('DataSet is not active');
+  if ADataSet.IsEmpty then
+    raise Exception.Create('DataSet is empty');
+
+  Result := '';
+  for LField in ADataSet.Fields do
+  begin
+    Result := Result + LField.AsString + ',';
+  end;
+  Result := Result.TrimRight([',']);
+end;
 
 class function TDataUtils.RecordToJSONObject(const ADataSet: TDataSet; const ARootPath: string = ''): TJSONObject;
 var
@@ -147,6 +169,36 @@ end;
 class function TDataUtils.DataSetToJSONArray(const ADataSet: TDataSet): TJSONArray;
 begin
   Result := DataSetToJSONArray(ADataSet, nil);
+end;
+
+class function TDataUtils.DataSetToCSV(const ADataSet: TDataSet): string;
+var
+  LBookmark: TBookmark;
+begin
+  Result := '';
+  if not Assigned(ADataSet) then
+    Exit;
+
+  if not ADataSet.Active then
+    ADataSet.Open;
+
+  ADataSet.DisableControls;
+  try
+    LBookmark := ADataSet.Bookmark;
+    try
+      ADataSet.First;
+      while not ADataSet.Eof do
+      try
+        Result := Result + TDataUtils.RecordToCSV(ADataSet) + sLineBreak;
+      finally
+        ADataSet.Next;
+      end;
+    finally
+      ADataSet.GotoBookmark(LBookmark);
+    end;
+  finally
+    ADataSet.EnableControls;
+  end;
 end;
 
 class function TDataUtils.DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): TJSONArray;

@@ -34,6 +34,12 @@ type
       AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
   end;
 
+  [Produces(TMediaType.TEXT_CSV)]
+  TDataSetWriterCSV = class(TInterfacedObject, IMessageBodyWriter)
+    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+  end;
+
 implementation
 
 uses
@@ -111,6 +117,22 @@ begin
   end;
 end;
 
+{ TDataSetWriterCSV }
+
+procedure TDataSetWriterCSV.WriteTo(const AValue: TValue;
+  const AAttributes: TAttributeArray; AMediaType: TMediaType;
+  AResponseHeaders: TStrings; AOutputStream: TStream);
+var
+  LStreamWriter: TStreamWriter;
+begin
+  LStreamWriter := TStreamWriter.Create(AOutputStream);
+  try
+    LStreamWriter.Write(TDataUtils.DataSetToCSV(Avalue.AsObject as TDataSet));
+  finally
+    LStreamWriter.Free;
+  end;
+end;
+
 procedure RegisterWriters;
 begin
   TWiRLMessageBodyRegistry.Instance.RegisterWriter(
@@ -148,6 +170,19 @@ begin
         Result := TWiRLMessageBodyRegistry.AFFINITY_LOW;
       end
   );
+
+  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+    TDataSetWriterCSV
+    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+      begin
+        Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/xml
+      end
+    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+      begin
+        Result := TWiRLMessageBodyRegistry.AFFINITY_LOW;
+      end
+  );
+
 end;
 
 initialization

@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{DA27006D-FB55-4034-9B8A-200F5214A71F}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="WiRLServer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="WiRLClient.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="WiRLServer">
+        <MSBuild Projects="WiRLServer.dproj"/>
+    </Target>
+    <Target Name="WiRLServer:Clean">
+        <MSBuild Projects="WiRLServer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="WiRLServer:Make">
+        <MSBuild Projects="WiRLServer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="WiRLClient">
+        <MSBuild Projects="WiRLClient.dproj"/>
+    </Target>
+    <Target Name="WiRLClient:Clean">
+        <MSBuild Projects="WiRLClient.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="WiRLClient:Make">
+        <MSBuild Projects="WiRLClient.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="WiRLServer;WiRLClient"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="WiRLServer:Clean;WiRLClient:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="WiRLServer:Make;WiRLClient:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

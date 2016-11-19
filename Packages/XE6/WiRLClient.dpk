@@ -27,9 +27,9 @@ package WiRLClient;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'WiRL REST Library (Client)'}
-{$LIBSUFFIX '230'}
+{$LIBSUFFIX '200'}
 {$DESIGNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,
@@ -67,7 +67,10 @@ contains
   WiRL.Core.URL in '..\..\Source\Core\WiRL.Core.URL.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
   WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
-  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas';
+  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
+  WiRL.Core.Request in '..\..\Source\Core\WiRL.Core.Request.pas',
+  WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas';
 
 end.
 

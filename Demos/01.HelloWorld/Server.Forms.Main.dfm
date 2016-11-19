@@ -54,7 +54,7 @@ object MainForm: TMainForm
       TabOrder = 2
       Text = '8080'
     end
-    object Edit1: TEdit
+    object edtSecret: TEdit
       Left = 312
       Top = 24
       Width = 121

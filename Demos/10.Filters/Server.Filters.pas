@@ -20,10 +20,10 @@ type
   [PreMatching]
   TRequestLoggerFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
   private
-    FMainForm :TMainForm;
+    FMainForm: TMainForm;
   public
     procedure Filter(Request: TWiRLRequest);
-    constructor Create(MainForm :TMainForm);
+    constructor Create(MainForm: TMainForm);
   end;
 
   [Priority(TWiRLPriorities.USER)] // Default priority
@@ -37,7 +37,7 @@ type
   [PoweredByWiRL]
   TResponsePoweredByFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
   public
-    procedure Filter(Request :TWiRLRequest; Response: TWiRLResponse);
+    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
   end;
 
 
@@ -76,9 +76,12 @@ begin
 end;
 
 initialization
-  TWiRLFilterRegistry.Instance.RegisterFilter<TRequestLoggerFilter>(function () :TObject begin
-    Result := TRequestLoggerFilter.Create(MainForm);
-  end);
+  TWiRLFilterRegistry.Instance.RegisterFilter<TRequestLoggerFilter>(
+    function (): TObject
+    begin
+      Result := TRequestLoggerFilter.Create(MainForm);
+    end
+  );
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestCheckerFilter>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TResponsePoweredByFilter>;
 

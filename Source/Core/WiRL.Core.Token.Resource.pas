@@ -46,7 +46,6 @@ type
 
     function Authenticate(const AUserName, APassword: string): TWiRLAuthResult; virtual; abstract;
   public
-    [GET, Produces(TMediaType.APPLICATION_JSON)]
     function GetGeneratedToken: TJSONObject;
   end;
 

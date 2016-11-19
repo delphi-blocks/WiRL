@@ -29,7 +29,7 @@ package WiRLClient;
 {$DESCRIPTION 'WiRL REST Library (Client)'}
 {$LIBSUFFIX '230'}
 {$DESIGNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,

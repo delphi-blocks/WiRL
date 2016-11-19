@@ -26,7 +26,7 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    Edit1: TEdit;
+    edtSecret: TEdit;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -76,12 +76,7 @@ begin
         'Server.Resources.THelloWorldResource',
         'Server.Resources.TEntityResource'
       ])
-      .SetSecret(
-        function (): TBytes
-        begin
-          Result := TEncoding.UTF8.GetBytes(Edit1.Text);
-        end
-      )
+      .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
   ;
 
   if not FServer.Active then

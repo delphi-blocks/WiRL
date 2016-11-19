@@ -61,6 +61,7 @@ type
 
     const TEXT_PLAIN = 'text/plain';
     const TEXT_XML = 'text/xml';
+    const TEXT_CSV = 'text/csv';
     const TEXT_HTML = 'text/html';
     const APPLICATION_XML = 'application/xml';
     const APPLICATION_JSON = 'application/json';
@@ -187,7 +188,7 @@ var
     LUSFormat: TFormatSettings;
     LIndex, LPosition: Integer;
   begin
-    LUSFormat := TFormatSettings.Create('en');
+    LUSFormat := TFormatSettings.Create('en-US');
     for LIndex := 1 to High(LSplitted) do
     begin
       LPosition := FMediaParameters.Add(Trim(LSplitted[LIndex]));
