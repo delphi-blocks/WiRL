@@ -96,6 +96,9 @@ type
     function GetContent: string; override;
     function GetAuthorization: string; override;
     function GetAccept: string; override;
+    function GetAcceptCharSet: string; override;
+    function GetAcceptEncoding: string; override;
+    function GetAcceptLanguage: string; override;
     function GetContentType: string; override;
     function GetContentLength: Integer; override;
     function GetContentVersion: string; override;
@@ -307,6 +310,21 @@ end;
 function TWiRLHttpRequestIndy.GetAccept: string;
 begin
   Result := FRequestInfo.Accept;
+end;
+
+function TWiRLHttpRequestIndy.GetAcceptCharSet: string;
+begin
+  Result := FRequestInfo.AcceptCharSet;
+end;
+
+function TWiRLHttpRequestIndy.GetAcceptEncoding: string;
+begin
+  Result := FRequestInfo.AcceptEncoding;
+end;
+
+function TWiRLHttpRequestIndy.GetAcceptLanguage: string;
+begin
+  Result := FRequestInfo.AcceptLanguage;
 end;
 
 function TWiRLHttpRequestIndy.GetAuthorization: string;

@@ -38,6 +38,9 @@ type
     function GetContent: string; virtual; abstract;
     function GetAuthorization: string; virtual; abstract;
     function GetAccept: string; virtual; abstract;
+    function GetAcceptCharSet: string; virtual; abstract;
+    function GetAcceptEncoding: string; virtual; abstract;
+    function GetAcceptLanguage: string; virtual; abstract;
     function GetContentType: string; virtual; abstract;
     function GetContentLength: Integer; virtual; abstract;
     function GetContentVersion: string; virtual; abstract;
@@ -58,6 +61,9 @@ type
     property ContentVersion: string read GetContentVersion;
     property Authorization: string read GetAuthorization;
     property Accept: string read GetAccept;
+    property AcceptCharSet: string read GetAcceptCharSet;
+    property AcceptEncoding: string read GetAcceptEncoding;
+    property AcceptLanguage: string read GetAcceptLanguage;
     property RawPathInfo: string read GetRawPathInfo;
 
     function GetFieldByName(const Name: string): string;
