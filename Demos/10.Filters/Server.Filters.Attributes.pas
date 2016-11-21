@@ -10,7 +10,10 @@ type
   [NameBinding]
   PoweredByWiRLAttribute = class(TCustomAttribute);
 
-//  PoweredByWiRLAttribute = class(NameBindingAttribute);
+  [NameBinding]
+  ContentEncodingAttribute = class(TCustomAttribute);
+
+  //  PoweredByWiRLAttribute = class(NameBindingAttribute);
 
 implementation
 

@@ -57,7 +57,7 @@ object MainForm: TMainForm
       Text = '8080'
     end
   end
-  object ListBox1: TListBox
+  object lstLog: TListBox
     Left = 0
     Top = 73
     Width = 464
@@ -65,10 +65,6 @@ object MainForm: TMainForm
     Align = alClient
     ItemHeight = 13
     TabOrder = 1
-    ExplicitLeft = 176
-    ExplicitTop = 112
-    ExplicitWidth = 121
-    ExplicitHeight = 97
   end
   object MainActionList: TActionList
     Left = 384

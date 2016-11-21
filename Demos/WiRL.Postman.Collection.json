@@ -1,0 +1,452 @@
+{
+	"variables": [],
+	"info": {
+		"name": "WiRLDemos",
+		"_postman_id": "06e57cfe-6ce7-e4db-7237-01db08da561a",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authorization",
+			"description": "",
+			"item": [
+				{
+					"name": "Public Resource",
+					"request": {
+						"url": "localhost:8080/rest/app/user/",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "BasicAuth",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": {
+								"username": "paolo",
+								"password": "mypassword",
+								"saveHelperData": false,
+								"showPassword": false
+							}
+						},
+						"url": "localhost:8080/rest/app/basic_auth/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic cGFvbG86bXlwYXNzd29yZA==",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "FormAuth",
+					"request": {
+						"url": "localhost:8080/rest/app/form_auth/",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Private Resource",
+					"request": {
+						"url": "localhost:8080/rest/app/user/details",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsYW5ndWFnZSI6ImVuLVVTIiwicm9sZXMiOiJ1c2VyLG1hbmFnZXIiLCJ1c2VybmFtZSI6Im1hcmNvIn0.ZEL1tYnX1HfhYqiFHqfOxdRMm4ZcH4TFic6QhRewncs",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Filters",
+			"description": "",
+			"item": [
+				{
+					"name": "Plain Content (identity)",
+					"request": {
+						"url": "localhost:8080/rest/app/filterdemo",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Encoding",
+								"value": "identity",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Compressed Content (gzip)",
+					"request": {
+						"url": "localhost:8080/rest/app/filterdemo",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Encoding",
+								"value": "gzip",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "HelloWorld",
+			"description": "",
+			"item": [
+				{
+					"name": "Hello World",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Echo String",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/echostring/Paolo",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Reverse String",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/reversestring/Paolo",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Sum (x + y)",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/sum/10/15",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Exception",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/exception",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "URL",
+					"request": {
+						"url": "localhost:8080/rest/app/entity/url",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Image",
+					"request": {
+						"url": "localhost:8080/rest/app/entity/image",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "image/png",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "PDF",
+					"request": {
+						"url": "localhost:8080/rest/app/entity/pdf",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/pdf",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -47,7 +47,7 @@ type
     [GET, Path('/authinfo'), Produces(TMediaType.APPLICATION_JSON)]
     function GetAuthInfo: string;
 
-    [GET, Path('/somma/{Addendo1}/{Addendo2}')]
+    [GET, Path('/sum/{Addendo1}/{Addendo2}')]
     function Somma(
       [PathParam] Addendo1: Integer;
       [PathParam] Addendo2: Integer): Integer;

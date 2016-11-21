@@ -9,7 +9,7 @@ unit Server.Resources;
 interface
 
 uses
-  SysUtils, Classes,
+  System.SysUtils, System.Classes,
 
   WiRL.Core.Attributes,
   WiRL.Core.MediaType,
@@ -18,15 +18,16 @@ uses
   Server.Filters.Attributes;
 
 type
-  [Path('helloworld')]
+  [Path('filterdemo')]
   [PoweredByWiRL]
-  THelloWorldResource = class
+  [ContentEncoding]
+  TFilterDemoResource = class
   private
   protected
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN)]
-    function HelloWorld(): string;
+    function SampleText: string;
 
     [GET, Path('/echostring/{AString}')]
     function EchoString([PathParam] AString: string): string;
@@ -40,25 +41,24 @@ implementation
 uses
   WiRL.Core.Registry;
 
+{ TFilterDemoResource }
 
-{ THelloWorldResource }
-
-function THelloWorldResource.EchoString(AString: string): string;
+function TFilterDemoResource.EchoString(AString: string): string;
 begin
   Result := AString;
 end;
 
-function THelloWorldResource.HelloWorld(): string;
+function TFilterDemoResource.SampleText: string;
 begin
-  Result := 'Hello World!';
+  Result := 'Hello World, I am a filter! ';
 end;
 
-function THelloWorldResource.RaiseTest: string;
+function TFilterDemoResource.RaiseTest: string;
 begin
   raise Exception.Create('Test error!');
 end;
 
 initialization
-  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TFilterDemoResource>;
 
 end.

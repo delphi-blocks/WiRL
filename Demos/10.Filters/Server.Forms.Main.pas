@@ -26,7 +26,7 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    ListBox1: TListBox;
+    lstLog: TListBox;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -66,9 +66,12 @@ end;
 
 procedure TMainForm.Log(const AMsg: string);
 begin
-  TThread.Synchronize(nil, procedure () begin
-    ListBox1.Items.Add(AMsg);
-  end);
+  TThread.Synchronize(nil,
+    procedure ()
+    begin
+      lstLog.Items.Add(AMsg);
+    end
+  );
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
@@ -83,7 +86,7 @@ begin
     .SetThreadPoolSize(5)
 
     // Application configuration
-    .AddApplication('/default')
+    .AddApplication('/app')
       .SetName('Default App')
       .SetResources(['*'])
       .SetFilters(['*'])

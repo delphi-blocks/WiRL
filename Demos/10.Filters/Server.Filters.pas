@@ -40,8 +40,17 @@ type
     procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
   end;
 
+  [ContentEncoding]
+  TResponseGzipFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
+  public
+    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+  end;
+
 
 implementation
+
+uses
+  System.ZLib;
 
 { TRequestLoggerFilter }
 
@@ -75,6 +84,63 @@ begin
   Response.SetCustomHeader('X-Powered-By', 'WiRL');
 end;
 
+{ TResponseGzipFilter }
+
+procedure TResponseGzipFilter.Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+var
+  LStrStream: TStringStream;
+  LMemStream: TMemoryStream;
+
+  procedure DoCompress(ASource, ADestination: TStream);
+  var
+    LCompressor: TZCompressionStream;
+  begin
+    ASource.Seek(0, TSeekOrigin.soBeginning);
+
+    LCompressor := TZCompressionStream.Create(clDefault, ADestination);
+    try
+      LCompressor.CopyFrom(ASource, ASource.Size);
+    finally
+      LCompressor.Free;
+    end;
+  end;
+
+begin
+  if Request.AcceptEncoding.Contains('gzip') then
+  begin
+    if Assigned(Response.ContentStream) then
+    begin
+      LMemStream := TStringStream.Create;
+      try
+        DoCompress(Response.ContentStream, LMemStream);
+        LMemStream.Position := soFromBeginning;
+        Response.ContentStream.Free;
+        Response.ContentStream := LMemStream;
+      except
+        LMemStream.Free;
+      end;
+    end
+    else
+    begin
+      LStrStream := TStringStream.Create(Response.Content);
+      LStrStream.Position := soFromBeginning;
+      try
+        LMemStream := TMemoryStream.Create;
+        try
+          DoCompress(LStrStream, LMemStream);
+          LMemStream.Position := soFromBeginning;
+          Response.Content := '';
+          Response.ContentStream := LMemStream;
+        except
+          FreeAndNil(LMemStream);
+        end;
+      finally
+        LStrStream.Free;
+      end;
+    end;
+  end;
+end;
+
 initialization
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestLoggerFilter>(
     function (): TObject
@@ -84,5 +150,6 @@ initialization
   );
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestCheckerFilter>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TResponsePoweredByFilter>;
+  TWiRLFilterRegistry.Instance.RegisterFilter<TResponseGzipFilter>;
 
 end.
