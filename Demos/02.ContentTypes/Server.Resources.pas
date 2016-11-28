@@ -17,46 +17,36 @@ uses
   WiRL.Core.JSON;
 
 type
-  [Path('helloworld')]
-  THelloWorldResource = class
+  [Path('sample')]
+  TSampleResource = class
   private
-  protected
+    const XML_AND_JSON = TMediaType.APPLICATION_XML + ',' + TMediaType.APPLICATION_JSON;
   public
+    [GET, Produces(TMediaType.TEXT_HTML)]
+    function HtmlDocument: string;
+
     [GET, Produces(TMediaType.TEXT_PLAIN)]
     function SayHelloWorld: string;
 
-    [GET, Path('/html'), Produces(TMediaType.TEXT_HTML)]
-    function HtmlDocument: string;
-
-    [GET, Path('/json'), Produces(TMediaType.APPLICATION_JSON)]
+    [GET, Produces(TMediaType.APPLICATION_JSON)]
     function JSON1: TJSONObject;
 
-    [GET, Path('/jpeg'), Produces('image/jpg')]
+    [GET, Produces('image/jpg')]
     function JpegImage: TStream;
 
-    [GET, Path('/pdf'), Produces('application/pdf')]
+    [GET, Produces('application/pdf')]
     function PdfDocument: TStream;
 
-    [
-      GET, Path('/dataset1'),
-      Produces(TMediaType.APPLICATION_XML),
-      Produces(TMediaType.APPLICATION_JSON)
-    ]
+    [GET, Path('/dataset1')]
+    [Produces(XML_AND_JSON)]
     function DataSet1: TDataSet;
 
-    [
-      GET, Path('/dataset2'),
-      Produces(TMediaType.APPLICATION_XML),
-      Produces(TMediaType.APPLICATION_JSON)
-    ]
+    [GET, Path('/dataset2')]
+    [Produces(XML_AND_JSON)]
     function DataSet2: TFDMemTable;
 
-    [
-      GET, Path('/dataset3'),
-      Produces(TMediaType.APPLICATION_JSON)
-    ]
+    [GET, Path('/dataset3'), Produces(TMediaType.APPLICATION_JSON)]
     function DataSet3: TDataset;
-
   end;
 
 implementation
@@ -66,9 +56,9 @@ uses
   WiRL.Core.Registry;
 
 
-{ THelloWorldResource }
+{ TSampleResource }
 
-function THelloWorldResource.DataSet1: TDataSet;
+function TSampleResource.DataSet1: TDataSet;
 var
   LCDS: TClientDataSet;
 begin
@@ -85,7 +75,7 @@ begin
 
 end;
 
-function THelloWorldResource.DataSet2: TFDMemTable;
+function TSampleResource.DataSet2: TFDMemTable;
 begin
   Result := TFDMemTable.Create(nil);
   Result.FieldDefs.Add('Name', ftString, 100);
@@ -96,42 +86,41 @@ begin
   Result.AppendRecord(['Luca', 'Minuti']);
 end;
 
-function THelloWorldResource.DataSet3: TDataset;
+function TSampleResource.DataSet3: TDataset;
 begin
   Result := DataSet2;
 end;
 
-function THelloWorldResource.HtmlDocument: string;
+function TSampleResource.HtmlDocument: string;
 begin
   Result :=
     '<html><body>' +
     '<h2>Hello World!</h2>' +
-    '<p>This is only a test.</p>' +
     '</body></html>';
 end;
 
-function THelloWorldResource.JpegImage: TStream;
+function TSampleResource.JpegImage: TStream;
 begin
   Result := TFileStream.Create('image.jpg', fmOpenRead or fmShareDenyWrite);
 end;
 
-function THelloWorldResource.JSON1: TJSONObject;
+function TSampleResource.JSON1: TJSONObject;
 begin
   Result := TJSONObject.Create;
   Result.AddPair('Hello', 'World');
 end;
 
-function THelloWorldResource.PdfDocument: TStream;
+function TSampleResource.PdfDocument: TStream;
 begin
   Result := TFileStream.Create('document.pdf', fmOpenRead or fmShareDenyWrite);
 end;
 
-function THelloWorldResource.SayHelloWorld: string;
+function TSampleResource.SayHelloWorld: string;
 begin
   Result := 'Hello World!';
 end;
 
 initialization
-  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TSampleResource>;
 
 end.

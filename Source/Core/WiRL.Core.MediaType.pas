@@ -116,17 +116,8 @@ type
   TAcceptParser = class
   private
     const DELIM_ACCEPT = ',';
-  private
-    FAccept: string;
-    FMediaTypeList: TMediaTypeList;
   public
-    constructor Create(AAccept: string);
-    destructor Destroy; override;
-
-    procedure Clear;
-    procedure ParseAccept;
-
-    property MediaTypeList: TMediaTypeList read FMediaTypeList write FMediaTypeList;
+    class function ParseAccept(const AAcceptHeader: string): TMediaTypeList; static;
   end;
 
 
@@ -274,47 +265,33 @@ end;
 
 { TAcceptParser }
 
-procedure TAcceptParser.Clear;
-begin
-  FMediaTypeList.Clear;
-end;
-
-constructor TAcceptParser.Create(AAccept: string);
-begin
-  FAccept := AAccept;
-  FMediaTypeList := TMediaTypeList.Create;
-  ParseAccept;
-end;
-
-destructor TAcceptParser.Destroy;
-begin
-  FMediaTypeList.Free;
-  inherited;
-end;
-
-procedure TAcceptParser.ParseAccept;
+class function TAcceptParser.ParseAccept(const AAcceptHeader: string): TMediaTypeList;
 var
   LMediaArray: TArray<string>;
   LMediaStr: string;
   LMediaType: TMediaType;
   LIndex, LLength: Integer;
 begin
-  Clear;
-  LMediaArray := TArray<string>(SplitString(FAccept, DELIM_ACCEPT));
-  LLength := Length(LMediaArray);
+  Result := TMediaTypeList.Create;
+  try
+    LMediaArray := TArray<string>(SplitString(AAcceptHeader, DELIM_ACCEPT));
+    LLength := Length(LMediaArray);
 
-  for LIndex := Low(LMediaArray) to High(LMediaArray) do
-  begin
-    LMediaStr := LMediaArray[LIndex];
-    LMediaType := TMediaType.Create(LMediaStr);
-    LMediaType.PFactor := LLength - LIndex;
-    FMediaTypeList.Add(LMediaType);
+    for LIndex := Low(LMediaArray) to High(LMediaArray) do
+    begin
+      LMediaStr := LMediaArray[LIndex];
+      LMediaType := TMediaType.Create(LMediaStr);
+      LMediaType.PFactor := LLength - LIndex;
+      Result.Add(LMediaType);
+    end;
+
+    if Result.Count = 0 then
+      Result.Add(TMediaType.Create(TMediaType.WILDCARD));
+
+    Result.Sort;
+  except
+    Result.Free;
   end;
-
-  if FMediaTypeList.Count = 0 then
-    FMediaTypeList.Add(TMediaType.Create(TMediaType.WILDCARD));
-
-  FMediaTypeList.Sort;
 end;
 
 { TMediaTypeList }

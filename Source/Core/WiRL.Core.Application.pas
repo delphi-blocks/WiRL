@@ -892,8 +892,12 @@ begin
 
   LInstance := LInfo.ConstructorFunc();
   try
-    TWiRLMessageBodyRegistry.Instance.FindWriter(LMethod, string(Request.Accept),
-      LWriter, LMediaType);
+    TWiRLMessageBodyRegistry.Instance.FindWriter(
+      LMethod,
+      Request.AcceptableMediaTypes,
+      LWriter,
+      LMediaType
+    );
 
     ContextInjection(LInstance);
     try

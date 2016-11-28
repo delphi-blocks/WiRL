@@ -69,14 +69,14 @@ begin
   // Engine configuration
   FServer.ConfigureEngine('/rest')
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('WiRL Template')
+    .SetName('WiRL ContentType Demo')
     .SetThreadPoolSize(5)
 
     // Application configuration
-    .AddApplication('/default')
-      .SetName('Default App')
+    .AddApplication('/app')
+      .SetName('Content App')
       .SetResources([
-        'Server.Resources.THelloWorldResource'
+        'Server.Resources.TSampleResource'
       ])
   ;
 

@@ -9,7 +9,8 @@ unit WiRL.Core.Request;
 interface
 
 uses
-  System.Classes, System.SysUtils;
+  System.Classes, System.SysUtils,
+  WiRL.Core.MediaType;
 
 type
   TWiRLMethod = class
@@ -26,6 +27,9 @@ type
   end;
 
   TWiRLRequest = class
+  private
+    FAcceptableMediaTypes: TMediaTypeList;
+    function GetAcceptableMediaTypes: TMediaTypeList;
   protected
     function GetPathInfo: string; virtual; abstract;
     function GetQuery: string; virtual; abstract;
@@ -47,6 +51,8 @@ type
     function GetRawPathInfo: string; virtual; abstract;
     function DoGetFieldByName(const Name: string): string; virtual; abstract;
   public
+    destructor Destroy; override;
+
     property PathInfo: string read GetPathInfo;
     property Query: string read GetQuery;
     property Method: string read GetMethod;
@@ -61,6 +67,7 @@ type
     property ContentVersion: string read GetContentVersion;
     property Authorization: string read GetAuthorization;
     property Accept: string read GetAccept;
+    property AcceptableMediaTypes: TMediaTypeList read GetAcceptableMediaTypes;
     property AcceptCharSet: string read GetAcceptCharSet;
     property AcceptEncoding: string read GetAcceptEncoding;
     property AcceptLanguage: string read GetAcceptLanguage;
@@ -72,6 +79,19 @@ type
 implementation
 
 { TWiRLRequest }
+
+destructor TWiRLRequest.Destroy;
+begin
+  FAcceptableMediaTypes.Free;
+  inherited;
+end;
+
+function TWiRLRequest.GetAcceptableMediaTypes: TMediaTypeList;
+begin
+  if not Assigned(FAcceptableMediaTypes) then
+    FAcceptableMediaTypes := TAcceptParser.ParseAccept(Accept);
+  Result := FAcceptableMediaTypes;
+end;
 
 function TWiRLRequest.GetFieldByName(const Name: string): string;
 begin

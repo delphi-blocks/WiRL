@@ -15,7 +15,10 @@ uses
   WiRL.Core.JSON;
 
 type
+
   TRttiHelper = class
+  private
+    class var FContext: TRttiContext;
   public
     // TRttiObject helpers functions
     class function HasAttribute<T: TCustomAttribute>(
@@ -57,6 +60,8 @@ type
 
     class function ForEachFieldWithAttribute<T: TCustomAttribute>(AInstance: TObject; const ADoSomething: TFunc<TRttiField, T, Boolean>): Integer; overload;
     class function ForEachField(AInstance: TObject; const ADoSomething: TFunc<TRttiField, Boolean>): Integer;
+
+    class property Context: TRttiContext read FContext;
   end;
 
 function ExecuteMethod(const AInstance: TValue; const AMethodName: string; const AArguments: array of TValue;
