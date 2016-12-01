@@ -116,6 +116,7 @@ implementation
 
 uses
   System.StrUtils,
+  WiRL.Core.Context,
   WiRL.Core.Utils;
 
 function DefaultCharSetEncoding: TEncoding;
@@ -179,27 +180,24 @@ end;
 procedure TWiRLhttpServerIndy.DoCommandGet(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
 var
-  LRequest: TWiRLHttpRequestIndy;
-  LResponse: TWiRLHttpResponseIndy;
+  LContext: TWiRLContext;
 begin
   inherited;
 
-  LRequest := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
+  LContext := TWiRLContext.Create;
   try
-    LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
-    try
-      AResponseInfo.FreeContentStream := True;
-      // skip browser requests (can be dangerous since it is a bit wide as approach)
-      if not EndsText('favicon.ico', string(LRequest.PathInfo)) then
-      begin
-        FEngine.HandleRequest(LRequest, LResponse);
-      end;
-      AResponseInfo.CustomHeaders.AddStrings(LResponse.CustomHeaders);
-    finally
-      FreeAndNil(LResponse);
+    LContext.Engine := FEngine;
+    LContext.Request := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
+    LContext.Response := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
+
+    AResponseInfo.FreeContentStream := True;
+    if not EndsText('/favicon.ico', LContext.Request.PathInfo) then
+    begin
+      FEngine.HandleRequest(LContext);
     end;
+    AResponseInfo.CustomHeaders.AddStrings(LContext.Response.CustomHeaders);
   finally
-    FreeAndNil(LRequest);
+    LContext.Free;
   end;
 end;
 

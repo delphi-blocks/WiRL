@@ -2,7 +2,7 @@
 	"variables": [],
 	"info": {
 		"name": "WiRLDemos",
-		"_postman_id": "06e57cfe-6ce7-e4db-7237-01db08da561a",
+		"_postman_id": "b871f090-84cf-2b48-eac5-0ef1761300fd",
 		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
@@ -46,7 +46,7 @@
 							"basic": {
 								"username": "paolo",
 								"password": "mypassword",
-								"saveHelperData": false,
+								"saveHelperData": true,
 								"showPassword": false
 							}
 						},
@@ -61,20 +61,7 @@
 						],
 						"body": {
 							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
+							"urlencoded": []
 						},
 						"description": ""
 					},
@@ -115,7 +102,46 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsYW5ndWFnZSI6ImVuLVVTIiwicm9sZXMiOiJ1c2VyLG1hbmFnZXIiLCJ1c2VybmFtZSI6Im1hcmNvIn0.ZEL1tYnX1HfhYqiFHqfOxdRMm4ZcH4TFic6QhRewncs",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsYW5ndWFnZSI6ImVuLVVTIiwicm9sZXMiOiJ1c2VyLG1hbmFnZXIsYWRtaW4iLCJ1c2VybmFtZSI6InBhb2xvIn0.9Irklo1bLE61KJ0Y7kgaHrjcpujiXAj3i0A7_WEhocs",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ContentType",
+			"description": "",
+			"item": [
+				{
+					"name": "Sample Resource",
+					"request": {
+						"url": "localhost:8080/rest/app/sample",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/plain",
 								"description": ""
 							}
 						],

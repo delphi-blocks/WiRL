@@ -237,9 +237,7 @@ end;
 
 function TMediaType.Matches(const AMediaTypeStr: string): Boolean;
 begin
-  Result :=
-    SameText(ToString, AMediaTypeStr)
-    or IsWildcard;
+  Result := SameText(ToString, AMediaTypeStr) or IsWildcard;
 end;
 
 function TMediaType.Matches(const AMediaType: TMediaType): Boolean;

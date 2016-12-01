@@ -13,6 +13,7 @@ uses
   System.SyncObjs, System.Diagnostics, System.Rtti,
 
   WiRL.Core.Classes,
+  WiRL.Core.Context,
   WiRL.Rtti.Utils,
   WiRL.Core.MediaType,
   WiRL.Core.Exceptions,
@@ -54,10 +55,6 @@ type
 
   TWiRLEngine = class
   private
-    class threadvar FRequest: TWiRLRequest;
-    class threadvar FResponse: TWiRLResponse;
-    class threadvar FURL: TWiRLURL;
-  private
     class var FServerFileName: string;
     class var FServerDirectory: string;
     class function GetServerDirectory: string; static;
@@ -72,27 +69,22 @@ type
     FThreadPoolSize: Integer;
     FName: string;
 
-    function GetURL: TWiRLURL;
-    function GetRequest: TWiRLRequest;
-    function GetResponse: TWiRLResponse;
-
     // Filter handling
-    procedure ApplyPreMatchingFilters;
-
+    procedure ApplyPreMatchingFilters(AContext: TWiRLContext);
   protected
     procedure DoBeforeHandleRequest(const AApplication: TWiRLApplication); virtual;
     procedure DoAfterHandleRequest(const AApplication: TWiRLApplication; const AStopWatch: TStopWatch); virtual;
-    function DoBeforeRequestStart() :Boolean; virtual;
+    function DoBeforeRequestStart(): Boolean; virtual;
     procedure DoAfterRequestEnd(const AStopWatch: TStopWatch); virtual;
-    procedure DoHandleException(const AApplication: TWiRLApplication; E: Exception); virtual;
+    procedure DoHandleException(AContext: TWirlContext; AApplication: TWiRLApplication; E: Exception); virtual;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
+    procedure HandleRequest(AContext: TWirlContext);
 
     function AddApplication(const ABasePath: string): TWiRLApplication; overload; virtual;
-    function AddApplication(const AName, ABasePath: string; const AResources: array of string): TWiRLApplication; overload; virtual; deprecated;
+    function AddApplication(const AName, ABasePath: string; const AResources: TArray<string>): TWiRLApplication; overload; virtual; deprecated;
 
     function AddSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
     function RemoveSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
@@ -110,10 +102,6 @@ type
     property Port: Integer read FPort write FPort;
     property ThreadPoolSize: Integer read FThreadPoolSize write FThreadPoolSize;
 
-    property CurrentRequest: TWiRLRequest read GetRequest;
-    property CurrentResponse: TWiRLResponse read GetResponse;
-    property CurrentURL: TWiRLURL read GetURL;
-
     class property ServerFileName: string read GetServerFileName;
     class property ServerDirectory: string read GetServerDirectory;
   end;
@@ -125,7 +113,7 @@ uses
   WiRL.Core.Utils;
 
 function TWiRLEngine.AddApplication(const AName, ABasePath: string;
-  const AResources: array of string): TWiRLApplication;
+  const AResources: TArray<string>): TWiRLApplication;
 begin
   Result := Self
     .AddApplication(ABasePath)
@@ -135,7 +123,7 @@ end;
 
 function TWiRLEngine.AddApplication(const ABasePath: string): TWiRLApplication;
 begin
-  Result := TWiRLApplication.Create(Self);
+  Result := TWiRLApplication.Create;
   Result.SetBasePath(ABasePath);
   try
     Applications.Add(TWiRLURL.CombinePath([BasePath, ABasePath]), Result);
@@ -151,12 +139,12 @@ begin
   Result := Self;
 end;
 
-procedure TWiRLEngine.ApplyPreMatchingFilters;
+procedure TWiRLEngine.ApplyPreMatchingFilters(AContext: TWiRLContext);
 var
   LRequestFilter: IWiRLContainerRequestFilter;
 begin
   TWiRLFilterRegistry.Instance.FetchRequestFilter(True,
-    procedure (ConstructorInfo :TWiRLFilterConstructorInfo)
+    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     begin
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
       if not Supports(ConstructorInfo.ConstructorFunc(), IWiRLContainerRequestFilter, LRequestFilter) then
@@ -164,7 +152,7 @@ begin
           Format('Request Filter [%s] does not implement requested interface [IWiRLContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]),
           Self.ClassName, 'ApplyPreMatchingFilters'
         );
-      LRequestFilter.Filter(FRequest);
+      LRequestFilter.Filter(AContext.Request);
     end
   );
 end;
@@ -237,23 +225,23 @@ begin
     end;
 end;
 
-procedure TWiRLEngine.DoHandleException(const AApplication: TWiRLApplication;
-  E: Exception);
+procedure TWiRLEngine.DoHandleException(AContext: TWirlContext; AApplication:
+    TWiRLApplication; E: Exception);
 var
   LSubscriber: IWiRLHandleListener;
   LHandleExceptionListener: IWiRLHandleExceptionListener;
 begin
   if E is EWiRLWebApplicationException then
   begin
-    FResponse.StatusCode := EWiRLWebApplicationException(E).Status;
-    FResponse.Content := EWiRLWebApplicationException(E).ToJSON;
-    FResponse.ContentType := TMediaType.APPLICATION_JSON;
+    AContext.Response.StatusCode := EWiRLWebApplicationException(E).Status;
+    AContext.Response.Content := EWiRLWebApplicationException(E).ToJSON;
+    AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
   end
   else if E is Exception then
   begin
-    FResponse.StatusCode := 500;
-    FResponse.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
-    FResponse.ContentType := TMediaType.APPLICATION_JSON;
+    AContext.Response.StatusCode := 500;
+    AContext.Response.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
+    AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
   end;
 
   for LSubscriber in FSubscribers do
@@ -278,75 +266,67 @@ begin
   end;
 end;
 
-procedure TWiRLEngine.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
+procedure TWiRLEngine.HandleRequest(AContext: TWirlContext);
 var
   LApplication: TWiRLApplication;
+  LAppWorker: TWiRLApplicationWorker;
   LApplicationPath: string;
-  LStopWatch: TStopWatch;
-  LStopWatchEx: TStopWatch;
+  LStopWatch, LStopWatchEx: TStopWatch;
 begin
-  FURL := nil;
+  LApplication := nil;
+  LStopWatchEx := TStopwatch.StartNew;
   try
-    LApplication := nil;
-    LStopWatchEx := TStopwatch.StartNew;
-    FRequest := ARequest;
-    FResponse := AResponse;
-    try
-      ApplyPreMatchingFilters;
-      if not DoBeforeRequestStart() then
+    ApplyPreMatchingFilters(AContext);
+    if not DoBeforeRequestStart() then
+    begin
+      LApplicationPath := TWiRLURL.CombinePath([AContext.URL.PathTokens[0]]);
+      if (BasePath <> '') and (BasePath <> TWiRLURL.URL_PATH_SEPARATOR) then
       begin
-        FURL := TWiRLURL.Create(ARequest); // The object must exists until the end of this procedure
-        LApplicationPath := TWiRLURL.CombinePath([FURL.PathTokens[0]]);
-        if (BasePath <> '') and (BasePath <> TWiRLURL.URL_PATH_SEPARATOR) then
-        begin
-          if not FURL.MatchPath(BasePath + TWiRLURL.URL_PATH_SEPARATOR) then
-            raise EWiRLNotFoundException.Create(
-              Format('Requested URL [%s] does not match base engine URL [%s]', [FURL.URL, BasePath]),
-              Self.ClassName, 'HandleRequest'
-            );
-
-          LApplicationPath := TWiRLURL.CombinePath([FURL.PathTokens[0], FURL.PathTokens[1]]);
-        end;
-
-        if FApplications.TryGetValue(LApplicationPath, LApplication) then
-        begin
-          FURL.BasePath := LApplicationPath;
-          DoBeforeHandleRequest(LApplication);
-          LApplication.ApplyRequestFilters;
-          LStopWatch := TStopwatch.StartNew;
-          try
-            LApplication.HandleRequest(ARequest, AResponse, FURL);
-          finally
-            LStopWatch.Stop;
-          end;
-          DoAfterHandleRequest(LApplication, LStopWatch);
-        end
-        else
+        if not AContext.URL.MatchPath(BasePath + TWiRLURL.URL_PATH_SEPARATOR) then
           raise EWiRLNotFoundException.Create(
-            Format('Application [%s] not found, please check the URL [%s]', [LApplicationPath, FURL.URL]),
+            Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.URL.BasePath]),
             Self.ClassName, 'HandleRequest'
           );
+        LApplicationPath := TWiRLURL.CombinePath([AContext.URL.PathTokens[0], AContext.URL.PathTokens[1]]);
       end;
-    except
-      on E: Exception do
-        DoHandleException(LApplication, E);
-    end;
-    LStopWatchEx.Stop;
+      // Change the URI BasePath (?)
+      AContext.URL.BasePath := LApplicationPath;
 
-    try
-      if Assigned(LApplication) then
-        LApplication.ApplyResponseFilters;
-    except
-      on E: Exception do
+      if FApplications.TryGetValue(LApplicationPath, LApplication) then
       begin
-        DoHandleException(LApplication, E);
-      end
-    end;
+        LAppWorker := TWiRLApplicationWorker.Create(AContext, LApplication);
+        try
+          DoBeforeHandleRequest(LApplication);
+          LAppWorker.ApplyRequestFilters;
+          LStopWatch := TStopwatch.StartNew;
+          LAppWorker.HandleRequest;
+          LStopWatch.Stop;
+          DoAfterHandleRequest(LApplication, LStopWatch);
+        finally
+          try
+            LAppWorker.ApplyResponseFilters;
+          except
+            on E: Exception do
+              DoHandleException(AContext, LApplication, E);
+          end;
 
-    DoAfterRequestEnd(LStopWatchEx);
-  finally
-    FreeAndNil(FURL);
+          LStopWatch.Stop;
+          LAppWorker.Free;
+        end;
+      end
+      else
+        raise EWiRLNotFoundException.Create(
+          Format('Application [%s] not found. URL [%s]', [LApplicationPath, AContext.URL.URL]),
+          Self.ClassName, 'HandleRequest'
+        );
+    end;
+  except
+    on E: Exception do
+      DoHandleException(AContext, LApplication, E);
   end;
+  LStopWatchEx.Stop;
+
+  DoAfterRequestEnd(LStopWatchEx);
 end;
 
 function TWiRLEngine.RemoveSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
@@ -383,16 +363,6 @@ begin
   Result := Self;
 end;
 
-function TWiRLEngine.GetRequest: TWiRLRequest;
-begin
-  Result := FRequest;
-end;
-
-function TWiRLEngine.GetResponse: TWiRLResponse;
-begin
-  Result := FResponse;
-end;
-
 class function TWiRLEngine.GetServerDirectory: string;
 begin
   if FServerDirectory = '' then
@@ -405,11 +375,6 @@ begin
   if FServerFileName = '' then
     FServerFileName := GetModuleName(MainInstance);
   Result := FServerFileName;
-end;
-
-function TWiRLEngine.GetURL: TWiRLURL;
-begin
-  Result := FURL;
 end;
 
 end.

@@ -21,6 +21,7 @@ uses
   WiRL.Core.Registry,
   WiRL.Core.MediaType,
   WiRL.Core.Token,
+  WiRL.Core.Context,
   WiRL.http.Filters;
 
 type
@@ -28,59 +29,35 @@ type
   TAttributeArray = TArray<TCustomAttribute>;
   TArgumentArray = array of TValue;
 
+
   TWiRLApplication = class
   private
     //256bit encoding key
     const SCRT_SGN = 'd2lybC5zdXBlcnNlY3JldC5zZWVkLmZvci5zaWduaW5n';
   private
-    class threadvar FAuthContext: TWiRLAuthContext;
+    class var FRttiContext: TRttiContext;
   private
     FSecret: TBytes;
-    FRttiContext: TRttiContext;
     FResourceRegistry: TObjectDictionary<string, TWiRLConstructorInfo>;
-    FFilterRegistry :TWiRLFilterRegistry;
+    FFilterRegistry: TWiRLFilterRegistry;
     FBasePath: string;
     FName: string;
     FClaimClass: TWiRLSubjectClass;
-    FEngine: TObject;
     FSystemApp: Boolean;
     function GetResources: TArray<string>;
-    function GetRequest: TWiRLRequest;
-    function GetResponse: TWiRLResponse;
-    function GetURL: TWiRLURL;
-  protected
-    function CheckFilterBinding(AFilterClass, AResourceClass :TClass; const AMethod: TRttiMethod) :Boolean;
-
-    procedure InternalHandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse; const AURL: TWiRLURL);
-    function FindMethodToInvoke(const AURL: TWiRLURL;
-      const AInfo: TWiRLConstructorInfo): TRttiMethod; virtual;
-
-    function FillAnnotatedParam(AParam: TRttiParameter; const AAttrArray: TAttributeArray;
-      AResourceInstance: TObject; AMethod: TRttiMethod): TValue;
-    function FillNonAnnotatedParam(AParam: TRttiParameter): TValue;
-    procedure FillResourceMethodParameters(AInstance: TObject; AMethod: TRttiMethod; var AArgumentArray: TArgumentArray);
-    procedure InvokeResourceMethod(AInstance: TObject; AMethod: TRttiMethod;
-      const AWriter: IMessageBodyWriter; ARequest: TWiRLRequest;
-      AMediaType: TMediaType); virtual;
-
-    function GetNewToken(ARequest: TWiRLRequest): TWiRLAuthContext;
-    procedure CheckAuthorization(const AMethod: TRttiMethod; const AToken: TWiRLAuthContext);
-    procedure ContextInjection(AInstance: TObject);
-    function ContextInjectionByType(const AType: TClass; out AValue: TValue): Boolean;
-
-    function ParamNameToParamIndex(AResourceInstance: TObject; const AParamName: string; AMethod: TRttiMethod): Integer;
-
-    property Engine: TObject read FEngine;
-    property Request: TWiRLRequest read GetRequest;
-    property Response: TWiRLResponse read GetResponse;
-    property URL: TWiRLURL read GetURL;
+    function GetResourceCtor(const AResourceName: string): TWiRLConstructorInfo;
+    function AddResource(AResource: string): Boolean;
+    function AddFilter(AFilter: string): Boolean;
+    function GetSecret: TBytes;
   public
-    constructor Create(const AEngine: TObject);
+    class procedure InitializeRtti;
+
+    constructor Create;
     destructor Destroy; override;
 
     // Fluent-like configuration methods
-    function SetResources(const AResources: array of string): TWiRLApplication;
-    function SetFilters(const AFilters: array of string): TWiRLApplication;
+    function SetResources(const AResources: TArray<string>): TWiRLApplication;
+    function SetFilters(const AFilters: TArray<string>): TWiRLApplication;
     function SetSecret(const ASecret: TBytes): TWiRLApplication; overload;
     function SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication; overload;
     function SetBasePath(const ABasePath: string): TWiRLApplication;
@@ -88,25 +65,55 @@ type
     function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
     function SetSystemApp(ASystem: Boolean): TWiRLApplication;
 
-    procedure GenerateToken;
-    function AddResource(AResource: string): Boolean;
-    function AddFilter(AFilter: string): Boolean;
-    procedure HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse; const AURL: TWiRLURL);
-    procedure CollectGarbage(const AValue: TValue);
-
-    // Filters handler
-    procedure ApplyRequestFilters;
-    procedure ApplyResponseFilters;
-
     property Name: string read FName;
     property BasePath: string read FBasePath;
     property SystemApp: Boolean read FSystemApp;
     property ClaimClass: TWiRLSubjectClass read FClaimClass;
+    property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property Resources: TArray<string> read GetResources;
+    property Secret: TBytes read GetSecret;
+
+    class property RttiContext: TRttiContext read FRttiContext;
   end;
 
   TWiRLApplicationDictionary = class(TObjectDictionary<string, TWiRLApplication>)
   end;
+
+  TWiRLApplicationWorker = class
+  private
+    FContext: TWiRLContext;
+    FAppConfig: TWiRLApplication;
+    FAuthContext: TWiRLAuthContext;
+    FResourceType: TRttiType;
+    FResourceCtor: TWiRLConstructorInfo;
+    FResourceMethod: TRttiMethod;
+
+    procedure CollectGarbage(const AValue: TValue);
+    function GetResourceMethod: TRttiMethod;
+    function GetResourceType: TRttiType;
+  protected
+    procedure CheckAuthorization(AAuth: TWiRLAuthContext);
+    function CheckFilterBinding(AFilterClass, AResourceClass: TClass): Boolean;
+    procedure ContextInjection(AInstance: TObject);
+    function ContextInjectionByType(const AType: TClass; out AValue: TValue): Boolean;
+    function FillAnnotatedParam(AParam: TRttiParameter; const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
+    function FillNonAnnotatedParam(AParam: TRttiParameter): TValue;
+    procedure FillResourceMethodParameters(AInstance: TObject; var AArgumentArray: TArgumentArray);
+    function GetNewToken(ARequest: TWiRLRequest): TWiRLAuthContext;
+    procedure InternalHandleRequest;
+    procedure InvokeResourceMethod(AInstance: TObject; const AWriter: IMessageBodyWriter; AMediaType: TMediaType); virtual;
+    function ParamNameToParamIndex(AResourceInstance: TObject; const AParamName: string): Integer;
+  public
+    constructor Create(AContext: TWiRLContext; AAppConfig: TWiRLApplication);
+    destructor Destroy; override;
+
+    // Filters handling
+    procedure ApplyRequestFilters;
+    procedure ApplyResponseFilters;
+    // HTTP Request handling
+    procedure HandleRequest;
+  end;
+
 
 implementation
 
@@ -118,6 +125,22 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Engine,
   WiRL.Core.JSON;
+
+function ExtractToken(const AString: string; const ATokenIndex: Integer; const ADelimiter: Char = '/'): string;
+var
+  LTokens: TArray<string>;
+begin
+  LTokens := TArray<string>(SplitString(AString, ADelimiter));
+
+  Result := '';
+  if ATokenIndex < Length(LTokens) then
+    Result := LTokens[ATokenIndex]
+  else
+    raise EWiRLServerException.Create(
+      Format('ExtractToken, index: %d from %s', [ATokenIndex, AString]), 'ExtractToken');
+end;
+
+{ TWiRLApplication }
 
 function TWiRLApplication.AddFilter(AFilter: string): Boolean;
 var
@@ -219,8 +242,7 @@ begin
   Result := Self;
 end;
 
-function TWiRLApplication.SetFilters(
-  const AFilters: array of string): TWiRLApplication;
+function TWiRLApplication.SetFilters(const AFilters: TArray<string>): TWiRLApplication;
 var
   LFilter: string;
 begin
@@ -229,7 +251,7 @@ begin
     Self.AddFilter(LFilter);
 end;
 
-function TWiRLApplication.SetResources(const AResources: array of string): TWiRLApplication;
+function TWiRLApplication.SetResources(const AResources: TArray<string>): TWiRLApplication;
 var
   LResource: string;
 begin
@@ -238,61 +260,168 @@ begin
     Self.AddResource(LResource);
 end;
 
-procedure TWiRLApplication.ApplyRequestFilters;
+function HasNameBindingAttribute(AClass :TRttiType; AMethod: TRttiMethod; Attrib :TCustomAttribute) :Boolean;
+var
+  LHasAttrib :Boolean;
+begin
+  // First search inside the method attributes
+  LHasAttrib := False;
+  TRttiHelper.ForEachAttribute<TCustomAttribute>(AMethod,
+    procedure (AMethodAttrib: TCustomAttribute)
+    begin
+      if AMethodAttrib is Attrib.ClassType then
+        LHasAttrib := True;
+    end
+  );
+
+  // Then inside the class attributes
+  if not LHasAttrib then
+  begin
+    TRttiHelper.ForEachAttribute<TCustomAttribute>(AClass,
+      procedure (AMethodAttrib: TCustomAttribute)
+      begin
+        if AMethodAttrib is Attrib.ClassType then
+          LHasAttrib := True;
+      end
+    );
+  end;
+
+  Result := LHasAttrib;
+end;
+
+constructor TWiRLApplication.Create;
+begin
+  inherited Create;
+  FResourceRegistry := TObjectDictionary<string, TWiRLConstructorInfo>.Create([doOwnsValues]);
+  FFilterRegistry := TWiRLFilterRegistry.Create;
+  FFilterRegistry.OwnsObjects := False;
+  FSecret := TEncoding.ANSI.GetBytes(SCRT_SGN);
+end;
+
+destructor TWiRLApplication.Destroy;
+begin
+  FResourceRegistry.Free;
+  FFilterRegistry.Free;
+  inherited;
+end;
+
+function TWiRLApplication.GetResourceCtor(const AResourceName: string): TWiRLConstructorInfo;
+begin
+  FResourceRegistry.TryGetValue(AResourceName, Result);
+end;
+
+function TWiRLApplication.GetResources: TArray<string>;
+begin
+  Result := FResourceRegistry.Keys.ToArray;
+end;
+
+function TWiRLApplication.GetSecret: TBytes;
+begin
+  Result := FSecret;
+end;
+
+class procedure TWiRLApplication.InitializeRtti;
+begin
+  FRttiContext := TRttiContext.Create;
+end;
+
+function TWiRLApplication.SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication;
+begin
+  if Assigned(ASecretGen) then
+    FSecret := ASecretGen;
+  Result := Self;
+end;
+
+function TWiRLApplication.SetSecret(const ASecret: TBytes): TWiRLApplication;
+begin
+  FSecret := ASecret;
+  Result := Self;
+end;
+
+function TWiRLApplication.SetSystemApp(ASystem: Boolean): TWiRLApplication;
+begin
+  FSystemApp := ASystem;
+  Result := Self;
+end;
+
+{ TWiRLApplicationWorker }
+
+constructor TWiRLApplicationWorker.Create(AContext: TWiRLContext; AAppConfig: TWiRLApplication);
+begin
+  FContext := AContext;
+  FAppConfig := AAppConfig;
+
+  // Saves the resource constructor (if found)
+  FResourceCtor := FAppConfig.GetResourceCtor(FContext.URL.Resource);
+
+  // Saves the resource type (if found)
+  FResourceType := GetResourceType;
+
+  // Saves the resource method (if found)
+  FResourceMethod := GetResourceMethod;
+end;
+
+destructor TWiRLApplicationWorker.Destroy;
+begin
+
+  inherited;
+end;
+
+procedure TWiRLApplicationWorker.ApplyRequestFilters;
 var
   LInfo: TWiRLConstructorInfo;
-  LMethod: TRttiMethod;
-  FilterImpl :TObject;
-  RequestFilter :IWiRLContainerRequestFilter;
+  LFilterImpl: TObject;
+  LRequestFilter: IWiRLContainerRequestFilter;
 begin
-  // Find resource method
-  if not FResourceRegistry.TryGetValue(URL.Resource, LInfo) then
+  // Find resource type
+  if not Assigned(FResourceType) then
     Exit;
 
-  LMethod := FindMethodToInvoke(URL, LInfo);
-  if not Assigned(LMethod) then
+  // Find resource method
+  if not Assigned(FResourceMethod) then
     Exit;
 
   // Run filters
-
-  FFilterRegistry.FetchRequestFilter(False, procedure (ConstructorInfo :TWiRLFilterConstructorInfo) begin
-    if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass, LMethod) then
+  FAppConfig.FilterRegistry.FetchRequestFilter(False,
+    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     begin
-      FilterImpl := ConstructorInfo.ConstructorFunc();
+      if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass) then
+      begin
+        LFilterImpl := ConstructorInfo.ConstructorFunc();
 
-      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
-      if not Supports(FilterImpl, IWiRLContainerRequestFilter, RequestFilter) then
-        raise EWiRLNotImplementedException.Create(
-          Format('Request Filter [%s] does not implement requested interface [IWiRLContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]),
-          Self.ClassName,
-          'ApplyRequestFilters'
-        );
-      ContextInjection(FilterImpl);
-      RequestFilter.Filter(Request);
-    end;
-  end);
+        // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+        if not Supports(LFilterImpl, IWiRLContainerRequestFilter, LRequestFilter) then
+          raise EWiRLNotImplementedException.Create(
+            Format('Request Filter [%s] does not implement requested interface [IWiRLContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]),
+            Self.ClassName,
+            'ApplyRequestFilters'
+          );
+        ContextInjection(LFilterImpl);
+        LRequestFilter.Filter(FContext.Request);
+      end;
+    end
+  );
 end;
 
-procedure TWiRLApplication.ApplyResponseFilters;
+procedure TWiRLApplicationWorker.ApplyResponseFilters;
 var
   LInfo: TWiRLConstructorInfo;
-  LMethod: TRttiMethod;
   LFilterImpl: TObject;
   LResponseFilter: IWiRLContainerResponseFilter;
 begin
-  // Find resource method
-  if not FResourceRegistry.TryGetValue(URL.Resource, LInfo) then
+  // Find resource type
+  if not Assigned(FResourceType) then
     Exit;
 
-  LMethod := FindMethodToInvoke(URL, LInfo);
-  if not Assigned(LMethod) then
+  // Find resource method
+  if not Assigned(FResourceMethod) then
     Exit;
 
   // Run filters
-  FFilterRegistry.FetchResponseFilter(
-    procedure (ConstructorInfo :TWiRLFilterConstructorInfo)
+  FAppConfig.FilterRegistry.FetchResponseFilter(
+    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     begin
-      if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass, LMethod) then
+      if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass) then
       begin
         LFilterImpl := ConstructorInfo.ConstructorFunc();
         // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
@@ -303,14 +432,13 @@ begin
             'ApplyResponseFilters'
           );
         ContextInjection(LFilterImpl);
-        LResponseFilter.Filter(Request, Response);
+        LResponseFilter.Filter(FContext.Request, FContext.Response);
       end;
     end
   );
 end;
 
-procedure TWiRLApplication.CheckAuthorization(const AMethod: TRttiMethod;
-  const AToken: TWiRLAuthContext);
+procedure TWiRLApplicationWorker.CheckAuthorization(AAuth: TWiRLAuthContext);
 var
   LDenyAll, LPermitAll, LRolesAllowed: Boolean;
   LAllowedRoles: TStringList;
@@ -325,7 +453,7 @@ begin
     LAllowedRoles.Sorted := True;
     LAllowedRoles.Duplicates := TDuplicates.dupIgnore;
 
-    TRttiHelper.ForEachAttribute<AuthorizationAttribute>(AMethod,
+    TRttiHelper.ForEachAttribute<AuthorizationAttribute>(FResourceMethod,
       procedure (AAttribute: AuthorizationAttribute)
       begin
         if AAttribute is DenyAllAttribute then
@@ -349,7 +477,7 @@ begin
       LAllowed := False;
       for LRole in LAllowedRoles do
       begin
-        LAllowed := AToken.Subject.HasRole(LRole);
+        LAllowed := AAuth.Subject.HasRole(LRole);
         if LAllowed then
           Break;
       end;
@@ -367,51 +495,22 @@ begin
   end;
 end;
 
-function HasNameBindingAttribute(AClass :TRttiType; AMethod: TRttiMethod; Attrib :TCustomAttribute) :Boolean;
-var
-  HasAttrib :Boolean;
-begin
-  // First search inside the method attributes
-  HasAttrib := False;
-  TRttiHelper.ForEachAttribute<TCustomAttribute>(AMethod,
-    procedure (AMethodAttrib: TCustomAttribute)
-    begin
-      if AMethodAttrib is Attrib.ClassType then
-        HasAttrib := True;
-    end
-  );
-
-  // Then inside the class attributes
-  if not HasAttrib then
-  begin
-    TRttiHelper.ForEachAttribute<TCustomAttribute>(AClass,
-      procedure (AMethodAttrib: TCustomAttribute)
-      begin
-        if AMethodAttrib is Attrib.ClassType then
-          HasAttrib := True;
-      end
-    );
-  end;
-
-  Result := HasAttrib;
-end;
-
-function TWiRLApplication.CheckFilterBinding(AFilterClass, AResourceClass: TClass;
-  const AMethod: TRttiMethod): Boolean;
+function TWiRLApplicationWorker.CheckFilterBinding(AFilterClass,
+    AResourceClass: TClass): Boolean;
 var
   LFilterType: TRttiType;
   LResourceType: TRttiType;
   LHasBinding: Boolean;
 begin
   LHasBinding := True;
-  LFilterType := FRttiContext.GetType(AFilterClass);
-  LResourceType := FRttiContext.GetType(AResourceClass);
+  LFilterType :=  TWiRLApplication.FRttiContext.GetType(AFilterClass);
+  LResourceType := TWiRLApplication.FRttiContext.GetType(AResourceClass);
 
   // Check for attributes that subclass "NameBindingAttribute"
   TRttiHelper.ForEachAttribute<NameBindingAttribute>(LFilterType,
     procedure (AFilterAttrib: NameBindingAttribute)
     begin
-      LHasBinding := LHasBinding and HasNameBindingAttribute(LResourceType, AMethod, AFilterAttrib);
+      LHasBinding := LHasBinding and HasNameBindingAttribute(LResourceType, FResourceMethod, AFilterAttrib);
     end
   );
 
@@ -419,15 +518,15 @@ begin
   TRttiHelper.ForEachAttribute<TCustomAttribute>(LFilterType,
     procedure (AFilterAttrib: TCustomAttribute)
     begin
-      if TRttiHelper.HasAttribute<NameBindingAttribute>(FRttiContext.GetType(AFilterAttrib.ClassType)) then
-        LHasBinding := LHasBinding and HasNameBindingAttribute(LResourceType, AMethod, AFilterAttrib);
+      if TRttiHelper.HasAttribute<NameBindingAttribute>(TWiRLApplication.FRttiContext.GetType(AFilterAttrib.ClassType)) then
+        LHasBinding := LHasBinding and HasNameBindingAttribute(LResourceType, FResourceMethod, AFilterAttrib);
     end
   );
 
   Result := LHasBinding;
 end;
 
-procedure TWiRLApplication.CollectGarbage(const AValue: TValue);
+procedure TWiRLApplicationWorker.CollectGarbage(const AValue: TValue);
 var
   LIndex: Integer;
   LValue: TValue;
@@ -435,7 +534,6 @@ begin
   case AValue.Kind of
     tkClass: AValue.AsObject.Free;
 
-    { TODO -opaolo -c : could be dangerous?? 14/01/2015 13:18:38 }
     tkInterface: TObject(AValue.AsInterface).Free;
 
     tkArray,
@@ -454,11 +552,11 @@ begin
   end;
 end;
 
-procedure TWiRLApplication.ContextInjection(AInstance: TObject);
+procedure TWiRLApplicationWorker.ContextInjection(AInstance: TObject);
 var
   LType: TRttiType;
 begin
-  LType := FRttiContext.GetType(AInstance.ClassType);
+  LType := TWiRLApplication.FRttiContext.GetType(AInstance.ClassType);
   // Context injection
   TRttiHelper.ForEachFieldWithAttribute<ContextAttribute>(LType,
     function (AField: TRttiField; AAttrib: ContextAttribute): Boolean
@@ -500,8 +598,8 @@ begin
   );
 end;
 
-function TWiRLApplication.ContextInjectionByType(const AType: TClass;
-  out AValue: TValue): Boolean;
+function TWiRLApplicationWorker.ContextInjectionByType(const AType: TClass; out
+    AValue: TValue): Boolean;
 begin
   Result := True;
   // AuthContext
@@ -512,134 +610,25 @@ begin
     AValue := FAuthContext.Subject
   // HTTP request
   else if (AType.InheritsFrom(TWiRLRequest)) then
-    AValue := Request
+    AValue := FContext.Request
   // HTTP response
   else if (AType.InheritsFrom(TWiRLResponse)) then
-    AValue := Response
+    AValue := FContext.Response
   // URL info
   else if (AType.InheritsFrom(TWiRLURL)) then
-    AValue := URL
+    AValue := FContext.URL
   // Engine
   else if (AType.InheritsFrom(TWiRLEngine)) then
-    AValue := Engine
+    AValue := FContext.Engine as TWirlEngine
   // Application
   else if (AType.InheritsFrom(TWiRLApplication)) then
-    AValue := Self
+    AValue := FAppConfig
   else
     Result := False;
 end;
 
-constructor TWiRLApplication.Create(const AEngine: TObject);
-begin
-  inherited Create;
-  FEngine := AEngine;
-  FRttiContext := TRttiContext.Create;
-  FResourceRegistry := TObjectDictionary<string, TWiRLConstructorInfo>.Create([doOwnsValues]);
-  FFilterRegistry := TWiRLFilterRegistry.Create;
-  FFilterRegistry.OwnsObjects := False;
-  FSecret := TEncoding.ANSI.GetBytes(SCRT_SGN);
-end;
-
-destructor TWiRLApplication.Destroy;
-begin
-  FResourceRegistry.Free;
-  FFilterRegistry.Free;
-  inherited;
-end;
-
-function TWiRLApplication.FindMethodToInvoke(const AURL: TWiRLURL;
-  const AInfo: TWiRLConstructorInfo): TRttiMethod;
-var
-  LResourceType: TRttiType;
-  LMethod: TRttiMethod;
-  LResourcePath: string;
-  LAttribute: TCustomAttribute;
-  LPrototypeURL: TWiRLURL;
-  LPathMatches: Boolean;
-  LHttpMethodMatches: Boolean;
-  LMethodPath: string;
-begin
-  LResourceType := FRttiContext.GetType(AInfo.TypeTClass);
-  Result := nil;
-  LResourcePath := '';
-
-  TRttiHelper.HasAttribute<PathAttribute>(LResourceType,
-    procedure (APathAttribute: PathAttribute)
-    begin
-      LResourcePath := APathAttribute.Value;
-    end
-  );
-
-  for LMethod in LResourceType.GetMethods do
-  begin
-    LMethodPath := '';
-    LHttpMethodMatches := False;
-
-    for LAttribute in LMethod.GetAttributes do
-    begin
-      if LAttribute is PathAttribute then
-        LMethodPath := PathAttribute(LAttribute).Value;
-
-      if LAttribute is HttpMethodAttribute then
-        LHttpMethodMatches := HttpMethodAttribute(LAttribute).Matches(Request);
-    end;
-
-    if LHttpMethodMatches then
-    begin
-      LPrototypeURL := TWiRLURL.CreateDummy([TWiRLEngine(Engine).BasePath, BasePath, LResourcePath, LMethodPath]);
-      try
-        LPathMatches := LPrototypeURL.MatchPath(URL);
-      finally
-        LPrototypeURL.Free;
-      end;
-
-      if LPathMatches and LHttpMethodMatches then
-      begin
-        Result := LMethod;
-        Break;
-      end;
-    end;
-  end;
-end;
-
-function TWiRLApplication.GetRequest: TWiRLRequest;
-begin
-  Result := TWiRLEngine(Engine).CurrentRequest;
-end;
-
-function TWiRLApplication.GetResponse: TWiRLResponse;
-begin
-  Result := TWiRLEngine(Engine).CurrentResponse;
-end;
-
-function TWiRLApplication.GetResources: TArray<string>;
-begin
-  Result := FResourceRegistry.Keys.ToArray;
-end;
-
-function TWiRLApplication.GetURL: TWiRLURL;
-begin
-  Result := TWiRLEngine(Engine).CurrentURL;
-end;
-
-function ExtractToken(const AString: string; const ATokenIndex: Integer; const ADelimiter: Char = '/'): string;
-var
-  LTokens: TArray<string>;
-begin
-  LTokens := TArray<string>(SplitString(AString, ADelimiter));
-
-  Result := '';
-  if ATokenIndex < Length(LTokens) then
-    Result := LTokens[ATokenIndex]
-  else
-    raise EWiRLServerException.Create(
-      Format('ExtractToken, index: %d from %s', [ATokenIndex, AString]), 'ExtractToken');
-end;
-
-
-function TWiRLApplication.FillAnnotatedParam(AParam: TRttiParameter;
-  const AAttrArray: TAttributeArray; AResourceInstance: TObject;
-  AMethod: TRttiMethod): TValue;
+function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
+    const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
 var
   LAttr: TCustomAttribute;
   LParamName, LParamValue: string;
@@ -669,8 +658,8 @@ begin
       if LParamName = '' then
         LParamName := AParam.Name;
 
-      LParamIndex := ParamNameToParamIndex(AResourceInstance, LParamName, AMethod);
-      LParamValue := URL.PathTokens[LParamIndex];
+      LParamIndex := ParamNameToParamIndex(AResourceInstance, LParamName);
+      LParamValue := FContext.URL.PathTokens[LParamIndex];
     end
     else
     if LAttr is QueryParamAttribute then
@@ -680,7 +669,7 @@ begin
         LParamName := AParam.Name;
 
       // Prendere il valore (come stringa) dalla lista QueryFields
-      LParamValue := Request.QueryFields.Values[LParamName];
+      LParamValue := FContext.Request.QueryFields.Values[LParamName];
     end
     else
     if LAttr is FormParamAttribute then
@@ -690,7 +679,7 @@ begin
         LParamName := AParam.Name;
 
       // Prendere il valore (come stringa) dalla lista ContentFields
-      LParamValue := Request.ContentFields.Values[LParamName];
+      LParamValue := FContext.Request.ContentFields.Values[LParamName];
     end
     else
     if LAttr is CookieParamAttribute then
@@ -700,7 +689,7 @@ begin
         LParamName := AParam.Name;
 
       // Prendere il valore (come stringa) dalla lista CookieFields
-      LParamValue := Request.CookieFields.Values[LParamName];
+      LParamValue := FContext.Request.CookieFields.Values[LParamName];
     end
     else
     if LAttr is HeaderParamAttribute then
@@ -710,13 +699,13 @@ begin
         LParamName := AParam.Name;
 
       // Prendere il valore (come stringa) dagli Header HTTP
-      LParamValue := string(Request.GetFieldByName(LParamName));
+      LParamValue := FContext.Request.GetFieldByName(LParamName);
     end
     else
     if LAttr is BodyParamAttribute then
     begin
       LParamName := AParam.Name;
-      LParamValue := Request.Content;
+      LParamValue := FContext.Request.Content;
     end;
 
     case AParam.ParamType.TypeKind of
@@ -764,7 +753,8 @@ begin
   end;
 end;
 
-function TWiRLApplication.FillNonAnnotatedParam(AParam: TRttiParameter): TValue;
+function TWiRLApplicationWorker.FillNonAnnotatedParam(AParam: TRttiParameter):
+    TValue;
 var
   LClass: TClass;
 begin
@@ -773,7 +763,7 @@ begin
   begin
     LClass := AParam.ParamType.AsInstance.MetaclassType;
     if LClass.InheritsFrom(TWiRLRequest) then
-      Result := TValue.From(Request)
+      Result := TValue.From(FContext.Request)
     else
       Result := TValue.From(nil);
       //Exception.Create('Only TWiRLRequest object if the method is not annotated');
@@ -785,7 +775,8 @@ begin
   end;
 end;
 
-procedure TWiRLApplication.FillResourceMethodParameters(AInstance: TObject; AMethod: TRttiMethod; var AArgumentArray: TArgumentArray);
+procedure TWiRLApplicationWorker.FillResourceMethodParameters(AInstance:
+    TObject; var AArgumentArray: TArgumentArray);
 var
   LParam: TRttiParameter;
   LParamArray: TArray<TRttiParameter>;
@@ -794,7 +785,7 @@ var
   LIndex: Integer;
 begin
   try
-    LParamArray := AMethod.GetParameters;
+    LParamArray := FResourceMethod.GetParameters;
 
     // The method has no parameters so simply call as it is
     if Length(LParamArray) = 0 then
@@ -811,7 +802,7 @@ begin
       if Length(LAttrArray) = 0 then
         AArgumentArray[LIndex] := FillNonAnnotatedParam(LParam)
       else
-        AArgumentArray[LIndex] := FillAnnotatedParam(LParam, LAttrArray, AInstance, AMethod);
+        AArgumentArray[LIndex] := FillAnnotatedParam(LParam, LAttrArray, AInstance);
     end;
 
   except
@@ -827,81 +818,133 @@ begin
   end;
 end;
 
-procedure TWiRLApplication.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse; const AURL: TWiRLURL);
+function TWiRLApplicationWorker.GetNewToken(ARequest: TWiRLRequest): TWiRLAuthContext;
+var
+  LAuthParts: TArray<string>;
 begin
-  FAuthContext := GetNewToken(ARequest);
+  if Assigned(FAppConfig.FClaimClass) then
+    Result := TWiRLAuthContext.Create(FAppConfig.FClaimClass)
+  else
+    Result := TWiRLAuthContext.Create;
+
+  if ARequest.Authorization = '' then
+    Exit;
+
+  LAuthParts := ARequest.Authorization.Split([#32]);
+  if Length(LAuthParts) < 2 then
+    Exit;
+
+  if SameText(LAuthParts[0], 'Bearer') then
+    Result.Verify(LAuthParts[1], FAppConfig.FSecret);
+end;
+
+function TWiRLApplicationWorker.GetResourceMethod: TRttiMethod;
+var
+  LMethod: TRttiMethod;
+  LResourcePath: string;
+  LAttribute: TCustomAttribute;
+  LPrototypeURL: TWiRLURL;
+  LPathMatches: Boolean;
+  LHttpMethodMatches: Boolean;
+  LMethodPath: string;
+begin
+  Result := nil;
+  LResourcePath := '';
+
+  if not Assigned(FResourceType) then
+    Exit;
+
+  TRttiHelper.HasAttribute<PathAttribute>(FResourceType,
+    procedure (APathAttribute: PathAttribute)
+    begin
+      LResourcePath := APathAttribute.Value;
+    end
+  );
+
+  for LMethod in FResourceType.GetMethods do
+  begin
+    LMethodPath := '';
+    LHttpMethodMatches := False;
+    LPathMatches := False;
+
+    // Tries to match the
+    for LAttribute in LMethod.GetAttributes do
+    begin
+      if LAttribute is PathAttribute then
+        LMethodPath := PathAttribute(LAttribute).Value;
+
+      if LAttribute is HttpMethodAttribute then
+        LHttpMethodMatches := HttpMethodAttribute(LAttribute).Matches(FContext.Request);
+    end;
+
+    if LHttpMethodMatches then
+    begin
+      LPrototypeURL := TWiRLURL.CreateDummy([TWiRLEngine(FContext.Engine).BasePath, FAppConfig.BasePath, LResourcePath, LMethodPath]);
+      try
+        LPathMatches := LPrototypeURL.MatchPath(FContext.URL);
+      finally
+        LPrototypeURL.Free;
+      end;
+    end;
+
+    if LPathMatches and LHttpMethodMatches then
+    begin
+      Result := LMethod;
+      Break;
+    end;
+
+  end;
+end;
+
+function TWiRLApplicationWorker.GetResourceType: TRttiType;
+begin
+  if Assigned(FResourceCtor) then
+    Result := TWiRLApplication.RttiContext.GetType(FResourceCtor.TypeTClass)
+  else
+    Result := nil;
+end;
+
+procedure TWiRLApplicationWorker.HandleRequest;
+begin
+  FAuthContext := GetNewToken(FContext.Request);
   try
-    InternalHandleRequest(ARequest, AResponse, AURL);
+    InternalHandleRequest;
   finally
     FAuthContext.Free;
   end;
 end;
 
-procedure TWiRLApplication.GenerateToken;
-begin
-  FAuthContext.Generate(FSecret);
-end;
-
-function TWiRLApplication.GetNewToken(ARequest: TWiRLRequest): TWiRLAuthContext;
+procedure TWiRLApplicationWorker.InternalHandleRequest;
 var
-  LAuth: string;
-  LAuthParts: TArray<string>;
-begin
-  if Assigned(FClaimClass) then
-    Result := TWiRLAuthContext.Create(FClaimClass)
-  else
-    Result := TWiRLAuthContext.Create;
-
-  LAuth := string(ARequest.Authorization);
-
-  if LAuth = '' then
-    Exit;
-
-  LAuthParts := LAuth.Split([#32]);
-  if Length(LAuthParts) < 2 then
-    Exit;
-
-  if SameText(LAuthParts[0], 'Bearer') then
-    Result.Verify(LAuthParts[1], FSecret);
-end;
-
-procedure TWiRLApplication.InternalHandleRequest{(ARequest: TWiRLRequest;
-  AResponse: TWiRLResponse; const AURL: TWiRLURL)};
-var
-  LInfo: TWiRLConstructorInfo;
-  LMethod: TRttiMethod;
   LInstance: TObject;
   LWriter: IMessageBodyWriter;
   LMediaType: TMediaType;
 begin
-  if not FResourceRegistry.TryGetValue(URL.Resource, LInfo) then
+  if not Assigned(FResourceType) then
     raise EWiRLNotFoundException.Create(
-      Format('Resource [%s] not found', [URL.Resource]),
+      Format('Resource [%s] not found', [FContext.URL.Resource]),
       Self.ClassName, 'HandleRequest'
     );
 
-  LMethod := FindMethodToInvoke(URL, LInfo);
-
-  if not Assigned(LMethod) then
+  if not Assigned(FResourceMethod) then
     raise EWiRLNotFoundException.Create(
-      Format('Resource''s method [%s] not found to handle resource [%s]', [ARequest.Method, URL.Resource + URL.SubResources.ToString]),
+      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.URL.Resource + FContext.URL.SubResources.ToString]),
       Self.ClassName, 'HandleRequest'
     );
 
-  CheckAuthorization(LMethod, FAuthContext);
+  CheckAuthorization(FAuthContext);
 
-  LInstance := LInfo.ConstructorFunc();
+  LInstance := FResourceCtor.ConstructorFunc();
   try
     TWiRLMessageBodyRegistry.Instance.FindWriter(
-      LMethod,
-      Request.AcceptableMediaTypes,
+      FResourceMethod,
+      FContext.Request.AcceptableMediaTypes,
       LWriter,
-      LMediaType
-    );
+      LMediaType);
 
     ContextInjection(LInstance);
     try
-      InvokeResourceMethod(LInstance, LMethod, LWriter, ARequest, LMediaType);
+      InvokeResourceMethod(LInstance, LWriter, LMediaType);
     finally
       LWriter := nil;
       LMediaType.Free;
@@ -912,9 +955,8 @@ begin
   end;
 end;
 
-procedure TWiRLApplication.InvokeResourceMethod(AInstance: TObject;
-  AMethod: TRttiMethod; const AWriter: IMessageBodyWriter;
-  ARequest: TWiRLRequest; AMediaType: TMediaType);
+procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject; const
+    AWriter: IMessageBodyWriter; AMediaType: TMediaType);
 var
   LMethodResult: TValue;
   LArgument: TValue;
@@ -925,9 +967,9 @@ begin
   // The returned object MUST be initially nil (needs to be consistent with the Free method)
   LMethodResult := nil;
   try
-    LContentType := Response.ContentType;
-    FillResourceMethodParameters(AInstance, AMethod, LArgumentArray);
-    LMethodResult := AMethod.Invoke(AInstance, LArgumentArray);
+    LContentType := FContext.Response.ContentType;
+    FillResourceMethodParameters(AInstance, LArgumentArray);
+    LMethodResult := FResourceMethod.Invoke(AInstance, LArgumentArray);
 
     if LMethodResult.IsInstanceOf(TWiRLResponse) then
     begin
@@ -935,19 +977,19 @@ begin
     end
     else if Assigned(AWriter) then // MessageBodyWriters mechanism
     begin
-      if Response.ContentType = LContentType then
-        Response.ContentType := AMediaType.ToString;
+      if FContext.Response.ContentType = LContentType then
+        FContext.Response.ContentType := AMediaType.ToString;
 
       LStream := TMemoryStream.Create;
       try
-        AWriter.WriteTo(LMethodResult, AMethod.GetAttributes, AMediaType, Response.CustomHeaders, LStream);
+        AWriter.WriteTo(LMethodResult, FResourceMethod.GetAttributes, AMediaType, FContext.Response.CustomHeaders, LStream);
         LStream.Position := 0;
-        Response.ContentStream := LStream;
+        FContext.Response.ContentStream := LStream;
       except
         on E: Exception do
         begin
           LStream.Free;
-          raise EWiRLServerException.Create(E.Message, 'TWiRLApplication', 'InvokeResourceMethod');
+          raise EWiRLServerException.Create(E.Message, 'TWiRLApplicationWorker', 'InvokeResourceMethod');
         end;
       end;
     end
@@ -959,10 +1001,10 @@ begin
         tkString, tkLString, tkUString, tkWString, // string types
         tkInteger, tkInt64, tkFloat, tkVariant:    // Treated as string, nothing more
         begin
-          Response.Content := LMethodResult.AsString;
-          if (Response.ContentType = LContentType) then
-            Response.ContentType := TMediaType.TEXT_PLAIN; // or check Produces of method!
-          Response.StatusCode := 200;
+          FContext.Response.Content := LMethodResult.AsString;
+          if (FContext.Response.ContentType = LContentType) then
+            FContext.Response.ContentType := TMediaType.TEXT_PLAIN; // or check Produces of method!
+          FContext.Response.StatusCode := 200;
         end;
 
         tkUnknown : ; // it's a procedure, not a function!
@@ -978,15 +1020,15 @@ begin
       end;
     end;
   finally
-    if (not TRttiHelper.HasAttribute<SingletonAttribute>(AMethod)) then
+    if (not TRttiHelper.HasAttribute<SingletonAttribute>(FResourceMethod)) then
       CollectGarbage(LMethodResult);
     for LArgument in LArgumentArray do
       CollectGarbage(LArgument);
   end;
 end;
 
-function TWiRLApplication.ParamNameToParamIndex(AResourceInstance: TObject;
-  const AParamName: string; AMethod: TRttiMethod): Integer;
+function TWiRLApplicationWorker.ParamNameToParamIndex(AResourceInstance: TObject;
+  const AParamName: string): Integer;
 var
   LParamIndex: Integer;
   LAttrib: TCustomAttribute;
@@ -995,7 +1037,7 @@ begin
   LParamIndex := -1;
 
   LSubResourcePath := '';
-  for LAttrib in AMethod.GetAttributes do
+  for LAttrib in FResourceMethod.GetAttributes do
   begin
     if LAttrib is PathAttribute then
     begin
@@ -1004,13 +1046,13 @@ begin
     end;
   end;
 
-  TRttiHelper.HasAttribute<PathAttribute>(FRttiContext.GetType(AResourceInstance.ClassType),
+  TRttiHelper.HasAttribute<PathAttribute>(TWiRLApplication.RttiContext.GetType(AResourceInstance.ClassType),
   procedure (AResourcePathAttrib: PathAttribute)
   var
     LResURL: TWiRLURL;
     LPair: TPair<Integer, string>;
   begin
-    LResURL := TWiRLURL.CreateDummy([TWiRLEngine(Engine).BasePath, BasePath, AResourcePathAttrib.Value, LSubResourcePath]);
+    LResURL := TWiRLURL.CreateDummy([TWiRLEngine(FContext.Engine).BasePath, FAppConfig.BasePath, AResourcePathAttrib.Value, LSubResourcePath]);
     try
       LParamIndex := -1;
       for LPair in LResURL.PathParams do
@@ -1029,23 +1071,7 @@ begin
   Result := LParamIndex;
 end;
 
-function TWiRLApplication.SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication;
-begin
-  if Assigned(ASecretGen) then
-    FSecret := ASecretGen;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetSecret(const ASecret: TBytes): TWiRLApplication;
-begin
-  FSecret := ASecret;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetSystemApp(ASystem: Boolean): TWiRLApplication;
-begin
-  FSystemApp := ASystem;
-  Result := Self;
-end;
+initialization
+  TWiRLApplication.InitializeRtti;
 
 end.

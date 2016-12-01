@@ -12,7 +12,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  WiRL.Core.JSON, WiRL.Core.Request, WiRL.Core.Response;
+  WiRL.Core.JSON,
+  WiRL.Core.Request,
+  WiRL.Core.Response;
 
 type
   TWiRLURLDictionary = class(TDictionary<Integer, string>)
@@ -56,7 +58,7 @@ type
 
     constructor Create(const AURL: string); overload; virtual;
     constructor CreateDummy(const APath: string; const ABaseURL: string = DUMMY_URL); overload; virtual;
-    constructor CreateDummy(const APaths: array of string; const ABaseURL: string = DUMMY_URL); overload; virtual;
+    constructor CreateDummy(const APaths: TArray<string>; const ABaseURL: string = DUMMY_URL); overload; virtual;
     constructor Create(ARequest: TWiRLRequest); overload; virtual;
     destructor Destroy; override;
 
@@ -194,15 +196,19 @@ constructor TWiRLURL.Create(ARequest: TWiRLRequest);
 var
   LQuery: string;
 begin
-  LQuery := string(ARequest.Query);
+  LQuery := ARequest.Query;
   if LQuery <> '' then
     LQuery := '?' + LQuery;
 
   // Add the protocol in order to make Parse work.
-  Create('http://' + string(ARequest.Host) + ':' + IntToStr(ARequest.ServerPort) + string(ARequest.PathInfo) + LQuery);
+  { TODO -opaolo -c : https handling? 27/11/2016 09:41:01 }
+  if ARequest.Host.Contains(':') then
+    Create('http://' + ARequest.Host.Split([':'])[0] + ':' + ARequest.ServerPort.ToString + ARequest.PathInfo + LQuery)
+  else
+    Create('http://' + ARequest.Host + ':' + ARequest.ServerPort.ToString + ARequest.PathInfo + LQuery);
 end;
 
-constructor TWiRLURL.CreateDummy(const APaths: array of string; const ABaseURL: string);
+constructor TWiRLURL.CreateDummy(const APaths: TArray<string>; const ABaseURL: string);
 begin
   Create(CombinePath([ABaseURL, CombinePath(APaths)]));
 end;

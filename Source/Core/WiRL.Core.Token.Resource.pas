@@ -106,7 +106,7 @@ begin
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create('Invalid username or password', 'TWiRLAuthFormResource', 'DoLogin');
 
-  FApplication.GenerateToken;
+  FAuthContext.Generate(FApplication.Secret);
   Result := GetGeneratedToken;
 end;
 
@@ -138,7 +138,7 @@ begin
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create('Invalid (basic) credentials', 'TWiRLAuthBasicResource', 'DoLogin');
 
-  FApplication.GenerateToken;
+  FAuthContext.Generate(FApplication.Secret);
   Result := GetGeneratedToken;
 end;
 

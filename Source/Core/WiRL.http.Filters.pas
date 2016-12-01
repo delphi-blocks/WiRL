@@ -21,7 +21,7 @@ type
 
   IWiRLContainerResponseFilter = interface
   ['{F952495E-00DB-44C6-ACED-33F1F2F25527}']
-    procedure Filter(Request :TWiRLRequest; Response: TWiRLResponse);
+    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
   end;
 
   // the lower the number the higher the priority
@@ -66,11 +66,11 @@ type
 
     procedure Sort;
 
-    function FilterByClassName(const AClassName :string; out AConstructorInfo :TWiRLFilterConstructorInfo) :Boolean;
+    function FilterByClassName(const AClassName: string; out AConstructorInfo: TWiRLFilterConstructorInfo) :Boolean;
     function RegisterFilter<T: class>: TWiRLFilterConstructorInfo; overload;
     function RegisterFilter<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLFilterConstructorInfo; overload;
 
-    procedure FetchRequestFilter(const PreMatching :Boolean; ARequestProc: TProc<TWiRLFilterConstructorInfo>);
+    procedure FetchRequestFilter(const PreMatching: Boolean; ARequestProc :TProc<TWiRLFilterConstructorInfo>);
     procedure FetchResponseFilter(AResponseProc: TProc<TWiRLFilterConstructorInfo>);
 
     class property Instance: TWiRLFilterRegistry read GetInstance;
