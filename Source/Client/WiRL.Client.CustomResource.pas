@@ -244,6 +244,7 @@ end;
 destructor TWiRLClientCustomResource.Destroy;
 begin
   FPathParamsValues.Free;
+  FQueryParams.Free;
   inherited;
 end;
 
