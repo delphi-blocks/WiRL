@@ -13,10 +13,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti,
   System.Generics.Collections,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
   WiRL.Core.Classes,
-  WiRL.Core.URL,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
   WiRL.Core.MediaType,
@@ -25,6 +22,8 @@ uses
   WiRL.http.Filters;
 
 type
+  {$SCOPEDENUMS ON}
+  TAuthTokenLocation = (Bearer, Cookie, Header);
   TSecretGenerator = reference to function(): TBytes;
   TAttributeArray = TArray<TCustomAttribute>;
   TArgumentArray = array of TValue;
@@ -44,6 +43,8 @@ type
     FName: string;
     FClaimClass: TWiRLSubjectClass;
     FSystemApp: Boolean;
+    FTokenCustomHeader: string;
+    FTokenLocation: TAuthTokenLocation;
     function GetResources: TArray<string>;
     function GetResourceCtor(const AResourceName: string): TWiRLConstructorInfo;
     function AddResource(AResource: string): Boolean;
@@ -61,6 +62,8 @@ type
     function SetSecret(const ASecret: TBytes): TWiRLApplication; overload;
     function SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication; overload;
     function SetBasePath(const ABasePath: string): TWiRLApplication;
+    function SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
+    function SetTokenCustomHeader(const ACustomHeader: string): TWiRLApplication;
     function SetName(const AName: string): TWiRLApplication;
     function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
     function SetSystemApp(ASystem: Boolean): TWiRLApplication;
@@ -72,6 +75,8 @@ type
     property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property Resources: TArray<string> read GetResources;
     property Secret: TBytes read GetSecret;
+    property TokenLocation: TAuthTokenLocation read FTokenLocation;
+    property TokenCustomHeader: string read FTokenCustomHeader;
 
     class property RttiContext: TRttiContext read FRttiContext;
   end;
@@ -92,17 +97,22 @@ type
     function GetResourceMethod: TRttiMethod;
     function GetResourceType: TRttiType;
   protected
-    procedure CheckAuthorization(AAuth: TWiRLAuthContext);
+    procedure InternalHandleRequest;
+
     function CheckFilterBinding(AFilterClass, AResourceClass: TClass): Boolean;
+
     procedure ContextInjection(AInstance: TObject);
     function ContextInjectionByType(const AType: TClass; out AValue: TValue): Boolean;
+
+    procedure CheckAuthorization(AAuth: TWiRLAuthContext);
     function FillAnnotatedParam(AParam: TRttiParameter; const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
     function FillNonAnnotatedParam(AParam: TRttiParameter): TValue;
     procedure FillResourceMethodParameters(AInstance: TObject; var AArgumentArray: TArgumentArray);
-    function GetNewToken(ARequest: TWiRLRequest): TWiRLAuthContext;
-    procedure InternalHandleRequest;
     procedure InvokeResourceMethod(AInstance: TObject; const AWriter: IMessageBodyWriter; AMediaType: TMediaType); virtual;
     function ParamNameToParamIndex(AResourceInstance: TObject; const AParamName: string): Integer;
+
+    procedure AuthContextFromConfig(AContext: TWiRLAuthContext);
+    function GetAuthContext: TWiRLAuthContext;
   public
     constructor Create(AContext: TWiRLContext; AAppConfig: TWiRLApplication);
     destructor Destroy; override;
@@ -119,9 +129,12 @@ implementation
 
 uses
   System.StrUtils, System.TypInfo,
+  WiRL.Core.Request,
+  WiRL.Core.Response,
   WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
+  WiRL.Core.URL,
   WiRL.Core.Attributes,
   WiRL.Core.Engine,
   WiRL.Core.JSON;
@@ -344,6 +357,18 @@ begin
   Result := Self;
 end;
 
+function TWiRLApplication.SetTokenCustomHeader(const ACustomHeader: string): TWiRLApplication;
+begin
+  FTokenCustomHeader := ACustomHeader;
+  Result := Self;
+end;
+
+function TWiRLApplication.SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
+begin
+  FTokenLocation := ALocation;
+  Result := Self;
+end;
+
 { TWiRLApplicationWorker }
 
 constructor TWiRLApplicationWorker.Create(AContext: TWiRLContext; AAppConfig: TWiRLApplication);
@@ -369,7 +394,6 @@ end;
 
 procedure TWiRLApplicationWorker.ApplyRequestFilters;
 var
-  LInfo: TWiRLConstructorInfo;
   LFilterImpl: TObject;
   LRequestFilter: IWiRLContainerRequestFilter;
 begin
@@ -385,7 +409,7 @@ begin
   FAppConfig.FilterRegistry.FetchRequestFilter(False,
     procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     begin
-      if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass) then
+      if CheckFilterBinding(ConstructorInfo.TypeTClass, FResourceCtor.TypeTClass) then
       begin
         LFilterImpl := ConstructorInfo.ConstructorFunc();
 
@@ -405,7 +429,6 @@ end;
 
 procedure TWiRLApplicationWorker.ApplyResponseFilters;
 var
-  LInfo: TWiRLConstructorInfo;
   LFilterImpl: TObject;
   LResponseFilter: IWiRLContainerResponseFilter;
 begin
@@ -421,7 +444,7 @@ begin
   FAppConfig.FilterRegistry.FetchResponseFilter(
     procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     begin
-      if CheckFilterBinding(ConstructorInfo.TypeTClass, LInfo.TypeTClass) then
+      if CheckFilterBinding(ConstructorInfo.TypeTClass, FResourceCtor.TypeTClass) then
       begin
         LFilterImpl := ConstructorInfo.ConstructorFunc();
         // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
@@ -436,6 +459,35 @@ begin
       end;
     end
   );
+end;
+
+procedure TWiRLApplicationWorker.AuthContextFromConfig(AContext: TWiRLAuthContext);
+var
+  LToken: string;
+
+  function ExtractJWTToken(const AAuth: string): string;
+  var
+    LAuthParts: TArray<string>;
+  begin
+    LAuthParts := AAuth.Split([#32]);
+    if Length(LAuthParts) < 2 then
+      Exit;
+
+    if SameText(LAuthParts[0], 'Bearer') then
+      Result := LAuthParts[1];
+  end;
+
+begin
+  case FAppConfig.FTokenLocation of
+    TAuthTokenLocation.Bearer: LToken := ExtractJWTToken(FContext.Request.Authorization);
+    TAuthTokenLocation.Cookie: LToken := FContext.Request.CookieFields.Values['token'];
+    TAuthTokenLocation.Header: LToken := FContext.Request.GetFieldByName(FAppConfig.TokenCustomHeader);
+  end;
+
+  if LToken.IsEmpty then
+    Exit;
+
+  AContext.Verify(LToken, FAppConfig.FSecret);
 end;
 
 procedure TWiRLApplicationWorker.CheckAuthorization(AAuth: TWiRLAuthContext);
@@ -818,24 +870,14 @@ begin
   end;
 end;
 
-function TWiRLApplicationWorker.GetNewToken(ARequest: TWiRLRequest): TWiRLAuthContext;
-var
-  LAuthParts: TArray<string>;
+function TWiRLApplicationWorker.GetAuthContext: TWiRLAuthContext;
 begin
   if Assigned(FAppConfig.FClaimClass) then
     Result := TWiRLAuthContext.Create(FAppConfig.FClaimClass)
   else
     Result := TWiRLAuthContext.Create;
 
-  if ARequest.Authorization = '' then
-    Exit;
-
-  LAuthParts := ARequest.Authorization.Split([#32]);
-  if Length(LAuthParts) < 2 then
-    Exit;
-
-  if SameText(LAuthParts[0], 'Bearer') then
-    Result.Verify(LAuthParts[1], FAppConfig.FSecret);
+  AuthContextFromConfig(Result);
 end;
 
 function TWiRLApplicationWorker.GetResourceMethod: TRttiMethod;
@@ -906,7 +948,7 @@ end;
 
 procedure TWiRLApplicationWorker.HandleRequest;
 begin
-  FAuthContext := GetNewToken(FContext.Request);
+  FAuthContext := GetAuthContext;
   try
     InternalHandleRequest;
   finally
@@ -940,7 +982,8 @@ begin
       FResourceMethod,
       FContext.Request.AcceptableMediaTypes,
       LWriter,
-      LMediaType);
+      LMediaType
+    );
 
     ContextInjection(LInstance);
     try
@@ -955,8 +998,8 @@ begin
   end;
 end;
 
-procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject; const
-    AWriter: IMessageBodyWriter; AMediaType: TMediaType);
+procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject;
+  const AWriter: IMessageBodyWriter; AMediaType: TMediaType);
 var
   LMethodResult: TValue;
   LArgument: TValue;
@@ -1047,26 +1090,27 @@ begin
   end;
 
   TRttiHelper.HasAttribute<PathAttribute>(TWiRLApplication.RttiContext.GetType(AResourceInstance.ClassType),
-  procedure (AResourcePathAttrib: PathAttribute)
-  var
-    LResURL: TWiRLURL;
-    LPair: TPair<Integer, string>;
-  begin
-    LResURL := TWiRLURL.CreateDummy([TWiRLEngine(FContext.Engine).BasePath, FAppConfig.BasePath, AResourcePathAttrib.Value, LSubResourcePath]);
-    try
-      LParamIndex := -1;
-      for LPair in LResURL.PathParams do
-      begin
-        if SameText(AParamName, LPair.Value) then
+    procedure (AResourcePathAttrib: PathAttribute)
+    var
+      LResURL: TWiRLURL;
+      LPair: TPair<Integer, string>;
+    begin
+      LResURL := TWiRLURL.CreateDummy([TWiRLEngine(FContext.Engine).BasePath, FAppConfig.BasePath, AResourcePathAttrib.Value, LSubResourcePath]);
+      try
+        LParamIndex := -1;
+        for LPair in LResURL.PathParams do
         begin
-          LParamIndex := LPair.Key;
-          Break;
+          if SameText(AParamName, LPair.Value) then
+          begin
+            LParamIndex := LPair.Key;
+            Break;
+          end;
         end;
+      finally
+        LResURL.Free;
       end;
-    finally
-      LResURL.Free;
-    end;
-  end);
+    end
+  );
 
   Result := LParamIndex;
 end;

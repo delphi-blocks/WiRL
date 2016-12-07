@@ -70,6 +70,10 @@ type
     [Produces(TMediaType.APPLICATION_JSON)]
     function PublicInfo: TUserInfo;
 
+    [POST, PermitAll]
+    [Produces(TMediaType.APPLICATION_JSON)]
+    function InsertUser([BodyParam] JSON: TJSONObject): TUserInfo;
+
     [GET, Path('/details'), RolesAllowed('admin')]
     [Produces(TMediaType.APPLICATION_JSON)]
     function DetailsInfo: TJSONObject;
@@ -97,6 +101,9 @@ type
 
 implementation
 
+uses
+  REST.Json;
+
 { TUserResource }
 
 function TUserResource.DetailsInfo: TJSONObject;
@@ -105,6 +112,16 @@ begin
 
   Result.AddPair('custom', TJSONString.Create('Admin-level access informations here!'));
   Result.AddPair('subject', Auth.Subject.Clone);
+end;
+
+function TUserResource.InsertUser(JSON: TJSONObject): TUserInfo;
+begin
+  Result := TJson.JsonToObject<TUserInfo>(JSON);
+
+  Result.FullName := 'Luca Minuti';
+  Result.Age := Result.Age - 10;
+  Result.Language := Subject.Language;
+  Result.Group := 2;
 end;
 
 function TUserResource.PublicInfo: TUserInfo;
@@ -156,6 +173,8 @@ begin
 
   // Here you can set all field of your custom claims object
   Subject.Language := 'it-IT';
+  Subject.Expiration := Now + 1;
+
 end;
 
 { TUserInfo }
