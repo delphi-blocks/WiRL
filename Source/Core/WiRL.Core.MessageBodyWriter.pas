@@ -85,6 +85,7 @@ type
 implementation
 
 uses
+  WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils;
 
@@ -131,6 +132,9 @@ var
   LCandidateMediaType: string;
   LCandidateQualityFactor: Double;
 begin
+  if FRegistry.Count = 0 then
+    raise EWiRLServerException.Create('MessageBodyWriters registry is empty. Please include the MBW''s units in your project');
+
   AWriter := nil;
   AMediaType := nil;
   LFound := False;
