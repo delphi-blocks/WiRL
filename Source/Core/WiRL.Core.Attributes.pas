@@ -136,10 +136,9 @@ type
   RolesAllowedAttribute = class(AuthorizationAttribute)
   private
     FRoles: TStringList;
-  protected
   public
-    constructor Create(ARoleName: string); overload; virtual;
-    constructor Create(ARoleNames: array of string); overload; virtual;
+    constructor Create(const ARoles: string); overload; virtual;
+    constructor Create(const ARoles: TArray<string>); overload; virtual;
     destructor Destroy; override;
 
     property Roles: TStringList read FRoles;
@@ -273,12 +272,12 @@ end;
 
 { RolesAllowedAttribute }
 
-constructor RolesAllowedAttribute.Create(ARoleName: string);
+constructor RolesAllowedAttribute.Create(const ARoles: string);
 begin
-  Create([ARoleName]);
+  Create(ARoles.Split([',']));
 end;
 
-constructor RolesAllowedAttribute.Create(ARoleNames: array of string);
+constructor RolesAllowedAttribute.Create(const ARoles: TArray<string>);
 var
   LRole: string;
 begin
@@ -286,8 +285,8 @@ begin
 
   FRoles := TStringList.Create;
 
-  for LRole in ARoleNames do
-    FRoles.Add(LRole);
+  for LRole in ARoles do
+    FRoles.Add(LRole.Trim);
 end;
 
 destructor RolesAllowedAttribute.Destroy;

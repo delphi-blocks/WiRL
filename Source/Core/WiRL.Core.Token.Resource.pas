@@ -104,7 +104,7 @@ begin
   FAuthContext.Subject.UserName := AUsername;
 
   if not LAuthOperation.Success then
-    raise EWiRLNotAuthorizedException.Create('Invalid username or password', 'TWiRLAuthFormResource', 'DoLogin');
+    raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthFormResource', 'DoLogin');
 
   FAuthContext.Generate(FApplication.Secret);
   Result := GetGeneratedToken;
@@ -136,7 +136,7 @@ begin
   FAuthContext.Subject.UserName := LAuthData[0];
 
   if not LAuthOperation.Success then
-    raise EWiRLNotAuthorizedException.Create('Invalid (basic) credentials', 'TWiRLAuthBasicResource', 'DoLogin');
+    raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthBasicResource', 'DoLogin');
 
   FAuthContext.Generate(FApplication.Secret);
   Result := GetGeneratedToken;
