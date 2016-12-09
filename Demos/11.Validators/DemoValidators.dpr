@@ -14,7 +14,7 @@ uses
   XML.OmniXMLDom,
   Server.Validators in 'Server.Validators.pas',
   WiRL.Core.Validators in '..\..\Source\Core\WiRL.Core.Validators.pas',
-  Server.Messages in 'Server.Messages.pas';
+  Server.Consts in 'Server.Consts.pas';
 
 {$R *.res}
 
