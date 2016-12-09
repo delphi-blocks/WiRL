@@ -19,6 +19,7 @@ uses
   WiRL.Core.MediaType,
   WiRL.Core.Token,
   WiRL.Core.Context,
+  WiRL.Core.Validators,
   WiRL.http.Filters;
 
 type
@@ -96,6 +97,8 @@ type
     procedure CollectGarbage(const AValue: TValue);
     function GetResourceMethod: TRttiMethod;
     function GetResourceType: TRttiType;
+    procedure ValidateMethodParam<T>(const AAttrArray: TAttributeArray; Value: T);
+    function GetConstraintErrorMessage(AAttr: TCustomConstraintAttribute): string;
   protected
     procedure InternalHandleRequest;
 
@@ -688,84 +691,99 @@ var
   LParamClassType: TClass;
   LContextValue: TValue;
 begin
-  if Length(AAttrArray) > 1 then
-    raise EWiRLServerException.Create('Only 1 attribute per param permitted', Self.ClassName);
-
   LParamName := '';
   LParamValue := '';
-  LAttr := AAttrArray[0];
-
-  // context injection
-  if (LAttr is ContextAttribute) and (AParam.ParamType.IsInstance) then
+  for LAttr in AAttrArray do
   begin
-    LParamClassType := TRttiInstanceType(AParam.ParamType).MetaclassType;
-    if ContextInjectionByType(LParamClassType, LContextValue) then
-      Result := LContextValue;
-  end
-  else // http values injection
-  begin
-    if LAttr is PathParamAttribute then
-    begin
-      LParamName := (LAttr as PathParamAttribute).Value;
-      if LParamName = '' then
-        LParamName := AParam.Name;
+    // Loop only inside attributes that define how to read the parameter
+    // (not (LAttr is ContextAttribute)) and (not (LAttr is MethodParamAttribute)) then
+    if not ( (LAttr is ContextAttribute) or (LAttr is MethodParamAttribute) ) then
+      Continue;
 
-      LParamIndex := ParamNameToParamIndex(AResourceInstance, LParamName);
-      LParamValue := FContext.URL.PathTokens[LParamIndex];
-    end
-    else
-    if LAttr is QueryParamAttribute then
+    // context injection
+    if (LAttr is ContextAttribute) and (AParam.ParamType.IsInstance) then
     begin
-      LParamName := (LAttr as QueryParamAttribute).Value;
-      if LParamName = '' then
-        LParamName := AParam.Name;
+      LParamClassType := TRttiInstanceType(AParam.ParamType).MetaclassType;
+      if ContextInjectionByType(LParamClassType, LContextValue) then
+        Result := LContextValue;
+    end
+    else // http values injection
+    begin
+      if (LParamValue <> '') and (LAttr is MethodParamAttribute) then
+        raise EWiRLServerException.Create('Only 1 attribute per param permitted', Self.ClassName);
 
-      // Prendere il valore (come stringa) dalla lista QueryFields
-      LParamValue := FContext.Request.QueryFields.Values[LParamName];
-    end
-    else
-    if LAttr is FormParamAttribute then
-    begin
-      LParamName := (LAttr as FormParamAttribute).Value;
-      if LParamName = '' then
-        LParamName := AParam.Name;
+      if LAttr is PathParamAttribute then
+      begin
+        LParamName := (LAttr as PathParamAttribute).Value;
+        if LParamName = '' then
+          LParamName := AParam.Name;
 
-      // Prendere il valore (come stringa) dalla lista ContentFields
-      LParamValue := FContext.Request.ContentFields.Values[LParamName];
-    end
-    else
-    if LAttr is CookieParamAttribute then
-    begin
-      LParamName := (LAttr as CookieParamAttribute).Value;
-      if LParamName = '' then
-        LParamName := AParam.Name;
+        LParamIndex := ParamNameToParamIndex(AResourceInstance, LParamName);
+        LParamValue := FContext.URL.PathTokens[LParamIndex];
+      end
+      else
+      if LAttr is QueryParamAttribute then
+      begin
+        LParamName := (LAttr as QueryParamAttribute).Value;
+        if LParamName = '' then
+          LParamName := AParam.Name;
 
-      // Prendere il valore (come stringa) dalla lista CookieFields
-      LParamValue := FContext.Request.CookieFields.Values[LParamName];
-    end
-    else
-    if LAttr is HeaderParamAttribute then
-    begin
-      LParamName := (LAttr as HeaderParamAttribute).Value;
-      if LParamName = '' then
-        LParamName := AParam.Name;
+        // Prendere il valore (come stringa) dalla lista QueryFields
+        LParamValue := FContext.Request.QueryFields.Values[LParamName];
+      end
+      else
+      if LAttr is FormParamAttribute then
+      begin
+        LParamName := (LAttr as FormParamAttribute).Value;
+        if LParamName = '' then
+          LParamName := AParam.Name;
 
-      // Prendere il valore (come stringa) dagli Header HTTP
-      LParamValue := FContext.Request.GetFieldByName(LParamName);
-    end
-    else
-    if LAttr is BodyParamAttribute then
-    begin
-      LParamName := AParam.Name;
-      LParamValue := FContext.Request.Content;
+        // Prendere il valore (come stringa) dalla lista ContentFields
+        LParamValue := FContext.Request.ContentFields.Values[LParamName];
+      end
+      else
+      if LAttr is CookieParamAttribute then
+      begin
+        LParamName := (LAttr as CookieParamAttribute).Value;
+        if LParamName = '' then
+          LParamName := AParam.Name;
+
+        // Prendere il valore (come stringa) dalla lista CookieFields
+        LParamValue := FContext.Request.CookieFields.Values[LParamName];
+      end
+      else
+      if LAttr is HeaderParamAttribute then
+      begin
+        LParamName := (LAttr as HeaderParamAttribute).Value;
+        if LParamName = '' then
+          LParamName := AParam.Name;
+
+        // Prendere il valore (come stringa) dagli Header HTTP
+        LParamValue := FContext.Request.GetFieldByName(LParamName);
+      end
+      else
+      if LAttr is BodyParamAttribute then
+      begin
+        LParamName := AParam.Name;
+        LParamValue := FContext.Request.Content;
+      end;
     end;
 
     case AParam.ParamType.TypeKind of
       tkInt64,
-      tkInteger: Result := TValue.From(StrToInt(LParamValue));
-      tkFloat: Result := TValue.From<Double>(StrToFloat(LParamValue));
+      tkInteger: begin
+        Result := TValue.From(StrToInt(LParamValue));
+        ValidateMethodParam(AAttrArray, Result.AsInteger);
+      end;
+      tkFloat: begin
+        Result := TValue.From<Double>(StrToFloat(LParamValue));
+        ValidateMethodParam(AAttrArray, Result.AsExtended);
+      end;
 
-      tkChar: Result := TValue.From(AnsiChar(LParamValue[1]));
+      tkChar: begin
+        Result := TValue.From(AnsiChar(LParamValue[1]));
+        ValidateMethodParam(AAttrArray, Char(Result.AsOrdinal));
+      end;
       tkWChar: ;
       tkEnumeration: ;
       tkSet: ;
@@ -781,6 +799,7 @@ begin
           Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONValue
         else
           raise EWiRLServerException.Create(Format('Unsupported class [%s] for param [%s]', [AParam.ParamType.Name, LParamName]), Self.ClassName);
+        ValidateMethodParam(AAttrArray, Result.Cast<TJSONObject>);
       end;
 
       tkMethod: ;
@@ -788,9 +807,15 @@ begin
       tkLString,
       tkUString,
       tkWString,
-      tkString: Result := TValue.From(LParamValue);
+      tkString: begin
+        Result := TValue.From(LParamValue);
+        ValidateMethodParam(AAttrArray, Result.AsString);
+      end;
 
-      tkVariant: Result := TValue.From(LParamValue);
+      tkVariant: begin
+        Result := TValue.From(LParamValue);
+        ValidateMethodParam(AAttrArray, Result.AsVariant);
+      end;
 
       tkArray: ;
       tkRecord: ;
@@ -1113,6 +1138,46 @@ begin
   );
 
   Result := LParamIndex;
+end;
+
+function TWiRLApplicationWorker.GetConstraintErrorMessage(AAttr: TCustomConstraintAttribute): string;
+const
+  AttributeSuffix = 'Attribute';
+var
+  AttributeName: string;
+begin
+  if AAttr.ErrorMessage <> '' then
+    Result := AAttr.ErrorMessage
+  else
+  begin
+    if Pos(AttributeSuffix, AAttr.ClassName) = Length(AAttr.ClassName) - Length(AttributeSuffix) + 1 then
+      AttributeName := Copy(AAttr.ClassName, 1, Length(AAttr.ClassName) - Length(AttributeSuffix))
+    else
+      AttributeName := AAttr.ClassName;
+    Result := Format('Constraint "%s" not enforced', [AttributeName]);
+  end;
+end;
+
+procedure TWiRLApplicationWorker.ValidateMethodParam<T>(
+  const AAttrArray: TAttributeArray; Value: T);
+var
+  LAttr: TCustomAttribute;
+  LValidator :IConstraintValidator<TCustomConstraintAttribute, T>;
+  LIntf :IInterface;
+  LObj :TObject;
+begin
+  // Loop inside every ConstraintAttribute
+  for LAttr in AAttrArray do
+  begin
+    if LAttr is TCustomConstraintAttribute then
+    begin
+      LIntf := TCustomConstraintAttribute(LAttr).GetValidator<T>;
+      if not Supports(LIntf as TObject, IConstraintValidator<TCustomConstraintAttribute, T>, LValidator) then
+        raise EWiRLException.Create('Validator interface is not valid');
+      if not LValidator.IsValid(Value, FContext) then
+        raise EWiRLValidationError.Create(GetConstraintErrorMessage(TCustomConstraintAttribute(LAttr)));
+    end;
+  end;
 end;
 
 initialization
