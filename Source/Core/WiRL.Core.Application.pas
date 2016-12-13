@@ -587,7 +587,12 @@ var
   LValue: TValue;
 begin
   case AValue.Kind of
-    tkClass: AValue.AsObject.Free;
+    tkClass: begin
+      // If the request content stream is used as a param to a resource
+      // it will be freed at the end process
+      if AValue.AsObject <> FContext.Request.ContentStream then
+        AValue.AsObject.Free;
+    end;
 
     tkInterface: TObject(AValue.AsInterface).Free;
 
@@ -684,19 +689,72 @@ end;
 
 function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
     const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
+
+  function ParamAsString(AAttr: TCustomAttribute): string;
+  var
+    LParamName: string;
+    LParamIndex: Integer;
+  begin
+    LParamName := (AAttr as MethodParamAttribute).Value;
+    if LParamName = '' then
+      LParamName := AParam.Name;
+
+    if AAttr is PathParamAttribute then
+    begin
+      LParamIndex := ParamNameToParamIndex(AResourceInstance, LParamName);
+      Result := FContext.URL.PathTokens[LParamIndex];
+    end
+    else
+    if AAttr is QueryParamAttribute then
+    begin
+      Result := FContext.Request.QueryFields.Values[LParamName];
+    end
+    else
+    if AAttr is FormParamAttribute then
+    begin
+      Result := FContext.Request.ContentFields.Values[LParamName];
+    end
+    else
+    if AAttr is CookieParamAttribute then
+    begin
+      Result := FContext.Request.CookieFields.Values[LParamName];
+    end
+    else
+    if AAttr is HeaderParamAttribute then
+    begin
+      Result := FContext.Request.GetFieldByName(LParamName);
+    end
+    else
+    if AAttr is BodyParamAttribute then
+    begin
+      Result := FContext.Request.Content;
+    end;
+  end;
+
+  function ParamAsStream(AAttr: TCustomAttribute): TStream;
+  begin
+    if AAttr is BodyParamAttribute then
+    begin
+      Result := FContext.Request.ContentStream;
+    end
+    else
+    begin
+      Result := TStringStream.Create(ParamAsString(AAttr));
+    end;
+    Result.Position := 0;
+  end;
+
 var
   LAttr: TCustomAttribute;
-  LParamName, LParamValue: string;
-  LParamIndex: Integer;
+  LParamName: string;
   LParamClassType: TClass;
   LContextValue: TValue;
+
 begin
   LParamName := '';
-  LParamValue := '';
   for LAttr in AAttrArray do
   begin
     // Loop only inside attributes that define how to read the parameter
-    // (not (LAttr is ContextAttribute)) and (not (LAttr is MethodParamAttribute)) then
     if not ( (LAttr is ContextAttribute) or (LAttr is MethodParamAttribute) ) then
       Continue;
 
@@ -705,83 +763,26 @@ begin
     begin
       LParamClassType := TRttiInstanceType(AParam.ParamType).MetaclassType;
       if ContextInjectionByType(LParamClassType, LContextValue) then
-        Result := LContextValue;
-    end
-    else // http values injection
-    begin
-      if (LParamValue <> '') and (LAttr is MethodParamAttribute) then
-        raise EWiRLServerException.Create('Only 1 attribute per param permitted', Self.ClassName);
-
-      if LAttr is PathParamAttribute then
-      begin
-        LParamName := (LAttr as PathParamAttribute).Value;
-        if LParamName = '' then
-          LParamName := AParam.Name;
-
-        LParamIndex := ParamNameToParamIndex(AResourceInstance, LParamName);
-        LParamValue := FContext.URL.PathTokens[LParamIndex];
-      end
-      else
-      if LAttr is QueryParamAttribute then
-      begin
-        LParamName := (LAttr as QueryParamAttribute).Value;
-        if LParamName = '' then
-          LParamName := AParam.Name;
-
-        // Prendere il valore (come stringa) dalla lista QueryFields
-        LParamValue := FContext.Request.QueryFields.Values[LParamName];
-      end
-      else
-      if LAttr is FormParamAttribute then
-      begin
-        LParamName := (LAttr as FormParamAttribute).Value;
-        if LParamName = '' then
-          LParamName := AParam.Name;
-
-        // Prendere il valore (come stringa) dalla lista ContentFields
-        LParamValue := FContext.Request.ContentFields.Values[LParamName];
-      end
-      else
-      if LAttr is CookieParamAttribute then
-      begin
-        LParamName := (LAttr as CookieParamAttribute).Value;
-        if LParamName = '' then
-          LParamName := AParam.Name;
-
-        // Prendere il valore (come stringa) dalla lista CookieFields
-        LParamValue := FContext.Request.CookieFields.Values[LParamName];
-      end
-      else
-      if LAttr is HeaderParamAttribute then
-      begin
-        LParamName := (LAttr as HeaderParamAttribute).Value;
-        if LParamName = '' then
-          LParamName := AParam.Name;
-
-        // Prendere il valore (come stringa) dagli Header HTTP
-        LParamValue := FContext.Request.GetFieldByName(LParamName);
-      end
-      else
-      if LAttr is BodyParamAttribute then
-      begin
-        LParamName := AParam.Name;
-        LParamValue := FContext.Request.Content;
-      end;
+        Exit(LContextValue);
     end;
+
+    LParamName := (LAttr as MethodParamAttribute).Value;
+    if LParamName = '' then
+      LParamName := AParam.Name;
 
     case AParam.ParamType.TypeKind of
       tkInt64,
       tkInteger: begin
-        Result := TValue.From(StrToInt(LParamValue));
+        Result := TValue.From<Integer>(StrToInt(ParamAsString(LAttr)));
         ValidateMethodParam(AAttrArray, Result.AsInteger);
       end;
       tkFloat: begin
-        Result := TValue.From<Double>(StrToFloat(LParamValue));
+        Result := TValue.From<Double>(StrToFloat(ParamAsString(LAttr)));
         ValidateMethodParam(AAttrArray, Result.AsExtended);
       end;
 
       tkChar: begin
-        Result := TValue.From(AnsiChar(LParamValue[1]));
+        Result := TValue.From(AnsiChar(ParamAsString(LAttr)[1]));
         ValidateMethodParam(AAttrArray, Char(Result.AsOrdinal));
       end;
       tkWChar: ;
@@ -792,14 +793,18 @@ begin
         // TODO: better error handling in case of an invalid type cast
         // TODO: add a dynamic way to create the right class
         if MatchStr(AParam.ParamType.Name, ['TJSONObject']) then
-          Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONObject
+          Result := TJSONObject.ParseJSONValue(ParamAsString(LAttr)) as TJSONObject
         else if MatchStr(AParam.ParamType.Name, ['TJSONArray']) then
-          Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONArray
+          Result := TJSONObject.ParseJSONValue(ParamAsString(LAttr)) as TJSONArray
         else if MatchStr(AParam.ParamType.Name, ['TJSONValue']) then
-          Result := TJSONObject.ParseJSONValue(LParamValue) as TJSONValue
+          Result := TJSONObject.ParseJSONValue(ParamAsString(LAttr)) as TJSONValue
+        else if MatchStr(AParam.ParamType.Name, ['TStream']) then
+        begin
+          Result := ParamAsStream(LAttr);
+        end
         else
           raise EWiRLServerException.Create(Format('Unsupported class [%s] for param [%s]', [AParam.ParamType.Name, LParamName]), Self.ClassName);
-        ValidateMethodParam(AAttrArray, Result.Cast<TJSONObject>);
+        ValidateMethodParam(AAttrArray, Result.Cast<TObject>);
       end;
 
       tkMethod: ;
@@ -808,12 +813,12 @@ begin
       tkUString,
       tkWString,
       tkString: begin
-        Result := TValue.From(LParamValue);
+        Result := TValue.From(ParamAsString(LAttr));
         ValidateMethodParam(AAttrArray, Result.AsString);
       end;
 
       tkVariant: begin
-        Result := TValue.From(LParamValue);
+        Result := TValue.From(ParamAsString(LAttr));
         ValidateMethodParam(AAttrArray, Result.AsVariant);
       end;
 
@@ -1092,6 +1097,8 @@ begin
       CollectGarbage(LMethodResult);
     for LArgument in LArgumentArray do
       CollectGarbage(LArgument);
+    if Assigned(FContext.Request.ContentStream) then
+      FContext.Request.ContentStream.Free;
   end;
 end;
 

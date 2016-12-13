@@ -27,6 +27,7 @@ type
   protected
     procedure ParseAuthorizationHeader(AContext: TIdContext; const AAuthType,
         AAuthData: string; var VUsername, VPassword: string; var VHandled: Boolean);
+    procedure DoneWithPostStream(ASender: TIdContext; ARequestInfo: TIdHTTPRequestInfo); override;
 
     procedure Startup; override;
     procedure Shutdown; override;
@@ -93,7 +94,7 @@ type
     function GetQueryFields: TStrings; override;
     function GetContentFields: TStrings; override;
     function GetCookieFields: TStrings; override;
-    function GetContent: string; override;
+    function GetContentStream: TStream; override;
     function GetAuthorization: string; override;
     function GetAccept: string; override;
     function GetAcceptCharSet: string; override;
@@ -109,53 +110,12 @@ type
     destructor Destroy; override;
   end;
 
-var
-  GetDefaultCharSetEncoding: TEncoding = nil;
-
 implementation
 
 uses
   System.StrUtils,
   WiRL.Core.Context,
   WiRL.Core.Utils;
-
-function DefaultCharSetEncoding: TEncoding;
-begin
-  Result := nil;
-  if Assigned(GetDefaultCharSetEncoding) then
-    Result := GetDefaultCharSetEncoding;
-  if Result = nil then
-    Result := TEncoding.UTF8;
-end;
-
-function EncodingFromContentType(const AContentType: string): TEncoding;
-var
-  S: string;
-begin
-  Result := nil;
-  S := UpperCase(string(AContentType));
-  if (Pos('CHARSET', S) > 0) then // Do not localize
-    if (Pos('UTF-8', S) > 0) then // Do not localize
-      Result := TEncoding.UTF8
-    else if (Pos('ISO-8859-1', S) > 0) then // Do not localize
-      Result := TEncoding.ANSI
-    else if (Pos('ANSI', S) > 0) then // Do not localize
-      Result := TEncoding.ANSI
-    else if (Pos('ASCII', S) > 0) then // Do not localize
-      Result := TEncoding.ASCII;
-
-  if Result = nil then
-    Result := DefaultCharSetEncoding;
-
-end;
-
-function EncodingGetString(const AContentType: string; const AValue: TBytes): string;
-var
-  Encoding: TEncoding;
-begin
-  Encoding := EncodingFromContentType(AContentType);
-  Result := Encoding.GetString(AValue);
-end;
 
 function TWiRLhttpServerIndy.ConfigureEngine(const ABasePath: string): TWiRLEngine;
 begin
@@ -206,6 +166,11 @@ procedure TWiRLhttpServerIndy.DoCommandOther(AContext: TIdContext;
 begin
   inherited;
   DoCommandGet(AContext, ARequestInfo, AResponseInfo);
+end;
+
+procedure TWiRLhttpServerIndy.DoneWithPostStream(ASender: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
+begin
+  ARequestInfo.PostStream := nil;
 end;
 
 procedure TWiRLhttpServerIndy.InitComponent;
@@ -262,6 +227,7 @@ end;
 
 destructor TWiRLHttpRequestIndy.Destroy;
 begin
+  FRequestInfo.PostStream := nil;
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
@@ -291,7 +257,7 @@ begin
         Inc(j);
       end;
       s := Copy(AValue, i, j-i);
-      s := ReplaceAll(s, '+', ' ');
+      s := StringReplace(s, '+', ' ', [rfReplaceAll]);
       Params.Add(TIdURI.URLDecode(s, LEncoding));
       i := j + 1;
     end;
@@ -330,24 +296,9 @@ begin
   Result := FRequestInfo.RawHeaders.Values['Authorization'];
 end;
 
-function TWiRLHttpRequestIndy.GetContent: string;
-var
-  LPos :Int64;
-  RawContents :TBytes;
+function TWiRLHttpRequestIndy.GetContentStream: TStream;
 begin
-  Result := '';
-
-  if FRequestInfo.PostStream.Size > 0 then
-  begin
-    LPos := FRequestInfo.PostStream.Position;
-    try
-      SetLength(RawContents, FRequestInfo.PostStream.Size);
-      FRequestInfo.PostStream.ReadBuffer(RawContents[0], FRequestInfo.PostStream.Size);
-    finally
-      FRequestInfo.PostStream.Position := LPos;
-    end;
-    Result := EncodingGetString(ContentType, RawContents);
-  end;
+  Result := FRequestInfo.PostStream;
 end;
 
 function TWiRLHttpRequestIndy.GetContentFields: TStrings;

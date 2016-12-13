@@ -30,6 +30,8 @@ type
   private
     FAcceptableMediaTypes: TMediaTypeList;
     function GetAcceptableMediaTypes: TMediaTypeList;
+    function GetContent: string;
+    function GetRawContent: TBytes;
   protected
     function GetPathInfo: string; virtual; abstract;
     function GetQuery: string; virtual; abstract;
@@ -39,7 +41,7 @@ type
     function GetQueryFields: TStrings; virtual; abstract;
     function GetContentFields: TStrings; virtual; abstract;
     function GetCookieFields: TStrings; virtual; abstract;
-    function GetContent: string; virtual; abstract;
+    function GetContentStream: TStream; virtual; abstract;
     function GetAuthorization: string; virtual; abstract;
     function GetAccept: string; virtual; abstract;
     function GetAcceptCharSet: string; virtual; abstract;
@@ -62,6 +64,8 @@ type
     property ContentFields: TStrings read GetContentFields;
     property CookieFields: TStrings read GetCookieFields;
     property Content: string read GetContent;
+    property RawContent: TBytes read GetRawContent;
+    property ContentStream: TStream read GetContentStream;
     property ContentType: string read GetContentType;
     property ContentLength: Integer read GetContentLength;
     property ContentVersion: string read GetContentVersion;
@@ -76,7 +80,47 @@ type
     function GetFieldByName(const Name: string): string;
   end;
 
+var
+  GetDefaultCharSetEncoding: TEncoding = nil;
+
 implementation
+
+function DefaultCharSetEncoding: TEncoding;
+begin
+  Result := nil;
+  if Assigned(GetDefaultCharSetEncoding) then
+    Result := GetDefaultCharSetEncoding;
+  if Result = nil then
+    Result := TEncoding.UTF8;
+end;
+
+function EncodingFromContentType(const AContentType: string): TEncoding;
+var
+  S: string;
+begin
+  Result := nil;
+  S := UpperCase(string(AContentType));
+  if (Pos('CHARSET', S) > 0) then // Do not localize
+    if (Pos('UTF-8', S) > 0) then // Do not localize
+      Result := TEncoding.UTF8
+    else if (Pos('ISO-8859-1', S) > 0) then // Do not localize
+      Result := TEncoding.ANSI
+    else if (Pos('ANSI', S) > 0) then // Do not localize
+      Result := TEncoding.ANSI
+    else if (Pos('ASCII', S) > 0) then // Do not localize
+      Result := TEncoding.ASCII;
+
+  if Result = nil then
+    Result := DefaultCharSetEncoding;
+end;
+
+function EncodingGetString(const AContentType: string; const AValue: TBytes): string;
+var
+  Encoding: TEncoding;
+begin
+  Encoding := EncodingFromContentType(AContentType);
+  Result := Encoding.GetString(AValue);
+end;
 
 { TWiRLRequest }
 
@@ -93,9 +137,30 @@ begin
   Result := FAcceptableMediaTypes;
 end;
 
+function TWiRLRequest.GetContent: string;
+begin
+  Result := EncodingGetString(ContentType, RawContent);
+end;
+
 function TWiRLRequest.GetFieldByName(const Name: string): string;
 begin
   Result := DoGetFieldByName(Name);
+end;
+
+function TWiRLRequest.GetRawContent: TBytes;
+var
+  LPos :Int64;
+begin
+  if (GetContentStream <> nil) and (GetContentStream.Size > 0) then
+  begin
+    LPos := GetContentStream.Position;
+    try
+      SetLength(Result, GetContentStream.Size);
+      GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
+    finally
+      GetContentStream.Position := LPos;
+    end;
+  end;
 end;
 
 end.
