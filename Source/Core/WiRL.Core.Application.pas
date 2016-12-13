@@ -96,6 +96,8 @@ type
 
     procedure CollectGarbage(const AValue: TValue);
     function GetResourceMethod: TRttiMethod;
+    function GetMethodConsumes(AMethod: TRttiMethod): TMediaTypeList;
+    function GetMethodProduces(AMethod: TRttiMethod): TMediaTypeList;
     function GetResourceType: TRttiType;
     procedure ValidateMethodParam<T>(const AAttrArray: TAttributeArray; Value: T);
     function GetConstraintErrorMessage(AAttr: TCustomConstraintAttribute): string;
@@ -916,9 +918,12 @@ var
   LResourcePath: string;
   LAttribute: TCustomAttribute;
   LPrototypeURL: TWiRLURL;
-  LPathMatches: Boolean;
+  LPathMatches,
+  LProducesMatch,
   LHttpMethodMatches: Boolean;
   LMethodPath: string;
+  LMethodProduces: TMediaTypeList;
+
 begin
   Result := nil;
   LResourcePath := '';
@@ -938,8 +943,9 @@ begin
     LMethodPath := '';
     LHttpMethodMatches := False;
     LPathMatches := False;
+    LProducesMatch := False;
 
-    // Tries to match the
+    // Match the HTTP method
     for LAttribute in LMethod.GetAttributes do
     begin
       if LAttribute is PathAttribute then
@@ -959,13 +965,66 @@ begin
       end;
     end;
 
-    if LPathMatches and LHttpMethodMatches then
+    // Match the Produces MediaType
+    LMethodProduces := GetMethodProduces(LMethod);
+    try
+      if Length(FContext.Request.AcceptableMediaTypes.Intersect(LMethodProduces)) > 0 then
+        LProducesMatch := True;
+    finally
+      LMethodProduces.Free;
+    end;
+
+    if LPathMatches and LHttpMethodMatches and LProducesMatch then
     begin
       Result := LMethod;
       Break;
     end;
 
   end;
+end;
+
+function TWiRLApplicationWorker.GetMethodConsumes(AMethod: TRttiMethod): TMediaTypeList;
+var
+  LList: TMediaTypeList;
+begin
+  LList := TMediaTypeList.Create;
+
+  TRttiHelper.ForEachAttribute<ConsumesAttribute>(AMethod,
+    procedure (AConsumes: ConsumesAttribute)
+    var
+      LMediaList: TArray<string>;
+      LMedia: string;
+    begin
+      LMediaList := AConsumes.Value.Split([',']);
+
+      for LMedia in LMediaList do
+        LList.Add(TMediaType.Create(LMedia));
+    end
+  );
+
+  Result := LList;
+end;
+
+function TWiRLApplicationWorker.GetMethodProduces(AMethod: TRttiMethod): TMediaTypeList;
+var
+  LList: TMediaTypeList;
+begin
+  LList := TMediaTypeList.Create;
+
+  TRttiHelper.ForEachAttribute<ProducesAttribute>(AMethod,
+    procedure (AProduces: ProducesAttribute)
+    var
+      LMediaList: TArray<string>;
+      LMedia: string;
+    begin
+      LMediaList := AProduces.Value.Split([',']);
+
+      for LMedia in LMediaList do
+        LList.Add(TMediaType.Create(LMedia));
+    end
+  );
+
+  Result := LList;
 end;
 
 function TWiRLApplicationWorker.GetResourceType: TRttiType;
