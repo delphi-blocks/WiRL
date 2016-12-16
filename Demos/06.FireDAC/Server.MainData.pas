@@ -19,7 +19,8 @@ uses
   WiRL.Data.FireDAC.DataModule,
   WiRL.Core.Attributes,
   WiRL.Core.URL,
-  WiRL.Core.Token;
+  WiRL.Core.Token, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
+  FireDAC.Stan.ExprFuncs;
 
 type
   [Path('/maindata')]

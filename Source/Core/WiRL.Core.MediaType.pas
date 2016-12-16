@@ -37,8 +37,8 @@ type
   TMediaType = class
   private
     FPFactor: Integer;
-    FMediaType: string;
-    FMediaSubType: string;
+    FMainType: string;
+    FSubType: string;
     FMediaParameters: TStringList;
     FVersion: Integer;
     FQFactor: Double;
@@ -46,6 +46,7 @@ type
     FCharset: string;
     function GetWeigth: Integer;
     function GetIsWildcard: Boolean;
+    function GetMediaTypeOnly: string;
   public
     const DELIM_MEDIA = '/';
     const DELIM_PARAMS = ';';
@@ -86,9 +87,10 @@ type
     function Matches(const AMediaTypeStr: string): Boolean; overload;
     function Matches(const AMediaType: TMediaType): Boolean; overload;
 
-    property MediaType: string read FMediaType;
-    property MediaSubType: string read FMediaSubType;
+    property MainType: string read FMainType;
+    property SubType: string read FSubType;
     property MediaParameters: TStringList read FMediaParameters;
+    property MediaTypeOnly: string read GetMediaTypeOnly;
 
     property QFactor: Double read FQFactor write FQFactor;
     property PFactor: Integer read FPFactor write FPFactor;
@@ -110,12 +112,13 @@ type
 
     function GetQualityFactor(const AMediaType: string): Double;
 
-    function Intersect(const AList: TMediaTypeList): TArray<string>; overload;
-    function Intersect(const AList: TArray<string>): TArray<string>; overload;
-    function IntersectList(const AList: TMediaTypeList): TMediaTypeList; overload;
-    function IntersectList(const AList: TArray<string>): TMediaTypeList; overload;
+    function Intersection(const AList: TMediaTypeList): TArray<string>; overload;
+    function Intersection(const AList: TArray<string>): TArray<string>; overload;
+    function IntersectionList(const AList: TMediaTypeList): TMediaTypeList; overload;
+    function IntersectionList(const AList: TArray<string>): TMediaTypeList; overload;
 
-    function IntersectDefault(AList: TMediaTypeList): TArray<string>;
+    function IntersectionWithDefault(AList: TMediaTypeList): TArray<string>;
+    function Intersected(AList: TMediaTypeList): Boolean;
   end;
 
   TAcceptParser = class
@@ -136,15 +139,15 @@ uses
 constructor TMediaType.Create(const AType, ASubType: string);
 begin
   Create;
-  FMediaType := AType;
-  FMediaSubType := ASubType;
+  FMainType := AType;
+  FSubType := ASubType;
 end;
 
 constructor TMediaType.Create(const AType, ASubType: string; AParams: TStringList);
 begin
   Create;
-  FMediaType := AType;
-  FMediaSubType := ASubType;
+  FMainType := AType;
+  FSubType := ASubType;
   FMediaParameters.Assign(AParams);
 end;
 
@@ -168,13 +171,13 @@ var
       0: ; // Error ;
       1:
       begin
-        FMediaType := Trim(LParsed[0]);
-        FMediaSubType := '';
+        FMainType := Trim(LParsed[0]);
+        FSubType := '';
       end;
       2:
       begin
-        FMediaType := Trim(LParsed[0]);
-        FMediaSubType := Trim(LParsed[1]);
+        FMainType := Trim(LParsed[0]);
+        FSubType := Trim(LParsed[1]);
       end;
     end;
   end;
@@ -219,8 +222,8 @@ end;
 constructor TMediaType.Create(const AType, ASubType, AParams: string);
 begin
   Create;
-  FMediaType := AType;
-  FMediaSubType := ASubType;
+  FMainType := AType;
+  FSubType := ASubType;
   FMediaParameters.Text := AParams;
 end;
 
@@ -233,6 +236,11 @@ end;
 function TMediaType.GetIsWildcard: Boolean;
 begin
   Result := ToString = WILDCARD;
+end;
+
+function TMediaType.GetMediaTypeOnly: string;
+begin
+  Result := FMainType + DELIM_MEDIA + FSubType;
 end;
 
 function TMediaType.GetWeigth: Integer;
@@ -252,7 +260,8 @@ end;
 
 function TMediaType.ToString: string;
 begin
-  Result := FMediaType + DELIM_MEDIA + FMediaSubType;
+  Result := MediaTypeOnly;
+
   if FDialect <> '' then
     Result := Result + DELIM_PARAMS + DIALECT_NAME + '=' + FDialect;
   if FCharset <> '' then
@@ -301,20 +310,27 @@ end;
 
 function TMediaTypeList.Contains(const AMediaType: string): Boolean;
 var
+  LTempMediaType: TMediaType;
+begin
+  LTempMediaType := TMediaType.Create(AMediaType);
+  try
+    Result := Contains(LTempMediaType);
+  finally
+    LTempMediaType.Free;
+  end;
+end;
+
+function TMediaTypeList.Contains(const AMediaType: TMediaType): Boolean;
+var
   LItem: TMediaType;
 begin
   Result := False;
   for LItem in Self do
-    if LItem.ToString = AMediaType then
+    if LItem.MediaTypeOnly = AMediaType.MediaTypeOnly then
     begin
       Result := True;
       Break;
     end;
-end;
-
-function TMediaTypeList.Contains(const AMediaType: TMediaType): Boolean;
-begin
-  Result := Contains(AMediaType.ToString);
 end;
 
 constructor TMediaTypeList.Create;
@@ -342,12 +358,12 @@ begin
     end;
 end;
 
-function TMediaTypeList.IntersectDefault(AList: TMediaTypeList): TArray<string>;
+function TMediaTypeList.IntersectionWithDefault(AList: TMediaTypeList): TArray<string>;
 begin
   // AList: AMediaTypeList
   // Self: LMethodProducesMediaTypes
   if Self.Count > 0 then
-    Result := Self.Intersect(AList)
+    Result := Self.Intersection(AList)
   else
     Result := AList.ToArrayOfString;
 
@@ -366,14 +382,26 @@ begin
   end;
 end;
 
-function TMediaTypeList.Intersect(const AList: TArray<string>): TArray<string>;
+function TMediaTypeList.Intersected(AList: TMediaTypeList): Boolean;
+var
+  LIntersection: TStringArray;
+begin
+  if Self.Count = 0 then
+    Self.Add(TMediaType.Create(TMediaType.WILDCARD));
+
+  LIntersection := Self.Intersection(AList);
+
+  Result := not LIntersection.IsEmpty;
+end;
+
+function TMediaTypeList.Intersection(const AList: TArray<string>): TArray<string>;
 var
   LMediaType: string;
 begin
   SetLength(Result, 0);
   for LMediaType in AList do
   begin
-    if Self.Contains(LMediaType) then
+    if Contains(LMediaType) or Contains(TMediaType.WILDCARD) then
     begin
       SetLength(Result, Length(Result) + 1);
       Result[Length(Result) -1 ] := LMediaType;
@@ -381,12 +409,12 @@ begin
   end;
 end;
 
-function TMediaTypeList.Intersect(const AList: TMediaTypeList): TArray<string>;
+function TMediaTypeList.Intersection(const AList: TMediaTypeList): TArray<string>;
 begin
-  Result := Intersect(AList.ToArrayOfString);
+  Result := Intersection(AList.ToArrayOfString);
 end;
 
-function TMediaTypeList.IntersectList(const AList: TMediaTypeList): TMediaTypeList;
+function TMediaTypeList.IntersectionList(const AList: TMediaTypeList): TMediaTypeList;
 var
   LMediaType: TMediaType;
 begin
@@ -400,7 +428,7 @@ begin
   end;
 end;
 
-function TMediaTypeList.IntersectList(const AList: TArray<string>): TMediaTypeList;
+function TMediaTypeList.IntersectionList(const AList: TArray<string>): TMediaTypeList;
 var
   LMediaType: string;
 begin

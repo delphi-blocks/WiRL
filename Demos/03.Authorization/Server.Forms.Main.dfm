@@ -30,6 +30,13 @@ object MainForm: TMainForm
       Height = 13
       Caption = 'Port number:'
     end
+    object Label2: TLabel
+      Left = 195
+      Top = 17
+      Width = 35
+      Height = 13
+      Caption = 'Secret:'
+    end
     object StartButton: TButton
       Left = 16
       Top = 41
@@ -53,6 +60,14 @@ object MainForm: TMainForm
       Height = 21
       TabOrder = 2
       Text = '8080'
+    end
+    object edtSecret: TEdit
+      Left = 232
+      Top = 14
+      Width = 209
+      Height = 21
+      TabOrder = 3
+      Text = 'MySuperSecretMustBeAtLeast256bit'
     end
   end
   object MainActionList: TActionList

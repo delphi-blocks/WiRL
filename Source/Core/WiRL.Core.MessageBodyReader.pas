@@ -15,20 +15,16 @@ uses
   System.Generics.Collections,
   WiRL.Core.Singleton,
   WiRL.Core.MediaType,
+  WiRL.Core.Request,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.Attributes;
 
 type
-  IMessageBodyReader<T> = interface
+  IMessageBodyReader = interface
   ['{472A6C22-F4AF-4E77-B6BB-B1085A63504D}']
-    function ReadFrom(
-      AType: T;
-      const AAttributes: TAttributeArray;
-      AMediaType: TMediaType;
-      AResponseHeaders: TStrings;
-      AInputStream: TStream
-    ): T;
+    function ReadFrom(const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AResponse: TWiRLRequest): TValue;
   end;
 
   TGetAffinityFunction = reference to function(AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Integer;
@@ -39,7 +35,7 @@ type
       TWiRLRegistrySingleton = TWiRLSingleton<TMessageBodyReaderRegistry>;
       TEntryInfo = record
         TypeMetadata: TRttiType;
-        CreateInstance: TFunc<IMessageBodyReader<T>>;
+        CreateInstance: TFunc<IMessageBodyReader>;
         IsReadable: TFunc<TRttiType, TAttributeArray, TMediaType, Boolean>;
         GetAffinity: TGetAffinityFunction;
       end;

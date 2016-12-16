@@ -23,6 +23,8 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
+    edtSecret: TEdit;
+    Label2: TLabel;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -68,6 +70,7 @@ begin
     .AddApplication('/app')
       .SetSystemApp(True)
       .SetName('Auth Application')
+      .SetSecret(Tencoding.UTF8.GetBytes(edtSecret.Text))
       .SetClaimsClass(TServerClaims)
       .SetResources([
        'Server.Resources.TFormAuthResource',

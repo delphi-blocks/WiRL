@@ -14,6 +14,8 @@ uses
 
   WiRL.Core.Attributes,
   WiRL.Core.MediaType,
+  WiRL.Core.MessageBodyWriters,
+  WiRL.Data.FireDAC.MessageBodyWriters,
   WiRL.Core.JSON;
 
 type

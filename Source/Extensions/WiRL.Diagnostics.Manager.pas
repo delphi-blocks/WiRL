@@ -17,6 +17,7 @@ uses
   WiRL.Core.JSON,
   WiRL.Core.Classes,
   WiRL.Core.Singleton,
+  WiRL.Core.Context,
   WiRL.Core.URL,
   WiRL.Core.Token,
   WiRL.Core.Engine,
@@ -80,6 +81,8 @@ type
     class function GetInstance: TWiRLDiagnosticsManager; static; inline;
     function GetAppInfo(const App: string; const ADoSomething: TProc<TWiRLDiagnosticAppInfo>): Boolean; overload;
   public
+    class var Context: TWiRLContext; //TODO: remove, as you remove the singleton from TWiRLDiagnosticsManager
+
     constructor Create;
     destructor Destroy; override;
 
@@ -96,7 +99,6 @@ type
     // IWiRLHandleRequestEventListener
     procedure BeforeHandleRequest(const ASender: TWiRLEngine; const AApplication: TWiRLApplication);
     procedure AfterHandleRequest(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; const AStopWatch: TStopWatch);
-    class var FEngine: TWiRLEngine; //TODO: remove, as you remove the singleton from TWiRLDiagnosticsManager
   end;
 
 
@@ -118,11 +120,11 @@ begin
   GetAppInfo(AApplication.Name,
     procedure (AAppInfo: TWiRLDiagnosticAppInfo)
     begin
-      AAppInfo.AcquireRequest(FEngine.CurrentURL, LStopWatch.ElapsedMilliseconds);
+      AAppInfo.AcquireRequest(Context.URL, LStopWatch.ElapsedMilliseconds);
 
       FCriticalSection.Enter;
       try
-        FEngineInfo.AcquireRequest(FEngine.CurrentURL, LStopWatch.ElapsedMilliseconds);
+        FEngineInfo.AcquireRequest(Context.URL, LStopWatch.ElapsedMilliseconds);
       finally
         FCriticalSection.Leave;
       end
@@ -146,12 +148,12 @@ begin
 
   inherited Create;
 
-  FEngine.AddSubscriber(Self);
+  (Context.Engine as TWiRLEngine).AddSubscriber(Self);
 end;
 
 destructor TWiRLDiagnosticsManager.Destroy;
 begin
-  FEngine.RemoveSubscriber(Self);
+  (Context.Engine as TWiRLEngine).RemoveSubscriber(Self);
 
   FEngineInfo.Free;
   FCriticalSection.Free;
@@ -169,7 +171,7 @@ begin
 
   FCriticalSection.Enter;
   try
-    if FEngine.Applications.TryGetValue(App, LWiRLApp) then // real application
+    if (Context.Engine as TWiRLEngine).Applications.TryGetValue(App, LWiRLApp) then // real application
     begin
       if not LWiRLApp.SystemApp then // skip system app
       begin

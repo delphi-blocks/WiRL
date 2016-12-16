@@ -13,35 +13,42 @@ uses
 
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
+  WiRL.Core.Response,
   WiRL.Core.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Exceptions;
 
 type
   [Produces(TMediaType.APPLICATION_JSON)]
+  TDateTimeWriter = class(TInterfacedObject, IMessageBodyWriter)
+    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
+  end;
+
+  [Produces(TMediaType.APPLICATION_JSON)]
   TObjectWriter = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   [Produces(TMediaType.APPLICATION_JSON)]
   TJSONValueWriter = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
     function AsObject: TObject;
   end;
 
   [Produces(TMediaType.WILDCARD)]
   TWildCardMediaTypeWriter = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   [Produces(TMediaType.APPLICATION_OCTET_STREAM)
   , Produces(TMediaType.WILDCARD)]
   TStreamValueWriter = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
 implementation
@@ -53,16 +60,37 @@ uses
   WiRL.Rtti.Utils,
   WiRL.Core.Serialization;
 
-{ TObjectWriter }
 
-procedure TObjectWriter.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+{ TDateTimeWriter }
+procedure TDateTimeWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+  AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
   LObj: TJSONObject;
 begin
-  LStreamWriter := TStreamWriter.Create(AOutputStream);
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
+  try
+    LObj := TJSONObject.Create(TJSONPair.Create('result', TJSONHelper.DateToJSON(AValue.AsExtended, False)));
+    try
+      LStreamWriter.Write(TJSONHelper.ToJSON(LObj));
+    finally
+      LObj.Free;
+    end;
+  finally
+    LStreamWriter.Free;
+  end;
+end;
+
+
+{ TObjectWriter }
+
+procedure TObjectWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+  AMediaType: TMediaType; AResponse: TWiRLResponse);
+var
+  LStreamWriter: TStreamWriter;
+  LObj: TJSONObject;
+begin
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
     LObj := TJSONSerializer.ObjectToJSON(AValue.AsObject);
     try
@@ -82,14 +110,13 @@ begin
   Result := Self;
 end;
 
-procedure TJSONValueWriter.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TJSONValueWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+  AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
   LJSONValue: TJSONValue;
 begin
-  LStreamWriter := TStreamWriter.Create(AOutputStream);
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
     LJSONValue := AValue.AsObject as TJSONValue;
     if Assigned(LJSONValue) then
@@ -101,9 +128,8 @@ end;
 
 { TWildCardMediaTypeWriter }
 
-procedure TWildCardMediaTypeWriter.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TWildCardMediaTypeWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+  AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LWriter: IMessageBodyWriter;
   LObj: TObject;
@@ -124,7 +150,7 @@ begin
     if Supports(LObj, IMessageBodyWriter, LWriter) then
     begin
       try
-        LWriter.WriteTo(AValue, AAttributes, AMediaType, AResponseHeaders, AOutPutStream)
+        LWriter.WriteTo(AValue, AAttributes, AMediaType, AResponse);
       finally
         LWriter := nil;
       end;
@@ -140,7 +166,7 @@ begin
     else if AMediaType.Charset = TMediaType.CHARSET_UTF16 then
       LEncoding := TEncoding.Unicode;
 
-    LStreamWriter := TStreamWriter.Create(AOutputStream, LEncoding);
+    LStreamWriter := TStreamWriter.Create(AResponse.ContentStream, LEncoding);
     try
 
       case AValue.Kind of
@@ -192,9 +218,8 @@ end;
 
 { TStreamValueWriter }
 
-procedure TStreamValueWriter.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TStreamValueWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+  AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStream: TStream;
 begin
@@ -202,12 +227,24 @@ begin
   begin
     LStream := AValue.AsObject as TStream;
     if Assigned(LStream) then
-      AOutputStream.CopyFrom(LStream, LStream.Size);
+      AResponse.ContentStream.CopyFrom(LStream, LStream.Size);
   end;
 end;
 
 procedure RegisterWriters;
 begin
+  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+    TDatetimeWriter,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and (AType.TypeKind = tkFloat);
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+    end
+  );
+
   TWiRLMessageBodyRegistry.Instance.RegisterWriter<TJSONValue>(TJSONValueWriter);
 
   TWiRLMessageBodyRegistry.Instance.RegisterWriter(
@@ -246,6 +283,7 @@ begin
     end
   );
 end;
+
 
 initialization
   RegisterWriters;

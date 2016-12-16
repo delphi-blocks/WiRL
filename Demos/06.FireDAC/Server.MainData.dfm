@@ -3,9 +3,10 @@ inherited MainDataResource: TMainDataResource
   Width = 412
   object FDConnection1: TFDConnection
     Params.Strings = (
-      'ConnectionDef=Firebird_Employee_Pooled')
+      'ConnectionDef=SQLite_Demo')
     FetchOptions.AssignedValues = [evMode]
     FetchOptions.Mode = fmAll
+    Connected = True
     LoginPrompt = False
     Left = 48
     Top = 24
@@ -13,7 +14,7 @@ inherited MainDataResource: TMainDataResource
   object employee: TFDQuery
     Connection = FDConnection1
     SQL.Strings = (
-      'select * from EMPLOYEE ')
+      'select * from Employees ')
     Left = 48
     Top = 88
   end

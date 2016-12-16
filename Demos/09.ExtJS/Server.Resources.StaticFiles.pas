@@ -9,14 +9,13 @@ unit Server.Resources.StaticFiles;
 interface
 
 uses
-  SysUtils, Classes, IOUtils
+  System.SysUtils, System.Classes, System.IOUtils,
 
-  , WiRL.Core.Attributes
-  , WiRL.Core.MediaType
-  , WiRL.Core.Response
+  WiRL.Core.Attributes,
+  WiRL.Core.MediaType,
+  WiRL.Core.Response,
+  WiRL.WebServer.Resources;
 
-  , WiRL.WebServer.Resources
-  ;
 
 type
   [Path('static')]
@@ -28,7 +27,7 @@ type
 implementation
 
 uses
-    WiRL.Core.Registry;
+  WiRL.Core.Registry;
 
 { THelloWorldResource }
 

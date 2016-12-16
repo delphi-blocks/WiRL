@@ -16,6 +16,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
   WiRL.Core.MediaType,
+  WiRL.Core.Response,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Utils,
@@ -25,13 +26,13 @@ type
   [Produces(TMediaType.APPLICATION_XML), Produces(TMediaType.APPLICATION_JSON)]
   TFDAdaptedDataSetWriter = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   [Produces(TMediaType.APPLICATION_JSON)]
   TArrayFDCustomQueryWriter = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
 
@@ -47,9 +48,9 @@ uses
 
 { TArrayFDCustomQueryWriter }
 
-procedure TArrayFDCustomQueryWriter.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TArrayFDCustomQueryWriter.WriteTo(const AValue: TValue; const
+    AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse:
+    TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
   LDatasetList: TFDJSONDataSets;
@@ -57,7 +58,7 @@ var
   LResult: TJSONObject;
   LData: TArray<TFDCustomQuery>;
 begin
-  LStreamWriter := TStreamWriter.Create(AOutputStream);
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
     LResult := TJSONObject.Create;
     try
@@ -87,9 +88,9 @@ end;
 
 { TFDAdaptedDataSetWriter }
 
-procedure TFDAdaptedDataSetWriter.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TFDAdaptedDataSetWriter.WriteTo(const AValue: TValue; const
+    AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse:
+    TWiRLResponse);
 var
   LDataset: TFDAdaptedDataSet;
   LStorageFormat: TFDStorageFormat;
@@ -108,7 +109,7 @@ begin
       Self.ClassName, 'WriteTo'
     );
 
-  LDataSet.SaveToStream(AOutputStream, LStorageFormat);
+  LDataSet.SaveToStream(AResponse.ContentStream, LStorageFormat);
 end;
 
 procedure RegisterWriters;

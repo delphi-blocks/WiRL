@@ -11,6 +11,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.JSON,
   WiRL.Core.Engine,
+  WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.Core.MediaType,
@@ -33,7 +34,12 @@ type
     [Produces(TMediaType.TEXT_PLAIN)]
     function HelloWorld(): string;
 
+    [GET, Path('/time')]
+    [Produces(TMediaType.APPLICATION_JSON)]
+    function WhatTimeIsIt: TDateTime;
+
     [GET, Path('/echostring/{AString}')]
+    [Produces(TMediaType.TEXT_PLAIN)]
     function EchoString([PathParam] AString: string): string;
 
     [GET, Path('/reversestring/{AString}')]
@@ -48,6 +54,7 @@ type
     function GetAuthInfo: string;
 
     [GET, Path('/sum/{Addendo1}/{Addendo2}')]
+    [Produces(TMediaType.TEXT_PLAIN)]
     function Somma(
       [PathParam] Addendo1: Integer;
       [PathParam] Addendo2: Integer): Integer;
@@ -138,6 +145,11 @@ end;
 function THelloWorldResource.TestException: string;
 begin
   raise Exception.Create('User Error Message');
+end;
+
+function THelloWorldResource.WhatTimeIsIt: TDateTime;
+begin
+  Result := Now;
 end;
 
 function TEntityResource.EchoURL: TJSONObject;
