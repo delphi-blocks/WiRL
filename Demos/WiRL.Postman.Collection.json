@@ -59,10 +59,7 @@
 								"description": ""
 							}
 						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": []
-						},
+						"body": {},
 						"description": ""
 					},
 					"response": []
@@ -102,7 +99,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsYW5ndWFnZSI6ImVuLVVTIiwicm9sZXMiOiJ1c2VyLG1hbmFnZXIsYWRtaW4iLCJ1c2VybmFtZSI6InBhb2xvIn0.9Irklo1bLE61KJ0Y7kgaHrjcpujiXAj3i0A7_WEhocs",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsYW5ndWFnZSI6ImVuLVVTIiwicm9sZXMiOiJ1c2VyLG1hbmFnZXIsYWRtaW4iLCJ1c2VybmFtZSI6InBhb2xvIn0.yLMj5hSbZIGso8JkTwpt-UVxiAyMV1CtLCCY3zZgm7g",
 								"description": ""
 							}
 						],

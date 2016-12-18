@@ -9,22 +9,17 @@ uses
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.SQLite,
   FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs, FireDAC.Stan.Param,
   FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.VCLUI.Wait,
-  FireDAC.Comp.UI, FireDAC.Comp.DataSet, FireDAC.Comp.Client
+  FireDAC.Comp.UI, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
 
-  , WiRL.Core.JSON
-  , WiRL.Core.Request
-  , WiRL.Core.Response
-
-  , WiRL.Core.Registry
-  , WiRL.Core.Attributes
-  , WiRL.Core.MediaType
-  , WiRL.Core.URL
-  , WiRL.Core.MessageBodyWriters
-  , WiRL.Core.Token
-  , WiRL.Core.Token.Resource
-  , WiRL.Core.Exceptions
-  , WiRL.Data.Resolver
-  ;
+  WiRL.Core.JSON,
+  WiRL.Core.Registry,
+  WiRL.Core.Attributes,
+  WiRL.Core.MediaType,
+  WiRL.Core.URL,
+  WiRL.Core.MessageBodyWriters,
+  WiRL.Data.MessageBodyWriters,
+  WiRL.Core.Exceptions,
+  WiRL.Data.Resolver;
 
 
 type
@@ -46,7 +41,7 @@ type
     qryEmpNoGen: TFDQuery;
     procedure DataModuleCreate(Sender: TObject);
   public
-    [GET, Path('/employee/'){, RolesAllowed('standard')}]
+    [GET, Path('/employee/')]
     function Employee(): TDataSet;
 
     [POST, Path('/employee/'), Produces(TMediaType.APPLICATION_JSON)]

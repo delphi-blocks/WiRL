@@ -14,6 +14,7 @@ uses
   System.SysUtils, System.Classes, System.Rtti,
   System.Generics.Collections,
   WiRL.Core.Classes,
+  //WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
   WiRL.Core.MediaType,
@@ -965,13 +966,28 @@ begin
       end;
     end;
 
-    // Match the Produces MediaType
-    LMethodProduces := GetMethodProduces(LMethod);
-    try
-      if Length(FContext.Request.AcceptableMediaTypes.Intersect(LMethodProduces)) > 0 then
-        LProducesMatch := True;
-    finally
-      LMethodProduces.Free;
+    // It's a procedure, so no Produces mechanism
+    if not Assigned(LMethod.ReturnType) then
+      LProducesMatch := True
+    else
+    begin
+      // Match the Produces MediaType
+      LMethodProduces := GetMethodProduces(LMethod);
+      try
+        if (LMethodProduces.Count = 0) or
+           ((LMethodProduces.Count = 1) and LMethodProduces.Contains(TMediaType.WILDCARD)) then
+        begin
+          if LMethod.ReturnType.TypeKind = tkClass then
+            LProducesMatch := True;
+        end
+        else
+        begin
+          if FContext.Request.AcceptableMediaTypes.Intersected(LMethodProduces) then
+            LProducesMatch := True;
+        end;
+      finally
+        LMethodProduces.Free;
+      end;
     end;
 
     if LPathMatches and LHttpMethodMatches and LProducesMatch then
@@ -1114,9 +1130,10 @@ begin
 
       LStream := TMemoryStream.Create;
       try
-        AWriter.WriteTo(LMethodResult, FResourceMethod.GetAttributes, AMediaType, FContext.Response.CustomHeaders, LStream);
         LStream.Position := 0;
         FContext.Response.ContentStream := LStream;
+        AWriter.WriteTo(LMethodResult, FResourceMethod.GetAttributes, AMediaType, FContext.Response);
+        LStream.Position := 0;
       except
         on E: Exception do
         begin

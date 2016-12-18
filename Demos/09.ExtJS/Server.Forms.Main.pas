@@ -47,11 +47,6 @@ implementation
 {$R *.dfm}
 
 uses
-  WiRL.Core.JSON,
-  WiRL.Rtti.Utils,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Data.MessageBodyWriters,
   Server.Database.Builder;
 
 procedure TMainForm.FormCreate(Sender: TObject);

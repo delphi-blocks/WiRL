@@ -15,9 +15,7 @@ uses
 
   WiRL.Core.Engine,
   WiRL.http.Server.Indy,
-  WiRL.Core.Application,
-  WiRL.Diagnostics.Manager,
-  WiRL.Diagnostics.Resources;
+  WiRL.Core.Application;
 
 type
   TMainForm = class(TForm)
@@ -70,12 +68,12 @@ begin
 
   FServer.ConfigureEngine('/rest')
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('WiRL HelloWorld')
+    .SetName('WiRL FireDAC Demo')
     .SetThreadPoolSize(5)
 
     // Add and configure an application
-    .AddApplication('/default')
-      .SetName('Default')
+    .AddApplication('/app')
+      .SetName('Default App')
       .SetResources([
         'Server.MainData.TMainDataResource'
       ])

@@ -74,7 +74,7 @@ type
     [Produces(TMediaType.APPLICATION_JSON)]
     function InsertUser([BodyParam] JSON: TJSONObject): TUserInfo;
 
-    [GET, Path('/details'), RolesAllowed('admin')]
+    [GET, Path('/details'), RolesAllowed('admin,manager')]
     [Produces(TMediaType.APPLICATION_JSON)]
     function DetailsInfo: TJSONObject;
   end;

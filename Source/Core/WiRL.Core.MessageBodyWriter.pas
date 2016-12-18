@@ -14,6 +14,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti,
   System.Generics.Defaults, System.Generics.Collections,
   WiRL.Core.Singleton,
+  WiRL.Core.Response,
   WiRL.Core.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
@@ -23,7 +24,7 @@ type
   IMessageBodyWriter = interface
   ['{C22068E1-3085-482D-9EAB-4829C7AE87C0}']
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   TIsWritableFunction = reference to function(AType: TRttiType;
@@ -150,7 +151,7 @@ begin
   // consider method's Produces
   LMethodProducesMediaTypes := GetProducesMediaTypes(AMethod);
   try
-    LAllowedMediaTypes := LMethodProducesMediaTypes.IntersectDefault(AMediaTypeList);
+    LAllowedMediaTypes := LMethodProducesMediaTypes.IntersectionWithDefault(AMediaTypeList);
 
     // collect compatible writers
     for LWriterEntry in FRegistry do
@@ -161,7 +162,7 @@ begin
         if LWriterMediaTypes.Contains(TMediaType.WILDCARD) then
           LMediaTypes := LAllowedMediaTypes
         else
-          LMediaTypes := LWriterMediaTypes.Intersect(LAllowedMediaTypes);
+          LMediaTypes := LWriterMediaTypes.Intersection(LAllowedMediaTypes);
         for LMediaType in LMediaTypes do
           if LWriterEntry.IsWritable(AMethod.ReturnType, AMethod.GetAttributes, LMediaType) then
           begin

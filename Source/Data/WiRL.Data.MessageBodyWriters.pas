@@ -11,6 +11,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
   WiRL.Core.Attributes,
+  WiRL.Core.Response,
   WiRL.Core.Declarations,
   WiRL.Core.MediaType,
   WiRL.Core.MessageBodyWriter;
@@ -19,25 +20,25 @@ type
   [Produces(TMediaType.APPLICATION_JSON)]
   TDataSetWriterJSON = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   [Produces(TMediaType.APPLICATION_JSON)]
   TArrayDataSetWriter = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   [Produces(TMediaType.APPLICATION_XML)]
   TDataSetWriterXML = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   [Produces(TMediaType.TEXT_CSV)]
   TDataSetWriterCSV = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponseHeaders: TStrings; AOutputStream: TStream);
+      AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
 implementation
@@ -50,14 +51,13 @@ uses
 
 { TDataSetWriterJSON }
 
-procedure TDataSetWriterJSON.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TDataSetWriterJSON.WriteTo(const AValue: TValue; const AAttributes:
+    TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
   LResult: TJSONArray;
 begin
-  LStreamWriter := TStreamWriter.Create(AOutputStream);
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
     LResult := TDataUtils.DataSetToJSONArray(AValue.AsObject as TDataSet);
     try
@@ -72,13 +72,12 @@ end;
 
 { TDataSetWriterXML }
 
-procedure TDataSetWriterXML.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TDataSetWriterXML.WriteTo(const AValue: TValue; const AAttributes:
+    TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
 begin
-  LStreamWriter := TStreamWriter.Create(AOutputStream);
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
     if AValue.AsObject is TClientDataSet then // CDS
       LStreamWriter.Write(TClientDataSet(AValue.AsObject).XMLData)
@@ -91,16 +90,15 @@ end;
 
 { TArrayDataSetWriter }
 
-procedure TArrayDataSetWriter.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TArrayDataSetWriter.WriteTo(const AValue: TValue; const AAttributes:
+    TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
   LResult: TJSONObject;
   LData: TArray<TDataSet>;
   LCurrent: TDataSet;
 begin
-  LStreamWriter := TStreamWriter.Create(AOutputStream);
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
     LData := AValue.AsType<TArray<TDataSet>>;
     LResult := TJSONObject.Create;
@@ -119,13 +117,12 @@ end;
 
 { TDataSetWriterCSV }
 
-procedure TDataSetWriterCSV.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponseHeaders: TStrings; AOutputStream: TStream);
+procedure TDataSetWriterCSV.WriteTo(const AValue: TValue; const AAttributes:
+    TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
 begin
-  LStreamWriter := TStreamWriter.Create(AOutputStream);
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
     LStreamWriter.Write(TDataUtils.DataSetToCSV(Avalue.AsObject as TDataSet));
   finally
