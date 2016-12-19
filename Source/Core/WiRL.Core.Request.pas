@@ -28,10 +28,12 @@ type
 
   TWiRLRequest = class
   private
+    FMediaType: TMediaType;
     FAcceptableMediaTypes: TMediaTypeList;
     function GetAcceptableMediaTypes: TMediaTypeList;
     function GetContent: string;
     function GetRawContent: TBytes;
+    function GetMediaType: TMediaType;
   protected
     function GetPathInfo: string; virtual; abstract;
     function GetQuery: string; virtual; abstract;
@@ -76,6 +78,7 @@ type
     property AcceptEncoding: string read GetAcceptEncoding;
     property AcceptLanguage: string read GetAcceptLanguage;
     property RawPathInfo: string read GetRawPathInfo;
+    property MediaType: TMediaType read GetMediaType;
 
     function GetFieldByName(const Name: string): string;
   end;
@@ -126,6 +129,7 @@ end;
 
 destructor TWiRLRequest.Destroy;
 begin
+  FMediaType.Free;
   FAcceptableMediaTypes.Free;
   inherited;
 end;
@@ -145,6 +149,15 @@ end;
 function TWiRLRequest.GetFieldByName(const Name: string): string;
 begin
   Result := DoGetFieldByName(Name);
+end;
+
+function TWiRLRequest.GetMediaType: TMediaType;
+begin
+  if not Assigned(FMediaType) then
+  begin
+    FMediaType := TMediaType.Create(ContentType);
+  end;
+  Result := FMediaType;
 end;
 
 function TWiRLRequest.GetRawContent: TBytes;

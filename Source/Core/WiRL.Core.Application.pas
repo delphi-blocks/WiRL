@@ -14,7 +14,7 @@ uses
   System.SysUtils, System.Classes, System.Rtti,
   System.Generics.Collections,
   WiRL.Core.Classes,
-  //WiRL.Core.MessageBodyReader,
+  WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
   WiRL.Core.MediaType,
@@ -752,6 +752,7 @@ var
   LParamName: string;
   LParamClassType: TClass;
   LContextValue: TValue;
+  LReader: IMessageBodyReader;
 
 begin
   LParamName := '';
@@ -793,21 +794,11 @@ begin
       tkSet: ;
       tkClass:
       begin
-        // TODO: better error handling in case of an invalid type cast
-        // TODO: add a dynamic way to create the right class
-        if MatchStr(AParam.ParamType.Name, ['TJSONObject']) then
-          Result := TJSONObject.ParseJSONValue(ParamAsString(LAttr)) as TJSONObject
-        else if MatchStr(AParam.ParamType.Name, ['TJSONArray']) then
-          Result := TJSONObject.ParseJSONValue(ParamAsString(LAttr)) as TJSONArray
-        else if MatchStr(AParam.ParamType.Name, ['TJSONValue']) then
-          Result := TJSONObject.ParseJSONValue(ParamAsString(LAttr)) as TJSONValue
-        else if MatchStr(AParam.ParamType.Name, ['TStream']) then
-        begin
-          Result := ParamAsStream(LAttr);
-        end
-        else
-          raise EWiRLServerException.Create(Format('Unsupported class [%s] for param [%s]', [AParam.ParamType.Name, LParamName]), Self.ClassName);
         ValidateMethodParam(AAttrArray, Result.Cast<TObject>);
+        LReader := TMessageBodyReaderRegistry.Instance.FindReader(AParam.ParamType, FContext.Request.MediaType);
+        if not Assigned(LReader) then
+          raise EWiRLServerException.Create(Format('Unsupported class [%s] for param [%s]', [AParam.ParamType.Name, LParamName]), Self.ClassName);
+        Result := LReader.ReadFrom(AParam.GetAttributes, FContext.Request.MediaType, FContext.Request);
       end;
 
       tkMethod: ;

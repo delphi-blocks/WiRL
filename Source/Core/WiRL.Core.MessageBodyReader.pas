@@ -17,17 +17,16 @@ uses
   WiRL.Core.MediaType,
   WiRL.Core.Request,
   WiRL.Core.Declarations,
-  WiRL.Core.Classes,
-  WiRL.Core.Attributes;
+  WiRL.Core.Classes;
 
 type
   IMessageBodyReader = interface
   ['{472A6C22-F4AF-4E77-B6BB-B1085A63504D}']
     function ReadFrom(const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLRequest): TValue;
+      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
-  TGetAffinityFunction = reference to function(AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Integer;
+  TGetAffinityFunction = reference to function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer;
 
   TMessageBodyReaderRegistry = class
   private
@@ -59,8 +58,7 @@ type
 
     procedure RegisterReader<T: class>(const AReaderClass: TClass); overload;
 
-    function FindReader(AType: TRttiType; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType): IMessageBodyReader;
+    function FindReader(AType: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
 
     class property Instance: TMessageBodyReaderRegistry read GetInstance;
     class function GetDefaultClassAffinityFunc<T: class>: TGetAffinityFunction;
@@ -86,8 +84,7 @@ begin
   inherited;
 end;
 
-function TMessageBodyReaderRegistry.FindReader(AType: TRttiType;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType): IMessageBodyReader;
+function TMessageBodyReaderRegistry.FindReader(AType: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
 var
   LEntry: TEntryInfo;
   LFound: Boolean;
@@ -95,19 +92,18 @@ var
   LCurrentAffinity, LCandidateAffinity: Integer;
   LCandidate: TEntryInfo;
 begin
-  Result := nil;
-
   for LEntry in FRegistry do
   begin
     LFound := False;
-    LEntry.TypeMetadata.ForEachAttribute<ProducesAttribute>(
-      procedure (AAttrib: ProducesAttribute)
+
+    TRttiHelper.ForEachAttribute<ConsumesAttribute>(LEntry.TypeMetadata,
+      procedure (AAttrib: ConsumesAttribute)
       begin
         if AMediaType.ToString = AAttrib.Value then
           LFound := True;
       end
     );
-    if LFound and LEntry.IsReadable(AType, AAttributes, AMediaType) then
+    if LFound and LEntry.IsReadable(AType, AType.GetAttributes, AMediaType) then
     begin
       {$ifndef DelphiXE7_UP}
       SetLength(LCompatibleEntries, Length(LCompatibleEntries) + 1);
@@ -124,11 +120,11 @@ begin
     else
     begin  // devo scegliere quello migliore fra quelli compatibili
       LCandidate := LCompatibleEntries[0];
-      LCandidateAffinity := LCandidate.GetAffinity(AType, AAttributes, AMediaType);
+      LCandidateAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType.ToString);
 
       for LEntry in LCompatibleEntries do
       begin
-        LCurrentAffinity := LCandidate.GetAffinity(AType, AAttributes, AMediaType);
+        LCurrentAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType.ToString);
 
         if LCurrentAffinity >= LCandidateAffinity then
         begin
@@ -145,11 +141,11 @@ end;
 class function TMessageBodyReaderRegistry.GetDefaultClassAffinityFunc<T>: TGetAffinityFunction;
 begin
   Result :=
-    function (AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      if AType.IsObjectOfType<T>(False) then
+      if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType, False) then
         Result := 100
-      else if AType.IsObjectOfType<T> then
+      else if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType) then
         Result := 99
       else
         Result := 0;
@@ -166,7 +162,7 @@ procedure TMessageBodyReaderRegistry.RegisterReader(const AReaderClass: TClass;
   const AGetAffinity: TGetAffinityFunction);
 begin
   RegisterReader(
-    function : IMessageBodyReader<T>
+    function : IMessageBodyReader
     var LInstance: TObject;
     begin
       LInstance := AReaderClass.Create;
@@ -186,7 +182,7 @@ begin
     AReaderClass,
     function (AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
-      Result := AType.IsObjectOfType(ASubjectClass);
+      Result := Assigned(AType) and TRttiHelper.IsObjectOfType(AType, ASubjectClass);
     end,
     AGetAffinity
   );
@@ -199,7 +195,7 @@ begin
     AReaderClass
     , function (AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
       begin
-        Result := AType.IsObjectOfType<T>;
+        Result := Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType);
       end
     , Self.GetDefaultClassAffinityFunc<T>()
   );

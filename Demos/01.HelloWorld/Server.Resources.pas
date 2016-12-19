@@ -17,6 +17,7 @@ uses
   WiRL.Core.MediaType,
   WiRL.Core.URL,
   WiRL.Core.MessageBodyWriters,
+  WiRL.Core.MessageBodyReaders,
   WiRL.Core.Token,
   WiRL.Core.Request,
   WiRL.Core.Response;
@@ -64,6 +65,15 @@ type
 
     [POST, Path('/postexample'), Produces(TMediaType.TEXT_PLAIN)]
     function PostExample([BodyParam] AContent: string): string;
+
+    [POST, Path('/postjsonexample'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_JSON)]
+    function PostJSONExample([BodyParam] AContent: TJSONObject): string;
+
+    [POST, Path('/postjsonarray'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_JSON)]
+    function PostJSONArrayExample([BodyParam] AContent: TJSONArray): string;
+
+    [POST, Path('/poststream'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
+    function PostStreamExample([BodyParam] AContent: TStream): string;
   end;
 
   [Path('/entity')]
@@ -130,6 +140,21 @@ begin
   finally
     LArray.Free;
   end;
+end;
+
+function THelloWorldResource.PostJSONArrayExample(AContent: TJSONArray): string;
+begin
+  Result := 'Array len: ' + IntToStr(AContent.Count);
+end;
+
+function THelloWorldResource.PostJSONExample(AContent: TJSONObject): string;
+begin
+  Result := 'Name=' + AContent.GetValue<string>('name');
+end;
+
+function THelloWorldResource.PostStreamExample(AContent: TStream): string;
+begin
+  Result := 'Stream len: ' + IntToStr(AContent.Size);
 end;
 
 function THelloWorldResource.ReverseString(AString: string): string;
