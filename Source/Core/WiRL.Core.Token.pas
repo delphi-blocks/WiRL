@@ -28,27 +28,25 @@ type
   TWiRLSubject = class(TJWTClaims)
   private
     //const CLAIM_PREFIX = 'WiRL_';
-    const CLAIM_NAME = 'name';
-    const CLAIM_USERNAME = 'username';
+    const CLAIM_APPID = 'aid';
+    const CLAIM_USERID = 'uid';
     const CLAIM_ROLES = 'roles';
   private
     function GetRoles: string;
-    function GetUserName: string;
+    function GetUserID: string;
     procedure SetRoles(const Value: string);
-    procedure SetUserName(const Value: string);
-    function GetDisplayName: string;
-    procedure SetDisplayName(const Value: string);
+    procedure SetUserID(const Value: string);
+    function GetAppID: string;
+    procedure SetAppID(const Value: string);
   public
     constructor Create; override;
 
     procedure Clear; virtual;
-
     function HasRole(const ARole: string): Boolean; virtual;
-    procedure SetUserAndRoles(const AUserName: string; const ARoles: TArray<string>); virtual;
 
     property Roles: string read GetRoles write SetRoles;
-    property UserName: string read GetUserName write SetUserName;
-    property DisplayName: string read GetDisplayName write SetDisplayName;
+    property AppID: string read GetAppID write SetAppID;
+    property UserID: string read GetUserID write SetUserID;
   end;
 
   TWiRLSubjectClass = class of TWiRLSubject;
@@ -191,8 +189,8 @@ end;
 procedure TWiRLSubject.Clear;
 begin
   Roles := '';
-  UserName := '';
-  DisplayName := '';
+  UserID := '';
+  AppID := '';
 end;
 
 constructor TWiRLSubject.Create;
@@ -200,9 +198,9 @@ begin
   inherited;
 end;
 
-function TWiRLSubject.GetDisplayName: string;
+function TWiRLSubject.GetAppID: string;
 begin
-  Result := TJSONUtils.GetJSONValue(CLAIM_NAME, FJSON).AsString;
+  Result := TJSONUtils.GetJSONValue(CLAIM_APPID, FJSON).AsString;
 end;
 
 function TWiRLSubject.GetRoles: string;
@@ -210,9 +208,9 @@ begin
   Result := TJSONUtils.GetJSONValue(CLAIM_ROLES, FJSON).AsString;
 end;
 
-function TWiRLSubject.GetUserName: string;
+function TWiRLSubject.GetUserID: string;
 begin
-  Result := TJSONUtils.GetJSONValue(CLAIM_USERNAME, FJSON).AsString;
+  Result := TJSONUtils.GetJSONValue(CLAIM_USERID, FJSON).AsString;
 end;
 
 function TWiRLSubject.HasRole(const ARole: string): Boolean;
@@ -223,15 +221,19 @@ begin
   Result := False;
   LRoles := Roles.Split([',']);
   for LRole in LRoles do
-    Result := SameText(ARole, LRole);
+    if SameText(ARole, LRole) then
+    begin
+      Result := True;
+      Break;
+    end;
 end;
 
-procedure TWiRLSubject.SetDisplayName(const Value: string);
+procedure TWiRLSubject.SetAppID(const Value: string);
 begin
   if Value = '' then
-    TJSONUtils.RemoveJSONNode(CLAIM_NAME, FJSON)
+    TJSONUtils.RemoveJSONNode(CLAIM_APPID, FJSON)
   else
-    TJSONUtils.SetJSONValueFrom<string>(CLAIM_NAME, Value, FJSON);
+    TJSONUtils.SetJSONValueFrom<string>(CLAIM_APPID, Value, FJSON);
 end;
 
 procedure TWiRLSubject.SetRoles(const Value: string);
@@ -242,18 +244,12 @@ begin
     TJSONUtils.SetJSONValueFrom<string>(CLAIM_ROLES, Value, FJSON);
 end;
 
-procedure TWiRLSubject.SetUserName(const Value: string);
+procedure TWiRLSubject.SetUserID(const Value: string);
 begin
   if Value = '' then
-    TJSONUtils.RemoveJSONNode(CLAIM_USERNAME, FJSON)
+    TJSONUtils.RemoveJSONNode(CLAIM_USERID, FJSON)
   else
-    TJSONUtils.SetJSONValueFrom<string>(CLAIM_USERNAME, Value, FJSON);
-end;
-
-procedure TWiRLSubject.SetUserAndRoles(const AUserName: string; const ARoles: TArray<string>);
-begin
-  UserName := AUserName;
-  Roles := Roles.Join(',', ARoles);
+    TJSONUtils.SetJSONValueFrom<string>(CLAIM_USERID, Value, FJSON);
 end;
 
 end.

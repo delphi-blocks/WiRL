@@ -98,10 +98,7 @@ begin
   LAuthOperation := Authenticate(AUserName, APassword);
 
   FAuthContext.Authenticated := LAuthOperation.Success;
-  //FAuthContext.Subject.Roles := LAuthOperation.Roles;
   FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
-
-  FAuthContext.Subject.UserName := AUsername;
 
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthFormResource', 'DoLogin');
@@ -133,7 +130,6 @@ begin
 
   FAuthContext.Authenticated := LAuthOperation.Success;
   FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
-  FAuthContext.Subject.UserName := LAuthData[0];
 
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthBasicResource', 'DoLogin');
