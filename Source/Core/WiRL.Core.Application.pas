@@ -18,7 +18,7 @@ uses
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
   WiRL.Core.MediaType,
-  WiRL.Core.Token,
+  WiRL.Core.Auth.Context,
   WiRL.Core.Context,
   WiRL.Core.Validators,
   WiRL.http.Filters;

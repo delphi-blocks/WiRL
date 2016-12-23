@@ -16,7 +16,7 @@ uses
   WiRL.Core.Engine,
   WiRL.Core.Response,
   WiRL.Core.Request,
-  WiRL.Core.Token;
+  WiRL.Core.Auth.Context;
 
 type
   TWiRLEngines = TArray<TWiRLEngine>;

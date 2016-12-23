@@ -13,25 +13,6 @@ uses
   WiRL.Core.Declarations;
 
 type
-(*
-  {$SCOPEDENUMS ON}
-  MediaType = (
-    Text_Plain,
-    Text_XML,
-    Text_HTML,
-    Application_XML,
-    Application_JSON,
-    Application_XHTML_XML,
-    Application_SVG_XML,
-    Application_Atom_XML,
-    Application_Octet_Stream,
-    Application_Form_Encoded,
-    Multipart_Form_Data,
-    Wildcard
-  );
-  {$SCOPEDENUMS OFF}
-*)
-
   TMediaTypeParams = TDictionary<string, string>;
 
   TMediaType = class
@@ -60,10 +41,15 @@ type
     const CHARSET_UTF8 = 'charset=utf-8';
     const CHARSET_UTF16 = 'charset=utf-16';
 
+    const WITH_CHARSET_ISO_8859_1 = DELIM_PARAMS + CHARSET_ISO_8859_1;
+    const WITH_CHARSET_UTF8 = DELIM_PARAMS + CHARSET_UTF8;
+    const WITH_CHARSET_UTF16 = DELIM_PARAMS + CHARSET_UTF16;
+
     const TEXT_PLAIN = 'text/plain';
     const TEXT_XML = 'text/xml';
     const TEXT_CSV = 'text/csv';
     const TEXT_HTML = 'text/html';
+    const APPLICATION_PDF = 'application/pdf';
     const APPLICATION_XML = 'application/xml';
     const APPLICATION_JSON = 'application/json';
     const APPLICATION_XHTML_XML = 'application/xhtml+xml';
@@ -279,19 +265,19 @@ end;
 
 class function TAcceptParser.ParseAccept(const AAcceptHeader: string): TMediaTypeList;
 var
-  LMediaArray: TArray<string>;
+  LMediaArray: TStringArray;
   LMediaStr: string;
   LMediaType: TMediaType;
   LIndex, LLength: Integer;
 begin
   Result := TMediaTypeList.Create;
   try
-    LMediaArray := TArray<string>(SplitString(AAcceptHeader, DELIM_ACCEPT));
-    LLength := Length(LMediaArray);
+    LMediaArray := AAcceptHeader.Split([DELIM_ACCEPT]);
+    LLength := LMediaArray.Size;
 
     for LIndex := Low(LMediaArray) to High(LMediaArray) do
     begin
-      LMediaStr := LMediaArray[LIndex];
+      LMediaStr := Trim(LMediaArray[LIndex]);
       LMediaType := TMediaType.Create(LMediaStr);
       LMediaType.PFactor := LLength - LIndex;
       Result.Add(LMediaType);

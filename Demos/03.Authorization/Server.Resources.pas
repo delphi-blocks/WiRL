@@ -19,8 +19,8 @@ uses
   WiRL.Core.MessageBodyWriters,
   WiRL.Core.Request,
   WiRL.Core.Response,
-  WiRL.Core.Token,
-  WiRL.Core.Token.Resource,
+  WiRL.Core.Auth.Context,
+  WiRL.Core.Auth.Resource,
 
   // Only if you want to use a custom (claims) class
   Server.Claims;

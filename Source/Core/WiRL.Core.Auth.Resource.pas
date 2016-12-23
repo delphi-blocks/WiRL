@@ -4,12 +4,12 @@
   Home: https://github.com/WiRL-library
 
 *)
-unit WiRL.Core.Token.Resource;
+unit WiRL.Core.Auth.Resource;
 
 interface
 
 uses
-  System.Classes, System.SysUtils,
+  System.Classes, System.SysUtils, System.JSON,
 
   WiRL.Core.JSON,
   WiRL.Core.Registry,
@@ -19,8 +19,8 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.MediaType,
   WiRL.Core.MessageBodyWriter,
-  WiRL.Core.Token,
-  WiRL.Core.URL, System.JSON;
+  WiRL.Core.Auth.Context,
+  WiRL.Core.URL;
 
 type
   TWiRLAuthPrincipal = class

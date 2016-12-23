@@ -5,7 +5,7 @@ interface
 uses
   System.Classes,
   WiRL.Core.JSON,
-  WiRL.Core.Token;
+  WiRL.Core.Auth.Context;
 
 type
   // Custom Claims Class

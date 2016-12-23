@@ -4,7 +4,7 @@
   Home: https://github.com/WiRL-library
 
 *)
-unit WiRL.Core.Token;
+unit WiRL.Core.Auth.Context;
 
 {$I WiRL.inc}
 

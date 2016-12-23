@@ -7,7 +7,7 @@ uses
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.URL,
-  WiRL.Core.Token;
+  WiRL.Core.Auth.Context;
 
 type
   TWiRLContext = class
