@@ -33,7 +33,7 @@ type
     function GetAcceptableMediaTypes: TMediaTypeList;
     function GetContent: string;
     function GetRawContent: TBytes;
-    function GetMediaType: TMediaType;
+    function GetContentMediaType: TMediaType;
   protected
     function GetPathInfo: string; virtual; abstract;
     function GetQuery: string; virtual; abstract;
@@ -78,7 +78,7 @@ type
     property AcceptEncoding: string read GetAcceptEncoding;
     property AcceptLanguage: string read GetAcceptLanguage;
     property RawPathInfo: string read GetRawPathInfo;
-    property MediaType: TMediaType read GetMediaType;
+    property ContentMediaType: TMediaType read GetContentMediaType;
 
     function GetFieldByName(const Name: string): string;
   end;
@@ -151,7 +151,7 @@ begin
   Result := DoGetFieldByName(Name);
 end;
 
-function TWiRLRequest.GetMediaType: TMediaType;
+function TWiRLRequest.GetContentMediaType: TMediaType;
 begin
   if not Assigned(FMediaType) then
   begin

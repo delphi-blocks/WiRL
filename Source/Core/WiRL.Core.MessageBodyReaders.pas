@@ -15,19 +15,19 @@ uses
 type
   [Consumes(TMediaType.APPLICATION_JSON)]
   TJSONObjectReader = class(TInterfacedObject, IMessageBodyReader)
-    function ReadFrom(const AAttributes: TAttributeArray;
+    function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
   [Consumes(TMediaType.APPLICATION_JSON)]
   TJSONArrayReader = class(TInterfacedObject, IMessageBodyReader)
-    function ReadFrom(const AAttributes: TAttributeArray;
+    function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
   [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
   TStreamReader = class(TInterfacedObject, IMessageBodyReader)
-    function ReadFrom(const AAttributes: TAttributeArray;
+    function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
@@ -36,7 +36,7 @@ implementation
 
 { TJSONObjectReader }
 
-function TJSONObjectReader.ReadFrom(const AAttributes: TAttributeArray;
+function TJSONObjectReader.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 begin
   Result := TJSONObject.ParseJSONValue(ARequest.Content) as TJSONObject;
@@ -44,7 +44,7 @@ end;
 
 { TJSONArrayReader }
 
-function TJSONArrayReader.ReadFrom(const AAttributes: TAttributeArray;
+function TJSONArrayReader.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 begin
   Result := TJSONObject.ParseJSONValue(ARequest.Content) as TJSONArray;
@@ -52,7 +52,7 @@ end;
 
 { TStreamReader }
 
-function TStreamReader.ReadFrom(const AAttributes: TAttributeArray;
+function TStreamReader.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 begin
   Result := ARequest.ContentStream;

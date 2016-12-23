@@ -771,7 +771,7 @@ begin
     end;
 
     LParamName := (LAttr as MethodParamAttribute).Value;
-    if LParamName = '' then
+    if (LParamName = '') or (LAttr is BodyParamAttribute) then
       LParamName := AParam.Name;
 
     case AParam.ParamType.TypeKind of
@@ -795,10 +795,10 @@ begin
       tkClass:
       begin
         ValidateMethodParam(AAttrArray, Result.Cast<TObject>);
-        LReader := TMessageBodyReaderRegistry.Instance.FindReader(AParam.ParamType, FContext.Request.MediaType);
+        LReader := TMessageBodyReaderRegistry.Instance.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
         if not Assigned(LReader) then
-          raise EWiRLServerException.Create(Format('Unsupported class [%s] for param [%s]', [AParam.ParamType.Name, LParamName]), Self.ClassName);
-        Result := LReader.ReadFrom(AParam.GetAttributes, FContext.Request.MediaType, FContext.Request);
+          raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.MediaTypeOnly, LParamName]), Self.ClassName);
+        Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
       end;
 
       tkMethod: ;
@@ -1228,7 +1228,7 @@ begin
       AttributeName := Copy(AAttr.ClassName, 1, Length(AAttr.ClassName) - Length(AttributeSuffix))
     else
       AttributeName := AAttr.ClassName;
-    Result := Format('Constraint "%s" not enforced', [AttributeName]);
+    Result := Format('Constraint [%s] not enforced', [AttributeName]);
   end;
 end;
 

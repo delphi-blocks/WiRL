@@ -14,12 +14,10 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.MediaType,
   WiRL.Core.JSON,
-
-  Server.Validators,
-  Server.Consts;
+  WiRL.Core.Validators;
 
 type
-  [Path('valdemo')]
+  [Path('validator')]
   TValidatorDemoResource = class
   public
     [GET, Produces(TMediaType.TEXT_PLAIN)]
@@ -28,8 +26,11 @@ type
     [GET, Path('/echostring/{AString}')]
     function EchoString([PathParam] AString: string): string;
 
-    [GET, Path('/double/{AValue}')]
-    function Double([PathParam][Max(50, sMaxErrorName)] AValue: Integer): Integer;
+    [GET, Path('/double/{AValue}'), Produces(TMediaType.TEXT_PLAIN)]
+    function Double([PathParam][Max(50), Min(1, 'Too small')] AValue: Integer): Integer;
+
+    [GET, Path('/concat?s1={s1}&s2={s2}'), Produces(TMediaType.TEXT_PLAIN)]
+    function Concat([QueryParam('email'), Pattern('.+@.+\..+', 'E-Mail is not valid')] EMail: string; [QueryParam('name'), NotNull('Name required')] Name: string): string;
   end;
 
 implementation
@@ -37,10 +38,12 @@ implementation
 uses
   WiRL.Core.Registry;
 
-resourcestring
-  sMaxError = 'Max';
-
 { TFilterDemoResource }
+
+function TValidatorDemoResource.Concat(EMail, Name: string): string;
+begin
+  Result := Name + ' <' + EMail + '>';
+end;
 
 function TValidatorDemoResource.Double(AValue: Integer): Integer;
 begin

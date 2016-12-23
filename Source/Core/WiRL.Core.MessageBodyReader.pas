@@ -22,7 +22,7 @@ uses
 type
   IMessageBodyReader = interface
   ['{472A6C22-F4AF-4E77-B6BB-B1085A63504D}']
-    function ReadFrom(const AAttributes: TAttributeArray;
+    function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
