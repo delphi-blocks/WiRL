@@ -40,10 +40,10 @@ implementation
 {%CLASSGROUP 'FMX.Controls.TControl'}
 
 uses
-  FMXClient.Forms.Main
-  , WiRL.Rtti.Utils
-  , WiRL.Core.JSON
-  ;
+  FMXClient.Forms.Main,
+
+  WiRL.Rtti.Utils,
+  WiRL.Core.JSON;
 
 {$R *.dfm}
 

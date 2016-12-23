@@ -10,14 +10,15 @@ object MainDataModule: TMainDataModule
     Top = 16
   end
   object WiRLClientApplication1: TWiRLClientApplication
-    DefaultMediaType = 'application/json'
-    AppName = 'default'
+    DefaultMediaType = 'text/plain'
+    AppName = 'app'
     Client = WiRLClient1
     Left = 280
     Top = 72
   end
   object HelloWorldResource: TWiRLClientResource
     Application = WiRLClientApplication1
+    SpecificAccept = 'text/plain'
     Resource = 'helloworld'
     Left = 280
     Top = 128

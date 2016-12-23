@@ -148,7 +148,7 @@ begin
   // The line below is only an example, you have to replace with roles
   // retrieved from the server
   if SameText(AUserName, 'admin') or SameText(AUserName, 'paolo') then
-    Result.Roles := 'user,manager,admin'.Split([','])
+    Result.Roles := 'admin,manager,user'.Split([','])
   else
     Result.Roles := 'user,manager'.Split([',']);
 
