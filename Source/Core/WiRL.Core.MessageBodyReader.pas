@@ -165,7 +165,8 @@ begin
     function : IMessageBodyReader
     var LInstance: TObject;
     begin
-      LInstance := AReaderClass.Create;
+      LInstance := TRttiHelper.CreateInstance(AReaderClass);
+      //LInstance := AReaderClass.Create;
       if not Supports(LInstance, IMessageBodyReader, Result) then
         raise Exception.Create('Interface IMessageBodyReader not implemented');
     end

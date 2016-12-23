@@ -52,6 +52,9 @@ type
     class function IsObjectOfType(ARttiType: TRttiType; const AClass: TClass;
       const AAllowInherithance: Boolean = True): Boolean; overload; static;
 
+    // Create instance of class with parameterless constructor
+    class function CreateInstance(AClass: TClass): TObject;
+
     // Rtti general helper functions
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject): Boolean; overload;
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject; const ADoSomething: TProc<T>): Boolean; overload;
@@ -163,6 +166,16 @@ begin
 end;
 
 { TRttiHelper }
+
+class function TRttiHelper.CreateInstance(AClass: TClass): TObject;
+var
+  LType: TRttiType;
+  LValue: TValue;
+begin
+  LType := FContext.GetType(AClass);
+  LValue := LType.GetMethod('Create').Invoke(LType.AsInstance.MetaclassType, []);
+  Result := LValue.AsObject;
+end;
 
 class function TRttiHelper.ForEachAttribute<T>(AInstance: TObject;
   const ADoSomething: TProc<T>): Integer;

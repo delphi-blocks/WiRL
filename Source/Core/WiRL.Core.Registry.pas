@@ -12,7 +12,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Rtti,
-  WiRL.Core.Singleton, WiRL.Core.Exceptions, WiRL.Core.Attributes;
+  WiRL.Core.Singleton, WiRL.Core.Exceptions, WiRL.Core.Attributes,
+  WiRL.Rtti.Utils;
 
 type
   TWiRLConstructorInfo = class
@@ -112,14 +113,8 @@ begin
   if not Assigned(FConstructorFunc) then
     FConstructorFunc :=
       function: TObject
-      var
-        LContext: TRttiContext;
-        LType: TRttiType;
-        LValue: TValue;
       begin
-        LType := LContext.GetType(FTypeTClass);
-        LValue := LType.GetMethod('Create').Invoke(LType.AsInstance.MetaclassType, []);
-        Result := LValue.AsObject;
+        Result := TRttiHelper.CreateInstance(FTypeTClass);
       end;
 end;
 

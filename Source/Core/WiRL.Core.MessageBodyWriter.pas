@@ -245,7 +245,8 @@ begin
     var
       LInstance: TObject;
     begin
-      LInstance := AWriterClass.Create;
+      LInstance := TRttiHelper.CreateInstance(AWriterClass);
+      //LInstance := AWriterClass.Create;
       if not Supports(LInstance, IMessageBodyWriter, Result) then
         raise Exception.Create('Interface IMessageBodyWriter not implemented');
     end,
