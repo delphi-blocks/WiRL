@@ -16,6 +16,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.MediaType,
   WiRL.Core.URL,
+  WiRL.Core.MessageBodyReaders,
   WiRL.Core.MessageBodyWriters,
   WiRL.Data.MessageBodyWriters,
   WiRL.Core.Exceptions,
@@ -44,13 +45,13 @@ type
     [GET, Path('/employee/')]
     function Employee(): TDataSet;
 
-    [POST, Path('/employee/'), Produces(TMediaType.APPLICATION_JSON)]
+    [POST, Path('/employee/')]
     function InsertEmployee([BodyParam] Json: TJSONValue): TJSONObject;
 
-    [PUT, Path('/employee/{Id}'), Produces(TMediaType.APPLICATION_JSON)]
+    [PUT, Path('/employee/{Id}')]
     function UpdateEmployee(Id :Integer; [BodyParam] Json: TJSONValue): TJSONObject;
 
-    [DELETE, Path('/employee/{Id}'), Produces(TMediaType.APPLICATION_JSON)]
+    [DELETE, Path('/employee/{Id}')]
     function DeleteEmployee([PathParam] Id :Integer; [BodyParam] Json: TJSONValue): TJSONObject;
   end;
 

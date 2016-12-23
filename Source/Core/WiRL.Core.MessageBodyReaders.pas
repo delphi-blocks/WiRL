@@ -14,13 +14,7 @@ uses
 
 type
   [Consumes(TMediaType.APPLICATION_JSON)]
-  TJSONObjectReader = class(TInterfacedObject, IMessageBodyReader)
-    function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
-  end;
-
-  [Consumes(TMediaType.APPLICATION_JSON)]
-  TJSONArrayReader = class(TInterfacedObject, IMessageBodyReader)
+  TJSONValueReader = class(TInterfacedObject, IMessageBodyReader)
     function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
@@ -31,23 +25,14 @@ uses
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
-
-implementation
+implementation
 
 { TJSONObjectReader }
 
-function TJSONObjectReader.ReadFrom(AParam: TRttiParameter;
+function TJSONValueReader.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 begin
-  Result := TJSONObject.ParseJSONValue(ARequest.Content) as TJSONObject;
-end;
-
-{ TJSONArrayReader }
-
-function TJSONArrayReader.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
-begin
-  Result := TJSONObject.ParseJSONValue(ARequest.Content) as TJSONArray;
+  Result := TJSONObject.ParseJSONValue(ARequest.Content);
 end;
 
 { TStreamReader }
@@ -58,26 +43,8 @@ begin
   Result := ARequest.ContentStream;
 end;
 
-procedure RegisterReaders;
-begin
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONObject>(TJSONObjectReader);
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONArray>(TJSONArrayReader);
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TStream>(TStreamReader);
-
-//  TMessageBodyReaderRegistry.Instance.RegisterReader(
-//    TJSONObjectReader,
-//    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-//    begin
-//      Result := Assigned(AType) and (AType.TypeKind = tkFloat);
-//    end,
-//    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-//    begin
-//      Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
-//    end
-//  );
-end;
-
 initialization
-  RegisterReaders;
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONValue>(TJSONValueReader);
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TStream>(TStreamReader);
 
-end.
+end.
