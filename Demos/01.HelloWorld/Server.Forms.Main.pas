@@ -12,6 +12,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.http.Server.Indy;
@@ -27,6 +28,8 @@ type
     PortNumberEdit: TEdit;
     Label1: TLabel;
     edtSecret: TEdit;
+    Button1: TButton;
+    procedure Button1Click(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -46,9 +49,19 @@ implementation
 {$R *.dfm}
 
 uses
+  WiRL.http.Accept.Parser,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyWriters,
   WiRL.Core.URL;
+
+procedure TMainForm.Button1Click(Sender: TObject);
+var
+  LMediaTypes: TMediaTypeList;
+begin
+  LMediaTypes := TMediaTypeList.Create;
+  TAcceptHeaderParser<TMediaType>.Parse(edtSecret.Text, LMediaTypes);
+  edtSecret.Text := LMediaTypes[0].AcceptItemOnly;
+end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin

@@ -5,7 +5,7 @@ interface
 uses
   DUnitX.TestFramework,
 
-  WiRL.Core.MediaType;
+  WiRL.http.Accept.MediaType;
 
 type
 

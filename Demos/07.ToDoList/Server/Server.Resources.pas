@@ -12,7 +12,7 @@ uses
   SysUtils, Classes
 
   , WiRL.Core.Attributes
-  , WiRL.Core.MediaType
+  , WiRL.http.Accept.MediaType
   , WiRL.Core.JSON
   , WiRL.Core.Token
   , WiRL.Core.Token.Resource

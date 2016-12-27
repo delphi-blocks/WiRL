@@ -17,9 +17,9 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
-  WiRL.Core.MediaType,
-  WiRL.Core.Auth.Context,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
+  WiRL.Core.Auth.Context,
   WiRL.Core.Validators,
   WiRL.http.Filters;
 
@@ -797,7 +797,7 @@ begin
         ValidateMethodParam(AAttrArray, Result.Cast<TObject>);
         LReader := TMessageBodyReaderRegistry.Instance.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
         if not Assigned(LReader) then
-          raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.MediaTypeOnly, LParamName]), Self.ClassName);
+          raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, LParamName]), Self.ClassName);
         Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
       end;
 
@@ -851,8 +851,8 @@ begin
   end;
 end;
 
-procedure TWiRLApplicationWorker.FillResourceMethodParameters(AInstance:
-    TObject; var AArgumentArray: TArgumentArray);
+procedure TWiRLApplicationWorker.FillResourceMethodParameters(AInstance: TObject;
+  var AArgumentArray: TArgumentArray);
 var
   LParam: TRttiParameter;
   LParamArray: TArray<TRttiParameter>;

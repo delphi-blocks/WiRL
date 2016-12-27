@@ -25,7 +25,7 @@ uses
   WiRL.Core.Application,
   WiRL.Core.Declarations,
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Token,
   WiRL.Core.URL;
 

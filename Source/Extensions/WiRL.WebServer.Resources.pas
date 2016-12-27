@@ -11,7 +11,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.URL,
   WiRL.Core.Response;
 

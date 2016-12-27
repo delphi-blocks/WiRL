@@ -8,7 +8,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
   WiRL.Core.Request,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.Exceptions;
 

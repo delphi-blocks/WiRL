@@ -15,7 +15,7 @@ uses
   System.Generics.Defaults, System.Generics.Collections,
   WiRL.Core.Singleton,
   WiRL.Core.Response,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.Attributes;

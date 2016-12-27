@@ -16,7 +16,7 @@ uses
   WiRL.Core.Request,
   WiRL.Core.JSON,
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.URL,
   // WiRL Data units
   WiRL.Data.MessageBodyWriters,

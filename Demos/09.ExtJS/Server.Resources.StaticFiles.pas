@@ -12,7 +12,7 @@ uses
   System.SysUtils, System.Classes, System.IOUtils,
 
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Response,
   WiRL.WebServer.Resources;
 

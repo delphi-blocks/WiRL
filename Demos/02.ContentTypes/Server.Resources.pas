@@ -13,7 +13,7 @@ uses
   FireDAC.Comp.Client,
 
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriters,
   WiRL.Data.FireDAC.MessageBodyWriters,
   WiRL.Core.JSON;

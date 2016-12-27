@@ -15,7 +15,7 @@ uses
 
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Response,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyWriter,

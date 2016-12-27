@@ -55,13 +55,22 @@ object MainForm: TMainForm
       Text = '8080'
     end
     object edtSecret: TEdit
-      Left = 312
+      Left = 208
       Top = 24
-      Width = 121
+      Width = 329
       Height = 21
       TabOrder = 3
-      Text = 'secret'
+      Text = 'text/plain; q=0.5, text/html,text/x-dvi; q=0.8, text/csv'
     end
+  end
+  object Button1: TButton
+    Left = 208
+    Top = 79
+    Width = 75
+    Height = 25
+    Caption = 'Button1'
+    TabOrder = 1
+    OnClick = Button1Click
   end
   object MainActionList: TActionList
     Left = 104

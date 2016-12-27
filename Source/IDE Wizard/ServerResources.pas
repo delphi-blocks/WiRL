@@ -4,7 +4,7 @@ interface
 
 uses
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   SysUtils,
   Classes;
 

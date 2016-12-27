@@ -15,7 +15,6 @@ uses
   WiRL.Core.Classes,
   WiRL.Core.Context,
   WiRL.Rtti.Utils,
-  WiRL.Core.MediaType,
   WiRL.Core.Exceptions,
   WiRL.Core.Registry,
   WiRL.Core.Application,
@@ -23,6 +22,7 @@ uses
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.Attributes,
+  WiRL.http.Accept.MediaType,
   WiRL.http.Filters;
 
 {$M+}

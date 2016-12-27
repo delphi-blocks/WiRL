@@ -17,7 +17,7 @@ uses
   WiRL.Core.Application,
   WiRL.Core.Declarations,
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Auth.Context,
   WiRL.Core.URL;

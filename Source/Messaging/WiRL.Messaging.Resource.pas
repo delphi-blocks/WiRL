@@ -16,7 +16,7 @@ uses
   , WiRL.Core.JSON
   , WiRL.Core.Attributes
   , WiRL.Core.Token
-  , WiRL.Core.MediaType
+  , WiRL.http.Accept.MediaType
 
   , WiRL.Messaging.Message
   , WiRL.Messaging.Queue

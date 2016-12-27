@@ -13,7 +13,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Response,
   WiRL.Core.Declarations,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter;
 
 type

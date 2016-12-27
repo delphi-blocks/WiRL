@@ -10,7 +10,13 @@ interface
 
 uses
   System.Classes, System.SysUtils,
-  WiRL.Core.MediaType;
+
+  WiRL.Http.Accept.Parser,
+  WiRL.Http.Accept.Charset,
+  WiRL.Http.Accept.Encoding,
+  WiRL.http.Accept.MediaType,
+  WiRL.http.Accept.Language;
+
 
 type
   TWiRLMethod = class
@@ -28,12 +34,18 @@ type
 
   TWiRLRequest = class
   private
-    FMediaType: TMediaType;
+    FContentMediaType: TMediaType;
+    FAcceptableCharSets: TAcceptCharsetList;
+    FAcceptableEncodings: TAcceptEncodingList;
+    FAcceptableLanguages: TAcceptLanguageList;
     FAcceptableMediaTypes: TMediaTypeList;
     function GetAcceptableMediaTypes: TMediaTypeList;
     function GetContent: string;
     function GetRawContent: TBytes;
     function GetContentMediaType: TMediaType;
+    function GetAcceptableCharSets: TAcceptCharsetList;
+    function GetAcceptableLanguages: TAcceptLanguageList;
+    function GetAcceptableEncodings: TAcceptEncodingList;
   protected
     function GetPathInfo: string; virtual; abstract;
     function GetQuery: string; virtual; abstract;
@@ -75,8 +87,11 @@ type
     property Accept: string read GetAccept;
     property AcceptableMediaTypes: TMediaTypeList read GetAcceptableMediaTypes;
     property AcceptCharSet: string read GetAcceptCharSet;
+    property AcceptableCharSets: TAcceptCharsetList read GetAcceptableCharSets;
     property AcceptEncoding: string read GetAcceptEncoding;
+    property AcceptableEncodings: TAcceptEncodingList read GetAcceptableEncodings;
     property AcceptLanguage: string read GetAcceptLanguage;
+    property AcceptableLanguages: TAcceptLanguageList read GetAcceptableLanguages;
     property RawPathInfo: string read GetRawPathInfo;
     property ContentMediaType: TMediaType read GetContentMediaType;
 
@@ -129,15 +144,51 @@ end;
 
 destructor TWiRLRequest.Destroy;
 begin
-  FMediaType.Free;
+  FContentMediaType.Free;
+  FAcceptableCharSets.Free;
+  FAcceptableLanguages.Free;
   FAcceptableMediaTypes.Free;
+
   inherited;
+end;
+
+function TWiRLRequest.GetAcceptableCharSets: TAcceptCharsetList;
+begin
+  if not Assigned(FAcceptableCharSets) then
+    FAcceptableCharSets := TAcceptCharsetList.Create;
+
+  TAcceptHeaderParser<TAcceptCharset>.Parse(AcceptCharSet, FAcceptableCharSets);
+
+  Result := FAcceptableCharSets;
+end;
+
+function TWiRLRequest.GetAcceptableEncodings: TAcceptEncodingList;
+begin
+  if not Assigned(FAcceptableEncodings) then
+    FAcceptableEncodings := TAcceptEncodingList.Create;
+
+  TAcceptHeaderParser<TAcceptEncoding>.Parse(AcceptEncoding, FAcceptableEncodings);
+
+  Result := FAcceptableEncodings;
+end;
+
+function TWiRLRequest.GetAcceptableLanguages: TAcceptLanguageList;
+begin
+  if not Assigned(FAcceptableLanguages) then
+    FAcceptableLanguages := TAcceptLanguageList.Create;
+
+  TAcceptHeaderParser<TAcceptLanguage>.Parse(AcceptLanguage, FAcceptableLanguages);
+
+  Result := FAcceptableLanguages;
 end;
 
 function TWiRLRequest.GetAcceptableMediaTypes: TMediaTypeList;
 begin
   if not Assigned(FAcceptableMediaTypes) then
-    FAcceptableMediaTypes := TAcceptParser.ParseAccept(Accept);
+    FAcceptableMediaTypes := TMediaTypeList.Create;
+
+  TAcceptHeaderParser<TMediaType>.Parse(Accept, FAcceptableMediaTypes);
+
   Result := FAcceptableMediaTypes;
 end;
 
@@ -153,11 +204,9 @@ end;
 
 function TWiRLRequest.GetContentMediaType: TMediaType;
 begin
-  if not Assigned(FMediaType) then
-  begin
-    FMediaType := TMediaType.Create(ContentType);
-  end;
-  Result := FMediaType;
+  if not Assigned(FContentMediaType) then
+    FContentMediaType := TMediaType.Create(ContentType);
+  Result := FContentMediaType;
 end;
 
 function TWiRLRequest.GetRawContent: TBytes;

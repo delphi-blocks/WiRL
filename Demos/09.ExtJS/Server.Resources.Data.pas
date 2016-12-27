@@ -14,7 +14,7 @@ uses
   WiRL.Core.JSON,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.URL,
   WiRL.Core.MessageBodyReaders,
   WiRL.Core.MessageBodyWriters,

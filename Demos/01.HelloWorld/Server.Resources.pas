@@ -14,11 +14,11 @@ uses
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.URL,
   WiRL.Core.MessageBodyWriters,
   WiRL.Core.MessageBodyReaders,
-  WiRL.Core.Token,
+  WiRL.Core.Auth.Context,
   WiRL.Core.Request,
   WiRL.Core.Response;
 
@@ -26,9 +26,7 @@ type
   [Path('/helloworld')]
   THelloWorldResource = class
   private
-  protected
     [Context] Request: TWiRLRequest;
-    [Context] Response: TWiRLResponse;
     [Context] AuthContext: TWiRLAuthContext;
   public
     [GET]
@@ -98,7 +96,8 @@ type
 implementation
 
 uses
-  System.DateUtils, System.StrUtils, System.IOUtils;
+  System.DateUtils, System.StrUtils, System.IOUtils,
+  WiRL.http.Accept.Language;
 
 { THelloWorldResource }
 
@@ -113,8 +112,19 @@ begin
 end;
 
 function THelloWorldResource.HelloWorld(): string;
+var
+  LLanguage: string;
+  LLang: TAcceptLanguage;
 begin
-  Result := 'Hello World!';
+  LLang := TAcceptLanguage.Create('it');
+  try
+    if Request.AcceptableLanguages.Contains(LLang) then
+      Result := 'Ciao Mondo!'
+    else
+      Result := 'Hello World!';
+  finally
+    LLang.Free;
+  end;
 end;
 
 function THelloWorldResource.Params(AOne, ATwo: string): string;

@@ -14,7 +14,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
   WiRL.Core.Response,
-  WiRL.Core.MediaType,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Exceptions;
 
@@ -62,6 +62,7 @@ uses
 
 
 { TDateTimeWriter }
+
 procedure TDateTimeWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
   AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
@@ -80,7 +81,6 @@ begin
     LStreamWriter.Free;
   end;
 end;
-
 
 { TObjectWriter }
 
@@ -284,8 +284,7 @@ begin
   );
 end;
 
-
-initialization
+initialization
   RegisterWriters;
 
 end.

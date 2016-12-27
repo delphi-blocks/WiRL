@@ -16,7 +16,7 @@ uses
   , WiRL.Core.JSON
   , WiRL.Core.Registry
   , WiRL.Core.Attributes
-  , WiRL.Core.MediaType
+  , WiRL.http.Accept.MediaType
 
   , WiRL.Core.Token
   , WiRL.Core.Token.Resource
