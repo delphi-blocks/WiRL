@@ -17,7 +17,7 @@ uses
   WiRL.Core.Engine,
   WiRL.http.Server.Indy,
   WiRL.Core.Application,
-  WiRL.http.Filters, Data.DB, MemDS, VirtualDataSet;
+  WiRL.http.Filters;
 
 type
   TMainForm = class(TForm)
@@ -30,7 +30,6 @@ type
     PortNumberEdit: TEdit;
     Label1: TLabel;
     lstLog: TListBox;
-    VirtualDataSet1: TVirtualDataSet;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);

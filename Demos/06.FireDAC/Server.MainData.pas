@@ -18,12 +18,12 @@ uses
   FireDAC.Phys, Data.DB, FireDAC.Comp.Client, FireDAC.Phys.FB,
   FireDAC.Phys.FBDef, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.VCLUI.Wait, FireDAC.Comp.UI,
+  FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
 
   WiRL.Data.FireDAC.DataModule,
   WiRL.Core.Attributes,
   WiRL.Core.URL,
-  WiRL.Core.Token, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
-  FireDAC.Stan.ExprFuncs;
+  WiRL.Core.Auth.Context;
 
 type
   [Path('/maindata')]

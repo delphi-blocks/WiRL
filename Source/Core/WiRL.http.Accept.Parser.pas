@@ -18,7 +18,6 @@ uses
   WiRL.Core.Declarations;
 
 type
-
   TAcceptItem = class abstract
   protected
     const DELIM_PARAMS = ';';
@@ -76,7 +75,6 @@ type
   public
     class procedure Parse(const AAcceptHeader: string; AList: TAcceptItemList<T>); static;
   end;
-
 
 implementation
 

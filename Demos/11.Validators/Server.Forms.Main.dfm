@@ -80,8 +80,4 @@ object MainForm: TMainForm
       OnUpdate = StopServerActionUpdate
     end
   end
-  object VirtualDataSet1: TVirtualDataSet
-    Left = 256
-    Top = 104
-  end
 end
