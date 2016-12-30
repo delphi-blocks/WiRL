@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit Server.Resources;
 
 interface
@@ -30,7 +33,7 @@ type
     [Context] AuthContext: TWiRLAuthContext;
   public
     [GET]
-    [Produces(TMediaType.TEXT_PLAIN)]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
     function HelloWorld(): string;
 
     [GET, Path('/time')]
@@ -113,15 +116,14 @@ end;
 
 function THelloWorldResource.HelloWorld(): string;
 var
-  LLanguage: string;
   LLang: TAcceptLanguage;
 begin
   LLang := TAcceptLanguage.Create('it');
   try
     if Request.AcceptableLanguages.Contains(LLang) then
-      Result := 'Ciao Mondo!'
+      Result := 'Ciao Mondo! טיטחח'
     else
-      Result := 'Hello World!';
+      Result := 'Hello World! טיטחח';
   finally
     LLang.Free;
   end;
@@ -186,6 +188,8 @@ function THelloWorldResource.WhatTimeIsIt: TDateTime;
 begin
   Result := Now;
 end;
+
+{ TEntityResource }
 
 function TEntityResource.EchoURL: TJSONObject;
 begin

@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Core.Engine;
 
 interface
@@ -76,12 +79,12 @@ type
     procedure DoAfterHandleRequest(const AApplication: TWiRLApplication; const AStopWatch: TStopWatch); virtual;
     function DoBeforeRequestStart(): Boolean; virtual;
     procedure DoAfterRequestEnd(const AStopWatch: TStopWatch); virtual;
-    procedure DoHandleException(AContext: TWirlContext; AApplication: TWiRLApplication; E: Exception); virtual;
+    procedure DoHandleException(AContext: TWiRLContext; AApplication: TWiRLApplication; E: Exception); virtual;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure HandleRequest(AContext: TWirlContext);
+    procedure HandleRequest(AContext: TWiRLContext);
 
     function AddApplication(const ABasePath: string): TWiRLApplication; overload; virtual;
     function AddApplication(const AName, ABasePath: string; const AResources: TArray<string>): TWiRLApplication; overload; virtual; deprecated;
@@ -225,7 +228,7 @@ begin
     end;
 end;
 
-procedure TWiRLEngine.DoHandleException(AContext: TWirlContext; AApplication:
+procedure TWiRLEngine.DoHandleException(AContext: TWiRLContext; AApplication:
     TWiRLApplication; E: Exception);
 var
   LSubscriber: IWiRLHandleListener;
@@ -266,7 +269,7 @@ begin
   end;
 end;
 
-procedure TWiRLEngine.HandleRequest(AContext: TWirlContext);
+procedure TWiRLEngine.HandleRequest(AContext: TWiRLContext);
 var
   LApplication: TWiRLApplication;
   LAppWorker: TWiRLApplicationWorker;

@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Core.Exceptions;
 
 interface
@@ -95,12 +98,9 @@ type
     property Status: Integer read FStatus write FStatus;
   end;
 
-  EWiRLNotFoundException = class(EWiRLWebApplicationException)
-  public
-    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
-  end;
+  // Client errors (400)
 
-  EWiRLServerException = class(EWiRLWebApplicationException)
+  EWiRLNotFoundException = class(EWiRLWebApplicationException)
   public
     constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
   end;
@@ -110,12 +110,24 @@ type
     constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
   end;
 
-  EWiRLNotImplementedException = class(EWiRLWebApplicationException)
+  EWiRLNotAcceptableException = class(EWiRLWebApplicationException)
   public
     constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
   end;
 
   EWiRLUnsupportedMediaTypeException = class(EWiRLWebApplicationException)
+  public
+    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+  end;
+
+  // Server errors (500)
+
+  EWiRLServerException = class(EWiRLWebApplicationException)
+  public
+    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+  end;
+
+  EWiRLNotImplementedException = class(EWiRLWebApplicationException)
   public
     constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
   end;
@@ -430,6 +442,26 @@ begin
   Result[0] := APair1;
   Result[1] := APair2;
   Result[2] := APair3;
+end;
+
+{ EWiRLNotAcceptableException }
+
+constructor EWiRLNotAcceptableException.Create(const AMessage, AIssuer, AMethod: string);
+var
+  LPairArray: TExceptionValues;
+begin
+  if not AIssuer.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
+  end;
+  if not AMethod.IsEmpty then
+  begin
+    SetLength(LPairArray, Length(LPairArray) + 1);
+    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
+  end;
+
+  inherited Create(AMessage, 406, LPairArray);
 end;
 
 end.

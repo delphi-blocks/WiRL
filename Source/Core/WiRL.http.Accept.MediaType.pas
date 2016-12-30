@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.http.Accept.MediaType;
 
 interface
@@ -30,13 +33,16 @@ type
     const DIALECT_NAME = 'dialect';
     const CHARSET_NAME = 'charset';
 
-    const CHARSET_ISO_8859_1 = 'charset=iso-8859-1';
-    const CHARSET_UTF8 = 'charset=utf-8';
-    const CHARSET_UTF16 = 'charset=utf-16';
+    const CHARSET_ISO_8859_1 = 'iso-8859-1';
+    const CHARSET_UTF8 = 'utf-8';
+    const CHARSET_UTF16 = 'utf-16';
+    const CHARSET_UTF16LE = 'utf-16le';
+    const CHARSET_UTF16BE = 'utf-16be';
 
-    const WITH_CHARSET_ISO_8859_1 = TAcceptItem.DELIM_PARAMS + CHARSET_ISO_8859_1;
-    const WITH_CHARSET_UTF8 = TAcceptItem.DELIM_PARAMS + CHARSET_UTF8;
-    const WITH_CHARSET_UTF16 = TAcceptItem.DELIM_PARAMS + CHARSET_UTF16;
+    const WITH_CHARSET = TAcceptItem.DELIM_PARAMS + CHARSET_NAME + TAcceptItem.DELIM_VALUE;
+    const WITH_CHARSET_ISO_8859_1 = WITH_CHARSET + CHARSET_ISO_8859_1;
+    const WITH_CHARSET_UTF8 = WITH_CHARSET + CHARSET_UTF8;
+    const WITH_CHARSET_UTF16 = WITH_CHARSET + CHARSET_UTF16;
 
     const TEXT_PLAIN = 'text/plain';
     const TEXT_XML = 'text/xml';

@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Client.CustomResource;
 
 {$I WiRL.inc}
@@ -11,11 +14,9 @@ unit WiRL.Client.CustomResource;
 interface
 
 uses
-  SysUtils, Classes
-
-  , WiRL.Client.Application
-  , WiRL.Client.Client
-  ;
+  System.SysUtils, System.Classes,
+  WiRL.Client.Application,
+  WiRL.Client.Client;
 
 type
   TWiRLClientProc = TProc;
@@ -110,10 +111,9 @@ type
 implementation
 
 uses
-  WiRL.Client.Utils
-  , WiRL.Core.URL
-  , WiRL.Core.Utils
-  ;
+  WiRL.Client.Utils,
+  WiRL.Core.URL,
+  WiRL.Core.Utils;
 
 { TWiRLClientCustomResource }
 
@@ -200,8 +200,8 @@ end;
 function TWiRLClientCustomResource.GetURL: string;
 begin
   Result := TWiRLURL.CombinePath([
-    Path
-    , TWiRLURL.CombinePath(TWiRLURL.URLEncode(FPathParamsValues.ToStringArray))
+    Path,
+    TWiRLURL.CombinePath(TWiRLURL.URLEncode(FPathParamsValues.ToStringArray))
   ]);
 
   if FQueryParams.Count > 0 then
@@ -301,20 +301,20 @@ begin
   if not Assigned(LEncoding) then
     LEncoding := TEncoding.Default;
 
-  GET(ABeforeExecute
-    , procedure (AResponse: TStream)
-      var
-        LStreamReader: TStreamReader;
-      begin
-        AResponse.Position := 0;
-        LStreamReader := TStreamReader.Create(AResponse, LEncoding);
-        try
-          LResult := LStreamReader.ReadToEnd;
-        finally
-          LStreamReader.Free;
-        end;
-      end
-    , AOnException
+  GET(ABeforeExecute,
+    procedure (AResponse: TStream)
+    var
+      LStreamReader: TStreamReader;
+    begin
+      AResponse.Position := 0;
+      LStreamReader := TStreamReader.Create(AResponse, LEncoding);
+      try
+        LResult := LStreamReader.ReadToEnd;
+      finally
+        LStreamReader.Free;
+      end;
+    end,
+    AOnException
   );
   Result := LResult;
 end;
@@ -414,8 +414,7 @@ end;
 
 procedure TWiRLClientCustomResource.PUT(const ABeforeExecute: TProc<TMemoryStream>{$ifdef DelphiXE2_UP} = nil{$endif};
   const AAfterExecute: TWiRLClientResponseProc{$ifdef DelphiXE2_UP} = nil{$endif};
-  const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif}
-);
+  const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif});
 var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;

@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Core.MessageBodyReaders;
 
 interface
@@ -12,20 +21,24 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.Exceptions;
 
-type
-  [Consumes(TMediaType.APPLICATION_JSON)]
+
+type
+
+  [Consumes(TMediaType.APPLICATION_JSON)]
   TJSONValueReader = class(TInterfacedObject, IMessageBodyReader)
     function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
-  [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
+
+  [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
   TStreamReader = class(TInterfacedObject, IMessageBodyReader)
     function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
-implementation
+
+implementation
 
 { TJSONObjectReader }
 
@@ -45,6 +58,8 @@ end;
 
 initialization
   TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONValue>(TJSONValueReader);
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TStream>(TStreamReader);
 
-end.
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TStream>(TStreamReader);
+
+
+end.

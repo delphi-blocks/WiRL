@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Diagnostics.Manager;
 
 {$I WiRL.inc}
@@ -18,8 +21,7 @@ uses
   WiRL.Core.Classes,
   WiRL.Core.Singleton,
   WiRL.Core.Context,
-  WiRL.Core.URL,
-  WiRL.Core.Token,
+  WiRL.Core.Auth.Context,
   WiRL.Core.Engine,
   WiRL.Core.Application;
 
@@ -36,7 +38,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure AcquireRequest(AURL: TWiRLURL; AExecutionTimeInMilliseconds: Integer = 0); virtual;
+    procedure AcquireRequest(AExecutionTimeInMilliseconds: Integer = 0); virtual;
 
     function ToJSON: TJSONObject; virtual;
 
@@ -74,6 +76,7 @@ type
   private
     type TDiagnosticsManagerSingleton = TWiRLSingleton<TWiRLDiagnosticsManager>;
   private
+    class var FEngine: TWiRLEngine;
     FEngineInfo: TWiRLDiagnosticEngineInfo;
     FAppDictionary: TObjectDictionary<string, TWiRLDiagnosticAppInfo>;
     FCriticalSection: TCriticalSection;
@@ -81,16 +84,14 @@ type
     class function GetInstance: TWiRLDiagnosticsManager; static; inline;
     function GetAppInfo(const App: string; const ADoSomething: TProc<TWiRLDiagnosticAppInfo>): Boolean; overload;
   public
-    class var Context: TWiRLContext; //TODO: remove, as you remove the singleton from TWiRLDiagnosticsManager
-
+  public
     constructor Create;
     destructor Destroy; override;
 
+    class procedure SetEngine(AEngine: TWiRLEngine);
+
     function ToJSON: TJSONObject; virtual;
-
     procedure RetrieveAppInfo(const App: string; const ADoSomething: TProc<TWiRLDiagnosticAppInfo>);
-
-    class property Instance: TWiRLDiagnosticsManager read GetInstance;
 
     // IWiRLTokenEventListener
     procedure OnTokenStart(const AToken: string);
@@ -99,6 +100,8 @@ type
     // IWiRLHandleRequestEventListener
     procedure BeforeHandleRequest(const ASender: TWiRLEngine; const AApplication: TWiRLApplication);
     procedure AfterHandleRequest(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; const AStopWatch: TStopWatch);
+
+    class property Instance: TWiRLDiagnosticsManager read GetInstance;
   end;
 
 
@@ -120,11 +123,11 @@ begin
   GetAppInfo(AApplication.Name,
     procedure (AAppInfo: TWiRLDiagnosticAppInfo)
     begin
-      AAppInfo.AcquireRequest(Context.URL, LStopWatch.ElapsedMilliseconds);
+      AAppInfo.AcquireRequest(LStopWatch.ElapsedMilliseconds);
 
       FCriticalSection.Enter;
       try
-        FEngineInfo.AcquireRequest(Context.URL, LStopWatch.ElapsedMilliseconds);
+        FEngineInfo.AcquireRequest(LStopWatch.ElapsedMilliseconds);
       finally
         FCriticalSection.Leave;
       end
@@ -148,12 +151,12 @@ begin
 
   inherited Create;
 
-  (Context.Engine as TWiRLEngine).AddSubscriber(Self);
+  FEngine.AddSubscriber(Self);
 end;
 
 destructor TWiRLDiagnosticsManager.Destroy;
 begin
-  (Context.Engine as TWiRLEngine).RemoveSubscriber(Self);
+  FEngine.RemoveSubscriber(Self);
 
   FEngineInfo.Free;
   FCriticalSection.Free;
@@ -171,7 +174,7 @@ begin
 
   FCriticalSection.Enter;
   try
-    if (Context.Engine as TWiRLEngine).Applications.TryGetValue(App, LWiRLApp) then // real application
+    if FEngine.Applications.TryGetValue(App, LWiRLApp) then // real application
     begin
       if not LWiRLApp.SystemApp then // skip system app
       begin
@@ -225,6 +228,11 @@ begin
   GetAppInfo(App, ADoSomething);
 end;
 
+class procedure TWiRLDiagnosticsManager.SetEngine(AEngine: TWiRLEngine);
+begin
+  FEngine := AEngine;
+end;
+
 function TWiRLDiagnosticsManager.ToJSON: TJSONObject;
 var
   LObj: TJSONObject;
@@ -256,7 +264,8 @@ end;
 
 { TAppInfo }
 
-procedure TWiRLDiagnosticInfo.AcquireRequest(AURL: TWiRLURL; AExecutionTimeInMilliseconds: Integer);
+procedure TWiRLDiagnosticInfo.AcquireRequest(AExecutionTimeInMilliseconds:
+    Integer = 0);
 begin
   FCriticalSection.Enter;
   try

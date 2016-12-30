@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Core.JSON;
 
 {$I WiRL.inc}
@@ -35,7 +38,7 @@ type
     class function ToJSON(AJSONValue: TJSONValue): string; static;
     class function StringArrayToJsonArray(const values: TArray<string>): string; static;
     class procedure JSONCopyFrom(ASource, ADestination: TJSONObject); static;
-
+
     class function BooleanToTJSON(AValue: Boolean): TJSONValue;
     class function DateToJSON(ADate: TDateTime; AInputIsUTC: Boolean = True): string; static;
     class function JSONToDate(const ADate: string; AReturnUTC: Boolean = True): TDateTime; static;

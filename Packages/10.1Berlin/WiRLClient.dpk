@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 package WiRLClient;
 
 {$R *.res}
@@ -70,7 +79,13 @@ contains
   WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
   WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
   WiRL.Core.Request in '..\..\Source\Core\WiRL.Core.Request.pas',
-  WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas';
+  WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas',
+  WiRL.http.Accept.Charset in '..\..\Source\Core\WiRL.http.Accept.Charset.pas',
+  WiRL.http.Accept.Encoding in '..\..\Source\Core\WiRL.http.Accept.Encoding.pas',
+  WiRL.http.Accept.Language in '..\..\Source\Core\WiRL.http.Accept.Language.pas',
+  WiRL.http.Accept.MediaType in '..\..\Source\Core\WiRL.http.Accept.MediaType.pas',
+  WiRL.http.Accept.Parser in '..\..\Source\Core\WiRL.http.Accept.Parser.pas',
+  WiRL.Core.Declarations in '..\..\Source\Core\WiRL.Core.Declarations.pas';
 
 end.
 

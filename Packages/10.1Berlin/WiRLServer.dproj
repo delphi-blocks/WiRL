@@ -107,26 +107,6 @@
         <DCCReference Include="DbxCommonDriver.dcp"/>
         <DCCReference Include="dsnap.dcp"/>
         <DCCReference Include="DataSnapFireDAC.dcp"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Cache.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Classes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Engine.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MediaType.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriters.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Token.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Token.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
         <DCCReference Include="..\..\Source\Data\WiRL.Data.MessageBodyWriters.pas"/>
         <DCCReference Include="..\..\Source\Data\WiRL.Data.Utils.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas">
@@ -149,8 +129,44 @@
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWS.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWT.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Context.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Resource.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Cache.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Classes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Context.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Engine.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReaders.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriters.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Serialization.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Validators.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Filters.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Extensions\WiRL.Data.Resolver.pas"/>
+        <DCCReference Include="..\..\Source\Extensions\WiRL.Diagnostics.Manager.pas"/>
+        <DCCReference Include="..\..\Source\Extensions\WiRL.Diagnostics.Resources.pas"/>
+        <DCCReference Include="..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas"/>
+        <DCCReference Include="..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas"/>
+        <DCCReference Include="..\..\Source\Extensions\WiRL.WebServer.Resources.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -197,7 +213,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLServer230.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLServer240.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>WiRLServer.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

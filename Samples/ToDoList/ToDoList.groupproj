@@ -1,0 +1,60 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{76E216A3-C2DE-43E5-B966-CCBE861CAAF6}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Server\ServerToDoList.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="ClientVCL\ClientVCL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="ClientFMX\ClientFMX.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="ServerToDoList">
+        <MSBuild Projects="Server\ServerToDoList.dproj"/>
+    </Target>
+    <Target Name="ServerToDoList:Clean">
+        <MSBuild Projects="Server\ServerToDoList.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ServerToDoList:Make">
+        <MSBuild Projects="Server\ServerToDoList.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ClientVCL">
+        <MSBuild Projects="ClientVCL\ClientVCL.dproj"/>
+    </Target>
+    <Target Name="ClientVCL:Clean">
+        <MSBuild Projects="ClientVCL\ClientVCL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ClientVCL:Make">
+        <MSBuild Projects="ClientVCL\ClientVCL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ClientFMX">
+        <MSBuild Projects="ClientFMX\ClientFMX.dproj"/>
+    </Target>
+    <Target Name="ClientFMX:Clean">
+        <MSBuild Projects="ClientFMX\ClientFMX.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ClientFMX:Make">
+        <MSBuild Projects="ClientFMX\ClientFMX.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="ServerToDoList;ClientVCL;ClientFMX"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="ServerToDoList:Clean;ClientVCL:Clean;ClientFMX:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="ServerToDoList:Make;ClientVCL:Make;ClientFMX:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

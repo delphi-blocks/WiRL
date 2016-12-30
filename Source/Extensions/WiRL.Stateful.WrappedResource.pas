@@ -1,16 +1,19 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Stateful.WrappedResource;
 
 interface
 
 uses
   System.Classes, System.SysUtils,
-  WiRL.Core.Token,
+  WiRL.Core.Auth.Context,
   WiRL.Core.Attributes,
   WiRL.Stateful.Dictionary;
 

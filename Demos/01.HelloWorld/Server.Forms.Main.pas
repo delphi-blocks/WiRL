@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit Server.Forms.Main;
 
 interface
@@ -12,9 +15,6 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
-  WiRL.http.Accept.MediaType,
-  WiRL.Core.Engine,
-  WiRL.Core.Application,
   WiRL.http.Server.Indy;
 
 type
@@ -27,9 +27,7 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    edtSecret: TEdit;
     Button1: TButton;
-    procedure Button1Click(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -47,21 +45,6 @@ var
 implementation
 
 {$R *.dfm}
-
-uses
-  WiRL.http.Accept.Parser,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Core.URL;
-
-procedure TMainForm.Button1Click(Sender: TObject);
-var
-  LMediaTypes: TMediaTypeList;
-begin
-  LMediaTypes := TMediaTypeList.Create;
-  TAcceptHeaderParser<TMediaType>.Parse(edtSecret.Text, LMediaTypes);
-  edtSecret.Text := LMediaTypes[0].AcceptItemOnly;
-end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -89,7 +72,6 @@ begin
         'Server.Resources.THelloWorldResource',
         'Server.Resources.TEntityResource'
       ])
-      .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
   ;
 
   if not FServer.Active then

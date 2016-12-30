@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Core.Response;
 
 interface
@@ -34,6 +37,8 @@ type
     procedure SetReasonString(const Value: string); virtual; abstract;
     function GetContentLength: Int64; virtual; abstract;
     procedure SetContentLength(const Value: Int64); virtual; abstract;
+    function GetContentCharSet: string; virtual; abstract;
+    procedure SetContentCharSet(const Value: string); virtual; abstract;
   public
     procedure SetCustomHeader(const Name, Value: string);
     property Date: TDateTime read GetDate write SetDate;
@@ -45,6 +50,7 @@ type
     property StatusCode: Integer read GetStatusCode write SetStatusCode;
     property ReasonString: string read GetReasonString write SetReasonString;
     property ContentType: string read GetContentType write SetContentType;
+    property ContentCharSet: string read GetContentCharSet write SetContentCharSet;
     property ContentLength: Int64 read GetContentLength write SetContentLength;
 
   {
@@ -78,7 +84,6 @@ type
 
    }
   end;
-
 
 
 implementation

@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Core.MessageBodyWriters;
 
 interface
@@ -11,8 +14,10 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
 
+  WiRL.Core.Classes,
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
+  WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
@@ -21,18 +26,23 @@ uses
 type
   [Produces(TMediaType.APPLICATION_JSON)]
   TDateTimeWriter = class(TInterfacedObject, IMessageBodyWriter)
+  public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   [Produces(TMediaType.APPLICATION_JSON)]
   TObjectWriter = class(TInterfacedObject, IMessageBodyWriter)
+  private
+    //[Context] Request: TWiRLRequest;
+  public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   [Produces(TMediaType.APPLICATION_JSON)]
   TJSONValueWriter = class(TInterfacedObject, IMessageBodyWriter)
+  public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
     function AsObject: TObject;
@@ -40,13 +50,15 @@ type
 
   [Produces(TMediaType.WILDCARD)]
   TWildCardMediaTypeWriter = class(TInterfacedObject, IMessageBodyWriter)
+  public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
-  [Produces(TMediaType.APPLICATION_OCTET_STREAM)
-  , Produces(TMediaType.WILDCARD)]
+  [Produces(TMediaType.APPLICATION_OCTET_STREAM)]
+  [Produces(TMediaType.WILDCARD)]
   TStreamValueWriter = class(TInterfacedObject, IMessageBodyWriter)
+  public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
@@ -160,15 +172,19 @@ begin
   end
   else
   begin
-    LEncoding := TEncoding.Default;
     if AMediaType.Charset = TMediaType.CHARSET_UTF8 then
-      LEncoding := TEncoding.UTF8
+      LEncoding := TUTF8EncodingNoBOM.Create
+    else if AMediaType.Charset = TMediaType.CHARSET_UTF16BE then
+      LEncoding := TUnicodeBEEncodingNoBOM.Create
+    else if AMediaType.Charset = TMediaType.CHARSET_UTF16LE then
+      LEncoding := TUnicodeLEEncodingNoBOM.Create
     else if AMediaType.Charset = TMediaType.CHARSET_UTF16 then
-      LEncoding := TEncoding.Unicode;
+      LEncoding := TUnicodeLEEncodingNoBOM.Create
+    else
+      LEncoding := TMBCSEncoding.Create;
 
     LStreamWriter := TStreamWriter.Create(AResponse.ContentStream, LEncoding);
     try
-
       case AValue.Kind of
         tkUnknown: LStreamWriter.Write(AValue.AsType<string>);
 
@@ -212,6 +228,7 @@ begin
 
     finally
       LStreamWriter.Free;
+      LEncoding.Free;
     end;
   end;
 end;
@@ -284,7 +301,7 @@ begin
   );
 end;
 
-initialization
+initialization
   RegisterWriters;
 
 end.

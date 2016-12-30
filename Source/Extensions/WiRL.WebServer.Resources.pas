@@ -1,5 +1,5 @@
 (*
-  Copyright 2015-2016, WiRL - REST Library
+  Copyright 2015-2017, WiRL - RESTful Library for Delphi
 
   Authors:
 

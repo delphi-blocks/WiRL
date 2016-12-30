@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Core.Application;
 
 {$I WiRL.inc}
@@ -97,7 +100,9 @@ type
 
     procedure CollectGarbage(const AValue: TValue);
     function GetResourceMethod: TRttiMethod;
+    {$HINTS OFF}
     function GetMethodConsumes(AMethod: TRttiMethod): TMediaTypeList;
+    {$HINTS ON}
     function GetMethodProduces(AMethod: TRttiMethod): TMediaTypeList;
     function GetResourceType: TRttiType;
     procedure ValidateMethodParam<T>(const AAttrArray: TAttributeArray; Value: T);
@@ -829,8 +834,7 @@ begin
   end;
 end;
 
-function TWiRLApplicationWorker.FillNonAnnotatedParam(AParam: TRttiParameter):
-    TValue;
+function TWiRLApplicationWorker.FillNonAnnotatedParam(AParam: TRttiParameter): TValue;
 var
   LClass: TClass;
 begin
@@ -1082,6 +1086,9 @@ begin
     );
 
     ContextInjection(LInstance);
+    if Assigned(LWriter) then
+      ContextInjection(LWriter as TObject);
+
     try
       InvokeResourceMethod(LInstance, LWriter, LMediaType);
     finally
@@ -1134,31 +1141,10 @@ begin
       end;
     end
     else // fallback (no MBW, no TWiRLResponse)
-    begin
-      // handle result
-      case LMethodResult.Kind of
-
-        tkString, tkLString, tkUString, tkWString, // string types
-        tkInteger, tkInt64, tkFloat, tkVariant:    // Treated as string, nothing more
-        begin
-          FContext.Response.Content := LMethodResult.AsString;
-          if (FContext.Response.ContentType = LContentType) then
-            FContext.Response.ContentType := TMediaType.TEXT_PLAIN; // or check Produces of method!
-          FContext.Response.StatusCode := 200;
-        end;
-
-        tkUnknown : ; // it's a procedure, not a function!
-
-        //tkRecord: ;
-        //tkInterface: ;
-        //tkDynArray: ;
-        else
-          raise EWiRLNotImplementedException.Create(
-            'Resource''s returned type not supported',
-            Self.ClassName, 'InvokeResourceMethod'
-          );
-      end;
-    end;
+      raise EWiRLNotImplementedException.Create(
+        'Resource''s returned type not supported',
+        Self.ClassName, 'InvokeResourceMethod'
+      );
   finally
     if (not TRttiHelper.HasAttribute<SingletonAttribute>(FResourceMethod)) then
       CollectGarbage(LMethodResult);

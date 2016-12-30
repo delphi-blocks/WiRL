@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2016, WiRL - REST Library
-
-  Home: https://github.com/WiRL-library
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.http.Server.Indy;
 
 interface
@@ -72,6 +75,8 @@ type
     procedure SetReasonString(const Value: string); override;
     function GetContentLength: Int64; override;
     procedure SetContentLength(const Value: Int64); override;
+    function GetContentCharSet: string; override;
+    procedure SetContentCharSet(const Value: string); override;
   public
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
     destructor Destroy; override;
@@ -114,6 +119,7 @@ implementation
 
 uses
   System.StrUtils,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
   WiRL.Core.Utils;
 
@@ -414,6 +420,11 @@ begin
   Result := FResponseInfo.ContentText;
 end;
 
+function TWiRLHttpResponseIndy.GetContentCharSet: string;
+begin
+  Result := FResponseInfo.CharSet;
+end;
+
 function TWiRLHttpResponseIndy.GetContentLength: Int64;
 begin
   Result := FResponseInfo.ContentLength;
@@ -465,6 +476,12 @@ begin
   FResponseInfo.ContentText := Value;
 end;
 
+procedure TWiRLHttpResponseIndy.SetContentCharSet(const Value: string);
+begin
+  inherited;
+  FResponseInfo.CharSet := Value;
+end;
+
 procedure TWiRLHttpResponseIndy.SetContentLength(const Value: Int64);
 begin
   inherited;
@@ -478,9 +495,18 @@ begin
 end;
 
 procedure TWiRLHttpResponseIndy.SetContentType(const Value: string);
+var
+ LMType: TMediaType;
 begin
   inherited;
-  FResponseInfo.ContentType := Value;
+
+  LMType := TMediaType.Create(Value);
+  try
+    FResponseInfo.ContentType := LMType.AcceptItemOnly;
+    FResponseInfo.CharSet := LMType.Charset;
+  finally
+    LMType.Free;
+  end;
 end;
 
 procedure TWiRLHttpResponseIndy.SetCustomHeaders(const Value: TStrings);
