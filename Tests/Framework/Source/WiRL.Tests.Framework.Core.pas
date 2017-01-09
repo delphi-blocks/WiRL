@@ -12,9 +12,11 @@ unit WiRL.Tests.Framework.Core;
 interface
 
 uses
+  System.SysUtils,
   DUnitX.TestFramework,
 
-  WiRL.http.Accept.MediaType;
+  WiRL.http.Accept.MediaType,
+  WiRL.Tests.Mock.Server;
 
 type
 

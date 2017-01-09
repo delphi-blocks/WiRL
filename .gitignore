@@ -55,4 +55,9 @@ __history/
 
 # Castalia statistics file
 *.stat
+
+# Test database
 /Demos/09.ExtJS/data.db
+
+# DUnitX result info
+/Tests/Framework/Win32/Debug/dunitx-results.xml
