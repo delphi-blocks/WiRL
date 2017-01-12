@@ -142,7 +142,8 @@ begin
     LSigner := TJWS.Create(LJWT);
     LKey := TJWK.Create(ASecret);
     try
-      LSigner.Sign(LKey, HS256);
+      // If you get an error here, please update the JWT library
+      LSigner.Sign(LKey, TJOSEAlgorithmId.HS256);
 
       FCompactToken := LSigner.CompactToken;
       FVerified := True;
