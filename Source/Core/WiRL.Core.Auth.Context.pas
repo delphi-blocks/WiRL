@@ -143,6 +143,7 @@ begin
     LKey := TJWK.Create(ASecret);
     try
       // If you get an error here, please update the JWT library
+      LSigner.SkipKeyValidation := True;
       LSigner.Sign(LKey, TJOSEAlgorithmId.HS256);
 
       FCompactToken := LSigner.CompactToken;
