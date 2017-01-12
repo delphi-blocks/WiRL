@@ -14,6 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils,
 
+  WiRL.Http.Core,
   WiRL.Http.Accept.Parser,
   WiRL.Http.Accept.Charset,
   WiRL.Http.Accept.Encoding,
@@ -44,104 +45,75 @@ type
     FAcceptableMediaTypes: TMediaTypeList;
     function GetAcceptableMediaTypes: TMediaTypeList;
     function GetContent: string;
+    procedure SetContent(const Value: string);
     function GetRawContent: TBytes;
+    procedure SetRawContent(const Value: TBytes);
     function GetContentMediaType: TMediaType;
     function GetAcceptableCharSets: TAcceptCharsetList;
     function GetAcceptableLanguages: TAcceptLanguageList;
     function GetAcceptableEncodings: TAcceptEncodingList;
+    function GetAuthorization: string;
+    procedure SetAuthorization(const Value: string);
+    function GetAccept: string;
+    procedure SetAccept(const Value: string);
+    function GetAcceptCharSet: string;
+    procedure SetAcceptCharSet(const Value: string);
+    function GetAcceptEncoding: string;
+    procedure SetAcceptEncoding(const Value: string);
+    function GetAcceptLanguage: string;
+    procedure SetAcceptLanguage(const Value: string);
+    function GetContentType: string;
+    procedure SetContentType(const Value: string);
+    function GetContentLength: Integer;
+    procedure SetContentLength(const Value: Integer);
+    function GetContentVersion: string;
+    procedure SetContentVersion(const Value: string);
+    function GetHost: string;
+    procedure SetHost(const Value: string);
   protected
+    FMethod: string;
     function GetPathInfo: string; virtual; abstract;
     function GetQuery: string; virtual; abstract;
-    function GetHost: string; virtual; abstract;
     function GetServerPort: Integer; virtual; abstract;
-    function GetMethod: string; virtual; abstract;
-    function GetQueryFields: TStrings; virtual; abstract;
-    function GetContentFields: TStrings; virtual; abstract;
-    function GetCookieFields: TStrings; virtual; abstract;
+    function GetHeaderFields: TWiRLHeaderList; virtual; abstract;
+    function GetQueryFields: TWiRLParam; virtual; abstract;
+    function GetContentFields: TWiRLParam; virtual; abstract;
+    function GetCookieFields: TWiRLCookie; virtual; abstract;
     function GetContentStream: TStream; virtual; abstract;
-    function GetAuthorization: string; virtual; abstract;
-    function GetAccept: string; virtual; abstract;
-    function GetAcceptCharSet: string; virtual; abstract;
-    function GetAcceptEncoding: string; virtual; abstract;
-    function GetAcceptLanguage: string; virtual; abstract;
-    function GetContentType: string; virtual; abstract;
-    function GetContentLength: Integer; virtual; abstract;
-    function GetContentVersion: string; virtual; abstract;
+    procedure SetContentStream(const Value: TStream); virtual; abstract;
     function GetRawPathInfo: string; virtual; abstract;
-    function DoGetFieldByName(const Name: string): string; virtual; abstract;
   public
     destructor Destroy; override;
 
     property PathInfo: string read GetPathInfo;
     property Query: string read GetQuery;
-    property Method: string read GetMethod;
-    property Host: string read GetHost;
+    property Method: string read FMethod write FMethod;
+    property Host: string read GetHost write SetHost;
     property ServerPort: Integer read GetServerPort;
-    property QueryFields: TStrings read GetQueryFields;
-    property ContentFields: TStrings read GetContentFields;
-    property CookieFields: TStrings read GetCookieFields;
-    property Content: string read GetContent;
-    property RawContent: TBytes read GetRawContent;
-    property ContentStream: TStream read GetContentStream;
-    property ContentType: string read GetContentType;
-    property ContentLength: Integer read GetContentLength;
-    property ContentVersion: string read GetContentVersion;
-    property Authorization: string read GetAuthorization;
-    property Accept: string read GetAccept;
+    property QueryFields: TWiRLParam read GetQueryFields;
+    property ContentFields: TWiRLParam read GetContentFields;
+    property HeaderFields: TWiRLHeaderList read GetHeaderFields;
+    property CookieFields: TWiRLCookie read GetCookieFields;
+    property Content: string read GetContent write SetContent;
+    property RawContent: TBytes read GetRawContent write SetRawContent;
+    property ContentStream: TStream read GetContentStream write SetContentStream;
+    property ContentType: string read GetContentType write SetContentType;
+    property ContentLength: Integer read GetContentLength write SetContentLength;
+    property ContentVersion: string read GetContentVersion write SetContentVersion;
+    property Authorization: string read GetAuthorization write SetAuthorization;
+    property Accept: string read GetAccept write SetAccept;
     property AcceptableMediaTypes: TMediaTypeList read GetAcceptableMediaTypes;
-    property AcceptCharSet: string read GetAcceptCharSet;
+    property AcceptCharSet: string read GetAcceptCharSet write SetAcceptCharSet;
     property AcceptableCharSets: TAcceptCharsetList read GetAcceptableCharSets;
-    property AcceptEncoding: string read GetAcceptEncoding;
+    property AcceptEncoding: string read GetAcceptEncoding write SetAcceptEncoding;
     property AcceptableEncodings: TAcceptEncodingList read GetAcceptableEncodings;
-    property AcceptLanguage: string read GetAcceptLanguage;
+    property AcceptLanguage: string read GetAcceptLanguage write SetAcceptLanguage;
     property AcceptableLanguages: TAcceptLanguageList read GetAcceptableLanguages;
     property RawPathInfo: string read GetRawPathInfo;
     property ContentMediaType: TMediaType read GetContentMediaType;
-
-    function GetFieldByName(const Name: string): string;
   end;
 
-var
-  GetDefaultCharSetEncoding: TEncoding = nil;
-
 implementation
-
-function DefaultCharSetEncoding: TEncoding;
-begin
-  Result := nil;
-  if Assigned(GetDefaultCharSetEncoding) then
-    Result := GetDefaultCharSetEncoding;
-  if Result = nil then
-    Result := TEncoding.UTF8;
-end;
-
-function EncodingFromContentType(const AContentType: string): TEncoding;
-var
-  S: string;
-begin
-  Result := nil;
-  S := UpperCase(string(AContentType));
-  if (Pos('CHARSET', S) > 0) then // Do not localize
-    if (Pos('UTF-8', S) > 0) then // Do not localize
-      Result := TEncoding.UTF8
-    else if (Pos('ISO-8859-1', S) > 0) then // Do not localize
-      Result := TEncoding.ANSI
-    else if (Pos('ANSI', S) > 0) then // Do not localize
-      Result := TEncoding.ANSI
-    else if (Pos('ASCII', S) > 0) then // Do not localize
-      Result := TEncoding.ASCII;
-
-  if Result = nil then
-    Result := DefaultCharSetEncoding;
-end;
-
-function EncodingGetString(const AContentType: string; const AValue: TBytes): string;
-var
-  Encoding: TEncoding;
-begin
-  Encoding := EncodingFromContentType(AContentType);
-  Result := Encoding.GetString(AValue);
-end;
 
 { TWiRLRequest }
 
@@ -153,6 +125,11 @@ begin
   FAcceptableMediaTypes.Free;
 
   inherited;
+end;
+
+function TWiRLRequest.GetAccept: string;
+begin
+  Result := HeaderFields.Values['Accept'];
 end;
 
 function TWiRLRequest.GetAcceptableCharSets: TAcceptCharsetList;
@@ -195,14 +172,41 @@ begin
   Result := FAcceptableMediaTypes;
 end;
 
-function TWiRLRequest.GetContent: string;
+function TWiRLRequest.GetAcceptCharSet: string;
 begin
-  Result := EncodingGetString(ContentType, RawContent);
+  Result := HeaderFields.Values['Accept-Charset'];
 end;
 
-function TWiRLRequest.GetFieldByName(const Name: string): string;
+function TWiRLRequest.GetAcceptEncoding: string;
 begin
-  Result := DoGetFieldByName(Name);
+  Result := HeaderFields.Values['Accept-Encoding'];
+end;
+
+function TWiRLRequest.GetAcceptLanguage: string;
+begin
+  Result := HeaderFields.Values['Accept-Language'];
+end;
+
+function TWiRLRequest.GetAuthorization: string;
+begin
+  Result := HeaderFields.Values['Authorization'];
+end;
+
+function TWiRLRequest.GetContent: string;
+//var
+//  Encoding :TEncoding;
+begin
+//  if ContentMediaType.Charset <> '' then
+//    Encoding := TEncoding.GetEncoding(ContentMediaType.Charset)
+//  else
+//    Encoding := TEncoding.UTF8;
+//  Result := Encoding.GetString(RawContent);
+  Result := EncodingFromCharSet(ContentMediaType.Charset).GetString(RawContent);
+end;
+
+function TWiRLRequest.GetContentLength: Integer;
+begin
+  Result := StrToIntDef(HeaderFields.Values['Content-Length'], -1);
 end;
 
 function TWiRLRequest.GetContentMediaType: TMediaType;
@@ -210,6 +214,21 @@ begin
   if not Assigned(FContentMediaType) then
     FContentMediaType := TMediaType.Create(ContentType);
   Result := FContentMediaType;
+end;
+
+function TWiRLRequest.GetContentType: string;
+begin
+  Result := HeaderFields.Values['Content-Type'];
+end;
+
+function TWiRLRequest.GetContentVersion: string;
+begin
+  Result := HeaderFields.Values['Content-Version'];
+end;
+
+function TWiRLRequest.GetHost: string;
+begin
+  Result := HeaderFields.Values['Host'];
 end;
 
 function TWiRLRequest.GetRawContent: TBytes;
@@ -220,12 +239,74 @@ begin
   begin
     LPos := GetContentStream.Position;
     try
+      GetContentStream.Position := 0;
       SetLength(Result, GetContentStream.Size);
       GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
     finally
       GetContentStream.Position := LPos;
     end;
   end;
+end;
+
+procedure TWiRLRequest.SetAccept(const Value: string);
+begin
+  HeaderFields.Values['Accept'] := Value;
+end;
+
+procedure TWiRLRequest.SetAcceptCharSet(const Value: string);
+begin
+  HeaderFields.Values['Accept-Charset'] := Value;
+end;
+
+procedure TWiRLRequest.SetAcceptEncoding(const Value: string);
+begin
+  HeaderFields.Values['Accept-Encoding'] := Value;
+end;
+
+procedure TWiRLRequest.SetAcceptLanguage(const Value: string);
+begin
+  HeaderFields.Values['Accept-Language'] := Value;
+end;
+
+procedure TWiRLRequest.SetAuthorization(const Value: string);
+begin
+  HeaderFields.Values['Authorization'] := Value;
+end;
+
+procedure TWiRLRequest.SetContent(const Value: string);
+var
+  LStream: TStream;
+begin
+  LStream := TStringStream.Create(Value, EncodingFromCharSet((ContentMediaType.Charset)));
+  ContentStream := LStream;
+end;
+
+procedure TWiRLRequest.SetContentLength(const Value: Integer);
+begin
+  HeaderFields.Values['Content-Length'] := IntToStr(Value);
+end;
+
+procedure TWiRLRequest.SetContentType(const Value: string);
+begin
+  HeaderFields.Values['Content-Type'] := Value;
+end;
+
+procedure TWiRLRequest.SetContentVersion(const Value: string);
+begin
+  HeaderFields.Values['Content-Version'] := Value;
+end;
+
+procedure TWiRLRequest.SetHost(const Value: string);
+begin
+  HeaderFields.Values['Host'] := Value;
+end;
+
+procedure TWiRLRequest.SetRawContent(const Value: TBytes);
+var
+  LStream: TStream;
+begin
+  LStream := TBytesStream.Create(Value);
+  ContentStream := LStream;
 end;
 
 end.

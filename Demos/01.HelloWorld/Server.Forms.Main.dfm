@@ -55,14 +55,6 @@ object MainForm: TMainForm
       Text = '8080'
     end
   end
-  object Button1: TButton
-    Left = 208
-    Top = 79
-    Width = 75
-    Height = 25
-    Caption = 'Button1'
-    TabOrder = 1
-  end
   object MainActionList: TActionList
     Left = 104
     Top = 96

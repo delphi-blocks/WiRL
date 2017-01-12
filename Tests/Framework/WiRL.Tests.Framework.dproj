@@ -84,6 +84,8 @@
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Server.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.Resources.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.pas"/>
+        <DCCReference Include="Source\WiRL.Tests.Framework.Request.pas"/>
+        <DCCReference Include="Source\WiRL.Tests.Framework.Response.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

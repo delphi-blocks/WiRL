@@ -23,7 +23,9 @@ uses
   WiRL.Tests.Framework.Core in 'Source\WiRL.Tests.Framework.Core.pas',
   WiRL.Tests.Mock.Server in '..\Mock\WiRL.Tests.Mock.Server.pas',
   WiRL.Tests.Framework.Resources in 'Source\WiRL.Tests.Framework.Resources.pas',
-  WiRL.Tests.Mock.Resources in '..\Mock\WiRL.Tests.Mock.Resources.pas';
+  WiRL.Tests.Mock.Resources in '..\Mock\WiRL.Tests.Mock.Resources.pas',
+  WiRL.Tests.Framework.Request in 'Source\WiRL.Tests.Framework.Request.pas',
+  WiRL.Tests.Framework.Response in 'Source\WiRL.Tests.Framework.Response.pas';
 
 var
   runner : ITestRunner;

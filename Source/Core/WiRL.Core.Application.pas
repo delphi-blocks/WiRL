@@ -492,7 +492,7 @@ begin
   case FAppConfig.FTokenLocation of
     TAuthTokenLocation.Bearer: LToken := ExtractJWTToken(FContext.Request.Authorization);
     TAuthTokenLocation.Cookie: LToken := FContext.Request.CookieFields.Values['token'];
-    TAuthTokenLocation.Header: LToken := FContext.Request.GetFieldByName(FAppConfig.TokenCustomHeader);
+    TAuthTokenLocation.Header: LToken := FContext.Request.HeaderFields[FAppConfig.TokenCustomHeader];
   end;
 
   if LToken.IsEmpty then
@@ -730,7 +730,7 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
     else
     if AAttr is HeaderParamAttribute then
     begin
-      Result := FContext.Request.GetFieldByName(LParamName);
+      Result := FContext.Request.HeaderFields[LParamName];
     end
     else
     if AAttr is BodyParamAttribute then
@@ -1140,11 +1140,13 @@ begin
         end;
       end;
     end
-    else // fallback (no MBW, no TWiRLResponse)
+    else if LMethodResult.Kind <> tkUnknown then // it's a procedure, not a function!
+      // fallback (no MBW, no TWiRLResponse)
       raise EWiRLNotImplementedException.Create(
         'Resource''s returned type not supported',
         Self.ClassName, 'InvokeResourceMethod'
       );
+    FContext.Response.SendHeaders;
   finally
     if (not TRttiHelper.HasAttribute<SingletonAttribute>(FResourceMethod)) then
       CollectGarbage(LMethodResult);

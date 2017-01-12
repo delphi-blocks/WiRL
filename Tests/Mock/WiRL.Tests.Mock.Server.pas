@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.RegularExpressions,
   System.Json, System.NetEncoding,
 
+  WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Engine,
   WiRL.Core.Response,
@@ -50,41 +51,21 @@ type
   TWiRLTestResponse = class(TWiRLResponse)
   private
     FContentStream: TStream;
-    FCustomHeaders: TStrings;
     FStatusCode: Integer;
     FContent: string;
-    FContentCharSet: string;
-    FContentType: string;
-    FContentLength: Int64;
-    FDate: TDateTime;
-    FExpires: TDateTime;
-    FLastModified: TDateTime;
     FReasonString: string;
     FResponseError: TWiRLResponseError;
   protected
     function GetContent: string; override;
     function GetContentStream: TStream; override;
-    function GetCustomHeaders: TStrings; override;
-    function GetDate: TDateTime; override;
-    function GetExpires: TDateTime; override;
-    function GetLastModified: TDateTime; override;
     procedure SetContent(const Value: string); override;
     procedure SetContentStream(const Value: TStream); override;
-    procedure SetCustomHeaders(const Value: TStrings); override;
-    procedure SetDate(const Value: TDateTime); override;
-    procedure SetExpires(const Value: TDateTime); override;
-    procedure SetLastModified(const Value: TDateTime); override;
     function GetStatusCode: Integer; override;
     procedure SetStatusCode(const Value: Integer); override;
-    function GetContentType: string; override;
-    procedure SetContentType(const Value: string); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
-    function GetContentLength: Int64; override;
-    procedure SetContentLength(const Value: Int64); override;
-    function GetContentCharSet: string; override;
-    procedure SetContentCharSet(const Value: string); override;
   public
+    procedure SendHeaders; override;
     property Error: TWiRLResponseError read FResponseError;
     constructor Create;
     destructor Destroy; override;
@@ -92,50 +73,36 @@ type
 
   TWiRLTestRequest = class(TWiRLRequest)
   private
-    FCookieFields: TStrings;
-    FQueryFields: TStrings;
-    FContentFields: TStrings;
+    FCookieFields: TWiRLCookie;
+    FQueryFields: TWiRLParam;
+    FContentFields: TWiRLParam;
     FUrl: string;
     FProtocol: string;
     FHost: string;
     FPathInfo: string;
     FRawPathInfo: string;
     FQuery: string;
-    FMethod: string;
-    FContentType: string;
     FServerPort: Integer;
     FContentStream: TStream;
-    FContentVersion: string;
+    FHeaderFields: TWiRLHeaderList;
     procedure ParseQueryParams;
     procedure SetUrl(const Value: string);
     function GetContent: string;
     procedure SetContent(const Value: string);
-    procedure SetContentType(const Value: string);
   protected
     function GetPathInfo: string; override;
     function GetQuery: string; override;
-    function GetHost: string; override;
     function GetServerPort: Integer; override;
-    function GetMethod: string; override;
-    function GetQueryFields: TStrings; override;
-    function GetContentFields: TStrings; override;
-    function GetCookieFields: TStrings; override;
+    function GetQueryFields: TWiRLParam; override;
+    function GetContentFields: TWiRLParam; override;
+    function GetCookieFields: TWiRLCookie; override;
     function GetContentStream: TStream; override;
-    function GetAuthorization: string; override;
-    function GetAccept: string; override;
-    function GetAcceptCharSet: string; override;
-    function GetAcceptEncoding: string; override;
-    function GetAcceptLanguage: string; override;
-    function GetContentType: string; override;
-    function GetContentLength: Integer; override;
-    function GetContentVersion: string; override;
+    procedure SetContentStream(const Value: TStream); override;
     function GetRawPathInfo: string; override;
-    function DoGetFieldByName(const Name: string): string; override;
+    function GetHeaderFields: TWiRLHeaderList; override;
   public
     property Url: string read FUrl write SetUrl;
-    property Method: string read FMethod write FMethod;
     property Content: string read GetContent write SetContent;
-    property ContentType: string read GetContentType write SetContentType;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -205,9 +172,9 @@ constructor TWiRLTestRequest.Create;
 begin
   inherited;
   FContentStream := TMemoryStream.Create;
-  FCookieFields := TStringList.Create;
-  FQueryFields := TStringList.Create;
-  FContentFields := TStringList.Create;
+  FCookieFields := TWiRLCookie.Create;
+  FQueryFields := TWiRLParam.Create;
+  FContentFields := TWiRLParam.Create;
   FMethod := 'GET';
   FServerPort := 80;
 end;
@@ -220,49 +187,14 @@ begin
   inherited;
 end;
 
-function TWiRLTestRequest.DoGetFieldByName(const Name: string): string;
-begin
-
-end;
-
-function TWiRLTestRequest.GetAccept: string;
-begin
-
-end;
-
-function TWiRLTestRequest.GetAcceptCharSet: string;
-begin
-
-end;
-
-function TWiRLTestRequest.GetAcceptEncoding: string;
-begin
-
-end;
-
-function TWiRLTestRequest.GetAcceptLanguage: string;
-begin
-
-end;
-
-function TWiRLTestRequest.GetAuthorization: string;
-begin
-
-end;
-
 function TWiRLTestRequest.GetContent: string;
 begin
   Result := inherited Content;
 end;
 
-function TWiRLTestRequest.GetContentFields: TStrings;
+function TWiRLTestRequest.GetContentFields: TWiRLParam;
 begin
   Result := FContentFields;
-end;
-
-function TWiRLTestRequest.GetContentLength: Integer;
-begin
-  Result := ContentLength;
 end;
 
 function TWiRLTestRequest.GetContentStream: TStream;
@@ -270,29 +202,18 @@ begin
   Result := FContentStream;
 end;
 
-function TWiRLTestRequest.GetContentType: string;
-begin
-  Result := FContentType;
-end;
-
-function TWiRLTestRequest.GetContentVersion: string;
-begin
-  Result := FContentVersion;
-end;
-
-function TWiRLTestRequest.GetCookieFields: TStrings;
+function TWiRLTestRequest.GetCookieFields: TWiRLCookie;
 begin
   Result := FCookieFields;
 end;
 
-function TWiRLTestRequest.GetHost: string;
+function TWiRLTestRequest.GetHeaderFields: TWiRLHeaderList;
 begin
-  Result := FHost;
-end;
-
-function TWiRLTestRequest.GetMethod: string;
-begin
-  Result := FMethod;
+  if not Assigned(FHeaderFields) then
+  begin
+    FHeaderFields := TWiRLHeaderList.Create;
+  end;
+  Result := FHeaderFields;
 end;
 
 function TWiRLTestRequest.GetPathInfo: string;
@@ -305,7 +226,7 @@ begin
   Result := FQuery;
 end;
 
-function TWiRLTestRequest.GetQueryFields: TStrings;
+function TWiRLTestRequest.GetQueryFields: TWiRLParam;
 begin
   Result := FQueryFields;
 end;
@@ -347,19 +268,22 @@ procedure TWiRLTestRequest.SetContent(const Value: string);
 var
   Buffer: TBytes;
 begin
-  Buffer := TEncoding.UTF8.GetBytes(Value);
+  Buffer := EncodingFromCharSet(ContentMediaType.Charset).GetBytes(Value);
   FContentStream.Write(Buffer[0], Length(Buffer));
   FContentStream.Position := 0;
 end;
 
-procedure TWiRLTestRequest.SetContentType(const Value: string);
+procedure TWiRLTestRequest.SetContentStream(const Value: TStream);
 begin
-  FContentType := Value;
+  inherited;
+  if Assigned(FContentStream) then
+    FContentStream.Free;
+  FContentStream := Value;
 end;
 
 procedure TWiRLTestRequest.SetUrl(const Value: string);
 const
-  Pattern = '(https{0,1}):\/\/([^\/]+)(\/[^?\n]+)\?*(.*)';
+  Pattern = '(https{0,1}):\/\/([^\/]+)(\/[^?\n]*)\?*(.*)';
 var
   LRegEx: TRegEx;
   LMatch: TMatch;
@@ -395,14 +319,12 @@ constructor TWiRLTestResponse.Create;
 begin
   inherited;
   FResponseError := TWiRLResponseError.Create;
-  FCustomHeaders := TStringList.Create;
   FStatusCode := 200;
   FReasonString := 'OK';
 end;
 
 destructor TWiRLTestResponse.Destroy;
 begin
-  FCustomHeaders.Free;
   inherited;
 end;
 
@@ -422,44 +344,9 @@ begin
     Result := FContent;
 end;
 
-function TWiRLTestResponse.GetContentCharSet: string;
-begin
-  Result := FContentCharSet;
-end;
-
-function TWiRLTestResponse.GetContentLength: Int64;
-begin
-  Result := FContentLength;
-end;
-
 function TWiRLTestResponse.GetContentStream: TStream;
 begin
   Result := FContentStream;
-end;
-
-function TWiRLTestResponse.GetContentType: string;
-begin
-  Result := FContentType;
-end;
-
-function TWiRLTestResponse.GetCustomHeaders: TStrings;
-begin
-  Result := FCustomHeaders;
-end;
-
-function TWiRLTestResponse.GetDate: TDateTime;
-begin
-  Result := FDate;
-end;
-
-function TWiRLTestResponse.GetExpires: TDateTime;
-begin
-  Result := FExpires;
-end;
-
-function TWiRLTestResponse.GetLastModified: TDateTime;
-begin
-  Result := FLastModified;
 end;
 
 function TWiRLTestResponse.GetReasonString: string;
@@ -472,61 +359,21 @@ begin
   Result := FStatusCode;
 end;
 
+procedure TWiRLTestResponse.SendHeaders;
+begin
+  inherited;
+end;
+
 procedure TWiRLTestResponse.SetContent(const Value: string);
 begin
   inherited;
   FContent := Value;
 end;
 
-procedure TWiRLTestResponse.SetContentCharSet(const Value: string);
-begin
-  inherited;
-  FContentCharSet := Value;
-end;
-
-procedure TWiRLTestResponse.SetContentLength(const Value: Int64);
-begin
-  inherited;
-  FContentLength := Value;
-end;
-
 procedure TWiRLTestResponse.SetContentStream(const Value: TStream);
 begin
   inherited;
   FContentStream := Value;
-end;
-
-procedure TWiRLTestResponse.SetContentType(const Value: string);
-begin
-  inherited;
-  FContentType := Value;
-end;
-
-procedure TWiRLTestResponse.SetCustomHeaders(const Value: TStrings);
-begin
-  inherited;
-  if Assigned(Value) then
-    FCustomHeaders.Assign(Value)
-  else
-    FCustomHeaders.Clear;
-end;
-
-procedure TWiRLTestResponse.SetDate(const Value: TDateTime);
-begin
-  inherited;
-  FDate := Value;
-end;
-
-procedure TWiRLTestResponse.SetExpires(const Value: TDateTime);
-begin
-  inherited;
-  FExpires := Value;
-end;
-
-procedure TWiRLTestResponse.SetLastModified(const Value: TDateTime);
-begin
-  inherited;
-  FLastModified := Value;
 end;
 
 procedure TWiRLTestResponse.SetReasonString(const Value: string);

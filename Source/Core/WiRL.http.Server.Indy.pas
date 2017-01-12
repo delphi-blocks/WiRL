@@ -15,7 +15,7 @@ uses
   System.Classes, System.SysUtils, System.SyncObjs,
   IdContext, IdCustomHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
   IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
-  //WiRL.http.Server.Authentication,
+  WiRL.http.Core,
   WiRL.Core.Engine,
   WiRL.Core.Response,
   WiRL.Core.Request,
@@ -57,27 +57,14 @@ type
   protected
     function GetContent: string; override;
     function GetContentStream: TStream; override;
-    function GetCustomHeaders: TStrings; override;
-    function GetDate: TDateTime; override;
-    function GetExpires: TDateTime; override;
-    function GetLastModified: TDateTime; override;
     procedure SetContent(const Value: string); override;
     procedure SetContentStream(const Value: TStream); override;
-    procedure SetCustomHeaders(const Value: TStrings); override;
-    procedure SetDate(const Value: TDateTime); override;
-    procedure SetExpires(const Value: TDateTime); override;
-    procedure SetLastModified(const Value: TDateTime); override;
     function GetStatusCode: Integer; override;
     procedure SetStatusCode(const Value: Integer); override;
-    function GetContentType: string; override;
-    procedure SetContentType(const Value: string); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
-    function GetContentLength: Int64; override;
-    procedure SetContentLength(const Value: Int64); override;
-    function GetContentCharSet: string; override;
-    procedure SetContentCharSet(const Value: string); override;
   public
+    procedure SendHeaders; override;
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
     destructor Destroy; override;
   end;
@@ -86,30 +73,22 @@ type
   private
     FContext: TIdContext;
     FRequestInfo: TIdHTTPRequestInfo;
-    FCookieFields: TStrings;
-    FQueryFields: TStrings;
-    FContentFields: TStrings;
+    FCookieFields: TWiRLCookie;
+    FQueryFields: TWiRLParam;
+    FHeaderFields: TWiRLHeaderList;
+    FContentFields: TWiRLParam;
     procedure ParseParams(Params :TStrings; const AValue: String);
   protected
     function GetPathInfo: string; override;
     function GetQuery: string; override;
-    function GetHost: string; override;
     function GetServerPort: Integer; override;
-    function GetMethod: string; override;
-    function GetQueryFields: TStrings; override;
-    function GetContentFields: TStrings; override;
-    function GetCookieFields: TStrings; override;
+    function GetQueryFields: TWiRLParam; override;
+    function GetContentFields: TWiRLParam; override;
+    function GetCookieFields: TWiRLCookie; override;
+    function GetHeaderFields: TWiRLHeaderList; override;
     function GetContentStream: TStream; override;
-    function GetAuthorization: string; override;
-    function GetAccept: string; override;
-    function GetAcceptCharSet: string; override;
-    function GetAcceptEncoding: string; override;
-    function GetAcceptLanguage: string; override;
-    function GetContentType: string; override;
-    function GetContentLength: Integer; override;
-    function GetContentVersion: string; override;
+    procedure SetContentStream(const Value: TStream); override;
     function GetRawPathInfo: string; override;
-    function DoGetFieldByName(const Name: string): string; override;
   public
     constructor Create(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
     destructor Destroy; override;
@@ -161,7 +140,7 @@ begin
     begin
       FEngine.HandleRequest(LContext);
     end;
-    AResponseInfo.CustomHeaders.AddStrings(LContext.Response.CustomHeaders);
+    //AResponseInfo.CustomHeaders.AddStrings(LContext.Response.CustomHeaders);
   finally
     LContext.Free;
   end;
@@ -176,7 +155,7 @@ end;
 
 procedure TWiRLhttpServerIndy.DoneWithPostStream(ASender: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
 begin
-  ARequestInfo.PostStream := nil;
+//  ARequestInfo.PostStream := nil;
 end;
 
 procedure TWiRLhttpServerIndy.InitComponent;
@@ -229,6 +208,7 @@ begin
   inherited Create;
   FContext := AContext;
   FRequestInfo := ARequestInfo;
+  FMethod := FRequestInfo.Command;
 end;
 
 destructor TWiRLHttpRequestIndy.Destroy;
@@ -237,6 +217,7 @@ begin
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
+  FHeaderFields.Free;
   inherited;
 end;
 
@@ -272,34 +253,12 @@ begin
   end;
 end;
 
-function TWiRLHttpRequestIndy.DoGetFieldByName(const Name: string): string;
+procedure TWiRLHttpRequestIndy.SetContentStream(const Value: TStream);
 begin
-  Result := FRequestInfo.RawHeaders.Values[Name];
-end;
-
-function TWiRLHttpRequestIndy.GetAccept: string;
-begin
-  Result := FRequestInfo.Accept;
-end;
-
-function TWiRLHttpRequestIndy.GetAcceptCharSet: string;
-begin
-  Result := FRequestInfo.AcceptCharSet;
-end;
-
-function TWiRLHttpRequestIndy.GetAcceptEncoding: string;
-begin
-  Result := FRequestInfo.AcceptEncoding;
-end;
-
-function TWiRLHttpRequestIndy.GetAcceptLanguage: string;
-begin
-  Result := FRequestInfo.AcceptLanguage;
-end;
-
-function TWiRLHttpRequestIndy.GetAuthorization: string;
-begin
-  Result := FRequestInfo.RawHeaders.Values['Authorization'];
+  inherited;
+  if Assigned(FRequestInfo.PostStream) then
+    FRequestInfo.PostStream.Free;
+  FRequestInfo.PostStream := Value;
 end;
 
 function TWiRLHttpRequestIndy.GetContentStream: TStream;
@@ -307,38 +266,23 @@ begin
   Result := FRequestInfo.PostStream;
 end;
 
-function TWiRLHttpRequestIndy.GetContentFields: TStrings;
+function TWiRLHttpRequestIndy.GetContentFields: TWiRLParam;
 begin
   if not Assigned(FContentFields) then
   begin
-    FContentFields := TStringList.Create;
+    FContentFields := TWiRLParam.Create;
     ParseParams(FContentFields, FRequestInfo.FormParams);
   end;
   Result := FContentFields;
 end;
 
-function TWiRLHttpRequestIndy.GetContentLength: Integer;
-begin
-  Result := FRequestInfo.ContentLength;
-end;
-
-function TWiRLHttpRequestIndy.GetContentType: string;
-begin
-  Result := FRequestInfo.ContentType;
-end;
-
-function TWiRLHttpRequestIndy.GetContentVersion: string;
-begin
-  Result := FRequestInfo.ContentVersion;
-end;
-
-function TWiRLHttpRequestIndy.GetCookieFields: TStrings;
+function TWiRLHttpRequestIndy.GetCookieFields: TWiRLCookie;
 var
   i :Integer;
 begin
   if not Assigned(FCookieFields) then
   begin
-    FCookieFields := TStringList.Create;
+    FCookieFields := TWiRLCookie.Create;
     for i := 0 to FRequestInfo.Cookies.Count - 1 do
     begin
       CookieFields.Add(FRequestInfo.Cookies[i].ClientCookie);
@@ -347,14 +291,14 @@ begin
   Result := FCookieFields;
 end;
 
-function TWiRLHttpRequestIndy.GetHost: string;
+function TWiRLHttpRequestIndy.GetHeaderFields: TWiRLHeaderList;
 begin
-  Result := FRequestInfo.Host;
-end;
-
-function TWiRLHttpRequestIndy.GetMethod: string;
-begin
-  Result := FRequestInfo.Command;
+  if not Assigned(FHeaderFields) then
+  begin
+    FHeaderFields := TWiRLHeaderList.Create;
+    FHeaderFields.Assign(FRequestInfo.RawHeaders);
+  end;
+  Result := FHeaderFields;
 end;
 
 function TWiRLHttpRequestIndy.GetPathInfo: string;
@@ -367,13 +311,13 @@ begin
   Result := FRequestInfo.QueryParams;
 end;
 
-function TWiRLHttpRequestIndy.GetQueryFields: TStrings;
+function TWiRLHttpRequestIndy.GetQueryFields: TWiRLParam;
 //const
 //  ContentTypeFormUrlencoded = 'application/x-www-form-urlencoded';
 begin
   if not Assigned(FQueryFields) then
   begin
-    FQueryFields := TStringList.Create;
+    FQueryFields := TWiRLParam.Create;
     ParseParams(FQueryFields, FRequestInfo.QueryParams);
   end;
   Result := FQueryFields;
@@ -420,44 +364,9 @@ begin
   Result := FResponseInfo.ContentText;
 end;
 
-function TWiRLHttpResponseIndy.GetContentCharSet: string;
-begin
-  Result := FResponseInfo.CharSet;
-end;
-
-function TWiRLHttpResponseIndy.GetContentLength: Int64;
-begin
-  Result := FResponseInfo.ContentLength;
-end;
-
 function TWiRLHttpResponseIndy.GetContentStream: TStream;
 begin
   Result := FResponseInfo.ContentStream;
-end;
-
-function TWiRLHttpResponseIndy.GetContentType: string;
-begin
-  Result := FResponseInfo.ContentType;
-end;
-
-function TWiRLHttpResponseIndy.GetCustomHeaders: TStrings;
-begin
-  Result := FCustomHeaders;
-end;
-
-function TWiRLHttpResponseIndy.GetDate: TDateTime;
-begin
-  Result := FResponseInfo.Date;
-end;
-
-function TWiRLHttpResponseIndy.GetExpires: TDateTime;
-begin
-  Result := FResponseInfo.Expires;
-end;
-
-function TWiRLHttpResponseIndy.GetLastModified: TDateTime;
-begin
-  Result := FResponseInfo.LastModified;
 end;
 
 function TWiRLHttpResponseIndy.GetReasonString: string;
@@ -470,67 +379,54 @@ begin
   Result := FResponseInfo.ResponseNo;
 end;
 
+procedure TWiRLHttpResponseIndy.SendHeaders;
+
+  function IsIndyHeader(const Name: string): Boolean;
+  const
+    IndyHeaders: array [0..3] of string = ('Date', 'Content-Type', 'Content-Length', 'Connection');
+  var
+    IndyHeader: string;
+  begin
+    Result := False;
+    for IndyHeader in IndyHeaders do
+      if CompareText(Name, IndyHeader) = 0 then
+        Exit(True);
+  end;
+
+var
+  i :Integer;
+begin
+  inherited;
+  FResponseInfo.Date := GMTToLocalDateTime(HeaderFields['Date']);
+  FResponseInfo.CustomHeaders.Clear;
+
+  for i := 0 to HeaderFields.Count - 1 do
+  begin
+    if IsIndyHeader(HeaderFields.Names[i]) then
+      Continue;
+    FResponseInfo.CustomHeaders.Add(HeaderFields.Strings[i]);
+  end;
+  if ContentType <> '' then
+    ContentMediaType.Parse(ContentType);
+  FResponseInfo.ContentType := ContentMediaType.AcceptItemOnly;
+  FResponseInfo.CharSet := ContentMediaType.Charset;
+  if Connection <> '' then
+    FResponseInfo.Connection := Connection;
+
+  if HasContentLength then
+    FResponseInfo.ContentLength := ContentLength;
+end;
+
 procedure TWiRLHttpResponseIndy.SetContent(const Value: string);
 begin
   inherited;
   FResponseInfo.ContentText := Value;
 end;
 
-procedure TWiRLHttpResponseIndy.SetContentCharSet(const Value: string);
-begin
-  inherited;
-  FResponseInfo.CharSet := Value;
-end;
-
-procedure TWiRLHttpResponseIndy.SetContentLength(const Value: Int64);
-begin
-  inherited;
-  FResponseInfo.ContentLength := Value;
-end;
-
 procedure TWiRLHttpResponseIndy.SetContentStream(const Value: TStream);
 begin
   inherited;
   FResponseInfo.ContentStream := Value;
-end;
-
-procedure TWiRLHttpResponseIndy.SetContentType(const Value: string);
-var
- LMType: TMediaType;
-begin
-  inherited;
-
-  LMType := TMediaType.Create(Value);
-  try
-    FResponseInfo.ContentType := LMType.AcceptItemOnly;
-    FResponseInfo.CharSet := LMType.Charset;
-  finally
-    LMType.Free;
-  end;
-end;
-
-procedure TWiRLHttpResponseIndy.SetCustomHeaders(const Value: TStrings);
-begin
-  inherited;
-  FCustomHeaders.Assign(Value);
-end;
-
-procedure TWiRLHttpResponseIndy.SetDate(const Value: TDateTime);
-begin
-  inherited;
-  FResponseInfo.Date := Value;
-end;
-
-procedure TWiRLHttpResponseIndy.SetExpires(const Value: TDateTime);
-begin
-  inherited;
-  FResponseInfo.Expires := Value;
-end;
-
-procedure TWiRLHttpResponseIndy.SetLastModified(const Value: TDateTime);
-begin
-  inherited;
-  FResponseInfo.LastModified := Value;
 end;
 
 procedure TWiRLHttpResponseIndy.SetReasonString(const Value: string);
