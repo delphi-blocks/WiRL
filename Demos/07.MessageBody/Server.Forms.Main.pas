@@ -48,10 +48,18 @@ implementation
 {$R *.dfm}
 
 uses
+  {$IFDEF DJSON}
+  DJSON.Params,
+  WiRL.MessageBody.DJSON,
+  {$ENDIF}
+
+  {$IFDEF OXML}
+  WiRL.MessageBody.OXML,
+  {$ENDIF}
+
   WiRL.Core.JSON,
   WiRL.Rtti.Utils,
   WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters,
   WiRL.Data.MessageBodyWriters;
 
 
@@ -83,6 +91,18 @@ begin
         'Server.Resources.TMessageBodyResource'
       ])
   ;
+
+  {$IFDEF DJSON}
+  TMessageBodyDJSON.Params :=
+    procedure (AParams: IdjParams)
+    begin
+      AParams.Engine := eDelphiStream;
+      AParams.SerializationMode := smJavaScript;
+      AParams.SerializationType := stFields;
+      AParams.TypeAnnotations := False;
+    end
+  ;
+  {$ENDIF}
 
   if not FServer.Active then
     FServer.Active := True;

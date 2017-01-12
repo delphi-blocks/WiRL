@@ -12,16 +12,37 @@ unit Server.Resources;
 interface
 
 uses
-  SysUtils, Classes, DB,
+  System.SysUtils, System.Classes, Data.DB,
   FireDAC.Comp.Client,
 
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
+  WiRL.Core.MessageBodyReaders,
   WiRL.Core.MessageBodyWriters,
+  {$IFDEF DJSON}
+  WiRL.MessageBody.DJSON,
+  {$ENDIF}
+  {$IFDEF OXML}
+  WiRL.MessageBody.OXML,
+  {$ENDIF}
+  WiRL.Data.MessageBodyWriters,
   WiRL.Data.FireDAC.MessageBodyWriters,
   WiRL.Core.JSON;
 
 type
+  TPerson = class
+  private
+    FBirthDate: TDateTime;
+    FList: TStringList;
+    FName: string;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property BirthDate: TDateTime read FBirthDate write FBirthDate;
+    property List: TStringList read FList write FList;
+    property Name: string read FName write FName;
+  end;
+
   [Path('mb')]
   TMessageBodyResource = class
   private
@@ -30,11 +51,19 @@ type
     [GET, Produces(TMediaType.TEXT_HTML)]
     function HtmlDocument: string;
 
+    [Path('/person')]
+    [Get, Produces(TMediaType.APPLICATION_JSON)]
+    function GetPerson: TPerson;
+
+    [Path('/person')]
+    [POST, Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
+    function New([BodyParam] APerson: TPerson): TPerson;
+
     [GET, Produces(TMediaType.TEXT_PLAIN)]
     function SayHelloWorld: string;
 
     [GET, Produces(TMediaType.APPLICATION_JSON)]
-    function JSON1: TJSONObject;
+    function WhoAmI: TPerson;
 
     [GET, Produces('image/jpg')]
     function JpegImage: TStream;
@@ -89,6 +118,14 @@ begin
   Result.AppendRecord(['Luca', 'Minuti']);
 end;
 
+function TMessageBodyResource.GetPerson: TPerson;
+begin
+  Result := TPerson.Create;
+
+  Result.Name := 'Paolo';
+  Result.BirthDate := EncodeDate(1969, 10, 2);
+end;
+
 function TMessageBodyResource.HtmlDocument: string;
 begin
   Result :=
@@ -102,10 +139,21 @@ begin
   Result := TFileStream.Create('image.jpg', fmOpenRead or fmShareDenyWrite);
 end;
 
-function TMessageBodyResource.JSON1: TJSONObject;
+function TMessageBodyResource.New(APerson: TPerson): TPerson;
 begin
-  Result := TJSONObject.Create;
-  Result.AddPair('Hello', 'World');
+  Result := TPerson.Create;
+  Result.FName := APerson.Name;
+  Result.List.Assign(APerson.List);
+end;
+
+function TMessageBodyResource.WhoAmI: TPerson;
+begin
+  Result := TPerson.Create;
+  Result.Name := 'Paolo';
+  Result.List.Add('First');
+  Result.List.Add('Second');
+  Result.List.Add('Third');
+  Result.BirthDate := EncodeDate(1969, 10, 02);
 end;
 
 function TMessageBodyResource.PdfDocument: TStream;
@@ -116,6 +164,19 @@ end;
 function TMessageBodyResource.SayHelloWorld: string;
 begin
   Result := 'Hello World!';
+end;
+
+{ TPerson }
+
+constructor TPerson.Create;
+begin
+  FList := TStringList.Create;
+end;
+
+destructor TPerson.Destroy;
+begin
+  FList.Free;
+  inherited;
 end;
 
 initialization
