@@ -330,6 +330,7 @@ begin
   LStopWatchEx.Stop;
 
   DoAfterRequestEnd(LStopWatchEx);
+  AContext.Response.SendHeaders;
 end;
 
 function TWiRLEngine.RemoveSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;

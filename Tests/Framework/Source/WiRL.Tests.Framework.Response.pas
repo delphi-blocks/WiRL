@@ -46,6 +46,8 @@ type
     [Test]
     procedure TestContentType;
     [Test]
+    procedure TestContentEncoding;
+    [Test]
     procedure TestContentLength;
     [Test]
     procedure TestEmptyContentLength;
@@ -55,6 +57,16 @@ type
     procedure TestContentMediaType;
     [Test]
     procedure TestConnection;
+    [Test]
+    procedure TestAllow;
+    [Test]
+    procedure TestServer;
+    [Test]
+    procedure TestWWWAuthenticate;
+    [Test]
+    procedure TestLocation;
+    [Test]
+    procedure TestContentLanguage;
   end;
 
 implementation
@@ -74,6 +86,12 @@ begin
   FResponse.Free;
 end;
 
+procedure TTestResponse.TestAllow;
+begin
+  FResponse.Allow := 'GET, HEAD';
+  Assert.AreEqual('GET, HEAD', FResponse.Allow);
+end;
+
 procedure TTestResponse.TestConnection;
 begin
   FResponse.Connection := 'open';
@@ -85,6 +103,18 @@ begin
   FResponse.ContentType := 'text/plain; charset=utf-8';
   FResponse.Content := '123';
   Assert.AreEqual('123', FResponse.Content);
+end;
+
+procedure TTestResponse.TestContentEncoding;
+begin
+  FResponse.ContentEncoding := 'gzip';
+  Assert.AreEqual('gzip', FResponse.ContentEncoding);
+end;
+
+procedure TTestResponse.TestContentLanguage;
+begin
+  FResponse.ContentLanguage := 'en';
+  Assert.AreEqual('en', FResponse.ContentLanguage);
 end;
 
 procedure TTestResponse.TestContentLength;
@@ -176,9 +206,27 @@ begin
   Assert.AreEqual(LTestDate, FResponse.LastModified, OneSecond);
 end;
 
+procedure TTestResponse.TestLocation;
+begin
+  FResponse.Location := 'https://github.com/delphi-blocks/WiRL';
+  Assert.AreEqual('https://github.com/delphi-blocks/WiRL', FResponse.Location);
+end;
+
 procedure TTestResponse.TestReasonString;
 begin
   Assert.AreEqual('OK', FResponse.ReasonString);
+end;
+
+procedure TTestResponse.TestServer;
+begin
+  FResponse.Server := 'WiRL WebServer';
+  Assert.AreEqual('WiRL WebServer', FResponse.Server);
+end;
+
+procedure TTestResponse.TestWWWAuthenticate;
+begin
+  FResponse.WWWAuthenticate := 'basic';
+  Assert.AreEqual('basic', FResponse.WWWAuthenticate);
 end;
 
 procedure TTestResponse.TestEmptyStatusCode;

@@ -20,6 +20,7 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.Core.URL,
   WiRL.Core.MessageBodyWriters,
+  WiRL.Core.MessageBodyReaders,
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.Auth.Context,

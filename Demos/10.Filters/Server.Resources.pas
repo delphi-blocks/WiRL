@@ -33,9 +33,11 @@ type
     function SampleText: string;
 
     [GET, Path('/echostring/{AString}')]
+    [Produces(TMediaType.TEXT_PLAIN)]
     function EchoString([PathParam] AString: string): string;
 
     [GET, Path('/raise/')]
+    [Produces(TMediaType.TEXT_PLAIN)]
     function RaiseTest: string;
   end;
 

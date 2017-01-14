@@ -90,7 +90,7 @@ end;
 
 procedure TResponsePoweredByFilter.Filter(Request: TWiRLRequest; Response: TWiRLResponse);
 begin
-  Response.SetCustomHeader('X-Powered-By', 'WiRL');
+  Response.HeaderFields['X-Powered-By'] := 'WiRL';
 end;
 
 { TResponseGzipFilter }
@@ -128,8 +128,9 @@ begin
       except
         LMemStream.Free;
       end;
+      Response.ContentEncoding := 'gzip';
     end
-    else
+    else if Response.Content <> '' then
     begin
       LStrStream := TStringStream.Create(Response.Content);
       LStrStream.Position := soFromBeginning;
@@ -146,6 +147,7 @@ begin
       finally
         LStrStream.Free;
       end;
+      Response.ContentEncoding := 'gzip';
     end;
   end;
 end;

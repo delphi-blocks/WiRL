@@ -1146,7 +1146,6 @@ begin
         'Resource''s returned type not supported',
         Self.ClassName, 'InvokeResourceMethod'
       );
-    FContext.Response.SendHeaders;
   finally
     if (not TRttiHelper.HasAttribute<SingletonAttribute>(FResourceMethod)) then
       CollectGarbage(LMethodResult);

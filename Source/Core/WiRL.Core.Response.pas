@@ -38,6 +38,18 @@ type
     procedure SetConnection(const Value: string);
     function GetRawContent: TBytes;
     procedure SetRawContent(const Value: TBytes);
+    function GetContentEncoding: string;
+    procedure SetContentEncoding(const Value: string);
+    function GetAllow: string;
+    procedure SetAllow(const Value: string);
+    function GetServer: string;
+    procedure SetServer(const Value: string);
+    function GetWWWAuthenticate: string;
+    procedure SetWWWAuthenticate(const Value: string);
+    function GetLocation: string;
+    procedure SetLocation(const Value: string);
+    function GetContentLanguage: string;
+    procedure SetContentLanguage(const Value: string);
   protected
     function GetHeaderFields: TWiRLHeaderList;
     function GetContent: string; virtual; abstract;
@@ -51,11 +63,14 @@ type
   public
     procedure SendHeaders; virtual; abstract;
     destructor Destroy; override;
+
     property HasContentLength: Boolean read FHasContentLength;
     property Date: TDateTime read GetDate write SetDate;
     property Expires: TDateTime read GetExpires write SetExpires;
     property LastModified: TDateTime read GetLastModified write SetLastModified;
     property Content: string read GetContent write SetContent;
+    property ContentEncoding: string read GetContentEncoding write SetContentEncoding;
+    property ContentLanguage: string read GetContentLanguage write SetContentLanguage;
     property ContentStream: TStream read GetContentStream write SetContentStream;
     property StatusCode: Integer read GetStatusCode write SetStatusCode;
     property ReasonString: string read GetReasonString write SetReasonString;
@@ -65,36 +80,21 @@ type
     property ContentMediaType: TMediaType read GetContentMediaType;
     property Connection: string read GetConnection write SetConnection;
     property RawContent: TBytes read GetRawContent write SetRawContent;
-
+    property Allow: string read GetAllow write SetAllow;
+    property Server: string read GetServer write SetServer;
+    property WWWAuthenticate: string read GetWWWAuthenticate write SetWWWAuthenticate;
+    property Location: string read GetLocation write SetLocation;
 
   {
     procedure SendRedirect(const URI: string); virtual; abstract;
-    procedure SendStream(AStream: TStream); virtual; abstract;
-    function Sent: Boolean; virtual;
     procedure SetCookieField(Values: TStrings; const ADomain, APath: string;
       AExpires: TDateTime; ASecure: Boolean);
-    procedure SetCustomHeader(const Name, Value: string);
     property Cookies: TCookieCollection read FCookies;
-    property HTTPRequest: TWebRequest read FHTTPRequest;
     property Version: string index 0 read GetStringVariable write SetStringVariable;
-    property ReasonString: string index 1 read GetStringVariable write SetStringVariable;
-    property Server: string index 2 read GetStringVariable write SetStringVariable;
-    property WWWAuthenticate: string index 3 read GetStringVariable write SetStringVariable;
     property Realm: string index 4 read GetStringVariable write SetStringVariable;
-    property Allow: string index 5 read GetStringVariable write SetStringVariable;
-    property Location: string index 6 read GetStringVariable write SetStringVariable;
-    property ContentEncoding: string index 7 read GetStringVariable write SetStringVariable;
-    property ContentType: string index 8 read GetStringVariable write SetStringVariable;
     property ContentVersion: string index 9 read GetStringVariable write SetStringVariable;
     property DerivedFrom: string index 10 read GetStringVariable write SetStringVariable;
     property Title: string index 11 read GetStringVariable write SetStringVariable;
-
-    property StatusCode: Integer read GetStatusCode write SetStatusCode;
-    property ContentLength: Integer index 0 read GetIntegerVariable write SetIntegerVariable;
-
-
-
-    property LogMessage: string read GetLogMessage write SetLogMessage;
 
    }
   end;
@@ -114,9 +114,24 @@ begin
   inherited;
 end;
 
+function TWiRLResponse.GetAllow: string;
+begin
+  Result := HeaderFields.Values['Allow'];
+end;
+
 function TWiRLResponse.GetConnection: string;
 begin
   Result := HeaderFields.Values['Connection'];
+end;
+
+function TWiRLResponse.GetContentEncoding: string;
+begin
+  Result := HeaderFields.Values['Content-Encoding'];
+end;
+
+function TWiRLResponse.GetContentLanguage: string;
+begin
+  Result := HeaderFields.Values['Content-Language'];
 end;
 
 function TWiRLResponse.GetContentLength: Int64;
@@ -176,6 +191,11 @@ begin
     Result := GMTToLocalDateTime(LValue);
 end;
 
+function TWiRLResponse.GetLocation: string;
+begin
+  Result := HeaderFields.Values['Location'];
+end;
+
 function TWiRLResponse.GetRawContent: TBytes;
 var
   LPos :Int64;
@@ -192,9 +212,34 @@ begin
   end;
 end;
 
+function TWiRLResponse.GetServer: string;
+begin
+  Result := HeaderFields.Values['Server'];
+end;
+
+function TWiRLResponse.GetWWWAuthenticate: string;
+begin
+  Result := HeaderFields.Values['WWW-Authenticate'];
+end;
+
+procedure TWiRLResponse.SetAllow(const Value: string);
+begin
+  HeaderFields.Values['Allow'] := Value;
+end;
+
 procedure TWiRLResponse.SetConnection(const Value: string);
 begin
   HeaderFields.Values['Connection'] := Value;
+end;
+
+procedure TWiRLResponse.SetContentEncoding(const Value: string);
+begin
+  HeaderFields.Values['Content-Encoding'] := Value;
+end;
+
+procedure TWiRLResponse.SetContentLanguage(const Value: string);
+begin
+  HeaderFields.Values['Content-Language'] := Value;
 end;
 
 procedure TWiRLResponse.SetContentLength(const Value: Int64);
@@ -229,12 +274,27 @@ begin
     HeaderFields.Values['Last-Modified'] := LocalDateTimeToHttpStr(Value);
 end;
 
+procedure TWiRLResponse.SetLocation(const Value: string);
+begin
+  HeaderFields.Values['Location'] := Value;
+end;
+
 procedure TWiRLResponse.SetRawContent(const Value: TBytes);
 var
   LStream: TStream;
 begin
   LStream := TBytesStream.Create(Value);
   ContentStream := LStream;
+end;
+
+procedure TWiRLResponse.SetServer(const Value: string);
+begin
+  HeaderFields.Values['Server'] := Value;
+end;
+
+procedure TWiRLResponse.SetWWWAuthenticate(const Value: string);
+begin
+  HeaderFields.Values['WWW-Authenticate'] := Value;
 end;
 
 end.
