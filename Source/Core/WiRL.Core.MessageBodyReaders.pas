@@ -12,7 +12,8 @@ unit WiRL.Core.MessageBodyReaders;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, System.JSON,
+  System.Classes, System.SysUtils, System.Rtti,
+  System.JSON, REST.Json,
 
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
@@ -21,15 +22,18 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.Exceptions;
 
-
 type
+  [Consumes(TMediaType.APPLICATION_JSON)]
+  TObjectReaderDelphi = class(TInterfacedObject, IMessageBodyReader)
+    function ReadFrom(AParam: TRttiParameter;
+      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+  end;
 
   [Consumes(TMediaType.APPLICATION_JSON)]
   TJSONValueReader = class(TInterfacedObject, IMessageBodyReader)
     function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
-
 
   [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
   TStreamReader = class(TInterfacedObject, IMessageBodyReader)
@@ -39,6 +43,10 @@ type
 
 
 implementation
+
+uses
+  WiRL.Core.Serialization,
+  WiRL.Rtti.Utils;
 
 { TJSONObjectReader }
 
@@ -56,9 +64,17 @@ begin
   Result := ARequest.ContentStream;
 end;
 
-initialization
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONValue>(TJSONValueReader);
+{ TObjectReaderDelphi }
 
+function TObjectReaderDelphi.ReadFrom(AParam: TRttiParameter;
+  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+begin
+  Result := TWiRLJSONMapper.JsonToObject(AParam.ParamType, ARequest.Content);
+end;
+
+initialization
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TObject>(TObjectReaderDelphi);
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONValue>(TJSONValueReader);
   TMessageBodyReaderRegistry.Instance.RegisterReader<TStream>(TStreamReader);
 
 

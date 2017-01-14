@@ -104,7 +104,7 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
-    LObj := TJSONSerializer.ObjectToJSON(AValue.AsObject);
+    LObj := TWiRLJSONMapper.ObjectToJSON(AValue.AsObject);
     try
       LStreamWriter.Write(TJSONHelper.ToJSON(LObj));
     finally

@@ -13,29 +13,35 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
-  WiRL.Core.JSON;
+  WiRL.Core.JSON, REST.Json;
 
 
 type
-  TJSONSerializer = class
-  private
-    class var FContext: TRttiContext;
+  TWiRLJSONMapper = class
   public
     class function ValueToJSONValue(AValue: TValue): TJSONValue;
     class function ObjectToJSON(AObject: TObject): TJSONObject;
     class function ObjectToJSONString(AObject: TObject): string;
-  end;
 
+    class function JsonToObject<T: class, constructor>(AJsonObject: TJSOnObject): T; overload;
+    class function JsonToObject(AType: TRttiType; AJsonObject: TJSOnObject): TObject; overload;
+
+    class function JsonToObject<T: class, constructor>(const AJson: string): T; overload;
+    class function JsonToObject(AType: TRttiType; const AJson: string): TObject; overload;
+
+    class procedure JsonToObject(AObject: TObject; AJsonObject: TJsonObject); overload;
+  end;
 
 implementation
 
 uses
   System.TypInfo,
+  WiRL.Rtti.Utils,
   WiRL.Core.Utils;
 
-{ TJSONSerializer }
+{ TWiRLJSONMapper }
 
-class function TJSONSerializer.ValueToJSONValue(AValue: TValue): TJSONValue;
+class function TWiRLJSONMapper.ValueToJSONValue(AValue: TValue): TJSONValue;
 var
   LIndex: Integer;
 begin
@@ -118,7 +124,7 @@ begin
   end;
 end;
 
-class function TJSONSerializer.ObjectToJSON(AObject: TObject): TJSONObject;
+class function TWiRLJSONMapper.ObjectToJSON(AObject: TObject): TJSONObject;
 var
   LType: TRttiType;
   LProperty: TRttiProperty;
@@ -128,7 +134,7 @@ begin
   try
     if Assigned(AObject) then
     begin
-      LType := FContext.GetType(AObject.ClassType);
+      LType := TRttiHelper.Context.GetType(AObject.ClassType);
       for LProperty in LType.GetProperties do
       begin
         if not LProperty.IsWritable then
@@ -155,7 +161,7 @@ begin
   end;
 end;
 
-class function TJSONSerializer.ObjectToJSONString(AObject: TObject): string;
+class function TWiRLJSONMapper.ObjectToJSONString(AObject: TObject): string;
 var
   LObj: TJSONObject;
 begin
@@ -165,6 +171,40 @@ begin
   finally
     LObj.Free;
   end;
+end;
+
+class function TWiRLJSONMapper.JsonToObject(AType: TRttiType; const AJson: string): TObject;
+var
+  LJObj: TJSONObject;
+begin
+  Result := TRttiHelper.CreateInstance(AType);
+  LJObj := TJSONObject.ParseJSONValue(AJson) as TJSONObject;
+  try
+    TJson.JsonToObject(Result, LJObj);
+  finally
+    LJObj.Free;
+  end;
+end;
+
+class function TWiRLJSONMapper.JsonToObject(AType: TRttiType; AJsonObject: TJSOnObject): TObject;
+begin
+  Result := TRttiHelper.CreateInstance(AType);
+  TJson.JsonToObject(Result, AJsonObject);
+end;
+
+class procedure TWiRLJSONMapper.JsonToObject(AObject: TObject; AJsonObject: TJsonObject);
+begin
+  TJson.JsonToObject(AObject, AJsonObject);
+end;
+
+class function TWiRLJSONMapper.JsonToObject<T>(const AJson: string): T;
+begin
+  Result := TJson.JsonToObject<T>(AJson);
+end;
+
+class function TWiRLJSONMapper.JsonToObject<T>(AJsonObject: TJSOnObject): T;
+begin
+  Result := TJson.JsonToObject<T>(AJsonObject);
 end;
 
 end.
