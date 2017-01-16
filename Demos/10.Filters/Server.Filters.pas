@@ -50,7 +50,11 @@ type
   end;
 
   [ContentEncoding]
-  TResponseGzipFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
+  TResponseEncodingFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
+  private
+    const ENC_DEFLATE = 'deflate';
+    const ENC_GZIP = 'gzip';
+    const END_IDENT = 'identity';
   public
     procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
   end;
@@ -93,9 +97,9 @@ begin
   Response.HeaderFields['X-Powered-By'] := 'WiRL';
 end;
 
-{ TResponseGzipFilter }
+{ TResponseEncodingFilter }
 
-procedure TResponseGzipFilter.Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+procedure TResponseEncodingFilter.Filter(Request: TWiRLRequest; Response: TWiRLResponse);
 var
   LStrStream: TStringStream;
   LMemStream: TMemoryStream;
@@ -115,7 +119,7 @@ var
   end;
 
 begin
-  if Request.AcceptEncoding.Contains('gzip') then
+  if Request.AcceptableEncodings.Contains(ENC_DEFLATE) then
   begin
     if Assigned(Response.ContentStream) then
     begin
@@ -128,7 +132,7 @@ begin
       except
         LMemStream.Free;
       end;
-      Response.ContentEncoding := 'gzip';
+      Response.ContentEncoding := ENC_DEFLATE;
     end
     else if Response.Content <> '' then
     begin
@@ -147,7 +151,7 @@ begin
       finally
         LStrStream.Free;
       end;
-      Response.ContentEncoding := 'gzip';
+      Response.ContentEncoding := ENC_DEFLATE;
     end;
   end;
 end;
@@ -161,6 +165,6 @@ initialization
   );
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestCheckerFilter>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TResponsePoweredByFilter>;
-  TWiRLFilterRegistry.Instance.RegisterFilter<TResponseGzipFilter>;
+  TWiRLFilterRegistry.Instance.RegisterFilter<TResponseEncodingFilter>;
 
 end.
