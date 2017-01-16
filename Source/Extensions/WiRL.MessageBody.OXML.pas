@@ -48,6 +48,7 @@ type
 implementation
 
 uses
+  Data.DB,
   System.TypInfo,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils;
@@ -113,7 +114,9 @@ initialization
   TMessageBodyReaderRegistry.Instance.RegisterReader(TObjectReaderOXML,
     function (AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
-      Result := Assigned(AType) and AType.IsInstance;
+      Result := Assigned(AType) and
+        AType.IsInstance and
+        not TRttiHelper.IsObjectOfType<TDataSet>(AType, True);
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
@@ -124,7 +127,9 @@ initialization
   TWiRLMessageBodyRegistry.Instance.RegisterWriter(TObjectWriterOXML,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
-      Result := Assigned(AType) and AType.IsInstance;
+      Result := Assigned(AType) and
+        AType.IsInstance and
+        not TRttiHelper.IsObjectOfType<TDataSet>(AType, True);
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin

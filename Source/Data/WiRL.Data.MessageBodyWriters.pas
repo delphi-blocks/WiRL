@@ -143,7 +143,7 @@ begin
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TWiRLMessageBodyRegistry.AFFINITY_LOW;
+        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
       end
   );
 
@@ -155,7 +155,7 @@ begin
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TWiRLMessageBodyRegistry.AFFINITY_LOW
+        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH
       end
   );
 
@@ -167,7 +167,7 @@ begin
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TWiRLMessageBodyRegistry.AFFINITY_LOW;
+        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
       end
   );
 
@@ -179,7 +179,7 @@ begin
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TWiRLMessageBodyRegistry.AFFINITY_LOW;
+        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
       end
   );
 

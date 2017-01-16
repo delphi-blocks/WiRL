@@ -83,6 +83,7 @@ type
     class property Instance: TWiRLMessageBodyRegistry read GetInstance;
     class function GetDefaultClassAffinityFunc<T: class>: TGetAffinityFunction;
 
+    const AFFINITY_VERY_HIGH = 50;
     const AFFINITY_HIGH = 30;
     const AFFINITY_LOW = 10;
     const AFFINITY_VERY_LOW = 1;

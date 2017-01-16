@@ -149,6 +149,8 @@ type
 
   SingletonAttribute = class(TCustomAttribute);
 
+  AsyncResponseAttribute = class(TCustomAttribute);
+
   PreMatchingAttribute = class(TCustomAttribute);
 
   NameBindingAttribute = class(TCustomAttribute);

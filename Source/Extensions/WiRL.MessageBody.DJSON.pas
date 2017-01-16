@@ -59,6 +59,7 @@ implementation
 
 uses
   System.TypInfo,
+  Data.DB,
 
   WiRL.Core.JSON,
   WiRL.Core.Utils,
@@ -78,6 +79,7 @@ begin
     Result.SerializationMode := smJavaScript;
     Result.SerializationType := stProperties;
     Result.TypeAnnotations := False;
+    Result.TimeUTC := False;
   end;
 end;
 
@@ -114,7 +116,9 @@ initialization
   TMessageBodyReaderRegistry.Instance.RegisterReader(TObjectReaderDJSON,
     function (AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
-      Result := Assigned(AType) and AType.IsInstance;
+      Result := Assigned(AType) and
+        AType.IsInstance and
+        not TRttiHelper.IsObjectOfType<TDataSet>(AType, True);
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
@@ -125,7 +129,9 @@ initialization
   TWiRLMessageBodyRegistry.Instance.RegisterWriter(TObjectWriterDJSON,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
-      Result := Assigned(AType) and AType.IsInstance;
+      Result := Assigned(AType) and
+        AType.IsInstance and
+        not TRttiHelper.IsObjectOfType<TDataSet>(AType, True);
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
