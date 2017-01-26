@@ -52,9 +52,9 @@ type
   [ContentEncoding]
   TResponseEncodingFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
   private
-    const ENC_DEFLATE = 'deflate';
     const ENC_GZIP = 'gzip';
-    const END_IDENT = 'identity';
+    const ENC_DEFLATE = 'deflate';
+    const ENC_IDENTITY = 'identity';
   public
     procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
   end;

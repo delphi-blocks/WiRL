@@ -50,9 +50,13 @@ type
     FConstructorFunc: TFunc<TObject>;
     FTypeTClass: TClass;
     FPriority: Integer;
+    FAttribute: TCustomAttribute;
   public
-    constructor Create(AClass: TClass; const AConstructorFunc: TFunc<TObject>; APriority :Integer);
+    constructor Create(AClass: TClass; const AConstructorFunc: TFunc<TObject>; APriority: Integer);
 
+    function GetRequestFilter: IWiRLContainerRequestFilter;
+    function GetResponseFilter: IWiRLContainerResponseFilter;
+    property Attribute: TCustomAttribute read FAttribute;
     property TypeTClass: TClass read FTypeTClass;
     property Priority: Integer read FPriority;
     property ConstructorFunc: TFunc<TObject> read FConstructorFunc write FConstructorFunc;
@@ -79,7 +83,7 @@ type
     function RegisterFilter<T: class>: TWiRLFilterConstructorInfo; overload;
     function RegisterFilter<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLFilterConstructorInfo; overload;
 
-    procedure FetchRequestFilter(const PreMatching: Boolean; ARequestProc :TProc<TWiRLFilterConstructorInfo>);
+    procedure FetchRequestFilter(const PreMatching: Boolean; ARequestProc: TProc<TWiRLFilterConstructorInfo>);
     procedure FetchResponseFilter(AResponseProc: TProc<TWiRLFilterConstructorInfo>);
 
     class property Instance: TWiRLFilterRegistry read GetInstance;
@@ -96,13 +100,34 @@ begin
 end;
 
 constructor TWiRLFilterConstructorInfo.Create(AClass: TClass;
-  const AConstructorFunc: TFunc<TObject>; APriority :Integer);
+  const AConstructorFunc: TFunc<TObject>; APriority: Integer);
+var
+  LFilterType: TRttiType;
 begin
   inherited Create;
 
   FConstructorFunc := AConstructorFunc;
   FTypeTClass := AClass;
   FPriority := APriority;
+
+  LFilterType := TRttiHelper.Context.GetType(FTypeTClass);
+
+  TRttiHelper.ForEachAttribute<NameBindingAttribute>(LFilterType,
+    procedure (AFilterAttrib: NameBindingAttribute)
+    begin
+      FAttribute := AFilterAttrib;
+    end
+  );
+
+  if not Assigned(FAttribute) then
+    TRttiHelper.ForEachAttribute<TCustomAttribute>(LFilterType,
+      procedure (AFilterAttrib: TCustomAttribute)
+      begin
+        if TRttiHelper.HasAttribute<NameBindingAttribute>(
+          TRttiHelper.Context.GetType(AFilterAttrib.ClassType)) then
+          FAttribute := AFilterAttrib;
+      end
+    );
 
   // Default constructor function
   if not Assigned(FConstructorFunc) then
@@ -118,6 +143,36 @@ begin
         Result := LValue.AsObject;
       end
     ;
+end;
+
+function TWiRLFilterConstructorInfo.GetRequestFilter: IWiRLContainerRequestFilter;
+var
+  LTempObj: TObject;
+begin
+  LTempObj := Self.ConstructorFunc();
+
+  // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+  if not Supports(LTempObj, IWiRLContainerRequestFilter, Result) then
+    raise EWiRLNotImplementedException.Create(
+      Format('[%s] does not implement requested interface [IWiRLContainerRequestFilter]', [TypeTClass.ClassName]),
+      Self.ClassName,
+      'GetRequestFilter'
+    );
+
+end;
+
+function TWiRLFilterConstructorInfo.GetResponseFilter: IWiRLContainerResponseFilter;
+var
+  LTempObj: TObject;
+begin
+  LTempObj := Self.ConstructorFunc();
+  // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+  if not Supports(LTempObj, IWiRLContainerResponseFilter, Result) then
+    raise EWiRLNotImplementedException.Create(
+      Format('[%s] does not implement requested interface [IWiRLContainerResponseFilter]', [TypeTClass.ClassName]),
+      Self.ClassName,
+      'GetResponseFilter'
+    );
 end;
 
 { TWiRLFilterRegistry }
@@ -217,7 +272,8 @@ begin
   if not Supports(TClass(T), IWiRLContainerRequestFilter) and not Supports(TClass(T), IWiRLContainerResponseFilter) then
     raise EWiRLServerException.Create(
       Format('Filter registration error: [%s] should be a valid filter', [TClass(T).QualifiedClassName]),
-      Self.ClassName, 'RegisterFilter',
+      Self.ClassName,
+      'RegisterFilter'
     );
 
   Result := TWiRLFilterConstructorInfo.Create(TClass(T), AConstructorFunc, GetPriority(TClass(T)));

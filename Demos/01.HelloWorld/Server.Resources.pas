@@ -121,9 +121,9 @@ begin
   LLang := TAcceptLanguage.Create('it');
   try
     if Request.AcceptableLanguages.Contains(LLang) then
-      Result := 'Ciao Mondo! טיטחח'
+      Result := 'Ciao Mondo!'
     else
-      Result := 'Hello World! טיטחח';
+      Result := 'Hello World!';
   finally
     LLang.Free;
   end;

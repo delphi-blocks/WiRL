@@ -233,12 +233,19 @@ procedure TWiRLEngine.DoHandleException(AContext: TWiRLContext; AApplication:
 var
   LSubscriber: IWiRLHandleListener;
   LHandleExceptionListener: IWiRLHandleExceptionListener;
+  LWebException: EWiRLWebApplicationException;
 begin
   if E is EWiRLWebApplicationException then
   begin
-    AContext.Response.StatusCode := EWiRLWebApplicationException(E).Status;
-    AContext.Response.Content := EWiRLWebApplicationException(E).ToJSON;
+    LWebException := E as EWiRLWebApplicationException;
+
+    AContext.Response.StatusCode := LWebException.Status;
+    AContext.Response.Content := LWebException.ToJSON;
     AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
+
+    // Set the Authorization challenge
+    if LWebException.Status = 401 then
+      AContext.Response.HeaderFields['WWW-Authenticate'] := AApplication.AuthChallengeHeader;
   end
   else if E is Exception then
   begin
@@ -297,7 +304,8 @@ begin
 
       if FApplications.TryGetValue(LApplicationPath, LApplication) then
       begin
-        LAppWorker := TWiRLApplicationWorker.Create(AContext, LApplication);
+        AContext.Application := LApplication;
+        LAppWorker := TWiRLApplicationWorker.Create(AContext);
         try
           DoBeforeHandleRequest(LApplication);
           LAppWorker.ApplyRequestFilters;

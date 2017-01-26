@@ -33,45 +33,51 @@ type
   end;
 
   HttpMethodAttribute = class(TCustomAttribute)
-  private
-  protected
   public
     function Matches(const ARequest: TWiRLRequest): Boolean; virtual;
+    function ToString: string; override;
   end;
 
-  GETAttribute     = class(HttpMethodAttribute)
+  GETAttribute = class(HttpMethodAttribute)
   public
     function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function ToString: string; override;
   end;
 
-  POSTAttribute    = class(HttpMethodAttribute)
+  POSTAttribute = class(HttpMethodAttribute)
   public
     function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function ToString: string; override;
   end;
 
-  PUTAttribute     = class(HttpMethodAttribute)
+  PUTAttribute = class(HttpMethodAttribute)
   public
     function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function ToString: string; override;
   end;
 
-  DELETEAttribute  = class(HttpMethodAttribute)
+  DELETEAttribute = class(HttpMethodAttribute)
   public
     function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function ToString: string; override;
   end;
 
-  PATCHAttribute   = class(HttpMethodAttribute)
+  PATCHAttribute = class(HttpMethodAttribute)
   public
     function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function ToString: string; override;
   end;
 
-  HEADAttribute    = class(HttpMethodAttribute)
+  HEADAttribute = class(HttpMethodAttribute)
   public
     function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function ToString: string; override;
   end;
 
   OPTIONSAttribute = class(HttpMethodAttribute)
   public
     function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function ToString: string; override;
   end;
 
   /// <summary>
@@ -314,11 +320,21 @@ begin
   Result := False;
 end;
 
+function HttpMethodAttribute.ToString: string;
+begin
+  Result := '';
+end;
+
 { GETAttribute }
 
 function GETAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
 begin
   Result := ARequest.Method = TWiRLMethod.GET;
+end;
+
+function GETAttribute.ToString: string;
+begin
+  Result := TWiRLMethod.GET;
 end;
 
 { POSTAttribute }
@@ -328,11 +344,21 @@ begin
   Result := ARequest.Method = TWiRLMethod.POST;
 end;
 
+function POSTAttribute.ToString: string;
+begin
+  Result := TWiRLMethod.POST;
+end;
+
 { PUTAttribute }
 
 function PUTAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
 begin
   Result := ARequest.Method = TWiRLMethod.PUT;
+end;
+
+function PUTAttribute.ToString: string;
+begin
+  Result := TWiRLMethod.PUT;
 end;
 
 { DELETEAttribute }
@@ -342,11 +368,21 @@ begin
   Result := ARequest.Method = TWiRLMethod.DELETE;
 end;
 
+function DELETEAttribute.ToString: string;
+begin
+  Result := TWiRLMethod.DELETE;
+end;
+
 { PATCHAttribute }
 
 function PATCHAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
 begin
   Result := ARequest.Method = TWiRLMethod.PATCH;
+end;
+
+function PATCHAttribute.ToString: string;
+begin
+  Result := TWiRLMethod.PATCH;
 end;
 
 { HEADAttribute }
@@ -356,11 +392,21 @@ begin
   Result := ARequest.Method = TWiRLMethod.HEAD;
 end;
 
+function HEADAttribute.ToString: string;
+begin
+  Result := TWiRLMethod.HEAD;
+end;
+
 { OPTIONSAttribute }
 
 function OPTIONSAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
 begin
   Result := ARequest.Method = 'OPTIONS';
+end;
+
+function OPTIONSAttribute.ToString: string;
+begin
+  Result := TWiRLMethod.OPTIONS;
 end;
 
 { PriorityAttribute }

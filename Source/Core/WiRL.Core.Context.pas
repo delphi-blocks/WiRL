@@ -25,11 +25,13 @@ type
     FRequest: TWiRLRequest;
     FResponse: TWiRLResponse;
     FURL: TWiRLURL;
+    FApplication: TObject;
     procedure SetRequest(const Value: TWiRLRequest);
   public
     destructor Destroy; override;
 
     property Engine: TObject read FEngine write FEngine;
+    property Application: TObject read FApplication write FApplication;
     property Request: TWiRLRequest read FRequest write SetRequest;
     property Response: TWiRLResponse read FResponse write FResponse;
     property URL: TWiRLURL read FURL write FURL;

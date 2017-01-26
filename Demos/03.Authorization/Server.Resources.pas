@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti,
 
   WiRL.Core.JSON,
+  WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
