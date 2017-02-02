@@ -77,7 +77,7 @@ begin
         'Server.Resources.THelloWorldResource,'+
         'Server.Resources.TEntityResource'
 	    );
-    {$ENDIF}
+    {$IFEND}
   ;
 
   if not FServer.Active then

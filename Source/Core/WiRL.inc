@@ -1,116 +1,116 @@
-{$if compilerversion = 22}
-  {$define DelphiXE}
-{$ifend}
+{$IF CompilerVersion = 22}
+  {$DEFINE DelphiXE}
+{$IFEND}
 
-{$if compilerversion = 23}
-  {$define DelphiXE2}
-{$ifend}
+{$IF CompilerVersion = 23}
+  {$DEFINE DelphiXE2}
+{$IFEND}
 
-{$if compilerversion = 24}
-  {$define DelphiXE3}
-{$ifend}
+{$IF CompilerVersion = 24}
+  {$DEFINE DelphiXE3}
+{$IFEND}
 
-{$if compilerversion = 25}
-  {$define DelphiXE4}
-{$ifend}
+{$IF CompilerVersion = 25}
+  {$DEFINE DelphiXE4}
+{$IFEND}
 
-{$if compilerversion = 26}
-  {$define DelphiXE5}
-{$ifend}
+{$IF CompilerVersion = 26}
+  {$DEFINE DelphiXE5}
+{$IFEND}
 
-{$if compilerversion = 27}
-  {$define DelphiXE6}
-{$ifend}
+{$IF CompilerVersion = 27}
+  {$DEFINE DelphiXE6}
+{$IFEND}
 
-{$if compilerversion = 28}
-  {$define DelphiXE7}
-{$ifend}
+{$IF CompilerVersion = 28}
+  {$DEFINE DelphiXE7}
+{$IFEND}
 
-{$if compilerversion = 29}
-  {$define DelphiXE8}
-{$ifend}
+{$IF CompilerVersion = 29}
+  {$DEFINE DelphiXE8}
+{$IFEND}
 
-{$if compilerversion >= 22}
-  {$define DelphiXE_UP}
-{$ifend}
+{$IF CompilerVersion >= 22}
+  {$DEFINE DelphiXE_UP}
+{$IFEND}
 
-{$if compilerversion >= 23}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-{$ifend}
+{$IF CompilerVersion >= 23}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+{$IFEND}
 
-{$if compilerversion >= 24}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-  {$define DelphiXE3_UP}
-{$ifend}
+{$IF CompilerVersion >= 24}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+  {$DEFINE DelphiXE3_UP}
+{$IFEND}
 
-{$if compilerversion >= 25}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-  {$define DelphiXE3_UP}
-  {$define DelphiXE4_UP}
-{$ifend}
+{$IF CompilerVersion >= 25}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+  {$DEFINE DelphiXE3_UP}
+  {$DEFINE DelphiXE4_UP}
+{$IFEND}
 
-{$if compilerversion >= 26}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-  {$define DelphiXE3_UP}
-  {$define DelphiXE4_UP}
-  {$define DelphiXE5_UP}
-{$ifend}
+{$IF CompilerVersion >= 26}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+  {$DEFINE DelphiXE3_UP}
+  {$DEFINE DelphiXE4_UP}
+  {$DEFINE DelphiXE5_UP}
+{$IFEND}
 
-{$if compilerversion >= 27}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-  {$define DelphiXE3_UP}
-  {$define DelphiXE4_UP}
-  {$define DelphiXE5_UP}
-  {$define DelphiXE6_UP}
-{$ifend}
+{$IF CompilerVersion >= 27}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+  {$DEFINE DelphiXE3_UP}
+  {$DEFINE DelphiXE4_UP}
+  {$DEFINE DelphiXE5_UP}
+  {$DEFINE DelphiXE6_UP}
+{$IFEND}
 
-{$if compilerversion >= 28}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-  {$define DelphiXE3_UP}
-  {$define DelphiXE4_UP}
-  {$define DelphiXE5_UP}
-  {$define DelphiXE6_UP}
-  {$define DelphiXE7_UP}
-{$ifend}
+{$IF CompilerVersion >= 28}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+  {$DEFINE DelphiXE3_UP}
+  {$DEFINE DelphiXE4_UP}
+  {$DEFINE DelphiXE5_UP}
+  {$DEFINE DelphiXE6_UP}
+  {$DEFINE DelphiXE7_UP}
+{$IFEND}
 
-{$if compilerversion >= 29}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-  {$define DelphiXE3_UP}
-  {$define DelphiXE4_UP}
-  {$define DelphiXE5_UP}
-  {$define DelphiXE6_UP}
-  {$define DelphiXE7_UP}
-  {$define DelphiXE8_UP}
-{$ifend}
+{$IF CompilerVersion >= 29}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+  {$DEFINE DelphiXE3_UP}
+  {$DEFINE DelphiXE4_UP}
+  {$DEFINE DelphiXE5_UP}
+  {$DEFINE DelphiXE6_UP}
+  {$DEFINE DelphiXE7_UP}
+  {$DEFINE DelphiXE8_UP}
+{$IFEND}
 
-{$if compilerversion >= 30}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-  {$define DelphiXE3_UP}
-  {$define DelphiXE4_UP}
-  {$define DelphiXE5_UP}
-  {$define DelphiXE6_UP}
-  {$define DelphiXE7_UP}
-  {$define DelphiXE8_UP}
-  {$define DelphiSeattle_UP}
-{$ifend}
+{$IF CompilerVersion >= 30}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+  {$DEFINE DelphiXE3_UP}
+  {$DEFINE DelphiXE4_UP}
+  {$DEFINE DelphiXE5_UP}
+  {$DEFINE DelphiXE6_UP}
+  {$DEFINE DelphiXE7_UP}
+  {$DEFINE DelphiXE8_UP}
+  {$DEFINE DelphiSeattle_UP}
+{$IFEND}
 
-{$if compilerversion >= 31}
-  {$define DelphiXE_UP}
-  {$define DelphiXE2_UP}
-  {$define DelphiXE3_UP}
-  {$define DelphiXE4_UP}
-  {$define DelphiXE5_UP}
-  {$define DelphiXE6_UP}
-  {$define DelphiXE7_UP}
-  {$define DelphiXE8_UP}
-  {$define DelphiSeattle_UP}
-  {$define DelphiBerlin_UP}
-{$ifend}
+{$IF CompilerVersion >= 31}
+  {$DEFINE DelphiXE_UP}
+  {$DEFINE DelphiXE2_UP}
+  {$DEFINE DelphiXE3_UP}
+  {$DEFINE DelphiXE4_UP}
+  {$DEFINE DelphiXE5_UP}
+  {$DEFINE DelphiXE6_UP}
+  {$DEFINE DelphiXE7_UP}
+  {$DEFINE DelphiXE8_UP}
+  {$DEFINE DelphiSeattle_UP}
+  {$DEFINE DelphiBerlin_UP}
+{$IFEND}

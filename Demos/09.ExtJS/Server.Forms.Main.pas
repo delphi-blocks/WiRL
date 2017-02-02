@@ -87,7 +87,7 @@ begin
         'Server.Resources.StaticFiles.TStaticFileResources,'+
         'Server.Resources.Data.TMainModule'
 	    );
-    {$ENDIF}
+    {$IFEND}
 
   if not FServer.Active then
     FServer.Active := True;

@@ -14,16 +14,15 @@ unit WiRL.Client.Messaging.Resource;
 interface
 
 uses
-  SysUtils, Classes
-  , WiRL.Core.JSON
+  System.SysUtils, System.Classes
+  WiRL.Core.JSON,
 
 {$ifdef DelphiXE7_UP}
-  , System.Threading
+  System.Threading,
 {$endif}
 
-  , WiRL.Client.Resource.JSON
-  , WiRL.Client.SubResource.JSON
-  ;
+  WiRL.Client.Resource.JSON,
+  WiRL.Client.SubResource.JSON;
 
 type
   TWiRLMessageEvent = procedure (Sender: TObject; AMessage: TJSONObject) of object;

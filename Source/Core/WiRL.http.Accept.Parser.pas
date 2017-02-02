@@ -313,7 +313,7 @@ begin
   Result := T.Create(AAcceptItem);
 {$ELSE}
   Result := T(TAcceptItemClass(T).Create(AAcceptItem));
-{$ENDIF}
+{$IFEND}
 end;
 
 end.

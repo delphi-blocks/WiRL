@@ -87,9 +87,7 @@ begin
     // Application configuration
     .AddApplication('/app')
       .SetName('Content App')
-      .SetResources([
-        'Server.Resources.TMessageBodyResource'
-      ])
+      .SetResources('Server.Resources.TMessageBodyResource')
   ;
 
   {$IFDEF DJSON}

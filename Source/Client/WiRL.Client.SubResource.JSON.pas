@@ -14,12 +14,10 @@ unit WiRL.Client.SubResource.JSON;
 interface
 
 uses
-  SysUtils, Classes
-  , WiRL.Core.JSON
-
-  , WiRL.Client.SubResource
-  , WiRL.Client.Client
-  ;
+  System.SysUtils, System.Classes, 
+  WiRL.Core.JSON, 
+  WiRL.Client.SubResource, 
+  WiRL.Client.Client;
 
 type
   {$ifdef DelphiXE2_UP}

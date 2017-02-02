@@ -14,19 +14,16 @@ unit WiRL.Messaging.Dispatcher;
 interface
 
 uses
-  Classes, SysUtils
-  , Rtti
-  , Generics.Collections
+  System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
+  System.SyncObjs,
 {$ifdef DelphiXE7_UP}
-  , Threading
+  System.Threading,
 {$endif}
-  , SyncObjs
 
-  , WiRL.Core.Singleton
-  , WiRL.Core.Utils
-  , WiRL.Messaging.Message
-  , WiRL.Messaging.Subscriber
-  ;
+  WiRL.Core.Singleton, 
+  WiRL.Core.Utils, 
+  WiRL.Messaging.Message, 
+  WiRL.Messaging.Subscriber;
 
 type
   TWiRLMessageDispatcher = class

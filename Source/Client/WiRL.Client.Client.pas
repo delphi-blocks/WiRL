@@ -14,16 +14,13 @@ unit WiRL.Client.Client;
 interface
 
 uses
-  SysUtils, Classes
+  System.SysUtils, System.Classes,
 
 {$ifdef DelphiXE7_UP}
-   , System.Threading
+  System.Threading,
 {$endif}
 
-  // Indy
-  , IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP
-
-  ;
+  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP;
 
 type
   {$ifdef DelphiXE2_UP}

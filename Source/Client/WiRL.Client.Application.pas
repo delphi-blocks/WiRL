@@ -14,10 +14,8 @@ unit WiRL.Client.Application;
 interface
 
 uses
-  SysUtils, Classes
-
-  , WiRL.Client.Client
-  ;
+  System.SysUtils, System.Classes,
+  WiRL.Client.Client;
 
 type
   {$ifdef DelphiXE2_UP}
@@ -45,9 +43,8 @@ procedure Register;
 implementation
 
 uses
-    WiRL.Client.Utils
-  , WiRL.Core.URL
-  ;
+  WiRL.Client.Utils,
+  WiRL.Core.URL;
 
 procedure Register;
 begin

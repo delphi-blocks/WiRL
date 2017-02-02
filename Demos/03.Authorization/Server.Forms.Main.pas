@@ -87,7 +87,7 @@ begin
         'Server.Resources.TBasicAuthResource,' +
         'Server.Resources.TUserResource'
 	    );
-    {$ENDIF}
+    {$IFEND}
 
   if not FServer.Active then
     FServer.Active := True;

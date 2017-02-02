@@ -18,7 +18,6 @@ uses
   System.SyncObjs, System.Rtti,
 
   WiRL.Core.JSON,
-
   JOSE.Types.Bytes,
   JOSE.Types.JSON,
   JOSE.Core.JWT,
@@ -62,9 +61,9 @@ type
     FVerified: Boolean;
     FSubject: TWiRLSubject;
   public
-    {$IF CompilerVersion < 30}
+    {$IF CompilerVersion < 30} //10Seattle
     class constructor Create;
-    {$ENDIF}
+    {$IFEND}
 
     constructor Create; overload;
     constructor Create(ASubjectClass: TWiRLSubjectClass); overload;
@@ -109,7 +108,7 @@ begin
     LToken.Free;
   end;
 end;
-{$ENDIF}
+{$IFEND}
 
 procedure TWiRLAuthContext.Clear;
 begin

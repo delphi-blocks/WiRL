@@ -14,11 +14,9 @@ unit WiRL.Client.Resource.Stream;
 interface
 
 uses
-  SysUtils, Classes
-
-  , WiRL.Client.Resource
-  , WiRL.Client.Client
-  ;
+  System.SysUtils, System.Classes, 
+  WiRL.Client.Resource, 
+  WiRL.Client.Client;
 
 type
   {$ifdef DelphiXE2_UP}

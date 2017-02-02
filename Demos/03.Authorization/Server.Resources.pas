@@ -195,7 +195,7 @@ begin
   {$ELSE}
   SetLength(FAddresses, Length(FAddresses) + 1);
   FAddresses[Length(FAddresses)] := Result;
-  {$ENDIF}
+  {$IFEND}
 end;
 
 constructor TUserInfo.Create;
