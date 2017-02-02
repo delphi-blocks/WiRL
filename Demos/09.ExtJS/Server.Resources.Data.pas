@@ -16,7 +16,7 @@ uses
   Variants, Windows, Datasnap.DBClient, FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.SQLite,
-  FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs, FireDAC.Stan.Param,
+  FireDAC.Stan.ExprFuncs, FireDAC.Stan.Param,
   FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.VCLUI.Wait,
   FireDAC.Comp.UI, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
 
@@ -99,13 +99,13 @@ end;
 function TMainModule.DeleteEmployee(Id: Integer; Json: TJSONValue): TJSONObject;
 begin
   TWiRLResolver.DeleteDataSet(qryEmployee, Id);
-  Result := TJSONObject.Create(TJSONPair.Create('success', TJSONBool.Create(True)));
+  Result := TJSONObject.Create(TJSONPair.Create('success', TJSONTrue.Create));
 end;
 
 function TMainModule.UpdateEmployee(Id :Integer; Json: TJSONValue): TJSONObject;
 begin
   TWiRLResolver.UpdateDataSet(qryEmployee, Json);
-  Result := TJSONObject.Create(TJSONPair.Create('success', TJSONBool.Create(True)));
+  Result := TJSONObject.Create(TJSONPair.Create('success', TJSONTrue.Create));
 end;
 
 initialization

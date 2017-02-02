@@ -75,11 +75,19 @@ begin
       .SetName('Auth Application')
       .SetSecret(Tencoding.UTF8.GetBytes(edtSecret.Text))
       .SetClaimsClass(TServerClaims)
+	  {$IFDEF CompilerVersion >=28} //XE7
       .SetResources([
        'Server.Resources.TFormAuthResource',
        'Server.Resources.TBasicAuthResource',
        'Server.Resources.TUserResource'
       ]);
+	  {$ELSE}
+      .SetResources(
+        'Server.Resources.TFormAuthResource,' +
+        'Server.Resources.TBasicAuthResource,' +
+        'Server.Resources.TUserResource'
+	    );
+    {$ENDIF}
 
   if not FServer.Active then
     FServer.Active := True;

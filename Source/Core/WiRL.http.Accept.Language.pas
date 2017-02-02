@@ -61,10 +61,10 @@ begin
 
   LParts := AFullLanguage.Split([DELIM_LANGUAGE]);
 
-  if LParts.Size > 0 then
+  if Length(LParts) > 0 then
     FLanguage := LParts[0];
 
-  if LParts.Size > 1 then
+  if Length(LParts) > 1 then
     FCountry := LParts[1];
 end;
 

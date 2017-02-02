@@ -77,9 +77,7 @@ begin
     // Add and configure an application
     .AddApplication('/app')
       .SetName('Default App')
-      .SetResources([
-        'Server.MainData.TMainDataResource'
-      ])
+      .SetResources('Server.MainData.TMainDataResource')
   ;
 
   if not FServer.Active then

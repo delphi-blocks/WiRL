@@ -67,10 +67,17 @@ begin
 
     // Adds and configures an application
     .AddApplication('/app')
+	  {$IFDEF CompilerVersion >=28} //XE7
       .SetResources([
         'Server.Resources.THelloWorldResource',
         'Server.Resources.TEntityResource'
-      ])
+      ]);
+	  {$ELSE}
+      .SetResources(
+        'Server.Resources.THelloWorldResource,'+
+        'Server.Resources.TEntityResource'
+	    );
+    {$ENDIF}
   ;
 
   if not FServer.Active then

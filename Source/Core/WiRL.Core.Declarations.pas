@@ -19,13 +19,18 @@ type
   TArgumentArray = array of TValue;
 
   TStringArray = TArray<string>;
+  {$IFDEF CompilerVersion >= 30} //10 Seattle
   TStringArrayHelper = record helper for TStringArray
   public
     function Size: Integer;
     function IsEmpty: Boolean;
   end;
+  {$ENDIF}
+
 
 implementation
+
+{$IFDEF CompilerVersion > 30}
 
 { TStringArrayHelper }
 
@@ -39,4 +44,5 @@ begin
   Result := Length(Self);
 end;
 
+{$ENDIF}
 end.

@@ -91,8 +91,8 @@ begin
     // Application configuration
     .AddApplication('/app')
       .SetName('Default App')
-      .SetResources(['*'])
-      .SetFilters(['*'])
+      .SetResources('Server.Resources.TFilterDemoResource')
+      .SetFilters('*')
   ;
 
   if not FServer.Active then

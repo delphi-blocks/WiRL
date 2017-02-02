@@ -83,7 +83,7 @@ begin
     // Add and configure an application
     .AddApplication('/default')
       .SetName('Default')
-      .SetResources([ 'Server.Resources.THelloWorldResource']);
+      .SetResources('Server.Resources.THelloWorldResource');
 
   if not FServer.Active then
     FServer.Active := True;

@@ -13,6 +13,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Generics.Collections, System.Rtti,
+  System.TypInfo,
 
   WiRL.http.Filters,
   WiRL.http.Accept.MediaType,
@@ -223,6 +224,7 @@ var
   LPathMatches,
   LProducesMatch,
   LHttpMethodMatches: Boolean;
+
 begin
   Result := nil;
 
@@ -239,7 +241,7 @@ begin
 
     if LHttpMethodMatches then
     begin
-      LPrototypeURL := TWiRLURL.CreateDummy([FEnginePath, FAppPath, FPath, LMethod.Path]);
+      LPrototypeURL := TWiRLURL.CreateDummy(FEnginePath, FAppPath, FPath, LMethod.Path);
       try
         LPathMatches := LPrototypeURL.MatchPath(FContext.URL);
       finally

@@ -77,10 +77,17 @@ begin
     // Application configuration
     .AddApplication('/default')
       .SetName('Default')
+	  {$IFDEF CompilerVersion >=28} //XE7
       .SetResources([
         'Server.Resources.StaticFiles.TStaticFileResources',
         'Server.Resources.Data.TMainModule'
       ]);
+	  {$ELSE}
+      .SetResources(
+        'Server.Resources.StaticFiles.TStaticFileResources,'+
+        'Server.Resources.Data.TMainModule'
+	    );
+    {$ENDIF}
 
   if not FServer.Active then
     FServer.Active := True;

@@ -110,7 +110,7 @@ begin
 
   LParts := AAcceptItem.Split([DELIM_PARAMS]);
 
-  if LParts.Size > 0 then
+  if Length(LParts) > 0 then
     FAcceptItemOnly := Trim(LParts[0]);
 
   for LIndex := 1 to High(LParts) do
@@ -162,7 +162,12 @@ function TAcceptItemList<T>.Contains(const AAcceptItem: string): Boolean;
 var
   LTempItem: T;
 begin
+  {$IFDEF CompilerVersion >=30} //10Seattle
   LTempItem := T.Create(AAcceptItem);
+  {$ELSE}
+  LTempItem := T(TAcceptItem(T).Create(AAcceptItem));
+  {$ENDIF}
+
   try
     Result := Contains(LTempItem);
   finally
@@ -213,11 +218,14 @@ var
   LIntersection: TStringArray;
 begin
   if Self.Count = 0 then
-    Self.Add(T.Create(T.GetWildcard));
-
+    {$IFDEF CompilerVersion >=30} //10Seattle
+	Self.Add(T.Create(T.GetWildcard));
+    {$ELSE}	
+    Self.Add(T(TAcceptItem(T).Create(T.GetWildcard)));
+	{$ENDIF}
   LIntersection := Self.Intersection(AList);
 
-  Result := not LIntersection.IsEmpty;
+  Result := Length(LIntersection) > 0;
 end;
 
 function TAcceptItemList<T>.Intersection(const AList: TArray<string>): TArray<string>;
@@ -248,7 +256,11 @@ begin
   try
     for LItem in AList do
       if Self.Contains(LItem) then
+	    {$IFDEF CompilerVersion >=30} //10Seattle
         Result.Add(T.Create(LItem));
+		{$ELSE}
+        Result.Add(T(TAcceptItem(T).Create(LItem)));
+		{$ENDIF}
   except
     Result.Free;
   end;
@@ -287,12 +299,16 @@ var
   LIndex, LLength: Integer;
 begin
   LItems := AAcceptHeader.Split([DELIM_ACCEPT]);
-  LLength := LItems.Size;
+  LLength := Length(LItems);
 
   for LIndex := Low(LItems) to High(LItems) do
   begin
     LItemString := Trim(LItems[LIndex]);
-    LItem := T.Create(LItemString);
+    {$IFDEF CompilerVersion >=30} //10Seattle
+	LItem := T.Create(LItemString);
+	{$ELSE}
+    LItem := T(TAcceptItem(T).Create(LItemString));
+	{$ENDIF}
     LItem.PFactor := LLength - LIndex;
     AList.Add(LItem);
   end;

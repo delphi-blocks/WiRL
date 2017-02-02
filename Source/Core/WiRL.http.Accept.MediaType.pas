@@ -118,10 +118,10 @@ var
 begin
   LParts := AFullMediaType.Split([DELIM_MEDIA]);
 
-  if LParts.Size > 0 then
+  if Length(LParts) > 0 then
     FMainType := LParts[0];
 
-  if LParts.Size > 1 then
+  if Length(LParts) > 1 then
     FSubType := LParts[1];
 end;
 

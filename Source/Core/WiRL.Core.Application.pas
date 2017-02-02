@@ -70,8 +70,10 @@ type
     destructor Destroy; override;
 
     // Fluent-like configuration methods
-    function SetResources(const AResources: TArray<string>): TWiRLApplication;
-    function SetFilters(const AFilters: TArray<string>): TWiRLApplication;
+    function SetResources(const AResources: TArray<string>): TWiRLApplication; overload;
+    function SetResources(const AResources: string): TWiRLApplication; overload;
+    function SetFilters(const AFilters: TArray<string>): TWiRLApplication; overload;
+    function SetFilters(const AFilters: string): TWiRLApplication; overload;
     function SetSecret(const ASecret: TBytes): TWiRLApplication; overload;
     function SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication; overload;
     function SetBasePath(const ABasePath: string): TWiRLApplication;
@@ -269,10 +271,20 @@ begin
   Result := Self;
 end;
 
+function TWiRLApplication.SetResources(const AResources: string): TWiRLApplication;
+begin
+  Result := SetResources(AResources.Split([',']));
+end;
+
 function TWiRLApplication.SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
 begin
   FClaimClass := AClaimClass;
   Result := Self;
+end;
+
+function TWiRLApplication.SetFilters(const AFilters: string): TWiRLApplication;
+begin
+  Result := SetFilters(AFilters.Split([',']));
 end;
 
 function TWiRLApplication.SetFilters(const AFilters: TArray<string>): TWiRLApplication;
@@ -905,12 +917,8 @@ var
   LResURL: TWiRLURL;
   LPair: TPair<Integer, string>;
 begin
-  LResURL := TWiRLURL.CreateDummy([
-    TWiRLEngine(FContext.Engine).BasePath,
-    FAppConfig.BasePath,
-    FResource.Path,
-    FResource.Method.Path
-  ]);
+  LResURL := TWiRLURL.CreateDummy(TWiRLEngine(FContext.Engine).BasePath,
+    FAppConfig.BasePath, FResource.Path, FResource.Method.Path);
   try
     Result := -1;
     for LPair in LResURL.PathParams do

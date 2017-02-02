@@ -100,6 +100,7 @@ implementation
 
 uses
   System.DateUtils, System.StrUtils, System.IOUtils,
+  WiRL.Core.JSON,
   WiRL.http.Accept.Language;
 
 { THelloWorldResource }
@@ -111,7 +112,7 @@ end;
 
 function THelloWorldResource.GetAuthInfo: string;
 begin
-  Result := AuthContext.Subject.JSON.ToJSON;
+  Result := TJSONHelper.ToJSON(AuthContext.Subject.JSON);
 end;
 
 function THelloWorldResource.HelloWorld(): string;
@@ -147,7 +148,7 @@ begin
       if Result <> '' then
         Result := Result + sLineBreak;
 
-      Result := Result + 'Element: ' + LElement.ToJSON;
+      Result := Result + 'Element: ' + TJSONHelper.ToJSON(LElement);
     end;
   finally
     LArray.Free;

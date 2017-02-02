@@ -79,9 +79,7 @@ begin
     // Application configuration
     .AddApplication('/app')
       .SetName('Content App')
-      .SetResources([
-        'Server.Resources.TSampleResource'
-      ])
+      .SetResources('Server.Resources.TSampleResource')
   ;
 
   if not FServer.Active then

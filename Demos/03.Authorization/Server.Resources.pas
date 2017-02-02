@@ -179,7 +179,6 @@ begin
   // Here you can set all field of your custom claims object
   Subject.Language := 'it-IT';
   Subject.Expiration := Now + 1;
-
 end;
 
 { TUserInfo }
@@ -191,7 +190,12 @@ begin
   Result.City := ACity;
   Result.ZipCode := AZip;
 
+  {$IFDEF CompilerVersion >= 28} //XE7
   FAddresses := FAddresses + [Result];
+  {$ELSE}
+  SetLength(FAddresses, Length(FAddresses) + 1);
+  FAddresses[Length(FAddresses)] := Result;
+  {$ENDIF}
 end;
 
 constructor TUserInfo.Create;

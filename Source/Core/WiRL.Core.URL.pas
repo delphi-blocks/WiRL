@@ -62,6 +62,8 @@ type
     constructor Create(const AURL: string); overload; virtual;
     constructor CreateDummy(const APath: string; const ABaseURL: string = DUMMY_URL); overload; virtual;
     constructor CreateDummy(const APaths: TArray<string>; const ABaseURL: string = DUMMY_URL); overload; virtual;
+    constructor CreateDummy(const AEnginePath, AAppPath, AResourcePath, AMethodPath: string); overload; virtual;
+
     constructor Create(ARequest: TWiRLRequest); overload; virtual;
     destructor Destroy; override;
 
@@ -209,6 +211,19 @@ begin
     Create('http://' + ARequest.Host.Split([':'])[0] + ':' + ARequest.ServerPort.ToString + ARequest.PathInfo + LQuery)
   else
     Create('http://' + ARequest.Host + ':' + ARequest.ServerPort.ToString + ARequest.PathInfo + LQuery);
+end;
+
+constructor TWiRLURL.CreateDummy(const AEnginePath, AAppPath, AResourcePath, AMethodPath: string);
+var
+  LParamArray: TArray<string>;
+begin
+  SetLength(LParamArray, 4);
+  LParamArray[0] := AEnginePath;
+  LParamArray[0] := AAppPath;
+  LParamArray[0] := AResourcePath;
+  LParamArray[0] := AMethodPath;
+
+  CreateDummy(LParamArray);
 end;
 
 constructor TWiRLURL.CreateDummy(const APaths: TArray<string>; const ABaseURL: string);
