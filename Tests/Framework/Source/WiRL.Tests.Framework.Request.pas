@@ -283,8 +283,21 @@ end;
 procedure TTestRequest.TestRawContent;
 var
   LBuffer: TBytes;
+  {$IF CompilerVersion <=28} //XE7
+  LRawContent: TBytes;
+  {$IFEND}
 begin
-  FRequest.RawContent := [0, 22, 65, 200];
+  {$IF CompilerVersion >28} //XE7
+    FRequest.RawContent := [0, 22, 65, 200];
+  {$ELSE}
+    SetLength(LRawContent, 4);
+    LRawContent[0] := 0;
+    LRawContent[1] := 22;
+    LRawContent[2] := 65;
+    LRawContent[3] := 200;
+    FRequest.RawContent := LRawContent;
+  {$IFEND}
+
   Assert.AreEqual(4, Integer(FRequest.ContentStream.Size), 'Some bytes has been lost');
   FRequest.ContentStream.Position := 0;
   SetLength(LBuffer, FRequest.ContentStream.Size);
