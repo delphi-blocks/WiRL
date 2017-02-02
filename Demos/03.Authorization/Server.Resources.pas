@@ -27,6 +27,7 @@ uses
   WiRL.Core.Auth.Context,
   WiRL.Core.Auth.Resource,
 
+  Server.Auth.Resource,
   // Only if you want to use a custom (claims) class
   Server.Claims;
 
