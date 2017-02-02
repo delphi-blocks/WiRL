@@ -803,9 +803,14 @@ procedure TWiRLApplicationWorker.HandleRequest;
 begin
   FAuthContext := GetAuthContext;
   try
-    InternalHandleRequest;
+    ApplyRequestFilters;
+    try
+      InternalHandleRequest;
+    finally
+      ApplyResponseFilters;
+    end;
   finally
-    FAuthContext.Free;
+    FreeAndNil(FAuthContext);
   end;
 end;
 

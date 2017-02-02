@@ -308,19 +308,11 @@ begin
         LAppWorker := TWiRLApplicationWorker.Create(AContext);
         try
           DoBeforeHandleRequest(LApplication);
-          LAppWorker.ApplyRequestFilters;
           LStopWatch := TStopwatch.StartNew;
           LAppWorker.HandleRequest;
           LStopWatch.Stop;
           DoAfterHandleRequest(LApplication, LStopWatch);
         finally
-          try
-            LAppWorker.ApplyResponseFilters;
-          except
-            on E: Exception do
-              DoHandleException(AContext, LApplication, E);
-          end;
-
           LStopWatch.Stop;
           LAppWorker.Free;
         end;

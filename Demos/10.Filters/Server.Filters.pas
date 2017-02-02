@@ -20,6 +20,7 @@ uses
   WiRL.Core.Response,
   WiRL.Core.Attributes,
   WiRL.Core.Exceptions,
+  WiRL.Core.Auth.Context,
   WiRL.Core.URL,
   WiRL.Core.Application,
 
@@ -38,6 +39,7 @@ type
   [Priority(TWiRLPriorities.USER)] // Default priority
   TRequestCheckerFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
   private
+    [Context] FAuth: TWiRLAuthContext;
     [Context] FApplication: TWiRLApplication;
   public
     procedure Filter(Request: TWiRLRequest);
@@ -69,6 +71,9 @@ uses
 
 procedure TRequestCheckerFilter.Filter(Request: TWiRLRequest);
 begin
+  if not FAuth.Authenticated then
+    raise EWiRLNotAuthorizedException.Create(Format('Invalid token signature [%s]', [FApplication.Name]));
+
   if Pos('error', Request.Query) > 0 then
     raise EWiRLWebApplicationException.Create(Format('Filter error test [%s]', [FApplication.Name]), 400);
 end;
