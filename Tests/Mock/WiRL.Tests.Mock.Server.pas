@@ -257,7 +257,14 @@ begin
       EqualIndex := Param.IndexOf('=');
       if EqualIndex > 0 then
       begin
-        FQueryFields.AddPair(TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)), TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1)));
+        {$IFDEF CompilerVersion >=28} //XE7
+          FQueryFields.AddPair(TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)), TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1)));
+        {$ELSE}
+          FQueryFields.Add(
+            TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)) + '=' +
+            TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1))
+          );
+        {$ENDIF}
       end;
     end;
   end;
