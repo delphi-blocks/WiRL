@@ -41,8 +41,6 @@ implementation
 
 destructor TWiRLContext.Destroy;
 begin
-  FRequest.Free;
-  FResponse.Free;
   FURL.Free;
   inherited;
 end;

@@ -25,7 +25,9 @@ uses
   WiRL.Tests.Framework.Resources in 'Source\WiRL.Tests.Framework.Resources.pas',
   WiRL.Tests.Mock.Resources in '..\Mock\WiRL.Tests.Mock.Resources.pas',
   WiRL.Tests.Framework.Request in 'Source\WiRL.Tests.Framework.Request.pas',
-  WiRL.Tests.Framework.Response in 'Source\WiRL.Tests.Framework.Response.pas';
+  WiRL.Tests.Framework.Response in 'Source\WiRL.Tests.Framework.Response.pas',
+  WiRL.Tests.Mock.Filters in '..\Mock\WiRL.Tests.Mock.Filters.pas',
+  WiRL.Tests.Framework.Filters in 'Source\WiRL.Tests.Framework.Filters.pas';
 
 var
   runner : ITestRunner;

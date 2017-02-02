@@ -134,13 +134,19 @@ begin
     LContext.Engine := FEngine;
     LContext.Request := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
     LContext.Response := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
+    try
 
-    AResponseInfo.FreeContentStream := True;
-    if not EndsText('/favicon.ico', LContext.Request.PathInfo) then
-    begin
-      FEngine.HandleRequest(LContext);
+      AResponseInfo.FreeContentStream := True;
+      if not EndsText('/favicon.ico', LContext.Request.PathInfo) then
+      begin
+        FEngine.HandleRequest(LContext);
+      end;
+      //AResponseInfo.CustomHeaders.AddStrings(LContext.Response.CustomHeaders);
+    finally
+      LContext.Request.Free;
+      LContext.Response.Free;
     end;
-    //AResponseInfo.CustomHeaders.AddStrings(LContext.Response.CustomHeaders);
+
   finally
     LContext.Free;
   end;

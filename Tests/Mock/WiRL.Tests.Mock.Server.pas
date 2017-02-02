@@ -158,7 +158,7 @@ begin
         //raise TWiRLTestException.Create(LMessage, LStatus, LException);
       end
       else
-      raise Exception.Create(IntToStr(AResponse.StatusCode) + ' - ' + AResponse.ReasonString);
+        raise Exception.Create(IntToStr(AResponse.StatusCode) + ' - ' + AResponse.ReasonString);
     end;
 
   finally
