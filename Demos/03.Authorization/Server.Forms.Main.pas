@@ -75,7 +75,7 @@ begin
       .SetName('Auth Application')
       .SetSecret(Tencoding.UTF8.GetBytes(edtSecret.Text))
       .SetClaimsClass(TServerClaims)
-	  {$IFDEF CompilerVersion >=28} //XE7
+	  {$IF CompilerVersion >=28} //XE7
       .SetResources([
        'Server.Resources.TFormAuthResource',
        'Server.Resources.TBasicAuthResource',

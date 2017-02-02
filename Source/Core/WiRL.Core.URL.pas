@@ -219,9 +219,9 @@ var
 begin
   SetLength(LParamArray, 4);
   LParamArray[0] := AEnginePath;
-  LParamArray[0] := AAppPath;
-  LParamArray[0] := AResourcePath;
-  LParamArray[0] := AMethodPath;
+  LParamArray[1] := AAppPath;
+  LParamArray[2] := AResourcePath;
+  LParamArray[3] := AMethodPath;
 
   CreateDummy(LParamArray);
 end;

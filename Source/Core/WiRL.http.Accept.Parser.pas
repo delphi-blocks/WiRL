@@ -51,6 +51,13 @@ type
     property IsWildcard: Boolean read GetIsWildcard;
   end;
 
+  TAcceptItemClass = class of TAcceptItem;
+
+  TAcceptItemFactory<T: TAcceptItem> = class
+  public
+    class function CreateItem(const AAcceptItem: string): T;
+  end;
+
   TAcceptItemList<T: TAcceptItem> = class(TObjectList<T>)
   public
     constructor Create; virtual;
@@ -162,12 +169,7 @@ function TAcceptItemList<T>.Contains(const AAcceptItem: string): Boolean;
 var
   LTempItem: T;
 begin
-  {$IFDEF CompilerVersion >=30} //10Seattle
-  LTempItem := T.Create(AAcceptItem);
-  {$ELSE}
-  LTempItem := T(TAcceptItem(T).Create(AAcceptItem));
-  {$ENDIF}
-
+  LTempItem := TAcceptItemFactory<T>.CreateItem(AAcceptItem);
   try
     Result := Contains(LTempItem);
   finally
@@ -218,11 +220,8 @@ var
   LIntersection: TStringArray;
 begin
   if Self.Count = 0 then
-    {$IFDEF CompilerVersion >=30} //10Seattle
-	Self.Add(T.Create(T.GetWildcard));
-    {$ELSE}	
-    Self.Add(T(TAcceptItem(T).Create(T.GetWildcard)));
-	{$ENDIF}
+    Self.Add(TAcceptItemFactory<T>.CreateItem(T.GetWildcard));
+
   LIntersection := Self.Intersection(AList);
 
   Result := Length(LIntersection) > 0;
@@ -256,11 +255,7 @@ begin
   try
     for LItem in AList do
       if Self.Contains(LItem) then
-	    {$IFDEF CompilerVersion >=30} //10Seattle
-        Result.Add(T.Create(LItem));
-		{$ELSE}
-        Result.Add(T(TAcceptItem(T).Create(LItem)));
-		{$ENDIF}
+        Result.Add(TAcceptItemFactory<T>.CreateItem(LItem))
   except
     Result.Free;
   end;
@@ -289,13 +284,11 @@ begin
     Result[LIndex] := Items[LIndex].ToString;
 end;
 
-{ TAcceptHeaderParser }
-
 class procedure TAcceptHeaderParser<T>.Parse(const AAcceptHeader: string; AList: TAcceptItemList<T>);
 var
   LItems: TStringArray;
   LItemString: string;
-  LItem: TAcceptItem;
+  LItem: T;
   LIndex, LLength: Integer;
 begin
   LItems := AAcceptHeader.Split([DELIM_ACCEPT]);
@@ -304,16 +297,23 @@ begin
   for LIndex := Low(LItems) to High(LItems) do
   begin
     LItemString := Trim(LItems[LIndex]);
-    {$IFDEF CompilerVersion >=30} //10Seattle
-	LItem := T.Create(LItemString);
-	{$ELSE}
-    LItem := T(TAcceptItem(T).Create(LItemString));
-	{$ENDIF}
+    LItem := TAcceptItemFactory<T>.CreateItem(LItemString);
     LItem.PFactor := LLength - LIndex;
     AList.Add(LItem);
   end;
 
   AList.Sort;
+end;
+
+{ TAcceptItemFactory<T> }
+
+class function TAcceptItemFactory<T>.CreateItem(const AAcceptItem: string): T;
+begin
+{$IF CompilerVersion >=30} //10Seattle
+  Result := T.Create(AAcceptItem);
+{$ELSE}
+  Result := T(TAcceptItemClass(T).Create(AAcceptItem));
+{$ENDIF}
 end;
 
 end.

@@ -190,7 +190,7 @@ begin
   Result.City := ACity;
   Result.ZipCode := AZip;
 
-  {$IFDEF CompilerVersion >= 28} //XE7
+  {$IF CompilerVersion >= 28} //XE7
   FAddresses := FAddresses + [Result];
   {$ELSE}
   SetLength(FAddresses, Length(FAddresses) + 1);

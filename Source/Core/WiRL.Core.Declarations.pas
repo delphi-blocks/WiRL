@@ -19,7 +19,7 @@ type
   TArgumentArray = array of TValue;
 
   TStringArray = TArray<string>;
-  {$IFDEF CompilerVersion >= 30} //10 Seattle
+  {$IF CompilerVersion >= 30} //10 Seattle
   TStringArrayHelper = record helper for TStringArray
   public
     function Size: Integer;
@@ -30,7 +30,7 @@ type
 
 implementation
 
-{$IFDEF CompilerVersion > 30}
+{$IF CompilerVersion > 30}
 
 { TStringArrayHelper }
 

@@ -29,7 +29,9 @@ uses
   WiRL.Core.MessageBodyWriters,
   WiRL.Data.MessageBodyWriters,
   WiRL.Core.Exceptions,
-  WiRL.Data.Resolver;
+  WiRL.Data.Resolver, FireDAC.Phys.SQLiteDef;
+
+  // In Delphi versions earlier than 10 Seattle please remove FireDAC.Phys.SQLiteDef
 
 
 type
@@ -57,11 +59,11 @@ type
     [POST, Path('/employee/')]
     function InsertEmployee([BodyParam] Json: TJSONValue): TJSONObject;
 
-    [PUT, Path('/employee/{Id}')]
-    function UpdateEmployee(Id :Integer; [BodyParam] Json: TJSONValue): TJSONObject;
+    [PUT, Path('/employee/')]
+    function UpdateEmployee([BodyParam] Json: TJSONValue): TJSONObject;
 
     [DELETE, Path('/employee/{Id}')]
-    function DeleteEmployee([PathParam] Id :Integer; [BodyParam] Json: TJSONValue): TJSONObject;
+    function DeleteEmployee([PathParam] Id: Integer; [BodyParam] Json: TJSONValue): TJSONObject;
   end;
 
 var
@@ -102,7 +104,7 @@ begin
   Result := TJSONObject.Create(TJSONPair.Create('success', TJSONTrue.Create));
 end;
 
-function TMainModule.UpdateEmployee(Id :Integer; Json: TJSONValue): TJSONObject;
+function TMainModule.UpdateEmployee([BodyParam] Json: TJSONValue): TJSONObject;
 begin
   TWiRLResolver.UpdateDataSet(qryEmployee, Json);
   Result := TJSONObject.Create(TJSONPair.Create('success', TJSONTrue.Create));

@@ -67,7 +67,7 @@ begin
 
     // Adds and configures an application
     .AddApplication('/app')
-	  {$IFDEF CompilerVersion >=28} //XE7
+	  {$IF CompilerVersion >=28} //XE7
       .SetResources([
         'Server.Resources.THelloWorldResource',
         'Server.Resources.TEntityResource'
