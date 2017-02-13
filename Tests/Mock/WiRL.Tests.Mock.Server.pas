@@ -90,15 +90,14 @@ type
     function GetContent: string;
     procedure SetContent(const Value: string);
   protected
-    function GetPathInfo: string; override;
-    function GetQuery: string; override;
+    function GetHttpPathInfo: string; override;
+    function GetHttpQuery: string; override;
     function GetServerPort: Integer; override;
     function GetQueryFields: TWiRLParam; override;
     function GetContentFields: TWiRLParam; override;
     function GetCookieFields: TWiRLCookie; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
-    function GetRawPathInfo: string; override;
     function GetHeaderFields: TWiRLHeaderList; override;
   public
     property Url: string read FUrl write SetUrl;
@@ -216,12 +215,12 @@ begin
   Result := FHeaderFields;
 end;
 
-function TWiRLTestRequest.GetPathInfo: string;
+function TWiRLTestRequest.GetHttpPathInfo: string;
 begin
   Result := FPathInfo;
 end;
 
-function TWiRLTestRequest.GetQuery: string;
+function TWiRLTestRequest.GetHttpQuery: string;
 begin
   Result := FQuery;
 end;
@@ -229,11 +228,6 @@ end;
 function TWiRLTestRequest.GetQueryFields: TWiRLParam;
 begin
   Result := FQueryFields;
-end;
-
-function TWiRLTestRequest.GetRawPathInfo: string;
-begin
-  Result := FRawPathInfo;
 end;
 
 function TWiRLTestRequest.GetServerPort: Integer;

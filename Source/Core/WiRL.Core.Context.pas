@@ -26,15 +26,15 @@ type
     FResponse: TWiRLResponse;
     FURL: TWiRLURL;
     FApplication: TObject;
-    procedure SetRequest(const Value: TWiRLRequest);
+    function GetURL: TWiRLURL;
   public
     destructor Destroy; override;
 
     property Engine: TObject read FEngine write FEngine;
     property Application: TObject read FApplication write FApplication;
-    property Request: TWiRLRequest read FRequest write SetRequest;
+    property Request: TWiRLRequest read FRequest write FRequest;
     property Response: TWiRLResponse read FResponse write FResponse;
-    property URL: TWiRLURL read FURL write FURL;
+    property URL: TWiRLURL read GetURL write FURL;
   end;
 
 implementation
@@ -45,11 +45,11 @@ begin
   inherited;
 end;
 
-procedure TWiRLContext.SetRequest(const Value: TWiRLRequest);
+function TWiRLContext.GetURL: TWiRLURL;
 begin
   if not Assigned(FURL) then
-    FURL := TWiRLURL.Create(Value);
-  FRequest := Value;
+    FURL := TWiRLURL.Create(FRequest);
+  Result := FURL;
 end;
 
 end.

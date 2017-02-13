@@ -79,8 +79,8 @@ type
     FContentFields: TWiRLParam;
     procedure ParseParams(Params :TStrings; const AValue: String);
   protected
-    function GetPathInfo: string; override;
-    function GetQuery: string; override;
+    function GetHttpPathInfo: string; override;
+    function GetHttpQuery: string; override;
     function GetServerPort: Integer; override;
     function GetQueryFields: TWiRLParam; override;
     function GetContentFields: TWiRLParam; override;
@@ -88,7 +88,6 @@ type
     function GetHeaderFields: TWiRLHeaderList; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
-    function GetRawPathInfo: string; override;
   public
     constructor Create(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
     destructor Destroy; override;
@@ -307,12 +306,12 @@ begin
   Result := FHeaderFields;
 end;
 
-function TWiRLHttpRequestIndy.GetPathInfo: string;
+function TWiRLHttpRequestIndy.GetHttpPathInfo: string;
 begin
   Result := FRequestInfo.Document;
 end;
 
-function TWiRLHttpRequestIndy.GetQuery: string;
+function TWiRLHttpRequestIndy.GetHttpQuery: string;
 begin
   Result := FRequestInfo.QueryParams;
 end;
@@ -327,11 +326,6 @@ begin
     ParseParams(FQueryFields, FRequestInfo.QueryParams);
   end;
   Result := FQueryFields;
-end;
-
-function TWiRLHttpRequestIndy.GetRawPathInfo: string;
-begin
-  Result := FRequestInfo.URI;
 end;
 
 function TWiRLHttpRequestIndy.GetServerPort: Integer;
