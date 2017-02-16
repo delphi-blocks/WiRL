@@ -89,7 +89,7 @@ procedure TRequestLoggerFilter.Filter(Request: TWiRLRequest);
 var
   LMessage: string;
 begin
-  LMessage := DateTimeToStr(Now) + ' - ' + Request.Method + ' ' + Request.RawPathInfo;
+  LMessage := DateTimeToStr(Now) + ' - ' + Request.Method + ' ' + Request.PathInfo;
   if Request.Query <> '' then
     LMessage := LMessage + '?' + Request.Query;
   FMainForm.Log(LMessage);

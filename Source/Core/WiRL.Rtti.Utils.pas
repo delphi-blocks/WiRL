@@ -60,6 +60,11 @@ type
     class function CreateInstance(AType: TRttiType): TObject; overload;
     class function CreateInstance(const ATypeName: string): TObject; overload;
 
+    // Create instance of class with one string parameter
+    class function CreateInstance(AClass: TClass; const AValue: string): TObject;  overload;
+    class function CreateInstance(AType: TRttiType; const AValue: string): TObject; overload;
+    class function CreateInstance(const ATypeName, AValue: string): TObject; overload;
+
     // Rtti general helper functions
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject): Boolean; overload;
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject; const ADoSomething: TProc<T>): Boolean; overload;
@@ -206,6 +211,50 @@ var
 begin
   LType := Context.FindType(ATypeName);
   Result := CreateInstance(LType);
+end;
+
+class function TRttiHelper.CreateInstance(AClass: TClass;
+  const AValue: string): TObject;
+var
+  LType: TRttiType;
+begin
+  LType := FContext.GetType(AClass);
+  Result := CreateInstance(LType, AValue);
+end;
+
+class function TRttiHelper.CreateInstance(AType: TRttiType;
+  const AValue: string): TObject;
+var
+  LMethod: TRttiMethod;
+  LMetaClass: TClass;
+begin
+  Result := nil;
+  if Assigned(AType) then
+  begin
+    for LMethod in AType.GetMethods do
+    begin
+      if LMethod.HasExtendedInfo and LMethod.IsConstructor then
+      begin
+        if Length(LMethod.GetParameters) = 1 then
+        begin
+          if LMethod.GetParameters[0].ParamType.TypeKind in [tkLString, tkUString, tkWString, tkString] then
+          begin
+            LMetaClass := AType.AsInstance.MetaclassType;
+            Result := LMethod.Invoke(LMetaClass, [AValue]).AsObject;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+class function TRttiHelper.CreateInstance(const ATypeName,
+  AValue: string): TObject;
+var
+  LType: TRttiType;
+begin
+  LType := Context.FindType(ATypeName);
+  Result := CreateInstance(LType, AValue);
 end;
 
 class function TRttiHelper.ForEachAttribute<T>(AInstance: TObject;

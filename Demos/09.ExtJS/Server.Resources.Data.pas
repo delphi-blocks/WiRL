@@ -59,7 +59,7 @@ type
     [POST, Path('/employee/')]
     function InsertEmployee([BodyParam] Json: TJSONValue): TJSONObject;
 
-    [PUT, Path('/employee/')]
+    [PUT, Path('/employee/{Id}')]
     function UpdateEmployee([BodyParam] Json: TJSONValue): TJSONObject;
 
     [DELETE, Path('/employee/{Id}')]

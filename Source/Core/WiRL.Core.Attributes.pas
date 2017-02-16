@@ -165,9 +165,18 @@ type
   private
     FValue: Integer;
   public
-    constructor Create(Value: Integer);
+    constructor Create(AValue: Integer);
     property Value: Integer read FValue write FValue;
   end;
+
+  DefaultValueAttribute = class(TCustomAttribute)
+  private
+    FValue: string;
+  public
+    constructor Create(const AValue: string);
+    property Value: string read FValue write FValue;
+  end;
+
 
 {$ENDREGION}
 
@@ -411,9 +420,16 @@ end;
 
 { PriorityAttribute }
 
-constructor PriorityAttribute.Create(Value: Integer);
+constructor PriorityAttribute.Create(AValue: Integer);
 begin
-  FValue := Value;
+  FValue := AValue;
+end;
+
+{ DefaultValueAttribute }
+
+constructor DefaultValueAttribute.Create(const AValue: string);
+begin
+  FValue := AValue;
 end;
 
 end.

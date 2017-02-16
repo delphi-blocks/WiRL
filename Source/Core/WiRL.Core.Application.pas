@@ -105,13 +105,29 @@ type
 
   TWiRLApplicationWorker = class
   private
+    type
+      TParamReader = record
+      private
+        FWorker: TWiRLApplicationWorker;
+        FContext: TWiRLContext;
+        FParam: TRttiParameter;
+        FDefaultValue: string;
+      public
+        function AsString(AAttr: TCustomAttribute): string;
+        function AsInteger(AAttr: TCustomAttribute): Integer;
+        function AsChar(AAttr: TCustomAttribute): Char;
+        function AsFloat(AAttr: TCustomAttribute): Double;
+        constructor Create(AWorker: TWiRLApplicationWorker; AParam: TRttiParameter; const ADefaultValue: string);
+      end;
+  private
     FContext: TWiRLContext;
     FAppConfig: TWiRLApplication;
     FAuthContext: TWiRLAuthContext;
     FResource: TWiRLResource;
 
     procedure CollectGarbage(const AValue: TValue);
-    procedure ValidateMethodParam<T>(const AAttrArray: TAttributeArray; Value: T);
+    function HasRowConstraints(const AAttrArray: TAttributeArray): Boolean;
+    procedure ValidateMethodParam(const AAttrArray: TAttributeArray; AValue: TValue; ARawConstraint: Boolean);
     function GetConstraintErrorMessage(AAttr: TCustomConstraintAttribute): string;
   protected
     procedure InternalHandleRequest;
@@ -627,40 +643,11 @@ end;
 function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
     const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
 
-  function ParamAsString(AAttr: TCustomAttribute): string;
-  var
-    LParamName: string;
-    LParamIndex: Integer;
+  function CreateParamInstance(AParam: TRttiParameter; const AValue: string): TObject;
   begin
-    LParamName := (AAttr as MethodParamAttribute).Value;
-    if LParamName = '' then
-      LParamName := AParam.Name;
-
-    if AAttr is PathParamAttribute then
-    begin
-      LParamIndex := ParamNameToParamIndex(LParamName);
-      Result := FContext.URL.PathTokens[LParamIndex];
-    end
-    else if AAttr is QueryParamAttribute then
-      Result := FContext.Request.QueryFields.Values[LParamName]
-    else if AAttr is FormParamAttribute then
-      Result := FContext.Request.ContentFields.Values[LParamName]
-    else if AAttr is CookieParamAttribute then
-      Result := FContext.Request.CookieFields.Values[LParamName]
-    else if AAttr is HeaderParamAttribute then
-      Result := FContext.Request.HeaderFields[LParamName]
-    else if AAttr is BodyParamAttribute then
-      Result := FContext.Request.Content;
-  end;
-
-  function ParamAsStream(AAttr: TCustomAttribute): TStream;
-  begin
-    if AAttr is BodyParamAttribute then
-      Result := FContext.Request.ContentStream
-    else
-      Result := TStringStream.Create(ParamAsString(AAttr));
-
-    Result.Position := 0;
+    Result := TRttiHelper.CreateInstance(AParam.ParamType, AValue);
+    if not Assigned(Result) then
+      raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [AParam.Name]), Self.ClassName);
   end;
 
 var
@@ -669,14 +656,24 @@ var
   LParamClassType: TClass;
   LContextValue: TValue;
   LReader: IMessageBodyReader;
-
+  LDefaultValue: string;
+  LParamReader: TParamReader;
 begin
+  // Search a default value
+  LDefaultValue := '';
+  TRttiHelper.HasAttribute<DefaultValueAttribute>(AParam, procedure (LAttr: DefaultValueAttribute)
+  begin
+    LDefaultValue := LAttr.Value;
+  end);
+
   LParamName := '';
   for LAttr in AAttrArray do
   begin
     // Loop only inside attributes that define how to read the parameter
     if not ( (LAttr is ContextAttribute) or (LAttr is MethodParamAttribute) ) then
       Continue;
+
+    LParamReader := TParamReader.Create(Self, AParam, LDefaultValue);
 
     // context injection
     if (LAttr is ContextAttribute) and (AParam.ParamType.IsInstance) then
@@ -693,55 +690,65 @@ begin
     case AParam.ParamType.TypeKind of
       tkInt64,
       tkInteger: begin
-        Result := TValue.From<Integer>(StrToInt(ParamAsString(LAttr)));
-        ValidateMethodParam(AAttrArray, Result.AsInteger);
+        Result := TValue.From<Integer>(LParamReader.AsInteger(LAttr));
       end;
       tkFloat: begin
-        Result := TValue.From<Double>(StrToFloat(ParamAsString(LAttr)));
-        ValidateMethodParam(AAttrArray, Result.AsExtended);
+        Result := TValue.From<Double>(LParamReader.AsFloat(LAttr));
       end;
 
       tkChar: begin
-        Result := TValue.From(AnsiChar(ParamAsString(LAttr)[1]));
-        ValidateMethodParam(AAttrArray, Char(Result.AsOrdinal));
+        Result := TValue.From(LParamReader.AsChar(LAttr));
       end;
-      tkWChar: ;
-      tkEnumeration: ;
-      tkSet: ;
+//      tkWChar: ;
+//      tkEnumeration: ;
+//      tkSet: ;
       tkClass:
       begin
-        ValidateMethodParam(AAttrArray, Result.Cast<TObject>);
-        LReader := TMessageBodyReaderRegistry.Instance.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
-        if not Assigned(LReader) then
-          raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, LParamName]), Self.ClassName);
-        Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
+        if HasRowConstraints(AAttrArray) then
+        begin
+          ValidateMethodParam(AAttrArray, LParamReader.AsString(LAttr), True);
+        end;
+        if LAttr is BodyParamAttribute then
+        begin
+          LReader := TMessageBodyReaderRegistry.Instance.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
+          if Assigned(LReader) then
+            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request)
+          else
+            Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
+          if Result.AsObject = nil then
+            raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, LParamName]), Self.ClassName);
+        end
+        else
+          Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
+
+        if Result.AsObject = nil then
+          raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
       end;
 
-      tkMethod: ;
+//      tkMethod: ;
 
       tkLString,
       tkUString,
       tkWString,
       tkString: begin
-        Result := TValue.From(ParamAsString(LAttr));
-        ValidateMethodParam(AAttrArray, Result.AsString);
+        Result := TValue.From(LParamReader.AsString(LAttr));
       end;
 
       tkVariant: begin
-        Result := TValue.From(ParamAsString(LAttr));
-        ValidateMethodParam(AAttrArray, Result.AsVariant);
+        Result := TValue.From(LParamReader.AsString(LAttr));
       end;
 
-      tkArray: ;
-      tkRecord: ;
-      tkInterface: ;
-      tkDynArray: ;
-      tkClassRef: ;
-      tkPointer: ;
-      tkProcedure: ;
-    else
-      raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
+//      tkArray: ;
+//      tkRecord: ;
+//      tkInterface: ;
+//      tkDynArray: ;
+//      tkClassRef: ;
+//      tkPointer: ;
+//      tkProcedure: ;
+      else
+        raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
     end;
+    ValidateMethodParam(AAttrArray, Result, False);
   end;
 end;
 
@@ -811,6 +818,23 @@ begin
     end;
   finally
     FreeAndNil(FAuthContext);
+  end;
+end;
+
+function TWiRLApplicationWorker.HasRowConstraints(
+  const AAttrArray: TAttributeArray): Boolean;
+var
+  LAttr: TCustomAttribute;
+begin
+  Result := False;
+  // Loop inside every ConstraintAttribute
+  for LAttr in AAttrArray do
+  begin
+    if LAttr is TCustomConstraintAttribute then
+    begin
+      if TCustomConstraintAttribute(LAttr).RawConstraint then
+        Exit(True);
+    end;
   end;
 end;
 
@@ -957,23 +981,25 @@ begin
   end;
 end;
 
-procedure TWiRLApplicationWorker.ValidateMethodParam<T>(
-  const AAttrArray: TAttributeArray; Value: T);
+procedure TWiRLApplicationWorker.ValidateMethodParam(
+  const AAttrArray: TAttributeArray; AValue: TValue; ARawConstraint: Boolean);
 var
   LAttr: TCustomAttribute;
-  LValidator: IConstraintValidator<TCustomConstraintAttribute, T>;
+  LValidator: IConstraintValidator<TCustomConstraintAttribute>;
   LIntf: IInterface;
-  LObj: TObject;
+//  LObj: TObject;
 begin
   // Loop inside every ConstraintAttribute
   for LAttr in AAttrArray do
   begin
     if LAttr is TCustomConstraintAttribute then
     begin
-      LIntf := TCustomConstraintAttribute(LAttr).GetValidator<T>;
-      if not Supports(LIntf as TObject, IConstraintValidator<TCustomConstraintAttribute, T>, LValidator) then
+      if TCustomConstraintAttribute(LAttr).RawConstraint <> ARawConstraint then
+        Continue;
+      LIntf := TCustomConstraintAttribute(LAttr).GetValidator;
+      if not Supports(LIntf as TObject, IConstraintValidator<TCustomConstraintAttribute>, LValidator) then
         raise EWiRLException.Create('Validator interface is not valid');
-      if not LValidator.IsValid(Value, FContext) then
+      if not LValidator.IsValid(AValue, FContext) then
         raise EWiRLValidationError.Create(GetConstraintErrorMessage(TCustomConstraintAttribute(LAttr)));
     end;
   end;
@@ -989,6 +1015,82 @@ begin
     TAuthChallenge.Bearer: Result := 'Bearer';
     TAuthChallenge.Forms:  Result := 'Forms';
   end;
+end;
+
+{ TWiRLApplicationWorker.TParamReader }
+
+function TWiRLApplicationWorker.TParamReader.AsString(AAttr: TCustomAttribute): string;
+var
+  LParamName: string;
+  LParamIndex: Integer;
+  LAttrArray: TArray<TCustomAttribute>;
+begin
+  LAttrArray := FParam.GetAttributes;
+  LParamName := (AAttr as MethodParamAttribute).Value;
+  if LParamName = '' then
+    LParamName := FParam.Name;
+
+  if AAttr is PathParamAttribute then
+  begin
+    LParamIndex := FWorker.ParamNameToParamIndex(LParamName);
+    Result := FContext.URL.PathTokens[LParamIndex];
+  end
+  else if AAttr is QueryParamAttribute then
+    Result := FContext.Request.QueryFields.Values[LParamName]
+  else if AAttr is FormParamAttribute then
+    Result := FContext.Request.ContentFields.Values[LParamName]
+  else if AAttr is CookieParamAttribute then
+    Result := FContext.Request.CookieFields.Values[LParamName]
+  else if AAttr is HeaderParamAttribute then
+    Result := FContext.Request.HeaderFields[LParamName]
+  else if AAttr is BodyParamAttribute then
+    Result := FContext.Request.Content;
+  if Result = '' then
+    Result := FDefaultValue;
+
+  FWorker.ValidateMethodParam(LAttrArray, Result, True);
+end;
+
+function TWiRLApplicationWorker.TParamReader.AsInteger(AAttr: TCustomAttribute): Integer;
+var
+  LValue: string;
+begin
+  LValue := AsString(AAttr);
+  if LValue = '' then
+    Result := 0
+  else
+    Result := StrToInt(LValue);
+end;
+
+function TWiRLApplicationWorker.TParamReader.AsFloat(AAttr: TCustomAttribute): Double;
+var
+  LValue: string;
+begin
+  LValue := AsString(AAttr);
+  if LValue = '' then
+    Result := 0
+  else
+    Result := StrToFloat(LValue);
+end;
+
+function TWiRLApplicationWorker.TParamReader.AsChar(AAttr: TCustomAttribute): Char;
+var
+  LValue: string;
+begin
+  LValue := AsString(AAttr);
+  if LValue = '' then
+    Result := #0
+  else
+    Result := LValue.Chars[0];
+end;
+
+constructor TWiRLApplicationWorker.TParamReader.Create(AWorker: TWiRLApplicationWorker; AParam: TRttiParameter;
+  const ADefaultValue: string);
+begin
+  FWorker := AWorker;
+  FContext := AWorker.FContext;
+  FParam := AParam;
+  FDefaultValue := ADefaultValue;
 end;
 
 initialization
