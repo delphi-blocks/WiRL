@@ -42,11 +42,6 @@ begin
 end;
 
 initialization
-  TWiRLResourceRegistry.Instance.RegisterResource<TStaticFileResources>(
-    function: TObject
-    begin
-      Result := TStaticFileResources.Create;
-    end
-  );
+  TWiRLResourceRegistry.Instance.RegisterResource<TStaticFileResources>;
 
 end.

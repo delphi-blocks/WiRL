@@ -199,7 +199,7 @@ begin
         if Length(LMethod.GetParameters) = 0 then
         begin
           LMetaClass := AType.AsInstance.MetaclassType;
-          Result := LMethod.Invoke(LMetaClass, []).AsObject;
+          Exit(LMethod.Invoke(LMetaClass, []).AsObject);
         end;
       end;
     end;
@@ -240,7 +240,7 @@ begin
           if LMethod.GetParameters[0].ParamType.TypeKind in [tkLString, tkUString, tkWString, tkString] then
           begin
             LMetaClass := AType.AsInstance.MetaclassType;
-            Result := LMethod.Invoke(LMetaClass, [AValue]).AsObject;
+            Exit(LMethod.Invoke(LMetaClass, [AValue]).AsObject);
           end;
         end;
       end;

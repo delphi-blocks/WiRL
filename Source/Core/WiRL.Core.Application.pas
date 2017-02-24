@@ -920,7 +920,6 @@ begin
       except
         on E: Exception do
         begin
-          LStream.Free;
           raise EWiRLServerException.Create(E.Message, 'TWiRLApplicationWorker', 'InvokeResourceMethod');
         end;
       end;
@@ -936,8 +935,6 @@ begin
       CollectGarbage(LMethodResult);
     for LArgument in LArgumentArray do
       CollectGarbage(LArgument);
-    if Assigned(FContext.Request.ContentStream) then
-      FContext.Request.ContentStream.Free;
   end;
 end;
 

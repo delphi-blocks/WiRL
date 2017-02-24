@@ -218,7 +218,6 @@ end;
 
 destructor TWiRLHttpRequestIndy.Destroy;
 begin
-  FRequestInfo.PostStream := nil;
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
