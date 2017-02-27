@@ -55,7 +55,6 @@ type
 
   TWiRLAuthContext = class
   private
-    FAuthenticated: Boolean;
     FSubjectClass: TWiRLSubjectClass;
     FCompactToken: string;
     FVerified: Boolean;
@@ -74,8 +73,14 @@ type
     procedure Verify(const ACompactToken: string; ASecret: TBytes);
 
     property CompactToken: string read FCompactToken;
-    property Authenticated: Boolean read FAuthenticated write FAuthenticated;
     property Subject: TWiRLSubject read FSubject write FSubject;
+    /// <summary>
+    ///   Indicates that the authentication object (es: jwt token) has been verified (signature)
+    /// </summary>
+    /// <remarks>
+    ///   Beware: The claims has not been validated!
+    /// </remarks>
+    property Verified: Boolean read FVerified;
   end;
 
 implementation
@@ -113,7 +118,6 @@ end;
 procedure TWiRLAuthContext.Clear;
 begin
   FVerified := False;
-  FAuthenticated := False;
   FSubject.Clear;
 end;
 

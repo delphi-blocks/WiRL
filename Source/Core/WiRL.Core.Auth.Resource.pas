@@ -100,7 +100,6 @@ begin
   FAuthContext.Clear;
   LAuthOperation := Authenticate(AUserName, APassword);
 
-  FAuthContext.Authenticated := LAuthOperation.Success;
   FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
 
   if not LAuthOperation.Success then
@@ -131,7 +130,6 @@ begin
   FAuthContext.Clear;
   LAuthOperation := Authenticate(LAuthData[0], LAuthData[1]);
 
-  FAuthContext.Authenticated := LAuthOperation.Success;
   FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
 
   if not LAuthOperation.Success then
