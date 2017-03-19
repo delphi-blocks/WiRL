@@ -145,6 +145,16 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Filters.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
         <RcItem Include="..\..\media\TWiRLClientMessagingResource.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLCLIENTMESSAGINGRESOURCE</ResourceId>
@@ -543,15 +553,15 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
             </Deployment>
             <Platforms>
                 <Platform value="Android">True</Platform>

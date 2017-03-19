@@ -135,6 +135,24 @@
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Token.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Filters.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
         <RcItem Include="..\..\media\TWiRLClientMessagingResource.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLCLIENTMESSAGINGRESOURCE</ResourceId>
@@ -236,7 +254,16 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -578,16 +605,7 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
