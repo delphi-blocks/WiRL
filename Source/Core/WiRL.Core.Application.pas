@@ -148,7 +148,7 @@ type
     destructor Destroy; override;
 
     // Filters handling
-    procedure ApplyRequestFilters;
+    function ApplyRequestFilters: Boolean;
     procedure ApplyResponseFilters;
     // HTTP Request handling
     procedure HandleRequest;
@@ -414,10 +414,13 @@ begin
   inherited;
 end;
 
-procedure TWiRLApplicationWorker.ApplyRequestFilters;
+function TWiRLApplicationWorker.ApplyRequestFilters: Boolean;
 var
   LRequestFilter: IWiRLContainerRequestFilter;
+  LAborted: Boolean;
 begin
+  Result := False;
+  LAborted := False;
   // Find resource type
   if not FResource.Found then
     Exit;
@@ -429,15 +432,24 @@ begin
   // Run filters
   FAppConfig.FilterRegistry.FetchRequestFilter(False,
     procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    var
+      LRequestContext: TWiRLContainerRequestContext;
     begin
       if FResource.Method.HasFilter(ConstructorInfo.Attribute) then
       begin
         LRequestFilter := ConstructorInfo.GetRequestFilter;
         ContextInjection(LRequestFilter as TObject);
-        LRequestFilter.Filter(FContext.Request);
+        LRequestContext := TWiRLContainerRequestContext.Create(FContext.Request, FContext.Response);
+        try
+          LRequestFilter.Filter(LRequestContext);
+          LAborted := LAborted or LRequestContext.Aborted;
+        finally
+          LRequestContext.Free;
+        end;
       end;
     end
   );
+  Result := LAborted;
 end;
 
 procedure TWiRLApplicationWorker.ApplyResponseFilters;
@@ -455,12 +467,19 @@ begin
   // Run filters
   FAppConfig.FilterRegistry.FetchResponseFilter(
     procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    var
+      LResponseContext: TWiRLContainerResponseContext;
     begin
       if FResource.Method.HasFilter(ConstructorInfo.Attribute) then
       begin
         LResponseFilter := ConstructorInfo.GetResponseFilter;
         ContextInjection(LResponseFilter as TObject);
-        LResponseFilter.Filter(FContext.Request, FContext.Response);
+        LResponseContext := TWiRLContainerResponseContext.Create(FContext.Request, FContext.Response);
+        try
+          LResponseFilter.Filter(LResponseContext);
+        finally
+          LResponseContext.Free;
+        end;
       end;
     end
   );
@@ -807,12 +826,15 @@ begin
 end;
 
 procedure TWiRLApplicationWorker.HandleRequest;
+var
+  LProcessResource: Boolean;
 begin
   FAuthContext := GetAuthContext;
   try
-    ApplyRequestFilters;
+    LProcessResource := not ApplyRequestFilters;
     try
-      InternalHandleRequest;
+      if LProcessResource then
+        InternalHandleRequest;
     finally
       ApplyResponseFilters;
     end;

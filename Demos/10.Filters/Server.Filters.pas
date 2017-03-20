@@ -23,6 +23,7 @@ uses
   WiRL.Core.Auth.Context,
   WiRL.Core.URL,
   WiRL.Core.Application,
+  WiRL.http.Accept.MediaType,
 
   Server.Filters.Attributes, Server.Forms.Main;
 
@@ -32,8 +33,14 @@ type
   private
     FMainForm: TMainForm;
   public
-    procedure Filter(Request: TWiRLRequest);
+    procedure Filter(ARequestContext: TWiRLContainerRequestContext);
     constructor Create(MainForm: TMainForm);
+  end;
+
+  [PreMatching]
+  TAbortTest = class(TInterfacedObject, IWiRLContainerRequestFilter)
+  public
+    procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
   [Priority(TWiRLPriorities.USER)] // Default priority
@@ -42,13 +49,13 @@ type
     [Context] FAuth: TWiRLAuthContext;
     [Context] FApplication: TWiRLApplication;
   public
-    procedure Filter(Request: TWiRLRequest);
+    procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
   [PoweredByWiRL]
   TResponsePoweredByFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
   public
-    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+    procedure Filter(AResponseContext: TWiRLContainerResponseContext);
   end;
 
   [ContentEncoding]
@@ -58,7 +65,7 @@ type
     const ENC_DEFLATE = 'deflate';
     const ENC_IDENTITY = 'identity';
   public
-    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+    procedure Filter(AResponseContext: TWiRLContainerResponseContext);
   end;
 
 
@@ -69,12 +76,9 @@ uses
 
 { TRequestLoggerFilter }
 
-procedure TRequestCheckerFilter.Filter(Request: TWiRLRequest);
+procedure TRequestCheckerFilter.Filter(ARequestContext: TWiRLContainerRequestContext);
 begin
-  if not FAuth.Authenticated then
-    raise EWiRLNotAuthorizedException.Create(Format('Invalid token signature [%s]', [FApplication.Name]));
-
-  if Pos('error', Request.Query) > 0 then
+  if Pos('error', ARequestContext.Request.Query) > 0 then
     raise EWiRLWebApplicationException.Create(Format('Filter error test [%s]', [FApplication.Name]), 400);
 end;
 
@@ -85,26 +89,26 @@ begin
   FMainForm := MainForm;
 end;
 
-procedure TRequestLoggerFilter.Filter(Request: TWiRLRequest);
+procedure TRequestLoggerFilter.Filter(ARequestContext: TWiRLContainerRequestContext);
 var
   LMessage: string;
 begin
-  LMessage := DateTimeToStr(Now) + ' - ' + Request.Method + ' ' + Request.PathInfo;
-  if Request.Query <> '' then
-    LMessage := LMessage + '?' + Request.Query;
+  LMessage := DateTimeToStr(Now) + ' - ' + ARequestContext.Request.Method + ' ' + ARequestContext.Request.PathInfo;
+  if ARequestContext.Request.Query <> '' then
+    LMessage := LMessage + '?' + ARequestContext.Request.Query;
   FMainForm.Log(LMessage);
 end;
 
 { TResponsePoweredByFilter }
 
-procedure TResponsePoweredByFilter.Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+procedure TResponsePoweredByFilter.Filter(AResponseContext: TWiRLContainerResponseContext);
 begin
-  Response.HeaderFields['X-Powered-By'] := 'WiRL';
+  AResponseContext.Response.HeaderFields['X-Powered-By'] := 'WiRL';
 end;
 
 { TResponseEncodingFilter }
 
-procedure TResponseEncodingFilter.Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+procedure TResponseEncodingFilter.Filter(AResponseContext: TWiRLContainerResponseContext);
 var
   LStrStream: TStringStream;
   LMemStream: TMemoryStream;
@@ -124,41 +128,56 @@ var
   end;
 
 begin
-  if Request.AcceptableEncodings.Contains(ENC_DEFLATE) then
+  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE) then
   begin
-    if Assigned(Response.ContentStream) then
+    if Assigned(AResponseContext.Response.ContentStream) then
     begin
       LMemStream := TStringStream.Create;
       try
-        DoCompress(Response.ContentStream, LMemStream);
+        DoCompress(AResponseContext.Response.ContentStream, LMemStream);
         LMemStream.Position := soFromBeginning;
-        Response.ContentStream.Free;
-        Response.ContentStream := LMemStream;
+        AResponseContext.Response.ContentStream.Free;
+        AResponseContext.Response.ContentStream := LMemStream;
       except
         LMemStream.Free;
       end;
-      Response.ContentEncoding := ENC_DEFLATE;
+      AResponseContext.Response.ContentEncoding := ENC_DEFLATE;
     end
-    else if Response.Content <> '' then
+    else if AResponseContext.Response.Content <> '' then
     begin
-      LStrStream := TStringStream.Create(Response.Content);
+      LStrStream := TStringStream.Create(AResponseContext.Response.Content);
       LStrStream.Position := soFromBeginning;
       try
         LMemStream := TMemoryStream.Create;
         try
           DoCompress(LStrStream, LMemStream);
           LMemStream.Position := soFromBeginning;
-          Response.Content := '';
-          Response.ContentStream := LMemStream;
+          AResponseContext.Response.Content := '';
+          AResponseContext.Response.ContentStream := LMemStream;
         except
           FreeAndNil(LMemStream);
         end;
       finally
         LStrStream.Free;
       end;
-      Response.ContentEncoding := ENC_DEFLATE;
+      AResponseContext.Response.ContentEncoding := ENC_DEFLATE;
     end;
   end;
+end;
+
+{ TAbortTest }
+
+procedure TAbortTest.Filter(ARequestContext: TWiRLContainerRequestContext);
+begin
+  if not ARequestContext.Request.PathInfo.StartsWith('/rest') then
+  begin
+    ARequestContext.Response.ContentType := TMediaType.TEXT_PLAIN;
+    ARequestContext.Response.Content := Format('[%s] is not a valid API URL',
+      [ARequestContext.Request.PathInfo]);
+    ARequestContext.Response.StatusCode := 200;
+    ARequestContext.Abort;
+  end;
+
 end;
 
 initialization
@@ -171,5 +190,6 @@ initialization
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestCheckerFilter>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TResponsePoweredByFilter>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TResponseEncodingFilter>;
+  TWiRLFilterRegistry.Instance.RegisterFilter<TAbortTest>;
 
 end.

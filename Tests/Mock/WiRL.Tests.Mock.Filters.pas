@@ -29,68 +29,66 @@ type
   [PreMatching]
   TPreFilterTest = class(TInterfacedObject, IWiRLContainerRequestFilter)
   public
-    procedure Filter(Request: TWiRLRequest);
+    procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
   TRequestFilterTest = class(TInterfacedObject, IWiRLContainerRequestFilter)
   public
-    procedure Filter(Request: TWiRLRequest);
+    procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
   TResponseFilterTest = class(TInterfacedObject, IWiRLContainerResponseFilter)
   public
-    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+    procedure Filter(AResponseContext: TWiRLContainerResponseContext);
   end;
 
   [ResponseBindingTest]
   TResponseBindingFilterTest = class(TInterfacedObject, IWiRLContainerResponseFilter)
   public
-    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+    procedure Filter(AResponseContext: TWiRLContainerResponseContext);
   end;
 
   [RequestBindingTest]
   TRequestBindingFilterTest = class(TInterfacedObject, IWiRLContainerRequestFilter)
   public
-    procedure Filter(Request: TWiRLRequest);
+    procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
 implementation
 
 { TResponseFilterTest }
 
-procedure TResponseFilterTest.Filter(Request: TWiRLRequest;
-  Response: TWiRLResponse);
+procedure TResponseFilterTest.Filter(AResponseContext: TWiRLContainerResponseContext);
 begin
-  Response.HeaderFields['x-response-filter'] := 'true';
+  AResponseContext.Response.HeaderFields['x-response-filter'] := 'true';
 end;
 
 { TPreFilterTest }
 
-procedure TPreFilterTest.Filter(Request: TWiRLRequest);
+procedure TPreFilterTest.Filter(ARequestContext: TWiRLContainerRequestContext);
 begin
-  Request.HeaderFields['x-prematching-filter'] := 'true';
+  ARequestContext.Request.HeaderFields['x-prematching-filter'] := 'true';
 end;
 
 { TRequestFilterTest }
 
-procedure TRequestFilterTest.Filter(Request: TWiRLRequest);
+procedure TRequestFilterTest.Filter(ARequestContext: TWiRLContainerRequestContext);
 begin
-  Request.HeaderFields['x-request-filter'] := 'true';
+  ARequestContext.Request.HeaderFields['x-request-filter'] := 'true';
 end;
 
 { TResponseBindingFilterTest }
 
-procedure TResponseBindingFilterTest.Filter(Request: TWiRLRequest;
-  Response: TWiRLResponse);
+procedure TResponseBindingFilterTest.Filter(AResponseContext: TWiRLContainerResponseContext);
 begin
-  Response.HeaderFields['x-response-binded-filter'] := 'true';
+  AResponseContext.Response.HeaderFields['x-response-binded-filter'] := 'true';
 end;
 
 { TRequestBindingFilterTest }
 
-procedure TRequestBindingFilterTest.Filter(Request: TWiRLRequest);
+procedure TRequestBindingFilterTest.Filter(ARequestContext: TWiRLContainerRequestContext);
 begin
-  Request.HeaderFields['x-request-binded-filter'] := 'true';
+  ARequestContext.Request.HeaderFields['x-request-binded-filter'] := 'true';
 end;
 
 initialization

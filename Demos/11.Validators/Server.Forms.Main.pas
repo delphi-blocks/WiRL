@@ -16,8 +16,7 @@ uses
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
   WiRL.Core.Engine,
   WiRL.http.Server.Indy,
-  WiRL.Core.Application,
-  WiRL.http.Filters;
+  WiRL.Core.Application;
 
 type
   TMainForm = class(TForm)
@@ -85,14 +84,13 @@ begin
   // Engine configuration
   FServer.ConfigureEngine('/rest')
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('WiRL Filters')
+    .SetName('WiRL Validators')
     .SetThreadPoolSize(5)
 
     // Application configuration
     .AddApplication('/app')
       .SetName('Default App')
       .SetResources('Server.Resources.TValidatorDemoResource')
-      .SetFilters('*')
   ;
 
   if not FServer.Active then

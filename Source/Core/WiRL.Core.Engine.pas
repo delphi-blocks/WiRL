@@ -73,7 +73,7 @@ type
     FName: string;
 
     // Filter handling
-    procedure ApplyPreMatchingFilters(AContext: TWiRLContext);
+    function ApplyPreMatchingFilters(AContext: TWiRLContext): Boolean;
   protected
     procedure DoBeforeHandleRequest(const AApplication: TWiRLApplication); virtual;
     procedure DoAfterHandleRequest(const AApplication: TWiRLApplication; const AStopWatch: TStopWatch); virtual;
@@ -142,10 +142,13 @@ begin
   Result := Self;
 end;
 
-procedure TWiRLEngine.ApplyPreMatchingFilters(AContext: TWiRLContext);
+function TWiRLEngine.ApplyPreMatchingFilters(AContext: TWiRLContext): Boolean;
 var
   LRequestFilter: IWiRLContainerRequestFilter;
+  LRequestContext: TWiRLContainerRequestContext;
+  LAborted: Boolean;
 begin
+  LAborted := False;
   TWiRLFilterRegistry.Instance.FetchRequestFilter(True,
     procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     begin
@@ -155,9 +158,16 @@ begin
           Format('Request Filter [%s] does not implement requested interface [IWiRLContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]),
           Self.ClassName, 'ApplyPreMatchingFilters'
         );
-      LRequestFilter.Filter(AContext.Request);
+      LRequestContext := TWiRLContainerRequestContext.Create(AContext.Request, AContext.Response);
+      try
+        LRequestFilter.Filter(LRequestContext);
+        LAborted := LAborted or LRequestContext.Aborted;
+      finally
+        LRequestContext.Free;
+      end;
     end
   );
+  Result := LAborted;
 end;
 
 constructor TWiRLEngine.Create;
@@ -286,42 +296,49 @@ begin
   LApplication := nil;
   LStopWatchEx := TStopwatch.StartNew;
   try
-    ApplyPreMatchingFilters(AContext);
-    if not DoBeforeRequestStart() then
+    if not ApplyPreMatchingFilters(AContext) then
     begin
-      LApplicationPath := TWiRLURL.CombinePath([AContext.URL.PathTokens[0]]);
-      if (BasePath <> '') and (BasePath <> TWiRLURL.URL_PATH_SEPARATOR) then
+      if not DoBeforeRequestStart() then
       begin
-        if not AContext.URL.MatchPath(BasePath + TWiRLURL.URL_PATH_SEPARATOR) then
+        if Length(AContext.URL.PathTokens) < 1 then
           raise EWiRLNotFoundException.Create(
             Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.URL.BasePath]),
             Self.ClassName, 'HandleRequest'
           );
-        LApplicationPath := TWiRLURL.CombinePath([AContext.URL.PathTokens[0], AContext.URL.PathTokens[1]]);
-      end;
-      // Change the URI BasePath (?)
-      AContext.URL.BasePath := LApplicationPath;
-
-      if FApplications.TryGetValue(LApplicationPath, LApplication) then
-      begin
-        AContext.Application := LApplication;
-        LAppWorker := TWiRLApplicationWorker.Create(AContext);
-        try
-          DoBeforeHandleRequest(LApplication);
-          LStopWatch := TStopwatch.StartNew;
-          LAppWorker.HandleRequest;
-          LStopWatch.Stop;
-          DoAfterHandleRequest(LApplication, LStopWatch);
-        finally
-          LStopWatch.Stop;
-          LAppWorker.Free;
+        LApplicationPath := TWiRLURL.CombinePath([AContext.URL.PathTokens[0]]);
+        if (BasePath <> '') and (BasePath <> TWiRLURL.URL_PATH_SEPARATOR) then
+        begin
+          if not AContext.URL.MatchPath(BasePath + TWiRLURL.URL_PATH_SEPARATOR) then
+            raise EWiRLNotFoundException.Create(
+              Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.URL.BasePath]),
+              Self.ClassName, 'HandleRequest'
+            );
+          LApplicationPath := TWiRLURL.CombinePath([AContext.URL.PathTokens[0], AContext.URL.PathTokens[1]]);
         end;
-      end
-      else
-        raise EWiRLNotFoundException.Create(
-          Format('Application [%s] not found. URL [%s]', [LApplicationPath, AContext.URL.URL]),
-          Self.ClassName, 'HandleRequest'
-        );
+        // Change the URI BasePath (?)
+        AContext.URL.BasePath := LApplicationPath;
+
+        if FApplications.TryGetValue(LApplicationPath, LApplication) then
+        begin
+          AContext.Application := LApplication;
+          LAppWorker := TWiRLApplicationWorker.Create(AContext);
+          try
+            DoBeforeHandleRequest(LApplication);
+            LStopWatch := TStopwatch.StartNew;
+            LAppWorker.HandleRequest;
+            LStopWatch.Stop;
+            DoAfterHandleRequest(LApplication, LStopWatch);
+          finally
+            LStopWatch.Stop;
+            LAppWorker.Free;
+          end;
+        end
+        else
+          raise EWiRLNotFoundException.Create(
+            Format('Application [%s] not found. URL [%s]', [LApplicationPath, AContext.URL.URL]),
+            Self.ClassName, 'HandleRequest'
+          );
+      end;
     end;
   except
     on E: Exception do

@@ -62,7 +62,7 @@ implementation
 uses
   WiRL.Core.Registry;
 
-{ TFilterDemoResource }
+{ TValidatorDemoResource }
 
 function TValidatorDemoResource.Concat(EMail, Name: string): string;
 begin

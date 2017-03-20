@@ -90,7 +90,7 @@ begin
 
     // Application configuration
     .AddApplication('/app')
-      .SetName('Auth Demo')
+      .SetName('Filter Demo')
       .SetResources('Server.Resources.TFilterDemoResource')
       .SetFilters('*')
   ;

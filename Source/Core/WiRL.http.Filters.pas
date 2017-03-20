@@ -23,14 +23,37 @@ uses
   WiRL.Rtti.Utils;
 
 type
+  TWiRLContainerRequestContext = class(TObject)
+  private
+    FRequest: TWiRLRequest;
+    FResponse: TWiRLResponse;
+    FAborted: Boolean;
+  public
+    property Request: TWiRLRequest read FRequest;
+    property Response: TWiRLResponse read FResponse;
+    property Aborted: Boolean read FAborted;
+    procedure Abort;
+    constructor Create(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
+  end;
+
+  TWiRLContainerResponseContext = class(TObject)
+  private
+    FRequest: TWiRLRequest;
+    FResponse: TWiRLResponse;
+  public
+    property Request: TWiRLRequest read FRequest;
+    property Response: TWiRLResponse read FResponse;
+    constructor Create(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
+  end;
+
   IWiRLContainerRequestFilter = interface
   ['{58406938-14A1-438F-946A-F0723920B511}']
-    procedure Filter(Request: TWiRLRequest);
+    procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
   IWiRLContainerResponseFilter = interface
   ['{F952495E-00DB-44C6-ACED-33F1F2F25527}']
-    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+    procedure Filter(AResponseContext: TWiRLContainerResponseContext);
   end;
 
   // the lower the number the higher the priority
@@ -293,6 +316,31 @@ end;
 function TWiRLFilterRegistry.RegisterFilter<T>: TWiRLFilterConstructorInfo;
 begin
   Result := RegisterFilter<T>(nil);
+end;
+
+{ TWiRLContainerRequestContext }
+
+procedure TWiRLContainerRequestContext.Abort;
+begin
+  FAborted := True;
+end;
+
+constructor TWiRLContainerRequestContext.Create(ARequest: TWiRLRequest;
+  AResponse: TWiRLResponse);
+begin
+  inherited Create;
+  FRequest := ARequest;
+  FResponse := AResponse;
+end;
+
+{ TWiRLContainerResponseContext }
+
+constructor TWiRLContainerResponseContext.Create(ARequest: TWiRLRequest;
+  AResponse: TWiRLResponse);
+begin
+  inherited Create;
+  FRequest := ARequest;
+  FResponse := AResponse;
 end;
 
 end.
