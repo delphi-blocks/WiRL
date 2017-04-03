@@ -18,6 +18,7 @@ uses
   WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Engine,
+  WiRL.http.Cookie,
   WiRL.Core.Response,
   WiRL.Core.Request,
   WiRL.Core.Context;
@@ -73,7 +74,7 @@ type
 
   TWiRLTestRequest = class(TWiRLRequest)
   private
-    FCookieFields: TWiRLCookie;
+    FCookieFields: TWiRLCookies;
     FQueryFields: TWiRLParam;
     FContentFields: TWiRLParam;
     FUrl: string;
@@ -93,10 +94,11 @@ type
     function GetServerPort: Integer; override;
     function GetQueryFields: TWiRLParam; override;
     function GetContentFields: TWiRLParam; override;
-    function GetCookieFields: TWiRLCookie; override;
+    function GetCookieFields: TWiRLCookies; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
     function GetHeaderFields: TWiRLHeaderList; override;
+    function GetRemoteIP: string; override;
   public
     property Url: string read FUrl write SetUrl;
     constructor Create;
@@ -172,7 +174,7 @@ constructor TWiRLTestRequest.Create;
 begin
   inherited;
   FContentStream := TMemoryStream.Create;
-  FCookieFields := TWiRLCookie.Create;
+  FCookieFields := TWiRLCookies.Create;
   FQueryFields := TWiRLParam.Create;
   FContentFields := TWiRLParam.Create;
   FMethod := 'GET';
@@ -199,7 +201,7 @@ begin
   Result := FContentStream;
 end;
 
-function TWiRLTestRequest.GetCookieFields: TWiRLCookie;
+function TWiRLTestRequest.GetCookieFields: TWiRLCookies;
 begin
   Result := FCookieFields;
 end;
@@ -226,6 +228,11 @@ end;
 function TWiRLTestRequest.GetQueryFields: TWiRLParam;
 begin
   Result := FQueryFields;
+end;
+
+function TWiRLTestRequest.GetRemoteIP: string;
+begin
+  Result := '127.0.0.1';
 end;
 
 function TWiRLTestRequest.GetServerPort: Integer;

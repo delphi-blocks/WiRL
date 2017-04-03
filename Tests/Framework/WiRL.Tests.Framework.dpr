@@ -13,6 +13,7 @@ program WiRL.Tests.Framework;
 {$APPTYPE CONSOLE}
 {$ENDIF}{$STRONGLINKTYPES ON}
 uses
+  FastMM4,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
@@ -27,7 +28,8 @@ uses
   WiRL.Tests.Framework.Request in 'Source\WiRL.Tests.Framework.Request.pas',
   WiRL.Tests.Framework.Response in 'Source\WiRL.Tests.Framework.Response.pas',
   WiRL.Tests.Mock.Filters in '..\Mock\WiRL.Tests.Mock.Filters.pas',
-  WiRL.Tests.Framework.Filters in 'Source\WiRL.Tests.Framework.Filters.pas';
+  WiRL.Tests.Framework.Filters in 'Source\WiRL.Tests.Framework.Filters.pas',
+  WiRL.Tests.Framework.Serialization in 'Source\WiRL.Tests.Framework.Serialization.pas';
 
 var
   runner : ITestRunner;
