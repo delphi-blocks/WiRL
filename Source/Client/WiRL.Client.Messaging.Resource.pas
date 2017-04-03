@@ -14,7 +14,7 @@ unit WiRL.Client.Messaging.Resource;
 interface
 
 uses
-  System.SysUtils, System.Classes
+  System.SysUtils, System.Classes,
   WiRL.Core.JSON,
 
 {$ifdef DelphiXE7_UP}

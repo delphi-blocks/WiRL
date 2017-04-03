@@ -39,7 +39,6 @@ begin
   LHardwareToken := ABody.GetValue('hardware_token').Value;
 
   // Validation of the hardware token (simulated)
-  FAuthContext.Authenticated := True;
   FAuthContext.Subject.Roles := 'admin,manager';
 
   if not LAuthOperation.Success then
