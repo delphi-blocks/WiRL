@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils,
 
   WiRL.Http.Core,
+  WiRL.http.Cookie,
   WiRL.Http.Accept.Parser,
   WiRL.Http.Accept.Charset,
   WiRL.Http.Accept.Encoding,
@@ -79,11 +80,12 @@ type
   protected
     FMethod: string;
     function GetHttpQuery: string; virtual; abstract;
+    function GetRemoteIP: string; virtual; abstract;
     function GetServerPort: Integer; virtual; abstract;
     function GetHeaderFields: TWiRLHeaderList; virtual; abstract;
     function GetQueryFields: TWiRLParam; virtual; abstract;
     function GetContentFields: TWiRLParam; virtual; abstract;
-    function GetCookieFields: TWiRLCookie; virtual; abstract;
+    function GetCookieFields: TWiRLCookies; virtual; abstract;
     function GetContentStream: TStream; virtual; abstract;
     procedure SetContentStream(const Value: TStream); virtual; abstract;
     function GetHttpPathInfo: string; virtual; abstract;
@@ -94,11 +96,12 @@ type
     property Query: string read GetQuery write SetQuery;
     property Method: string read FMethod write FMethod;
     property Host: string read GetHost write SetHost;
+    property RemoteIP: string read GetRemoteIP;
     property ServerPort: Integer read GetServerPort;
     property QueryFields: TWiRLParam read GetQueryFields;
     property ContentFields: TWiRLParam read GetContentFields;
     property HeaderFields: TWiRLHeaderList read GetHeaderFields;
-    property CookieFields: TWiRLCookie read GetCookieFields;
+    property CookieFields: TWiRLCookies read GetCookieFields;
     property Content: string read GetContent write SetContent;
     property RawContent: TBytes read GetRawContent write SetRawContent;
     property ContentStream: TStream read GetContentStream write SetContentStream;

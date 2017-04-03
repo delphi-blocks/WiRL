@@ -504,7 +504,7 @@ var
 begin
   case FAppConfig.FTokenLocation of
     TAuthTokenLocation.Bearer: LToken := ExtractJWTToken(FContext.Request.Authorization);
-    TAuthTokenLocation.Cookie: LToken := FContext.Request.CookieFields.Values['token'];
+    TAuthTokenLocation.Cookie: LToken := FContext.Request.CookieFields['token'];
     TAuthTokenLocation.Header: LToken := FContext.Request.HeaderFields[FAppConfig.TokenCustomHeader];
   end;
 
@@ -1059,7 +1059,7 @@ begin
   else if AAttr is FormParamAttribute then
     Result := FContext.Request.ContentFields.Values[LParamName]
   else if AAttr is CookieParamAttribute then
-    Result := FContext.Request.CookieFields.Values[LParamName]
+    Result := FContext.Request.CookieFields[LParamName]
   else if AAttr is HeaderParamAttribute then
     Result := FContext.Request.HeaderFields[LParamName]
   else if AAttr is BodyParamAttribute then

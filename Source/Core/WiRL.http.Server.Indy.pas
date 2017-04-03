@@ -13,9 +13,10 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.SyncObjs,
-  IdContext, IdCustomHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
+  IdContext, IdCookie, IdCustomHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
   IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
   WiRL.http.Core,
+  WiRL.http.Cookie,
   WiRL.Core.Engine,
   WiRL.Core.Response,
   WiRL.Core.Request,
@@ -54,6 +55,7 @@ type
     FContext: TIdContext;
     FResponseInfo: TIdHTTPResponseInfo;
     FCustomHeaders :TStrings;
+    procedure SendCookies;
   protected
     function GetContent: string; override;
     function GetContentStream: TStream; override;
@@ -73,7 +75,7 @@ type
   private
     FContext: TIdContext;
     FRequestInfo: TIdHTTPRequestInfo;
-    FCookieFields: TWiRLCookie;
+    FCookieFields: TWiRLCookies;
     FQueryFields: TWiRLParam;
     FHeaderFields: TWiRLHeaderList;
     FContentFields: TWiRLParam;
@@ -81,10 +83,11 @@ type
   protected
     function GetHttpPathInfo: string; override;
     function GetHttpQuery: string; override;
+    function GetRemoteIP: string; override;
     function GetServerPort: Integer; override;
     function GetQueryFields: TWiRLParam; override;
     function GetContentFields: TWiRLParam; override;
-    function GetCookieFields: TWiRLCookie; override;
+    function GetCookieFields: TWiRLCookies; override;
     function GetHeaderFields: TWiRLHeaderList; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
@@ -280,16 +283,16 @@ begin
   Result := FContentFields;
 end;
 
-function TWiRLHttpRequestIndy.GetCookieFields: TWiRLCookie;
+function TWiRLHttpRequestIndy.GetCookieFields: TWiRLCookies;
 var
   i :Integer;
 begin
   if not Assigned(FCookieFields) then
   begin
-    FCookieFields := TWiRLCookie.Create;
+    FCookieFields := TWiRLCookies.Create;
     for i := 0 to FRequestInfo.Cookies.Count - 1 do
     begin
-      CookieFields.Add(FRequestInfo.Cookies[i].ClientCookie);
+      CookieFields.AddClientCookie(FRequestInfo.Cookies[i].ClientCookie);
     end;
   end;
   Result := FCookieFields;
@@ -325,6 +328,11 @@ begin
     ParseParams(FQueryFields, FRequestInfo.QueryParams);
   end;
   Result := FQueryFields;
+end;
+
+function TWiRLHttpRequestIndy.GetRemoteIP: string;
+begin
+  Result := FRequestInfo.RemoteIP;
 end;
 
 function TWiRLHttpRequestIndy.GetServerPort: Integer;
@@ -378,6 +386,29 @@ begin
   Result := FResponseInfo.ResponseNo;
 end;
 
+procedure TWiRLHttpResponseIndy.SendCookies;
+var
+  LWiRLCookie: TWiRLCookie;
+  LIdCookie: TIdCookie;
+begin
+  for LWiRLCookie in Cookies do
+  begin
+    LIdCookie := FResponseInfo.Cookies.Add;
+
+    LIdCookie.CookieName := LWiRLCookie.CookieName;
+    LIdCookie.Value := LWiRLCookie.Value;
+    LIdCookie.Domain := LWiRLCookie.Domain;
+    LIdCookie.Expires := LWiRLCookie.Expires;
+    LIdCookie.HttpOnly := LWiRLCookie.HttpOnly;
+    LIdCookie.Path := LWiRLCookie.Path;
+    LIdCookie.Secure := LWiRLCookie.Secure;
+    LIdCookie.CreatedAt := LWiRLCookie.CreatedAt;
+    LIdCookie.HostOnly := LWiRLCookie.HostOnly;
+    LIdCookie.LastAccessed := LWiRLCookie.LastAccessed;
+    LIdCookie.Persistent := LWiRLCookie.Persistent;
+  end;
+end;
+
 procedure TWiRLHttpResponseIndy.SendHeaders;
 
   function IsIndyHeader(const Name: string): Boolean;
@@ -414,6 +445,8 @@ begin
 
   if HasContentLength then
     FResponseInfo.ContentLength := ContentLength;
+
+  SendCookies;
 end;
 
 procedure TWiRLHttpResponseIndy.SetContent(const Value: string);
