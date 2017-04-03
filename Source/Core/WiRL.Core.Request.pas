@@ -127,7 +127,7 @@ begin
   FAcceptableCharSets.Free;
   FAcceptableLanguages.Free;
   FAcceptableMediaTypes.Free;
-
+  FAcceptableEncodings.Free;
   inherited;
 end;
 

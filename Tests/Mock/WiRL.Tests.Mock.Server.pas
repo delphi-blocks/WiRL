@@ -87,8 +87,6 @@ type
     FHeaderFields: TWiRLHeaderList;
     procedure ParseQueryParams;
     procedure SetUrl(const Value: string);
-    function GetContent: string;
-    procedure SetContent(const Value: string);
   protected
     function GetHttpPathInfo: string; override;
     function GetHttpQuery: string; override;
@@ -101,7 +99,6 @@ type
     function GetHeaderFields: TWiRLHeaderList; override;
   public
     property Url: string read FUrl write SetUrl;
-    property Content: string read GetContent write SetContent;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -151,9 +148,13 @@ begin
       if AResponse.ContentType = TMediaType.APPLICATION_JSON then
       begin
         LContentJson := TJSONObject.ParseJSONValue(AResponse.Content);
-        (AResponse as TWiRLTestResponse).Error.Message := LContentJson.GetValue<string>('message');
-        (AResponse as TWiRLTestResponse).Error.Status := LContentJson.GetValue<string>('status');
-        (AResponse as TWiRLTestResponse).Error.Exception := LContentJson.GetValue<string>('exception');
+        try
+          (AResponse as TWiRLTestResponse).Error.Message := LContentJson.GetValue<string>('message');
+          (AResponse as TWiRLTestResponse).Error.Status := LContentJson.GetValue<string>('status');
+          (AResponse as TWiRLTestResponse).Error.Exception := LContentJson.GetValue<string>('exception');
+        finally
+          LContentJson.Free;
+        end;
         //raise TWiRLTestException.Create(LMessage, LStatus, LException);
       end
       else
@@ -183,12 +184,9 @@ begin
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
+  FHeaderFields.Free;
+  FContentStream.Free;
   inherited;
-end;
-
-function TWiRLTestRequest.GetContent: string;
-begin
-  Result := inherited Content;
 end;
 
 function TWiRLTestRequest.GetContentFields: TWiRLParam;
@@ -265,15 +263,6 @@ begin
 
 end;
 
-procedure TWiRLTestRequest.SetContent(const Value: string);
-var
-  Buffer: TBytes;
-begin
-  Buffer := EncodingFromCharSet(ContentMediaType.Charset).GetBytes(Value);
-  FContentStream.Write(Buffer[0], Length(Buffer));
-  FContentStream.Position := 0;
-end;
-
 procedure TWiRLTestRequest.SetContentStream(const Value: TStream);
 begin
   inherited;
@@ -326,6 +315,8 @@ end;
 
 destructor TWiRLTestResponse.Destroy;
 begin
+  FResponseError.Free;
+  FContentStream.Free;
   inherited;
 end;
 
