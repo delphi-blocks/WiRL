@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{EAB54FDF-97F4-469D-BA97-4BCEF647A737}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="DemoAuthorization.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DemoAuthorizationClient.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DemoAuthorization">
+        <MSBuild Projects="DemoAuthorization.dproj"/>
+    </Target>
+    <Target Name="DemoAuthorization:Clean">
+        <MSBuild Projects="DemoAuthorization.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoAuthorization:Make">
+        <MSBuild Projects="DemoAuthorization.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoAuthorizationClient">
+        <MSBuild Projects="DemoAuthorizationClient.dproj"/>
+    </Target>
+    <Target Name="DemoAuthorizationClient:Clean">
+        <MSBuild Projects="DemoAuthorizationClient.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoAuthorizationClient:Make">
+        <MSBuild Projects="DemoAuthorizationClient.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DemoAuthorization;DemoAuthorizationClient"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DemoAuthorization:Clean;DemoAuthorizationClient:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DemoAuthorization:Make;DemoAuthorizationClient:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
