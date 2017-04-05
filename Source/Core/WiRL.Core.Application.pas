@@ -25,7 +25,8 @@ uses
   WiRL.Core.Context,
   WiRL.Core.Auth.Context,
   WiRL.Core.Validators,
-  WiRL.http.Filters;
+  WiRL.http.Filters,
+  WiRL.Core.Injection;
 
 type
   {$SCOPEDENUMS ON}
@@ -133,7 +134,7 @@ type
     procedure InternalHandleRequest;
 
     procedure ContextInjection(AInstance: TObject);
-    function ContextInjectionByType(const AType: TClass; out AValue: TValue): Boolean;
+    function ContextInjectionByType(const AObject: TRttiObject; out AValue: TValue): Boolean;
 
     procedure CheckAuthorization(AAuth: TWiRLAuthContext);
     function FillAnnotatedParam(AParam: TRttiParameter; const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
@@ -585,78 +586,16 @@ begin
 end;
 
 procedure TWiRLApplicationWorker.ContextInjection(AInstance: TObject);
-var
-  LType: TRttiType;
 begin
-  LType := TWiRLApplication.FRttiContext.GetType(AInstance.ClassType);
-  // Context injection
-  TRttiHelper.ForEachFieldWithAttribute<ContextAttribute>(LType,
-    function (AField: TRttiField; AAttrib: ContextAttribute): Boolean
-    var
-      LFieldClassType: TClass;
-      LValue: TValue;
-    begin
-      Result := True; // enumerate all
-      if (AField.FieldType.IsInstance) then
-      begin
-        LFieldClassType := TRttiInstanceType(AField.FieldType).MetaclassType;
-
-        if not ContextInjectionByType(LFieldClassType, LValue) then
-          raise EWiRLServerException.Create(
-            Format('Unable to inject class [%s] in resource [%s]', [LFieldClassType.ClassName, AInstance.ClassName]),
-            Self.ClassName, 'ContextInjection'
-          );
-
-        AField.SetValue(AInstance, LValue);
-      end;
-    end
-  );
-
-  // properties
-  TRttiHelper.ForEachPropertyWithAttribute<ContextAttribute>(LType,
-    function (AProperty: TRttiProperty; AAttrib: ContextAttribute): Boolean
-    var
-      LPropertyClassType: TClass;
-      LValue: TValue;
-    begin
-      Result := True; // enumerate all
-      if (AProperty.PropertyType.IsInstance) then
-      begin
-        LPropertyClassType := TRttiInstanceType(AProperty.PropertyType).MetaclassType;
-        if ContextInjectionByType(LPropertyClassType, LValue) then
-          AProperty.SetValue(AInstance, LValue);
-      end;
-    end
-  );
+  TWiRLContextInjectionRegistry.Instance.
+    ContextInjection(AInstance, FContext);
 end;
 
-function TWiRLApplicationWorker.ContextInjectionByType(const AType: TClass;
-    out AValue: TValue): Boolean;
+function TWiRLApplicationWorker.ContextInjectionByType(const AObject: TRttiObject;
+  out AValue: TValue): Boolean;
 begin
-  Result := True;
-  // AuthContext
-  if (AType.InheritsFrom(TWiRLAuthContext)) then
-    AValue := FAuthContext
-  // Claims (Subject)
-  else if (AType.InheritsFrom(TWiRLSubject)) then
-    AValue := FAuthContext.Subject
-  // HTTP request
-  else if (AType.InheritsFrom(TWiRLRequest)) then
-    AValue := FContext.Request
-  // HTTP response
-  else if (AType.InheritsFrom(TWiRLResponse)) then
-    AValue := FContext.Response
-  // URL info
-  else if (AType.InheritsFrom(TWiRLURL)) then
-    AValue := FContext.URL
-  // Engine
-  else if (AType.InheritsFrom(TWiRLEngine)) then
-    AValue := FContext.Engine as TWirlEngine
-  // Application
-  else if (AType.InheritsFrom(TWiRLApplication)) then
-    AValue := FAppConfig
-  else
-    Result := False;
+  Result := TWiRLContextInjectionRegistry.Instance.
+    ContextInjectionByType(AObject, FContext, AValue);
 end;
 
 function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
@@ -672,7 +611,6 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
 var
   LAttr: TCustomAttribute;
   LParamName: string;
-  LParamClassType: TClass;
   LContextValue: TValue;
   LReader: IMessageBodyReader;
   LDefaultValue: string;
@@ -697,8 +635,7 @@ begin
     // context injection
     if (LAttr is ContextAttribute) and (AParam.ParamType.IsInstance) then
     begin
-      LParamClassType := TRttiInstanceType(AParam.ParamType).MetaclassType;
-      if ContextInjectionByType(LParamClassType, LContextValue) then
+      if ContextInjectionByType(AParam, LContextValue) then
         Exit(LContextValue);
     end;
 
@@ -831,6 +768,7 @@ var
 begin
   FAuthContext := GetAuthContext;
   try
+    FContext.AuthContext := FAuthContext;
     LProcessResource := not ApplyRequestFilters;
     try
       if LProcessResource then
@@ -841,6 +779,7 @@ begin
   finally
     FreeAndNil(FAuthContext);
   end;
+  FContext.AuthContext := nil;
 end;
 
 function TWiRLApplicationWorker.HasRowConstraints(

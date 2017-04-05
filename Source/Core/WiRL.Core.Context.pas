@@ -12,7 +12,7 @@ unit WiRL.Core.Context;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti,
+  System.Classes, System.SysUtils, System.Rtti, System.Contnrs,
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.URL,
@@ -26,7 +26,10 @@ type
     FResponse: TWiRLResponse;
     FURL: TWiRLURL;
     FApplication: TObject;
+    FAuthContext: TWiRLAuthContext;
+    FOwnedObjects: TObjectList;
     function GetURL: TWiRLURL;
+    function GetOwnedObjects: TObjectList;
   public
     destructor Destroy; override;
 
@@ -34,7 +37,9 @@ type
     property Application: TObject read FApplication write FApplication;
     property Request: TWiRLRequest read FRequest write FRequest;
     property Response: TWiRLResponse read FResponse write FResponse;
+    property AuthContext: TWiRLAuthContext read FAuthContext write FAuthContext;
     property URL: TWiRLURL read GetURL write FURL;
+    property OwnedObjects: TObjectList read GetOwnedObjects;
   end;
 
 implementation
@@ -42,7 +47,15 @@ implementation
 destructor TWiRLContext.Destroy;
 begin
   FURL.Free;
+  FOwnedObjects.Free;
   inherited;
+end;
+
+function TWiRLContext.GetOwnedObjects: TObjectList;
+begin
+  if not Assigned(FOwnedObjects) then
+    FOwnedObjects := TObjectList.Create(True);
+  Result := FOwnedObjects;
 end;
 
 function TWiRLContext.GetURL: TWiRLURL;
