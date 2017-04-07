@@ -68,6 +68,7 @@ var
   LType: TClass;
   LEntry: TEntryInfo;
   LContextFactory: IContextFactory;
+  LContextOwned :Boolean;
 begin
   Result := False;
   LType := TRttiHelper.GetType(AObject).AsInstance.MetaclassType;
@@ -77,10 +78,13 @@ begin
     begin
       LContextFactory := LEntry.ConstructorFunc();
       AValue := LContextFactory.CreateContext(AObject, AContext);
-      if not IsSigleton(AObject) and // Singleton should'n be released
-        (not (AObject is TRttiParameter)) and // Parameters are released by the WiRL garbage collector
-        AValue.IsObject then // Only object should be released
-        AContext.OwnedObjects.Add(AValue.AsObject);
+      if AValue.IsObject then  // Only object should be released
+      begin
+        LContextOwned :=
+          not IsSigleton(AObject) and // Singleton should'n be released
+          not (AObject is TRttiParameter); // Parameters are released by the WiRL garbage collector
+        AContext.CustomContext.Add(AValue.AsObject, LContextOwned);
+      end;
       Exit(True);
     end;
   end;

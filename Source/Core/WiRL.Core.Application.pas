@@ -440,7 +440,7 @@ begin
       begin
         LRequestFilter := ConstructorInfo.GetRequestFilter;
         ContextInjection(LRequestFilter as TObject);
-        LRequestContext := TWiRLContainerRequestContext.Create(FContext.Request, FContext.Response);
+        LRequestContext := TWiRLContainerRequestContext.Create(FContext);
         try
           LRequestFilter.Filter(LRequestContext);
           LAborted := LAborted or LRequestContext.Aborted;
@@ -475,7 +475,7 @@ begin
       begin
         LResponseFilter := ConstructorInfo.GetResponseFilter;
         ContextInjection(LResponseFilter as TObject);
-        LResponseContext := TWiRLContainerResponseContext.Create(FContext.Request, FContext.Response);
+        LResponseContext := TWiRLContainerResponseContext.Create(FContext);
         try
           LResponseFilter.Filter(LResponseContext);
         finally
@@ -564,7 +564,8 @@ begin
       // If the request content stream is used as a param to a resource
       // it will be freed at the end process
       if AValue.AsObject <> FContext.Request.ContentStream then
-        AValue.AsObject.Free;
+        if not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType) then
+          AValue.AsObject.Free;
     end;
 
     tkInterface: TObject(AValue.AsInterface).Free;

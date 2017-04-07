@@ -158,7 +158,7 @@ begin
           Format('Request Filter [%s] does not implement requested interface [IWiRLContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]),
           Self.ClassName, 'ApplyPreMatchingFilters'
         );
-      LRequestContext := TWiRLContainerRequestContext.Create(AContext.Request, AContext.Response);
+      LRequestContext := TWiRLContainerRequestContext.Create(AContext);
       try
         LRequestFilter.Filter(LRequestContext);
         LAborted := LAborted or LRequestContext.Aborted;

@@ -18,6 +18,7 @@ uses
   WiRL.Core.Singleton,
   WiRL.Core.Exceptions,
   WiRL.Core.Attributes,
+  WiRL.Core.Context,
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Rtti.Utils;
@@ -28,22 +29,26 @@ type
     FRequest: TWiRLRequest;
     FResponse: TWiRLResponse;
     FAborted: Boolean;
+    FContext: TWiRLContext;
   public
+    property Context: TWiRLContext read FContext;
     property Request: TWiRLRequest read FRequest;
     property Response: TWiRLResponse read FResponse;
     property Aborted: Boolean read FAborted;
     procedure Abort;
-    constructor Create(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
+    constructor Create(AContext: TWiRLContext);
   end;
 
   TWiRLContainerResponseContext = class(TObject)
   private
     FRequest: TWiRLRequest;
     FResponse: TWiRLResponse;
+    FContext: TWiRLContext;
   public
+    property Context: TWiRLContext read FContext;
     property Request: TWiRLRequest read FRequest;
     property Response: TWiRLResponse read FResponse;
-    constructor Create(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
+    constructor Create(AContext: TWiRLContext);
   end;
 
   IWiRLContainerRequestFilter = interface
@@ -325,22 +330,22 @@ begin
   FAborted := True;
 end;
 
-constructor TWiRLContainerRequestContext.Create(ARequest: TWiRLRequest;
-  AResponse: TWiRLResponse);
+constructor TWiRLContainerRequestContext.Create(AContext: TWiRLContext);
 begin
   inherited Create;
-  FRequest := ARequest;
-  FResponse := AResponse;
+  FContext := AContext;
+  FRequest := AContext.Request;
+  FResponse := AContext.Response;
 end;
 
 { TWiRLContainerResponseContext }
 
-constructor TWiRLContainerResponseContext.Create(ARequest: TWiRLRequest;
-  AResponse: TWiRLResponse);
+constructor TWiRLContainerResponseContext.Create(AContext: TWiRLContext);
 begin
   inherited Create;
-  FRequest := ARequest;
-  FResponse := AResponse;
+  FContext := AContext;
+  FRequest := AContext.Request;
+  FResponse := AContext.Response;
 end;
 
 end.

@@ -19,6 +19,29 @@ uses
   WiRL.Core.Auth.Context;
 
 type
+  TCustomContextEnumerator = class
+  private
+    FIndex: Integer;
+    FList: TList;
+  public
+    constructor Create(AList: TList);
+    function GetCurrent: TObject; inline;
+    function MoveNext: Boolean;
+    property Current: TObject read GetCurrent;
+  end;
+
+  TWiRLCustomContext = class
+  private
+    FList: TObjectList;
+    FOwnedObjects: TObjectList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function GetEnumerator: TCustomContextEnumerator;
+    procedure Add(AValue: TObject; AOwned: Boolean);
+  end;
+
   TWiRLContext = class
   private
     FEngine: TObject;
@@ -27,9 +50,9 @@ type
     FURL: TWiRLURL;
     FApplication: TObject;
     FAuthContext: TWiRLAuthContext;
-    FOwnedObjects: TObjectList;
+    FCustomContext: TWiRLCustomContext;
     function GetURL: TWiRLURL;
-    function GetOwnedObjects: TObjectList;
+    function GetCustomContext: TWiRLCustomContext;
   public
     destructor Destroy; override;
 
@@ -39,7 +62,7 @@ type
     property Response: TWiRLResponse read FResponse write FResponse;
     property AuthContext: TWiRLAuthContext read FAuthContext write FAuthContext;
     property URL: TWiRLURL read GetURL write FURL;
-    property OwnedObjects: TObjectList read GetOwnedObjects;
+    property CustomContext: TWiRLCustomContext read GetCustomContext;
   end;
 
 implementation
@@ -47,15 +70,15 @@ implementation
 destructor TWiRLContext.Destroy;
 begin
   FURL.Free;
-  FOwnedObjects.Free;
+  FCustomContext.Free;
   inherited;
 end;
 
-function TWiRLContext.GetOwnedObjects: TObjectList;
+function TWiRLContext.GetCustomContext: TWiRLCustomContext;
 begin
-  if not Assigned(FOwnedObjects) then
-    FOwnedObjects := TObjectList.Create(True);
-  Result := FOwnedObjects;
+  if not Assigned(FCustomContext) then
+    FCustomContext := TWiRLCustomContext.Create;
+  Result := FCustomContext;
 end;
 
 function TWiRLContext.GetURL: TWiRLURL;
@@ -63,6 +86,54 @@ begin
   if not Assigned(FURL) then
     FURL := TWiRLURL.Create(FRequest);
   Result := FURL;
+end;
+
+{ TWiRLCustomContext }
+
+procedure TWiRLCustomContext.Add(AValue: TObject; AOwned: Boolean);
+begin
+  FList.Add(AValue);
+  if AOwned then
+    FOwnedObjects.Add(AValue);
+end;
+
+constructor TWiRLCustomContext.Create;
+begin
+  inherited;
+  FList := TObjectList.Create(False);
+  FOwnedObjects := TObjectList.Create(True);
+end;
+
+destructor TWiRLCustomContext.Destroy;
+begin
+  FList.Free;
+  FOwnedObjects.Free;
+  inherited;
+end;
+
+function TWiRLCustomContext.GetEnumerator: TCustomContextEnumerator;
+begin
+  Result := TCustomContextEnumerator.Create(FList);
+end;
+
+{ TCustomContextEnumerator }
+
+constructor TCustomContextEnumerator.Create(AList: TList);
+begin
+  FIndex := -1;
+  FList := AList;
+end;
+
+function TCustomContextEnumerator.GetCurrent: TObject;
+begin
+  Result := FList[FIndex];
+end;
+
+function TCustomContextEnumerator.MoveNext: Boolean;
+begin
+  Result := FIndex < FList.Count - 1;
+  if Result then
+    Inc(FIndex);
 end;
 
 end.

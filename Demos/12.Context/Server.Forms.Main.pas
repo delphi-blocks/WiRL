@@ -91,6 +91,7 @@ begin
     .AddApplication('/app')
       .SetName('Default App')
       .SetResources('*')
+      .SetFilters('*')
   ;
 
   if not FServer.Active then
