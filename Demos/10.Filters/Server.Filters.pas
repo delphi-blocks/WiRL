@@ -103,7 +103,10 @@ end;
 
 procedure TResponsePoweredByFilter.Filter(AResponseContext: TWiRLContainerResponseContext);
 begin
-  AResponseContext.Response.HeaderFields['X-Powered-By'] := 'WiRL';
+  if AResponseContext.Response.StatusCode >= 500 then
+    AResponseContext.Response.HeaderFields['X-Powered-By'] := 'DataSnap' // ;-)
+  else
+    AResponseContext.Response.HeaderFields['X-Powered-By'] := 'WiRL';
 end;
 
 { TResponseEncodingFilter }

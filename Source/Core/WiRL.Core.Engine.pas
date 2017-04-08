@@ -243,27 +243,7 @@ procedure TWiRLEngine.DoHandleException(AContext: TWiRLContext; AApplication:
 var
   LSubscriber: IWiRLHandleListener;
   LHandleExceptionListener: IWiRLHandleExceptionListener;
-  LWebException: EWiRLWebApplicationException;
 begin
-  if E is EWiRLWebApplicationException then
-  begin
-    LWebException := E as EWiRLWebApplicationException;
-
-    AContext.Response.StatusCode := LWebException.Status;
-    AContext.Response.Content := LWebException.ToJSON;
-    AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
-
-    // Set the Authorization challenge
-    if LWebException.Status = 401 then
-      AContext.Response.HeaderFields['WWW-Authenticate'] := AApplication.AuthChallengeHeader;
-  end
-  else if E is Exception then
-  begin
-    AContext.Response.StatusCode := 500;
-    AContext.Response.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
-    AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
-  end;
-
   for LSubscriber in FSubscribers do
     if Supports(LSubscriber, IWiRLHandleExceptionListener, LHandleExceptionListener) then
       LHandleExceptionListener.HandleException(Self, AApplication, E);
@@ -342,7 +322,10 @@ begin
     end;
   except
     on E: Exception do
+    begin
+      EWiRLWebApplicationException.HandleException(AContext, E);
       DoHandleException(AContext, LApplication, E);
+    end;
   end;
   LStopWatchEx.Stop;
 

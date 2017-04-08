@@ -774,9 +774,11 @@ begin
     try
       if LProcessResource then
         InternalHandleRequest;
-    finally
-      ApplyResponseFilters;
+    except
+      on E: Exception do
+        EWiRLWebApplicationException.HandleException(FContext, E);
     end;
+    ApplyResponseFilters;
   finally
     FreeAndNil(FAuthContext);
   end;
