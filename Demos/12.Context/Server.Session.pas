@@ -30,6 +30,7 @@ type
     FDelete: Boolean;
     FID: string;
     FTimeStamp: TDateTime;
+    FRole: string;
     function GetStatus: TSessionStatus;
     function GetIsValid: Boolean;
     function GetIsNew: Boolean;
@@ -44,6 +45,7 @@ type
     
     property ID: string read FID write FID;
     property UserName: string read FUserName write FUserName;
+    property Role: string read FRole write FRole;
     property TimeStamp: TDateTime read FTimeStamp write FTimeStamp;
 
     procedure StartSession;
@@ -59,6 +61,7 @@ type
     class function GetInstance: TSessions; static; inline;
   private
     FList: TDictionary<string,TSession>;
+    procedure ClearExpiredSessions;
   public
     procedure Add(ASession: TSession);
     // nil if not found
@@ -89,6 +92,11 @@ type
 
   [NameBinding]
   CheckSessionAttribute = class(TCustomAttribute)
+  private
+    FRole: string;
+  public
+    constructor Create(const ARole: string = '');
+    property Role: string read FRole;
   end;
 
   [CheckSession]
@@ -109,6 +117,7 @@ procedure TSessions.Add(ASession: TSession);
 begin
   MonitorEnter(FList);
   try
+    ClearExpiredSessions;
     FList.Add(ASession.ID, ASession);
     ASession.FNew := False;
   finally
@@ -128,6 +137,11 @@ begin
   finally
     MonitorExit(FList);
   end;
+end;
+
+procedure TSessions.ClearExpiredSessions;
+begin
+  // not yet implemented
 end;
 
 constructor TSessions.Create;
@@ -296,11 +310,31 @@ procedure TCheckSessionRequestFilter.Filter(
 var
   LSid: string;
   LSession: TSession;
+  LMethod: TRttiMethod;
+  LRole: string;
 begin
   LSid := ARequestContext.Request.CookieFields[SidName];
   LSession := TSessions.Instance.Find(LSid);
   if not Assigned(LSession) then
     raise EWiRLNotAuthorizedException.Create('Session not found');
+
+  LMethod := ARequestContext.Resource.Method.RttiObject;
+  TRttiHelper.HasAttribute<CheckSessionAttribute>(LMethod,
+    procedure (AAttr: CheckSessionAttribute)
+    begin
+      LRole := AAttr.Role;
+    end
+  );
+  if (LRole <> '') and (LSession.Role <> LRole) then
+    raise EWiRLNotAuthorizedException.Create(Format('Not enough privileges (role [%s])', [LSession.Role]));
+end;
+
+{ CheckSessionAttribute }
+
+constructor CheckSessionAttribute.Create(const ARole: string);
+begin
+  inherited Create;
+  FRole := ARole;
 end;
 
 initialization

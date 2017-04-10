@@ -21,6 +21,7 @@ uses
   WiRL.Core.Context,
   WiRL.Core.Request,
   WiRL.Core.Response,
+  WiRL.Core.Resource,
   WiRL.Rtti.Utils;
 
 type
@@ -30,13 +31,16 @@ type
     FResponse: TWiRLResponse;
     FAborted: Boolean;
     FContext: TWiRLContext;
+    FResource: TWiRLResource;
+    function GetResource: TWiRLResource;
   public
     property Context: TWiRLContext read FContext;
     property Request: TWiRLRequest read FRequest;
     property Response: TWiRLResponse read FResponse;
+    property Resource: TWiRLResource read GetResource;
     property Aborted: Boolean read FAborted;
     procedure Abort;
-    constructor Create(AContext: TWiRLContext);
+    constructor Create(AContext: TWiRLContext; AResource: TWiRLResource = nil);
   end;
 
   TWiRLContainerResponseContext = class(TObject)
@@ -44,11 +48,14 @@ type
     FRequest: TWiRLRequest;
     FResponse: TWiRLResponse;
     FContext: TWiRLContext;
+    FResource: TWiRLResource;
+    function GetResource: TWiRLResource;
   public
     property Context: TWiRLContext read FContext;
     property Request: TWiRLRequest read FRequest;
     property Response: TWiRLResponse read FResponse;
-    constructor Create(AContext: TWiRLContext);
+    property Resource: TWiRLResource read GetResource;
+    constructor Create(AContext: TWiRLContext; AResource: TWiRLResource);
   end;
 
   IWiRLContainerRequestFilter = interface
@@ -330,22 +337,38 @@ begin
   FAborted := True;
 end;
 
-constructor TWiRLContainerRequestContext.Create(AContext: TWiRLContext);
+constructor TWiRLContainerRequestContext.Create(AContext: TWiRLContext; AResource: TWiRLResource);
 begin
   inherited Create;
   FContext := AContext;
   FRequest := AContext.Request;
   FResponse := AContext.Response;
+  FResource := AResource;
+end;
+
+function TWiRLContainerRequestContext.GetResource: TWiRLResource;
+begin
+  if not Assigned(FResource) then
+    raise EWiRLException.Create('Resource info not available');
+  Result := FResource;
 end;
 
 { TWiRLContainerResponseContext }
 
-constructor TWiRLContainerResponseContext.Create(AContext: TWiRLContext);
+constructor TWiRLContainerResponseContext.Create(AContext: TWiRLContext; AResource: TWiRLResource);
 begin
   inherited Create;
   FContext := AContext;
   FRequest := AContext.Request;
   FResponse := AContext.Response;
+  FResource := AResource;
+end;
+
+function TWiRLContainerResponseContext.GetResource: TWiRLResource;
+begin
+  if not Assigned(FResource) then
+    raise EWiRLException.Create('Resource info not available');
+  Result := FResource;
 end;
 
 end.

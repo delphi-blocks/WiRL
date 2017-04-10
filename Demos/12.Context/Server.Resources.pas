@@ -49,9 +49,9 @@ type
     function ReadSession: TSession;
     [POST]
     function Login([FormParam('username')] const AUserName: string): TSession;
-    [CheckSession]
+    [CheckSession('admin')]
     [PUT]
-    function ChangeSession([FormParam] const UserName: string): TSession;
+    function ChangeSession([FormParam('role')] const ARole: string): TSession;
     [CheckSession]
     [DELETE]
     procedure Logout;
@@ -77,9 +77,9 @@ end;
 
 { TSessionResource }
 
-function TSessionResource.ChangeSession(const UserName: string): TSession;
+function TSessionResource.ChangeSession(const ARole: string): TSession;
 begin
-  Session.UserName := UserName;
+  Session.Role := ARole;
   Result := Session;
 end;
 
@@ -88,6 +88,7 @@ begin
   // check for a valid user
   // ...
   Session.UserName := AUserName;
+  Session.Role := 'admin';
   Session.StartSession;
 
   Result := Session;

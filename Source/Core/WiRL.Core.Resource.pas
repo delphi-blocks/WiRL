@@ -15,7 +15,6 @@ uses
   System.Classes, System.SysUtils, System.Generics.Collections, System.Rtti,
   System.TypInfo,
 
-  WiRL.http.Filters,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Context,

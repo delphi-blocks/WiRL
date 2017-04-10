@@ -440,7 +440,7 @@ begin
       begin
         LRequestFilter := ConstructorInfo.GetRequestFilter;
         ContextInjection(LRequestFilter as TObject);
-        LRequestContext := TWiRLContainerRequestContext.Create(FContext);
+        LRequestContext := TWiRLContainerRequestContext.Create(FContext, FResource);
         try
           LRequestFilter.Filter(LRequestContext);
           LAborted := LAborted or LRequestContext.Aborted;
@@ -475,7 +475,7 @@ begin
       begin
         LResponseFilter := ConstructorInfo.GetResponseFilter;
         ContextInjection(LResponseFilter as TObject);
-        LResponseContext := TWiRLContainerResponseContext.Create(FContext);
+        LResponseContext := TWiRLContainerResponseContext.Create(FContext, FResource);
         try
           LResponseFilter.Filter(LResponseContext);
         finally
@@ -770,8 +770,8 @@ begin
   FAuthContext := GetAuthContext;
   try
     FContext.AuthContext := FAuthContext;
-    LProcessResource := not ApplyRequestFilters;
     try
+      LProcessResource := not ApplyRequestFilters;
       if LProcessResource then
         InternalHandleRequest;
     except
