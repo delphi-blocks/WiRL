@@ -56,9 +56,17 @@ type
       const AAllowInherithance: Boolean = True): Boolean; overload; static;
 
     // Create instance of class with parameterless constructor
+    class function CreateInstanceValue(AType: TRttiType): TValue; overload;
+
+    // Create instance of class with parameterless constructor
     class function CreateInstance(AClass: TClass): TObject;  overload;
     class function CreateInstance(AType: TRttiType): TObject; overload;
     class function CreateInstance(const ATypeName: string): TObject; overload;
+
+    // Create instance of class with one string parameter
+    class function CreateInstance(AClass: TClass; const AValue: string): TObject;  overload;
+    class function CreateInstance(AType: TRttiType; const AValue: string): TObject; overload;
+    class function CreateInstance(const ATypeName, AValue: string): TObject; overload;
 
     // Rtti general helper functions
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject): Boolean; overload;
@@ -177,10 +185,65 @@ var
   LType: TRttiType;
 begin
   LType := FContext.GetType(AClass);
-  Result := CreateInstance(LType);
+  Result := CreateInstanceValue(LType).AsObject;
 end;
 
 class function TRttiHelper.CreateInstance(AType: TRttiType): TObject;
+begin
+  Result := CreateInstanceValue(AType).AsObject;
+end;
+
+class function TRttiHelper.CreateInstance(const ATypeName: string): TObject;
+var
+  LType: TRttiType;
+begin
+  LType := Context.FindType(ATypeName);
+  Result := CreateInstanceValue(LType).AsObject;
+end;
+
+class function TRttiHelper.CreateInstance(AClass: TClass; const AValue: string): TObject;
+var
+  LType: TRttiType;
+begin
+  LType := FContext.GetType(AClass);
+  Result := CreateInstance(LType, AValue);
+end;
+
+class function TRttiHelper.CreateInstance(AType: TRttiType;
+  const AValue: string): TObject;
+var
+  LMethod: TRttiMethod;
+  LMetaClass: TClass;
+begin
+  Result := nil;
+  if Assigned(AType) then
+  begin
+    for LMethod in AType.GetMethods do
+    begin
+      if LMethod.HasExtendedInfo and LMethod.IsConstructor then
+      begin
+        if Length(LMethod.GetParameters) = 1 then
+        begin
+          if LMethod.GetParameters[0].ParamType.TypeKind in [tkLString, tkUString, tkWString, tkString] then
+          begin
+            LMetaClass := AType.AsInstance.MetaclassType;
+            Exit(LMethod.Invoke(LMetaClass, [AValue]).AsObject);
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+class function TRttiHelper.CreateInstance(const ATypeName, AValue: string): TObject;
+var
+  LType: TRttiType;
+begin
+  LType := Context.FindType(ATypeName);
+  Result := CreateInstance(LType, AValue);
+end;
+
+class function TRttiHelper.CreateInstanceValue(AType: TRttiType): TValue;
 var
   LMethod: TRTTIMethod;
   LMetaClass: TClass;
@@ -194,18 +257,10 @@ begin
         if Length(LMethod.GetParameters) = 0 then
         begin
           LMetaClass := AType.AsInstance.MetaclassType;
-          Result := LMethod.Invoke(LMetaClass, []).AsObject;
+          Exit(LMethod.Invoke(LMetaClass, []));
         end;
       end;
     end;
-end;
-
-class function TRttiHelper.CreateInstance(const ATypeName: string): TObject;
-var
-  LType: TRttiType;
-begin
-  LType := Context.FindType(ATypeName);
-  Result := CreateInstance(LType);
 end;
 
 class function TRttiHelper.ForEachAttribute<T>(AInstance: TObject;
