@@ -100,15 +100,15 @@ procedure TObjectWriter.WriteTo(const AValue: TValue; const AAttributes: TAttrib
   AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
-  LObj: TJSONObject;
+  LJSON: TJSONValue;
 begin
   LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
-    LObj := TWiRLJSONMapper.ObjectToJSON(AValue.AsObject);
+    LJSON := TWiRLJSONMapper.ObjectToJSON(AValue.AsObject);
     try
-      LStreamWriter.Write(TJSONHelper.ToJSON(LObj));
+      LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally
-      LObj.Free;
+      LJSON.Free;
     end;
   finally
     LStreamWriter.Free;

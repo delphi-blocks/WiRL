@@ -26,17 +26,20 @@ type
     function WriteEnum(const AValue: TValue): TJSONValue;
     function WriteInteger(const AValue: TValue): TJSONValue;
     function WriteFloat(const AValue: TValue): TJSONValue;
-    function WriteObject(const AValue: TValue): TJSONValue;
     function WriteInterface(const AValue: TValue): TJSONValue;
     function WriteArray(const AValue: TValue): TJSONValue;
     function WriteRecord(const AValue: TValue): TJSONValue;
     function WriteSet(const AValue: TValue): TJSONValue;
     function WriteVariant(const AValue: TValue): TJSONValue;
 
-    function WriteDataMembers(AValue: TValue): TJSONValue;
+    function WriteObject(const AValue: TValue): TJSONValue;
+    function WriteGenericList(const AValue: TValue): TJSONValue;
+    function WriteDataMembers(const AValue: TValue): TJSONValue;
+  private
   public
     function RecordToJSON(ARecord: TValue): TJSONObject;
-    function ObjectToJSON(AObject: TObject): TJSONObject;
+    function ObjectToJSON(AObject: TObject): TJSONValue;
+    function TValueToJSON(const AValue: TValue): TJSONValue;
   end;
 
   TWiRLJSONDeserializer = class
@@ -58,22 +61,18 @@ type
     procedure SetMemberValue(const AValue: TValue; AMember: TRttiMember; AInstance: Pointer);
     function CreateNewValue(AType: TRttiType; AItemJSON: TJSONValue; var AAllocatedData: Pointer): TValue;
   public
-    procedure JSONToObject(AObject: TObject; AJSONObject: TJSONObject);
+    procedure JSONToObject(AObject: TObject; AJSON: TJSONValue);
   end;
 
   TWiRLJSONMapper = class
   public
-    class function ObjectToJSON(AObject: TObject): TJSONObject;
+    class function ObjectToJSON(AObject: TObject): TJSONValue;
+    class function TValueToJSON(const AValue: TValue): TJSONValue;
 
     class function ObjectToJSONString(AObject: TObject): string;
 
-    class procedure JSONToObject(AObject: TObject; AJSONObject: TJSONObject); overload;
+    class procedure JSONToObject(AObject: TObject; AJSON: TJSONValue); overload;
 
-    class function JsonToObject<T: class, constructor>(AJsonObject: TJSOnObject): T; overload;
-    class function JsonToObject(AType: TRttiType; AJsonObject: TJSOnObject): TObject; overload;
-
-    class function JsonToObject<T: class, constructor>(const AJson: string): T; overload;
-    class function JsonToObject(AType: TRttiType; const AJson: string): TObject; overload;
   end;
 
 implementation
@@ -86,41 +85,14 @@ uses
 
 { TWiRLJSONSerializer }
 
-function TWiRLJSONSerializer.ObjectToJSON(AObject: TObject): TJSONObject;
-var
-  LType: TRttiType;
-  LProperty: TRttiProperty;
-  LJSONValue: TJSONValue;
+function TWiRLJSONSerializer.ObjectToJSON(AObject: TObject): TJSONValue;
 begin
-  Result := TJSONObject.Create;
-  try
-    if Assigned(AObject) then
-    begin
-      LType := TRttiHelper.Context.GetType(AObject.ClassType);
-      for LProperty in LType.GetProperties do
-      begin
-        if not LProperty.IsWritable then
-          Continue;
+  if not Assigned(AObject) then
+    Exit(TJSONObject.Create);
 
-        if LProperty.IsReadable and (LProperty.Visibility in [mvPublic, mvPublished]) then
-        begin
-          try
-            LJSONValue := WriteDataMembers(LProperty.GetValue(AObject));
-          except
-            raise Exception.CreateFmt(
-              'Error converting property (%s) of type (%s)',
-                [LProperty.Name, LProperty.PropertyType.Name]
-            );
-          end;
-          if Assigned(LJSONValue) then
-            Result.AddPair(LProperty.Name, LJSONValue);
-        end;
-      end;
-    end;
-  except
-    Result.Free;
-    raise;
-  end;
+  Result := WriteDataMembers(AObject);
+  if Assigned(Result) then
+    Exit;
 end;
 
 function TWiRLJSONSerializer.RecordToJSON(ARecord: TValue): TJSONObject;
@@ -156,17 +128,21 @@ begin
   end;
 end;
 
+function TWiRLJSONSerializer.TValueToJSON(const AValue: TValue): TJSONValue;
+begin
+  Result := WriteDataMembers(AValue);
+end;
+
 function TWiRLJSONSerializer.WriteArray(const AValue: TValue): TJSONValue;
 var
   LIndex: Integer;
+  LArray: TJSONArray;
 begin
-  Result := TJSONArray.Create;
+  LArray := TJSONArray.Create;
   for LIndex := 0 to AValue.GetArrayLength - 1 do
-  begin
-    (Result as TJSONArray).AddElement(
-      WriteDataMembers(AValue.GetArrayElement(LIndex))
-    );
-  end;
+    LArray.AddElement(WriteDataMembers(AValue.GetArrayElement(LIndex)));
+
+  Result := LArray;
 end;
 
 function TWiRLJSONSerializer.WriteChar(const AValue: TValue): TJSONValue;
@@ -177,7 +153,7 @@ begin
     Result := TJSONString.Create(AValue.AsString);
 end;
 
-function TWiRLJSONSerializer.WriteDataMembers(AValue: TValue): TJSONValue;
+function TWiRLJSONSerializer.WriteDataMembers(const AValue: TValue): TJSONValue;
 begin
   Result := nil;
 
@@ -214,7 +190,9 @@ begin
 
     tkClass:
     begin
-      Result := WriteObject(AValue);
+      Result := WriteGenericList(AValue);
+      if not Assigned(Result) then
+        Result := WriteObject(AValue);
     end;
 
     tkArray,
@@ -291,8 +269,104 @@ begin
 end;
 
 function TWiRLJSONSerializer.WriteObject(const AValue: TValue): TJSONValue;
+var
+  LJSONValue: TJSONValue;
+  LObject: TObject;
+  LType: TRttiType;
+  LProperty: TRttiProperty;
 begin
-  Result := ObjectToJSON(AValue.AsObject);
+  Result := TJSONObject.Create;
+  LObject := AValue.AsObject;
+  LType := TRttiHelper.Context.GetType(LObject.ClassType);
+
+  for LProperty in LType.GetProperties do
+  begin
+    if not LProperty.IsWritable then
+      Continue;
+
+    if LProperty.IsReadable and (LProperty.Visibility in [mvPublic, mvPublished]) then
+    begin
+      try
+        LJSONValue := WriteDataMembers(LProperty.GetValue(LObject));
+      except
+        raise Exception.CreateFmt(
+          'Error converting property (%s) of type (%s)',
+            [LProperty.Name, LProperty.PropertyType.Name]
+        );
+      end;
+      if Assigned(LJSONValue) then
+        (Result as TJSONObject).AddPair(LProperty.Name, LJSONValue);
+    end;
+  end;
+end;
+
+function TWiRLJSONSerializer.WriteGenericList(const AValue: TValue): TJSONValue;
+var
+  LListObject: TObject;
+  LMethodGetEnumerator, LMethodAdd: TRttiMethod;
+  LMethodClear, LMethodMoveNext: TRttiMethod;
+  LEnumObject: TObject;
+  LListType, LEnumType: TRttiType;
+  LCurrentProp: TRttiProperty;
+  LValue: TValue;
+  LJSONValue: TJSONValue;
+begin
+  Result := nil;
+  LListObject := AValue.AsObject;
+  LListType := TRttiHelper.Context.GetType(LListObject.ClassType);
+
+  LMethodGetEnumerator := LListType.GetMethod('GetEnumerator');
+  if not Assigned(LMethodGetEnumerator) or
+     (LMethodGetEnumerator.MethodKind <> mkFunction) or
+     (LMethodGetEnumerator.ReturnType.Handle.Kind <> tkClass)
+  then
+    Exit;
+
+  LMethodClear := LListType.GetMethod('Clear');
+  if not Assigned(LMethodClear) then
+    Exit;
+
+  LMethodAdd := LListType.GetMethod('Add');
+  if not Assigned(LMethodAdd) or (Length(LMethodAdd.GetParameters) <> 1) then
+    Exit;
+
+  LEnumType := LMethodGetEnumerator.ReturnType;
+
+  LCurrentProp := LEnumType.GetProperty('Current');
+  if not Assigned(LCurrentProp) then
+    Exit;
+
+  LEnumObject := LMethodGetEnumerator.Invoke(LListObject, []).AsObject;
+  if not Assigned(LEnumObject) then
+    Exit;
+
+  try
+    LEnumType := TRttiHelper.Context.GetType(LEnumObject.ClassType);
+
+    LCurrentProp := LEnumType.GetProperty('Current');
+    if not Assigned(LCurrentProp) then
+      Exit;
+
+    LMethodMoveNext := LEnumType.GetMethod('MoveNext');
+    if not Assigned(LMethodMoveNext) or
+       (Length(LMethodMoveNext.GetParameters) <> 0) or
+       (LMethodMoveNext.MethodKind <> mkFunction) or
+       (LMethodMoveNext.ReturnType.Handle <> TypeInfo(Boolean))
+    then
+      Exit;
+
+    Result := TJSONArray.Create;
+    while LMethodMoveNext.Invoke(LEnumObject, []).AsBoolean do
+    begin
+      LValue := LCurrentProp.GetValue(LEnumObject);
+      LJSONValue := WriteDataMembers(LValue);
+
+      (Result as TJSONArray).AddElement(LJSONValue);
+    end;
+
+  finally
+    LEnumObject.Free;
+  end;
 end;
 
 function TWiRLJSONSerializer.WriteRecord(const AValue: TValue): TJSONValue;
@@ -627,18 +701,17 @@ begin
   end;
 end;
 
-procedure TWiRLJSONDeserializer.JSONToObject(AObject: TObject; AJSONObject:
-    TJSONObject);
+procedure TWiRLJSONDeserializer.JSONToObject(AObject: TObject; AJSON: TJSONValue);
 var
   LType: TRttiType;
 begin
   LType := TRttiHelper.Context.GetType(AObject.ClassType);
-  ReadDataMembers(AJSONObject, LType, AObject);
+  ReadDataMembers(AJSON, LType, AObject);
 end;
 
 { TWiRLJSONMapper }
 
-class function TWiRLJSONMapper.ObjectToJSON(AObject: TObject): TJSONObject;
+class function TWiRLJSONMapper.ObjectToJSON(AObject: TObject): TJSONValue;
 var
   LWriter: TWiRLJSONSerializer;
 begin
@@ -652,55 +725,38 @@ end;
 
 class function TWiRLJSONMapper.ObjectToJSONString(AObject: TObject): string;
 var
-  LObj: TJSONObject;
+  LJSON: TJSONValue;
 begin
-  LObj := ObjectToJSON(AObject);
+  LJSON := ObjectToJSON(AObject);
   try
-    Result := TJSONHelper.ToJSON(LObj);
+    Result := TJSONHelper.ToJSON(LJSON);
   finally
-    LObj.Free;
+    LJSON.Free;
   end;
 end;
 
-class function TWiRLJSONMapper.JsonToObject(AType: TRttiType; const AJson: string): TObject;
+class function TWiRLJSONMapper.TValueToJSON(const AValue: TValue): TJSONValue;
 var
-  LJObj: TJSONObject;
+  LWriter: TWiRLJSONSerializer;
 begin
-  Result := TRttiHelper.CreateInstance(AType);
-  LJObj := TJSONObject.ParseJSONValue(AJson) as TJSONObject;
+  LWriter := TWiRLJSONSerializer.Create;
   try
-    TJson.JsonToObject(Result, LJObj);
+    Result := LWriter.TValueToJSON(AValue);
   finally
-    LJObj.Free;
+    LWriter.Free;
   end;
 end;
 
-class function TWiRLJSONMapper.JsonToObject(AType: TRttiType; AJsonObject: TJSOnObject): TObject;
-begin
-  Result := TRttiHelper.CreateInstance(AType);
-  TJson.JsonToObject(Result, AJsonObject);
-end;
-
-class procedure TWiRLJSONMapper.JSONToObject(AObject: TObject; AJSONObject: TJSONObject);
+class procedure TWiRLJSONMapper.JSONToObject(AObject: TObject; AJSON: TJSONValue);
 var
   LReader: TWiRLJSONDeserializer;
 begin
   LReader := TWiRLJSONDeserializer.Create;
   try
-    LReader.JSONToObject(AObject, AJSONObject);
+    LReader.JSONToObject(AObject, AJSON);
   finally
     LReader.Free;
   end;
-end;
-
-class function TWiRLJSONMapper.JsonToObject<T>(const AJson: string): T;
-begin
-  Result := TJson.JsonToObject<T>(AJson);
-end;
-
-class function TWiRLJSONMapper.JsonToObject<T>(AJsonObject: TJSOnObject): T;
-begin
-  Result := TJson.JsonToObject<T>(AJsonObject);
 end;
 
 end.

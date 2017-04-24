@@ -32,14 +32,18 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    btnSerialize: TButton;
+    btnSerComplexObject: TButton;
     memoSerialize: TMemo;
-    Button2: TButton;
-    btnDeserialize: TButton;
+    btnSimpleTypes: TButton;
+    btnDesComplexObject: TButton;
     memoDeserialize: TMemo;
-    procedure btnSerializeClick(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
-    procedure btnDeserializeClick(Sender: TObject);
+    btnGenericList: TButton;
+    btnGenericObjectList: TButton;
+    procedure btnSerComplexObjectClick(Sender: TObject);
+    procedure btnSimpleTypesClick(Sender: TObject);
+    procedure btnDesComplexObjectClick(Sender: TObject);
+    procedure btnGenericListClick(Sender: TObject);
+    procedure btnGenericObjectListClick(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -48,6 +52,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FServer: TWiRLhttpServerIndy;
+    procedure Log(const ATitle, ALog: string);
   public
 
   end;
@@ -61,6 +66,7 @@ implementation
 
 uses
   System.Rtti, REST.Json,
+  System.Generics.Collections,
   WiRL.Core.JSON,
   WiRL.Rtti.Utils,
   WiRL.Core.MessageBodyWriter,
@@ -70,10 +76,10 @@ uses
   Server.Entities;
 
 
-procedure TMainForm.btnSerializeClick(Sender: TObject);
+procedure TMainForm.btnSerComplexObjectClick(Sender: TObject);
 var
   LPerson: TPerson;
-  LJSON: TJSONObject;
+  LJSON: TJSONValue;
 begin
   LPerson := TPerson.Create;
   try
@@ -95,20 +101,38 @@ begin
   end;
 end;
 
-procedure TMainForm.Button2Click(Sender: TObject);
+procedure TMainForm.btnSimpleTypesClick(Sender: TObject);
 var
   LRec: TMyRecord;
+  LArr: TIntArray;
+
+
+  function GetStringFromValue(const AValue: TValue): string;
+  var
+    LJSON: TJSONValue;
+  begin
+    LJSON := TWiRLJSONMapper.TValueToJSON(AValue);
+    try
+      Result := LJSON.ToJSON;
+    finally
+      LJSON.Free;
+    end;
+  end;
 begin
+  Log('Integer', GetStringFromValue(TValue.From<Integer>(42)));
+
   LRec.Uno := 'Test Test Test';
   LRec.Due := 42;
+  Log('Record', GetStringFromValue(TValue.From<TMyRecord>(LRec)));
 
-  //memoSerialize.Lines.Text := TWiRLJSONMapper.RecordToJSON(TValue.From<TMyRecord>(LRec)).ToJSON;
+  LArr := [12, 34, 797, 5252636];
+  Log('Array of Integer', GetStringFromValue(TValue.From<TIntArray>(LArr)));
 end;
 
-procedure TMainForm.btnDeserializeClick(Sender: TObject);
+procedure TMainForm.btnDesComplexObjectClick(Sender: TObject);
 var
   LPerson: TPerson;
-  LJSON: TJSONObject;
+  LJSON: TJSONValue;
 begin
   LPerson := TPerson.Create;
   try
@@ -130,6 +154,48 @@ begin
   end;
 end;
 
+procedure TMainForm.btnGenericListClick(Sender: TObject);
+var
+  LList: TList<Double>;
+  LJSON: TJSONValue;
+begin
+  LList := TList<Double>.Create;
+  try
+    LList.Add(34.9);
+    LList.Add(10.0);
+
+    LJSON := TWiRLJSONMapper.ObjectToJSON(LList);
+    try
+      Log('List', TJson.Format(LJSON));
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LList.Free;
+  end;
+end;
+
+procedure TMainForm.btnGenericObjectListClick(Sender: TObject);
+var
+  LBook: TAddressBook;
+  LJSON: TJSONValue;
+begin
+  LBook := TAddressBook.Create;
+  try
+    LBook.Add('Verona', 'Italy');
+    LBook.Add('Napoli', 'Italy');
+
+    LJSON := TWiRLJSONMapper.ObjectToJSON(LBook);
+    try
+      Log('List', TJson.Format(LJSON));
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LBook.Free;
+  end;
+end;
+
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   StopServerAction.Execute;
@@ -138,6 +204,14 @@ end;
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   StartServerAction.Execute;
+end;
+
+procedure TMainForm.Log(const ATitle, ALog: string);
+begin
+  memoSerialize.Lines.Add('');
+  memoSerialize.Lines.Add(ATitle + ':');
+  memoSerialize.Lines.Add(ALog);
+  memoSerialize.Lines.Add('-----------------------');
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);

@@ -3,11 +3,14 @@ unit Server.Entities;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections;
 
 {$M+}
 
 type
+
+  TIntArray = TArray<Integer>;
+
   {$SCOPEDENUMS ON}
   TMyEnum = (Primo, Secondo, Terzo, Quarto);
 
@@ -31,6 +34,19 @@ type
   end;
 
   TAddresses = TArray<TAddress>;
+  TAddressList = TList<TAddress>;
+
+  TAddressBook = class
+  private
+    FAddressList: TAddressList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function Add(ACity, ACountry: string): TAddress;
+  published
+    property AddressList: TAddressList read FAddressList write FAddressList;
+  end;
 
   TNote = class
   private
@@ -102,6 +118,33 @@ begin
     FAddresses[LIndex].Free;
 
   FNote.Free;
+  inherited;
+end;
+
+{ TAddressBook }
+
+function TAddressBook.Add(ACity, ACountry: string): TAddress;
+begin
+  Result := TAddress.Create;
+  Result.City := ACity;
+  Result.Country := ACountry;
+  FAddressList.Add(Result);
+end;
+
+constructor TAddressBook.Create;
+begin
+  FAddressList := TAddressList.Create;
+end;
+
+destructor TAddressBook.Destroy;
+var
+  LAddress: TObject;
+begin
+  for LAddress in FAddressList do
+  begin
+    LAddress.Free;
+  end;
+  FAddressList.Free;
   inherited;
 end;
 
