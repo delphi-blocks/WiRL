@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'WiRL ContentTypes Server'
-  ClientHeight = 486
+  ClientHeight = 512
   ClientWidth = 1037
   Color = clBtnFace
   Constraints.MinHeight = 240
@@ -17,12 +17,12 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   DesignSize = (
     1037
-    486)
+    512)
   PixelsPerInch = 96
   TextHeight = 13
   object imgSample: TImage
     Left = 16
-    Top = 250
+    Top = 210
     Width = 131
     Height = 135
     Picture.Data = {
@@ -1779,7 +1779,7 @@ object MainForm: TMainForm
     Left = 0
     Top = 0
     Width = 1037
-    Height = 73
+    Height = 80
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
@@ -1828,7 +1828,7 @@ object MainForm: TMainForm
     Left = 153
     Top = 88
     Width = 373
-    Height = 390
+    Height = 416
     Anchors = [akLeft, akTop, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -1839,10 +1839,11 @@ object MainForm: TMainForm
     ScrollBars = ssVertical
     TabOrder = 2
     WordWrap = False
+    ExplicitHeight = 390
   end
   object btnSimpleTypes: TButton
     Left = 16
-    Top = 125
+    Top = 117
     Width = 131
     Height = 25
     Caption = 'SimpleTypes'
@@ -1862,7 +1863,7 @@ object MainForm: TMainForm
     Left = 669
     Top = 88
     Width = 360
-    Height = 390
+    Height = 416
     Anchors = [akLeft, akTop, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -1873,10 +1874,11 @@ object MainForm: TMainForm
     ScrollBars = ssVertical
     TabOrder = 5
     WordWrap = False
+    ExplicitHeight = 390
   end
   object btnGenericList: TButton
     Left = 16
-    Top = 168
+    Top = 148
     Width = 131
     Height = 25
     Caption = 'GenericList'
@@ -1885,7 +1887,7 @@ object MainForm: TMainForm
   end
   object btnGenericObjectList: TButton
     Left = 16
-    Top = 207
+    Top = 179
     Width = 131
     Height = 25
     Caption = 'GenericObjectList'
@@ -1894,12 +1896,21 @@ object MainForm: TMainForm
   end
   object btnImage: TButton
     Left = 16
-    Top = 391
+    Top = 351
     Width = 131
     Height = 25
     Caption = 'Image'
     TabOrder = 8
     OnClick = btnImageClick
+  end
+  object btnDataSet: TButton
+    Left = 16
+    Top = 382
+    Width = 131
+    Height = 25
+    Caption = 'DataSet'
+    TabOrder = 9
+    OnClick = btnDataSetClick
   end
   object MainActionList: TActionList
     Left = 384
@@ -1913,6 +1924,69 @@ object MainForm: TMainForm
       Caption = 'Stop Server'
       OnExecute = StopServerActionExecute
       OnUpdate = StopServerActionUpdate
+    end
+  end
+  object dsPersons: TFDMemTable
+    Active = True
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvPersistent, rvSilentMode]
+    ResourceOptions.Persistent = True
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 112
+    Top = 376
+    Content = {
+      414442530F000F3AEA010000FF00010001FF02FF030400120000006400730050
+      006500720073006F006E00730005000A0000005400610062006C006500060000
+      000000070000080032000000090000FF0AFF0B0400080000004E0061006D0065
+      000500080000004E0061006D0065000C00010000000E000D000F003200000010
+      00011100011200011300011400011500011600080000004E0061006D00650017
+      0032000000FEFF0B04000E0000005300750072006E0061006D00650005000E00
+      00005300750072006E0061006D0065000C00020000000E000D000F0032000000
+      10000111000112000113000114000115000116000E0000005300750072006E00
+      61006D006500170032000000FEFF0B0400060000004100670065000500060000
+      004100670065000C00030000000E001800100001110001120001130001140001
+      150001160006000000410067006500FEFEFF19FEFF1AFEFF1BFF1C1D00000000
+      00FF1E00000500000050616F6C6F010005000000526F73736902002E000000FE
+      FEFF1C1D0001000000FF1E0000040000004C7563610100060000004D696E7574
+      69020028000000FEFEFF1C1D0002000000FF1E000007000000416C626572746F
+      01000900000044616C20446F73736F020026000000FEFEFEFEFEFF1FFEFF2021
+      0003000000FF22FEFEFE0E004D0061006E0061006700650072001E0055007000
+      6400610074006500730052006500670069007300740072007900120054006100
+      62006C0065004C006900730074000A005400610062006C00650008004E006100
+      6D006500140053006F0075007200630065004E0061006D0065000A0054006100
+      620049004400240045006E0066006F0072006300650043006F006E0073007400
+      7200610069006E00740073001E004D0069006E0069006D0075006D0043006100
+      700061006300690074007900180043006800650063006B004E006F0074004E00
+      75006C006C00140043006F006C0075006D006E004C006900730074000C004300
+      6F006C0075006D006E00100053006F0075007200630065004900440018006400
+      740041006E007300690053007400720069006E00670010004400610074006100
+      54007900700065000800530069007A0065001400530065006100720063006800
+      610062006C006500120041006C006C006F0077004E0075006C006C0008004200
+      61007300650014004F0041006C006C006F0077004E0075006C006C0012004F00
+      49006E0055007000640061007400650010004F0049006E005700680065007200
+      65001A004F0072006900670069006E0043006F006C004E0061006D0065001400
+      53006F007500720063006500530069007A0065000E006400740049006E007400
+      330032001C0043006F006E00730074007200610069006E0074004C0069007300
+      7400100056006900650077004C006900730074000E0052006F0077004C006900
+      73007400060052006F0077000A0052006F0077004900440010004F0072006900
+      670069006E0061006C001800520065006C006100740069006F006E004C006900
+      730074001C0055007000640061007400650073004A006F00750072006E006100
+      6C001200530061007600650050006F0069006E0074000E004300680061006E00
+      670065007300}
+    object dsPersonsName: TStringField
+      FieldName = 'Name'
+      Size = 50
+    end
+    object dsPersonsSurname: TStringField
+      FieldName = 'Surname'
+      Size = 50
+    end
+    object dsPersonsAge: TIntegerField
+      FieldName = 'Age'
     end
   end
 end

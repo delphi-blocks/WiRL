@@ -18,9 +18,12 @@ uses
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.http.Server.Indy,
-  WiRL.Core.Serialization,
+  WiRL.Persistence.JSON,
 
-  Server.Resources, Vcl.Imaging.pngimage, System.JSON;
+  Server.Resources, Vcl.Imaging.pngimage, System.JSON, FireDAC.Stan.Intf,
+  FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
+  FireDAC.Phys.Intf, FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet,
+  FireDAC.Comp.Client, FireDAC.Stan.StorageBin;
 
 type
   TMainForm = class(TForm)
@@ -41,6 +44,12 @@ type
     btnGenericObjectList: TButton;
     imgSample: TImage;
     btnImage: TButton;
+    dsPersons: TFDMemTable;
+    dsPersonsName: TStringField;
+    dsPersonsSurname: TStringField;
+    dsPersonsAge: TIntegerField;
+    btnDataSet: TButton;
+    procedure btnDataSetClick(Sender: TObject);
     procedure btnSerComplexObjectClick(Sender: TObject);
     procedure btnSimpleTypesClick(Sender: TObject);
     procedure btnDesComplexObjectClick(Sender: TObject);
@@ -79,6 +88,18 @@ uses
   Server.Entities;
 
 
+procedure TMainForm.btnDataSetClick(Sender: TObject);
+var
+  LJSON: TJSONValue;
+begin
+  LJSON := TNeonMapperJSON.ObjectToJSON(dsPersons);
+  try
+    Log('DataSet', TJSONHelper.PrettyPrint(LJSON));
+  finally
+    LJSON.Free;
+  end;
+end;
+
 procedure TMainForm.btnSerComplexObjectClick(Sender: TObject);
 var
   LPerson: TPerson;
@@ -93,7 +114,7 @@ begin
     LPerson.Note.Date := Now;
     LPerson.Note.Text := 'Note Text';
 
-    LJSON := TWiRLJSONMapper.ObjectToJSON(LPerson);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson);
     try
       memoSerialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
@@ -114,7 +135,7 @@ var
   var
     LJSON: TJSONValue;
   begin
-    LJSON := TWiRLJSONMapper.TValueToJSON(AValue);
+    LJSON := TNeonMapperJSON.TValueToJSON(AValue);
     try
       Result := LJSON.ToJSON;
     finally
@@ -141,12 +162,12 @@ begin
   try
     LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text) as TJSONObject;
     try
-      TWiRLJSONMapper.JSONToObject(LPerson, LJSON);
+      TNeonMapperJSON.JSONToObject(LPerson, LJSON);
     finally
       LJSON.Free;
     end;
 
-    LJSON := TWiRLJSONMapper.ObjectToJSON(LPerson);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson);
     try
       memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
@@ -167,7 +188,7 @@ begin
     LList.Add(34.9);
     LList.Add(10.0);
 
-    LJSON := TWiRLJSONMapper.ObjectToJSON(LList);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LList);
     try
       Log('List', TJSONHelper.PrettyPrint(LJSON));
     finally
@@ -190,7 +211,7 @@ begin
     LBook.NoteList.Add('Note 1');
     LBook.NoteList.Add('Note 2');
     LBook.NoteList.Add('Note 3');
-    LJSON := TWiRLJSONMapper.ObjectToJSON(LBook);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LBook);
     try
       Log('List', TJSONHelper.PrettyPrint(LJSON));
     finally
@@ -205,7 +226,7 @@ procedure TMainForm.btnImageClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TWiRLJSONMapper.ObjectToJSON(imgSample);
+  LJSON := TNeonMapperJSON.ObjectToJSON(imgSample);
   try
     Log('Image', TJSONHelper.PrettyPrint(LJSON));
   finally

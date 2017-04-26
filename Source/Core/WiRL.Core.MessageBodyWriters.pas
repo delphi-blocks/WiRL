@@ -70,7 +70,7 @@ uses
   WiRL.Core.JSON,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
-  WiRL.Core.Serialization;
+  WiRL.Persistence.JSON;
 
 
 { TDateTimeWriter }
@@ -104,7 +104,7 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
-    LJSON := TWiRLJSONMapper.ObjectToJSON(AValue.AsObject);
+    LJSON := TNeonMapperJSON.ObjectToJSON(AValue.AsObject);
     try
       LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally

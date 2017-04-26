@@ -7,31 +7,21 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Core.Serialization;
+unit WiRL.Persistence.JSON;
 
 interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
   System.JSON, Data.DB,
+  WiRL.Persistence.Attributes,
+  WiRL.Persistence.Core,
+  WiRL.Persistence.Utils,
   WiRL.Core.JSON;
 
 
 type
-  EWiRLJSONMapperException = class(Exception);
-
-  TWiRLPersistenceBase = class
-  protected
-    FErrors: TStrings;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure LogError(const AMessage: string);
-  public
-    property Errors: TStrings read FErrors write FErrors;
-  end;
-
-  TWiRLJSONSerializer = class(TWiRLPersistenceBase)
+  TNeonSerializerJSON = class(TNeonBase)
   private
     function WriteString(const AValue: TValue): TJSONValue;
     function WriteChar(const AValue: TValue): TJSONValue;
@@ -45,7 +35,7 @@ type
     function WriteVariant(const AValue: TValue): TJSONValue;
 
     /// <summary>
-    /// Serializer for a standard TObject type (no list, no stream or streamable)
+    ///   Writer for a standard TObject type (no list, no stream or streamable)
     /// </summary>
     function WriteObject(const AValue: TValue): TJSONValue;
     function WriteStream(const AValue: TValue): TJSONValue;
@@ -60,7 +50,7 @@ type
     function TValueToJSON(const AValue: TValue): TJSONValue;
   end;
 
-  TWiRLJSONDeserializer = class(TWiRLPersistenceBase)
+  TNeonDeserializerJSON = class(TNeonBase)
   private
     function ReadString(AJSONValue: TJSONValue; AType: TRttiType; AKind: TTypeKind): TValue;
     function ReadChar(AJSONValue: TJSONValue; AType: TRttiType; AKind: TTypeKind): TValue;
@@ -82,7 +72,7 @@ type
     procedure JSONToObject(AObject: TObject; AJSON: TJSONValue);
   end;
 
-  TWiRLJSONMapper = class
+  TNeonMapperJSON = class
   public
     class function ObjectToJSON(AObject: TObject): TJSONValue;
     class function TValueToJSON(const AValue: TValue): TJSONValue;
@@ -99,8 +89,9 @@ uses
   WiRL.Rtti.Utils,
   WiRL.Core.Utils;
 
+{ TNeonSerializerJSON }
 
-function TWiRLJSONSerializer.ObjectToJSON(AObject: TObject): TJSONValue;
+function TNeonSerializerJSON.ObjectToJSON(AObject: TObject): TJSONValue;
 begin
   if not Assigned(AObject) then
     Exit(TJSONObject.Create);
@@ -110,7 +101,7 @@ begin
     Exit;
 end;
 
-function TWiRLJSONSerializer.RecordToJSON(ARecord: TValue): TJSONObject;
+function TNeonSerializerJSON.RecordToJSON(ARecord: TValue): TJSONObject;
 var
   LType: TRttiType;
   LField: TRttiField;
@@ -134,12 +125,12 @@ begin
   end;
 end;
 
-function TWiRLJSONSerializer.TValueToJSON(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.TValueToJSON(const AValue: TValue): TJSONValue;
 begin
   Result := WriteDataMembers(AValue);
 end;
 
-function TWiRLJSONSerializer.WriteArray(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteArray(const AValue: TValue): TJSONValue;
 var
   LIndex: Integer;
   LArray: TJSONArray;
@@ -151,7 +142,7 @@ begin
   Result := LArray;
 end;
 
-function TWiRLJSONSerializer.WriteChar(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteChar(const AValue: TValue): TJSONValue;
 begin
   if AValue.AsString = #0 then
     Result := TJSONString.Create('')
@@ -159,7 +150,7 @@ begin
     Result := TJSONString.Create(AValue.AsString);
 end;
 
-function TWiRLJSONSerializer.WriteDataMembers(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteDataMembers(const AValue: TValue): TJSONValue;
 begin
   Result := nil;
 
@@ -196,11 +187,18 @@ begin
 
     tkClass:
     begin
-      Result := WriteEnumerator(AValue);
-      if not Assigned(Result) then
-        Result := WriteStreamable(AValue);
-      if not Assigned(Result) then
-        Result := WriteObject(AValue);
+      if AValue.AsObject is TDataSet then
+        Result := WriteDataSet(AValue)
+      else if AValue.AsObject is TStream then
+        Result := WriteStream(AValue)
+      else
+      begin
+        Result := WriteEnumerator(AValue);
+        if not Assigned(Result) then
+          Result := WriteStreamable(AValue);
+        if not Assigned(Result) then
+          Result := WriteObject(AValue);
+      end;
     end;
 
     tkArray,
@@ -238,12 +236,15 @@ begin
   end;
 end;
 
-function TWiRLJSONSerializer.WriteDataSet(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteDataSet(const AValue: TValue): TJSONValue;
+var
+  LDataSet: TDataSet;
 begin
-  Result := TJSONArray.Create;
+  LDataSet := AValue.AsObject as TDataSet;
+  Result := TDataSetUtils.DataSetToJSONArray(LDataSet);
 end;
 
-function TWiRLJSONSerializer.WriteEnum(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteEnum(const AValue: TValue): TJSONValue;
 begin
   if AValue.TypeInfo = System.TypeInfo(Boolean) then
   begin
@@ -256,7 +257,7 @@ begin
     Result := TJSONString.Create(GetEnumName(AValue.TypeInfo, AValue.AsOrdinal));
 end;
 
-function TWiRLJSONSerializer.WriteFloat(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteFloat(const AValue: TValue): TJSONValue;
 begin
   if (AValue.TypeInfo = System.TypeInfo(TDateTime)) or
      (AValue.TypeInfo = System.TypeInfo(TDate)) or
@@ -266,12 +267,12 @@ begin
     Result := TJSONNumber.Create(AValue.AsExtended);
 end;
 
-function TWiRLJSONSerializer.WriteInteger(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteInteger(const AValue: TValue): TJSONValue;
 begin
   Result := TJSONNumber.Create(AValue.AsInt64);
 end;
 
-function TWiRLJSONSerializer.WriteInterface(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteInterface(const AValue: TValue): TJSONValue;
 var
   LInterface: IInterface;
   LObject: TObject;
@@ -281,7 +282,7 @@ begin
   Result := WriteObject(LObject);
 end;
 
-function TWiRLJSONSerializer.WriteObject(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteObject(const AValue: TValue): TJSONValue;
 var
   LJSONValue: TJSONValue;
   LObject: TObject;
@@ -324,7 +325,7 @@ begin
   end;
 end;
 
-function TWiRLJSONSerializer.WriteEnumerator(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteEnumerator(const AValue: TValue): TJSONValue;
 var
   LObject: TObject;
   LMethodGetEnumerator, LMethodAdd: TRttiMethod;
@@ -393,17 +394,17 @@ begin
   end;
 end;
 
-function TWiRLJSONSerializer.WriteRecord(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteRecord(const AValue: TValue): TJSONValue;
 begin
   Result := RecordToJSON(AValue);
 end;
 
-function TWiRLJSONSerializer.WriteSet(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteSet(const AValue: TValue): TJSONValue;
 begin
   Result := TJSONString.Create(SetToString(AValue.TypeInfo, AValue.GetReferenceToRawData, True));
 end;
 
-function TWiRLJSONSerializer.WriteStream(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteStream(const AValue: TValue): TJSONValue;
 var
   LStream: TStream;
   LBase64Stream: TStringStream;
@@ -420,7 +421,7 @@ begin
   end;
 end;
 
-function TWiRLJSONSerializer.WriteStreamable(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteStreamable(const AValue: TValue): TJSONValue;
 var
   LObject: TObject;
   LType: TRttiType;
@@ -458,19 +459,19 @@ begin
   end;
 end;
 
-function TWiRLJSONSerializer.WriteString(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteString(const AValue: TValue): TJSONValue;
 begin
   Result := TJSONString.Create(AValue.AsString);
 end;
 
-function TWiRLJSONSerializer.WriteVariant(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteVariant(const AValue: TValue): TJSONValue;
 begin
   Result := TJSONString.Create(AValue.AsString);
 end;
 
-{ TWiRLJSONDeserializer }
+{ TNeonDeserializerJSON }
 
-function TWiRLJSONDeserializer.ReadArray(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadArray(AJSONValue: TJSONValue; AType:
     TRttiType; const ADataValue: TValue): TValue;
 var
   LIndex: NativeInt;
@@ -495,7 +496,7 @@ begin
 
 end;
 
-function TWiRLJSONDeserializer.ReadChar(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadChar(AJSONValue: TJSONValue; AType:
     TRttiType; AKind: TTypeKind): TValue;
 begin
   if (AJSONValue is TJSONNull) or AJSONValue.Value.IsEmpty then
@@ -510,7 +511,7 @@ begin
   end;
 end;
 
-procedure TWiRLJSONDeserializer.ReadDataMembers(AJSONValue: TJSONValue; AType:
+procedure TNeonDeserializerJSON.ReadDataMembers(AJSONValue: TJSONValue; AType:
     TRttiType; AData: Pointer);
 var
   LField: TRttiField;
@@ -568,7 +569,7 @@ begin
   end;
 end;
 
-function TWiRLJSONDeserializer.ReadDynArray(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadDynArray(AJSONValue: TJSONValue; AType:
     TRttiType; const ADataValue: TValue): TValue;
 var
   LIndex: NativeInt;
@@ -599,7 +600,7 @@ begin
   end;
 end;
 
-function TWiRLJSONDeserializer.ReadEnum(AJSONValue: TJSONValue; AType: TRttiType): TValue;
+function TNeonDeserializerJSON.ReadEnum(AJSONValue: TJSONValue; AType: TRttiType): TValue;
 begin
   if AType.Handle = System.TypeInfo(Boolean) then
   begin
@@ -608,7 +609,7 @@ begin
     else if AJSONValue is TJSONFalse then
       Result := False
     else
-      raise EWiRLJSONMapperException.Create('Invalid JSON value. Boolean expected');
+      raise ENeonException.Create('Invalid JSON value. Boolean expected');
   end
   else
   begin
@@ -616,7 +617,7 @@ begin
   end;
 end;
 
-function TWiRLJSONDeserializer.ReadFloat(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadFloat(AJSONValue: TJSONValue; AType:
     TRttiType): TValue;
 begin
   if AJSONValue is TJSONNull then
@@ -633,11 +634,11 @@ begin
     if AJSONValue is TJSONNumber then
       Result := (AJSONValue as TJSONNumber).AsDouble
     else
-      raise EWiRLJSONMapperException.Create('Invalid JSON value. Float expected');
+      raise ENeonException.Create('Invalid JSON value. Float expected');
   end;
 end;
 
-function TWiRLJSONDeserializer.ReadInt64(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadInt64(AJSONValue: TJSONValue; AType:
     TRttiType): TValue;
 var
   LNumber: TJSONNumber;
@@ -649,7 +650,7 @@ begin
   Result := LNumber.AsInt64
 end;
 
-function TWiRLJSONDeserializer.ReadInteger(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadInteger(AJSONValue: TJSONValue; AType:
     TRttiType): TValue;
 var
   LNumber: TJSONNumber;
@@ -661,19 +662,19 @@ begin
   Result := LNumber.AsInt;
 end;
 
-function TWiRLJSONDeserializer.ReadInterface(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadInterface(AJSONValue: TJSONValue; AType:
     TRttiType): TValue;
 begin
 
 end;
 
-function TWiRLJSONDeserializer.ReadSet(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadSet(AJSONValue: TJSONValue; AType:
     TRttiType): TValue;
 begin
   TValue.Make(StringToSet(AType.Handle, AJSONValue.Value), aType.Handle, Result);
 end;
 
-function TWiRLJSONDeserializer.ReadString(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadString(AJSONValue: TJSONValue; AType:
     TRttiType; AKind: TTypeKind): TValue;
 begin
   case AKind of
@@ -695,13 +696,13 @@ begin
   end;
 end;
 
-function TWiRLJSONDeserializer.ReadVariant(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadVariant(AJSONValue: TJSONValue; AType:
     TRttiType): TValue;
 begin
 
 end;
 
-procedure TWiRLJSONDeserializer.SetMemberValue(const AValue: TValue; AMember:
+procedure TNeonDeserializerJSON.SetMemberValue(const AValue: TValue; AMember:
     TRttiMember; AInstance: Pointer);
 begin
   if AValue.IsEmpty then
@@ -714,7 +715,7 @@ begin
 end;
 
 
-function TWiRLJSONDeserializer.CreateNewValue(AType: TRttiType; AItemJSON:
+function TNeonDeserializerJSON.CreateNewValue(AType: TRttiType; AItemJSON:
     TJSONValue; var AAllocatedData: Pointer): TValue;
 begin
   AAllocatedData := nil;
@@ -738,11 +739,11 @@ begin
     end;
     }
   else
-    raise EWiRLJSONMapperException.Create('Item not supported');
+    raise ENeonException.Create('Item not supported');
   end;
 end;
 
-function TWiRLJSONDeserializer.GetValueFromJSON(AInstanceValue: TValue;
+function TNeonDeserializerJSON.GetValueFromJSON(AInstanceValue: TValue;
     AJSONValue: TJSONValue; AType: TRttiType): TValue;
 begin
   Result := TValue.Empty;
@@ -780,7 +781,7 @@ begin
   end;
 end;
 
-procedure TWiRLJSONDeserializer.JSONToObject(AObject: TObject; AJSON: TJSONValue);
+procedure TNeonDeserializerJSON.JSONToObject(AObject: TObject; AJSON: TJSONValue);
 var
   LType: TRttiType;
 begin
@@ -788,13 +789,13 @@ begin
   ReadDataMembers(AJSON, LType, AObject);
 end;
 
-{ TWiRLJSONMapper }
+{ TNeonMapperJSON }
 
-class function TWiRLJSONMapper.ObjectToJSON(AObject: TObject): TJSONValue;
+class function TNeonMapperJSON.ObjectToJSON(AObject: TObject): TJSONValue;
 var
-  LWriter: TWiRLJSONSerializer;
+  LWriter: TNeonSerializerJSON;
 begin
-  LWriter := TWiRLJSONSerializer.Create;
+  LWriter := TNeonSerializerJSON.Create;
   try
     Result := LWriter.ObjectToJSON(AObject);
   finally
@@ -802,7 +803,7 @@ begin
   end;
 end;
 
-class function TWiRLJSONMapper.ObjectToJSONString(AObject: TObject): string;
+class function TNeonMapperJSON.ObjectToJSONString(AObject: TObject): string;
 var
   LJSON: TJSONValue;
 begin
@@ -814,11 +815,11 @@ begin
   end;
 end;
 
-class function TWiRLJSONMapper.TValueToJSON(const AValue: TValue): TJSONValue;
+class function TNeonMapperJSON.TValueToJSON(const AValue: TValue): TJSONValue;
 var
-  LWriter: TWiRLJSONSerializer;
+  LWriter: TNeonSerializerJSON;
 begin
-  LWriter := TWiRLJSONSerializer.Create;
+  LWriter := TNeonSerializerJSON.Create;
   try
     Result := LWriter.TValueToJSON(AValue);
   finally
@@ -826,34 +827,16 @@ begin
   end;
 end;
 
-class procedure TWiRLJSONMapper.JSONToObject(AObject: TObject; AJSON: TJSONValue);
+class procedure TNeonMapperJSON.JSONToObject(AObject: TObject; AJSON: TJSONValue);
 var
-  LReader: TWiRLJSONDeserializer;
+  LReader: TNeonDeserializerJSON;
 begin
-  LReader := TWiRLJSONDeserializer.Create;
+  LReader := TNeonDeserializerJSON.Create;
   try
     LReader.JSONToObject(AObject, AJSON);
   finally
     LReader.Free;
   end;
-end;
-
-{ TWiRLPersistenceBase }
-
-constructor TWiRLPersistenceBase.Create;
-begin
-  FErrors := TStringList.Create;
-end;
-
-destructor TWiRLPersistenceBase.Destroy;
-begin
-  FErrors.Free;
-  inherited;
-end;
-
-procedure TWiRLPersistenceBase.LogError(const AMessage: string);
-begin
-  FErrors.Add(AMessage);
 end;
 
 end.
