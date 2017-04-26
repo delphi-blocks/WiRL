@@ -39,6 +39,7 @@ type
   TAddressBook = class
   private
     FAddressList: TAddressList;
+    FNoteList: TStringList;
   public
     constructor Create;
     destructor Destroy; override;
@@ -46,6 +47,7 @@ type
     function Add(ACity, ACountry: string): TAddress;
   published
     property AddressList: TAddressList read FAddressList write FAddressList;
+    property NoteList: TStringList read FNoteList write FNoteList;
   end;
 
   TNote = class
@@ -134,6 +136,7 @@ end;
 constructor TAddressBook.Create;
 begin
   FAddressList := TAddressList.Create;
+  FNoteList := TStringList.Create;
 end;
 
 destructor TAddressBook.Destroy;
@@ -145,6 +148,7 @@ begin
     LAddress.Free;
   end;
   FAddressList.Free;
+  FNoteList.Free;
   inherited;
 end;
 

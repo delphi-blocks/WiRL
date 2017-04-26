@@ -13,13 +13,25 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
-  WiRL.Core.JSON, REST.Json, System.JSON;
+  System.JSON, Data.DB,
+  WiRL.Core.JSON;
 
 
 type
   EWiRLJSONMapperException = class(Exception);
 
-  TWiRLJSONSerializer = class
+  TWiRLPersistenceBase = class
+  protected
+    FErrors: TStrings;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure LogError(const AMessage: string);
+  public
+    property Errors: TStrings read FErrors write FErrors;
+  end;
+
+  TWiRLJSONSerializer = class(TWiRLPersistenceBase)
   private
     function WriteString(const AValue: TValue): TJSONValue;
     function WriteChar(const AValue: TValue): TJSONValue;
@@ -32,17 +44,23 @@ type
     function WriteSet(const AValue: TValue): TJSONValue;
     function WriteVariant(const AValue: TValue): TJSONValue;
 
+    /// <summary>
+    /// Serializer for a standard TObject type (no list, no stream or streamable)
+    /// </summary>
     function WriteObject(const AValue: TValue): TJSONValue;
-    function WriteGenericList(const AValue: TValue): TJSONValue;
-    function WriteDataMembers(const AValue: TValue): TJSONValue;
+    function WriteStream(const AValue: TValue): TJSONValue;
+    function WriteDataSet(const AValue: TValue): TJSONValue;
+    function WriteEnumerator(const AValue: TValue): TJSONValue;
+    function WriteStreamable(const AValue: TValue): TJSONValue;
   private
+    function WriteDataMembers(const AValue: TValue): TJSONValue;
   public
     function RecordToJSON(ARecord: TValue): TJSONObject;
     function ObjectToJSON(AObject: TObject): TJSONValue;
     function TValueToJSON(const AValue: TValue): TJSONValue;
   end;
 
-  TWiRLJSONDeserializer = class
+  TWiRLJSONDeserializer = class(TWiRLPersistenceBase)
   private
     function ReadString(AJSONValue: TJSONValue; AType: TRttiType; AKind: TTypeKind): TValue;
     function ReadChar(AJSONValue: TJSONValue; AType: TRttiType; AKind: TTypeKind): TValue;
@@ -72,18 +90,15 @@ type
     class function ObjectToJSONString(AObject: TObject): string;
 
     class procedure JSONToObject(AObject: TObject; AJSON: TJSONValue); overload;
-
   end;
 
 implementation
 
 uses
-  System.TypInfo,
+  Winapi.Windows, System.TypInfo, System.NetEncoding,
   WiRL.Rtti.Utils,
   WiRL.Core.Utils;
 
-
-{ TWiRLJSONSerializer }
 
 function TWiRLJSONSerializer.ObjectToJSON(AObject: TObject): TJSONValue;
 begin
@@ -102,29 +117,20 @@ var
   LJSONValue: TJSONValue;
 begin
   Result := TJSONObject.Create;
-  try
+  LType := TRttiHelper.Context.GetType(ARecord.TypeInfo);
+  for LField in LType.GetFields do
+  begin
+    if LField.Visibility in [mvPublic, mvPublished] then
     begin
-      LType := TRttiHelper.Context.GetType(ARecord.TypeInfo);
-      for LField in LType.GetFields do
-      begin
-        if LField.Visibility in [mvPublic, mvPublished] then
-        begin
-          try
-            LJSONValue := WriteDataMembers(LField.GetValue(ARecord.GetReferenceToRawData));
-          except
-            raise Exception.CreateFmt(
-              'Error converting property (%s) of type (%s)',
-                [LField.Name, LField.FieldType.Name]
-            );
-          end;
-          if Assigned(LJSONValue) then
-            Result.AddPair(LField.Name, LJSONValue);
-        end;
+      try
+        LJSONValue := WriteDataMembers(LField.GetValue(ARecord.GetReferenceToRawData));
+        if Assigned(LJSONValue) then
+          Result.AddPair(LField.Name, LJSONValue);
+      except
+        LogError(Format('Error converting property [%s] [%s type]',
+          [LField.Name, LField.FieldType.Name]));
       end;
     end;
-  except
-    Result.Free;
-    raise;
   end;
 end;
 
@@ -190,7 +196,9 @@ begin
 
     tkClass:
     begin
-      Result := WriteGenericList(AValue);
+      Result := WriteEnumerator(AValue);
+      if not Assigned(Result) then
+        Result := WriteStreamable(AValue);
       if not Assigned(Result) then
         Result := WriteObject(AValue);
     end;
@@ -228,6 +236,11 @@ begin
     tkClassRef:
     }
   end;
+end;
+
+function TWiRLJSONSerializer.WriteDataSet(const AValue: TValue): TJSONValue;
+begin
+  Result := TJSONArray.Create;
 end;
 
 function TWiRLJSONSerializer.WriteEnum(const AValue: TValue): TJSONValue;
@@ -277,32 +290,43 @@ var
 begin
   Result := TJSONObject.Create;
   LObject := AValue.AsObject;
+
+  if not Assigned(LObject) then
+    Exit(TJSONNull.Create);
+
   LType := TRttiHelper.Context.GetType(LObject.ClassType);
 
   for LProperty in LType.GetProperties do
   begin
-    if not LProperty.IsWritable then
+    if LProperty.Name = 'Parent' then
+      Continue;
+
+    if LProperty.Name = 'Owner' then
+      Continue;
+
+    if not LProperty.IsWritable and
+       not (LProperty.PropertyType.TypeKind in [tkClass, tkInterface]) then
       Continue;
 
     if LProperty.IsReadable and (LProperty.Visibility in [mvPublic, mvPublished]) then
     begin
       try
+        OutputDebugString(PChar(Format('Error converting property [%s] [%s type] of object [%s]',
+          [LProperty.Name, LProperty.PropertyType.Name, LObject.ClassName])));
         LJSONValue := WriteDataMembers(LProperty.GetValue(LObject));
+        if Assigned(LJSONValue) then
+          (Result as TJSONObject).AddPair(LProperty.Name, LJSONValue);
       except
-        raise Exception.CreateFmt(
-          'Error converting property (%s) of type (%s)',
-            [LProperty.Name, LProperty.PropertyType.Name]
-        );
+        LogError(Format('Error converting property [%s] [%s type] of object [%s]',
+          [LProperty.Name, LProperty.PropertyType.Name, LObject.ClassName]));
       end;
-      if Assigned(LJSONValue) then
-        (Result as TJSONObject).AddPair(LProperty.Name, LJSONValue);
     end;
   end;
 end;
 
-function TWiRLJSONSerializer.WriteGenericList(const AValue: TValue): TJSONValue;
+function TWiRLJSONSerializer.WriteEnumerator(const AValue: TValue): TJSONValue;
 var
-  LListObject: TObject;
+  LObject: TObject;
   LMethodGetEnumerator, LMethodAdd: TRttiMethod;
   LMethodClear, LMethodMoveNext: TRttiMethod;
   LEnumObject: TObject;
@@ -312,8 +336,8 @@ var
   LJSONValue: TJSONValue;
 begin
   Result := nil;
-  LListObject := AValue.AsObject;
-  LListType := TRttiHelper.Context.GetType(LListObject.ClassType);
+  LObject := AValue.AsObject;
+  LListType := TRttiHelper.Context.GetType(LObject.ClassType);
 
   LMethodGetEnumerator := LListType.GetMethod('GetEnumerator');
   if not Assigned(LMethodGetEnumerator) or
@@ -336,7 +360,7 @@ begin
   if not Assigned(LCurrentProp) then
     Exit;
 
-  LEnumObject := LMethodGetEnumerator.Invoke(LListObject, []).AsObject;
+  LEnumObject := LMethodGetEnumerator.Invoke(LObject, []).AsObject;
   if not Assigned(LEnumObject) then
     Exit;
 
@@ -377,6 +401,61 @@ end;
 function TWiRLJSONSerializer.WriteSet(const AValue: TValue): TJSONValue;
 begin
   Result := TJSONString.Create(SetToString(AValue.TypeInfo, AValue.GetReferenceToRawData, True));
+end;
+
+function TWiRLJSONSerializer.WriteStream(const AValue: TValue): TJSONValue;
+var
+  LStream: TStream;
+  LBase64Stream: TStringStream;
+begin
+  LStream := AValue.AsObject as TStream;
+
+  LBase64Stream := TStringStream.Create;
+  try
+    LStream.Position := soFromBeginning;
+    TNetEncoding.Base64.Encode(LStream, LBase64Stream);
+    Result := TJSONString.Create(LBase64Stream.DataString);
+  finally
+    LBase64Stream.Free;
+  end;
+end;
+
+function TWiRLJSONSerializer.WriteStreamable(const AValue: TValue): TJSONValue;
+var
+  LObject: TObject;
+  LType: TRttiType;
+  LMethodLoadFromStream, LMethodSaveToStream: TRttiMethod;
+  LBinaryStream: TMemoryStream;
+  LBase64Stream: TStringStream;
+begin
+  Result := nil;
+  LObject := AValue.AsObject;
+  LType := TRttiHelper.Context.GetType(LObject.ClassType);
+
+  if not Assigned(LObject) then
+    Exit;
+
+  LMethodLoadFromStream := LType.GetMethod('LoadFromStream');
+  { TODO -opaolo -c : check parameters (number and type) 24/04/2017 17:50:43 }
+  if not Assigned(LMethodLoadFromStream) then
+    Exit;
+
+  LMethodSaveToStream := LType.GetMethod('SaveToStream');
+  { TODO -opaolo -c : check parameters (number and type) 24/04/2017 17:50:43 }
+  if not Assigned(LMethodSaveToStream) then
+    Exit;
+
+  LBinaryStream := TMemoryStream.Create;
+  LBase64Stream := TStringStream.Create;
+  try
+    LMethodSaveToStream.Invoke(LObject, [LBinaryStream]);
+    LBinaryStream.Position := soFromBeginning;
+    TNetEncoding.Base64.Encode(LBinaryStream, LBase64Stream);
+    Result := TJSONString.Create(LBase64Stream.DataString);
+  finally
+    LBinaryStream.Free;
+    LBase64Stream.Free;
+  end;
 end;
 
 function TWiRLJSONSerializer.WriteString(const AValue: TValue): TJSONValue;
@@ -757,6 +836,24 @@ begin
   finally
     LReader.Free;
   end;
+end;
+
+{ TWiRLPersistenceBase }
+
+constructor TWiRLPersistenceBase.Create;
+begin
+  FErrors := TStringList.Create;
+end;
+
+destructor TWiRLPersistenceBase.Destroy;
+begin
+  FErrors.Free;
+  inherited;
+end;
+
+procedure TWiRLPersistenceBase.LogError(const AMessage: string);
+begin
+  FErrors.Add(AMessage);
 end;
 
 end.

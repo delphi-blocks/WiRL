@@ -20,7 +20,7 @@ uses
   WiRL.http.Server.Indy,
   WiRL.Core.Serialization,
 
-  Server.Resources;
+  Server.Resources, Vcl.Imaging.pngimage, System.JSON;
 
 type
   TMainForm = class(TForm)
@@ -39,11 +39,14 @@ type
     memoDeserialize: TMemo;
     btnGenericList: TButton;
     btnGenericObjectList: TButton;
+    imgSample: TImage;
+    btnImage: TButton;
     procedure btnSerComplexObjectClick(Sender: TObject);
     procedure btnSimpleTypesClick(Sender: TObject);
     procedure btnDesComplexObjectClick(Sender: TObject);
     procedure btnGenericListClick(Sender: TObject);
     procedure btnGenericObjectListClick(Sender: TObject);
+    procedure btnImageClick(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -92,7 +95,7 @@ begin
 
     LJSON := TWiRLJSONMapper.ObjectToJSON(LPerson);
     try
-      memoSerialize.Lines.Text := TJson.Format(LJSON);
+      memoSerialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
       LJSON.Free;
     end;
@@ -145,7 +148,7 @@ begin
 
     LJSON := TWiRLJSONMapper.ObjectToJSON(LPerson);
     try
-      memoDeserialize.Lines.Text := TJson.Format(LJSON);
+      memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
       LJSON.Free;
     end;
@@ -166,7 +169,7 @@ begin
 
     LJSON := TWiRLJSONMapper.ObjectToJSON(LList);
     try
-      Log('List', TJson.Format(LJSON));
+      Log('List', TJSONHelper.PrettyPrint(LJSON));
     finally
       LJSON.Free;
     end;
@@ -184,15 +187,29 @@ begin
   try
     LBook.Add('Verona', 'Italy');
     LBook.Add('Napoli', 'Italy');
-
+    LBook.NoteList.Add('Note 1');
+    LBook.NoteList.Add('Note 2');
+    LBook.NoteList.Add('Note 3');
     LJSON := TWiRLJSONMapper.ObjectToJSON(LBook);
     try
-      Log('List', TJson.Format(LJSON));
+      Log('List', TJSONHelper.PrettyPrint(LJSON));
     finally
       LJSON.Free;
     end;
   finally
     LBook.Free;
+  end;
+end;
+
+procedure TMainForm.btnImageClick(Sender: TObject);
+var
+  LJSON: TJSONValue;
+begin
+  LJSON := TWiRLJSONMapper.ObjectToJSON(imgSample);
+  try
+    Log('Image', TJSONHelper.PrettyPrint(LJSON));
+  finally
+    LJSON.Free;
   end;
 end;
 
