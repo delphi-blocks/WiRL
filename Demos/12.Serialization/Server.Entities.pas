@@ -20,6 +20,8 @@ type
   public
     Uno: string;
     Due: Integer;
+
+    function ToString: string;
   end;
 
   TAddress = class
@@ -150,6 +152,13 @@ begin
   FAddressList.Free;
   FNoteList.Free;
   inherited;
+end;
+
+{ TMyRecord }
+
+function TMyRecord.ToString: string;
+begin
+  Result := Uno + '|' + Due.ToString;
 end;
 
 end.

@@ -1828,7 +1828,7 @@ object MainForm: TMainForm
     Left = 153
     Top = 88
     Width = 373
-    Height = 416
+    Height = 319
     Anchors = [akLeft, akTop, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -1839,7 +1839,6 @@ object MainForm: TMainForm
     ScrollBars = ssVertical
     TabOrder = 2
     WordWrap = False
-    ExplicitHeight = 390
   end
   object btnSimpleTypes: TButton
     Left = 16
@@ -1863,7 +1862,7 @@ object MainForm: TMainForm
     Left = 669
     Top = 88
     Width = 360
-    Height = 416
+    Height = 319
     Anchors = [akLeft, akTop, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -1874,7 +1873,6 @@ object MainForm: TMainForm
     ScrollBars = ssVertical
     TabOrder = 5
     WordWrap = False
-    ExplicitHeight = 390
   end
   object btnGenericList: TButton
     Left = 16
@@ -1912,6 +1910,37 @@ object MainForm: TMainForm
     TabOrder = 9
     OnClick = btnDataSetClick
   end
+  object Button1: TButton
+    Left = 576
+    Top = 176
+    Width = 75
+    Height = 25
+    Caption = 'Button1'
+    TabOrder = 10
+    OnClick = Button1Click
+  end
+  object Button2: TButton
+    Left = 576
+    Top = 207
+    Width = 75
+    Height = 25
+    Caption = 'Button2'
+    TabOrder = 11
+    OnClick = Button2Click
+  end
+  object DBGrid1: TDBGrid
+    Left = 208
+    Top = 384
+    Width = 713
+    Height = 120
+    DataSource = DataSource1
+    TabOrder = 12
+    TitleFont.Charset = DEFAULT_CHARSET
+    TitleFont.Color = clWindowText
+    TitleFont.Height = -11
+    TitleFont.Name = 'Tahoma'
+    TitleFont.Style = []
+  end
   object MainActionList: TActionList
     Left = 384
     Top = 24
@@ -1939,7 +1968,7 @@ object MainForm: TMainForm
     Left = 112
     Top = 376
     Content = {
-      414442530F000F3AEA010000FF00010001FF02FF030400120000006400730050
+      414442530F00DC22EA010000FF00010001FF02FF030400120000006400730050
       006500720073006F006E00730005000A0000005400610062006C006500060000
       000000070000080032000000090000FF0AFF0B0400080000004E0061006D0065
       000500080000004E0061006D0065000C00010000000E000D000F003200000010
@@ -1988,5 +2017,10 @@ object MainForm: TMainForm
     object dsPersonsAge: TIntegerField
       FieldName = 'Age'
     end
+  end
+  object DataSource1: TDataSource
+    DataSet = dsPersons
+    Left = 512
+    Top = 264
   end
 end

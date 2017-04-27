@@ -12,18 +12,20 @@ unit Server.Forms.Main;
 interface
 
 uses
-  System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
+  System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls, System.Rtti,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
 
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.http.Server.Indy,
+
+  WiRL.Persistence.Core,
   WiRL.Persistence.JSON,
 
   Server.Resources, Vcl.Imaging.pngimage, System.JSON, FireDAC.Stan.Intf,
   FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
   FireDAC.Phys.Intf, FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet,
-  FireDAC.Comp.Client, FireDAC.Stan.StorageBin;
+  FireDAC.Comp.Client, FireDAC.Stan.StorageBin, Vcl.Grids, Vcl.DBGrids;
 
 type
   TMainForm = class(TForm)
@@ -49,6 +51,10 @@ type
     dsPersonsSurname: TStringField;
     dsPersonsAge: TIntegerField;
     btnDataSet: TButton;
+    Button1: TButton;
+    Button2: TButton;
+    DBGrid1: TDBGrid;
+    DataSource1: TDataSource;
     procedure btnDataSetClick(Sender: TObject);
     procedure btnSerComplexObjectClick(Sender: TObject);
     procedure btnSimpleTypesClick(Sender: TObject);
@@ -56,6 +62,8 @@ type
     procedure btnGenericListClick(Sender: TObject);
     procedure btnGenericObjectListClick(Sender: TObject);
     procedure btnImageClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -65,6 +73,7 @@ type
   private
     FServer: TWiRLhttpServerIndy;
     procedure Log(const ATitle, ALog: string);
+    function GetStringFromValue(const AValue: TValue): string;
   public
 
   end;
@@ -77,7 +86,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.Rtti, REST.Json,
+  REST.Json,
   System.Generics.Collections,
   WiRL.Core.JSON,
   WiRL.Rtti.Utils,
@@ -125,23 +134,22 @@ begin
   end;
 end;
 
+function TMainForm.GetStringFromValue(const AValue: TValue): string;
+var
+  LJSON: TJSONValue;
+begin
+  LJSON := TNeonMapperJSON.TValueToJSON(AValue);
+  try
+    Result := LJSON.ToJSON;
+  finally
+    LJSON.Free;
+  end;
+end;
+
 procedure TMainForm.btnSimpleTypesClick(Sender: TObject);
 var
   LRec: TMyRecord;
   LArr: TIntArray;
-
-
-  function GetStringFromValue(const AValue: TValue): string;
-  var
-    LJSON: TJSONValue;
-  begin
-    LJSON := TNeonMapperJSON.TValueToJSON(AValue);
-    try
-      Result := LJSON.ToJSON;
-    finally
-      LJSON.Free;
-    end;
-  end;
 begin
   Log('Integer', GetStringFromValue(TValue.From<Integer>(42)));
 
@@ -232,6 +240,108 @@ begin
   finally
     LJSON.Free;
   end;
+end;
+
+procedure TMainForm.Button1Click(Sender: TObject);
+var
+  LArr: TIntArray;
+  LJString: string;
+  LDes: TNeonDeserializerJSON;
+  LJSON: TJSONValue;
+  LInt: Integer;
+  LRec: TMyRecord;
+  LValue: TValue;
+begin
+  // Integer
+  LInt := 42;
+  LJString := GetStringFromValue(TValue.From<Integer>(LInt));
+
+  LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  try
+    LJSON := TJSONObject.ParseJSONValue(LJString);
+    try
+      LInt := LDes.JSONToTValue(LJSON, TRttiHelper.Context.GetType(TypeInfo(Integer))).AsInteger;
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LDes.Free;
+  end;
+  memoDeserialize.Lines.Add('Integer: ' + LInt.ToString);
+
+  // Record
+  LRec.Uno := 'Test Test Test';
+  LRec.Due := 42;
+  LJString := GetStringFromValue(TValue.From<TMyRecord>(LRec));
+  Log('Record', LJString);
+
+  LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  try
+    LJSON := TJSONObject.ParseJSONValue(LJString);
+    try
+      LValue := LDes.JSONToTValue(LJSON, TRttiHelper.Context.GetType(TypeInfo(TMyRecord)), TValue.From<TMyRecord>(LRec));
+      if LValue.IsArray then
+        LRec := LValue.AsType<TMyRecord>;
+      memoDeserialize.Lines.Add('Record: ' + LRec.ToString);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LDes.Free;
+  end;
+
+  // Dynamic Array
+  LArr := [12, 34, 797, 5252636];
+  LJString := GetStringFromValue(TValue.From<TIntArray>(LArr));
+  Log('Array', LJString);
+  LArr := [100];
+
+  LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  try
+    LJSON := TJSONObject.ParseJSONValue(LJString);
+    try
+      LValue := LDes.JSONToTValue(LJSON, TRttiHelper.Context.GetType(TypeInfo(TIntArray)), TValue.From<TIntArray>(LArr));
+      if LValue.IsArray then
+        LArr := LValue.AsType<TIntArray>;
+
+      LJString := '[';
+      for LInt in LArr do
+        LJString := LJString + LInt.ToString + ',';
+      LJString := LJString.TrimRight([',']) + ']';
+
+      memoDeserialize.Lines.Add('Array: ' + LJString);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LDes.Free;
+  end;
+end;
+
+procedure TMainForm.Button2Click(Sender: TObject);
+var
+  LJString: string;
+  LJSON: TJSONValue;
+  LDes: TNeonDeserializerJSON;
+  LValue: TValue;
+begin
+  // DataSet
+  //LJString := GetStringFromValue(dsPersons);
+  //Log('DataSet', LJString);
+  dsPersons.EmptyDataSet;
+  LJString := memoSerialize.Lines.Text;
+  LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  try
+    LJSON := TJSONObject.ParseJSONValue(LJString);
+    try
+      LValue := LDes.JSONToTValue(LJSON, TRttiHelper.Context.GetType(dsPersons.ClassType), dsPersons);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LDes.Free;
+  end;
+  memoDeserialize.Lines.Add('DataSet: ' + dsPersons.Fields[0].AsString);
 end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
