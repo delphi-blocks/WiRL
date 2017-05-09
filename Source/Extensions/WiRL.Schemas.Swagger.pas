@@ -140,6 +140,25 @@ end;
 procedure TSwaggerFilter.AddOperation(AJsonPath: TJSONObject; 
   const AMethodName: string; AResourceMethod: TRttiMethod);
 
+
+  function GetTypeName(ATypeKind: TTypeKind): string;
+  begin
+    case ATypeKind of
+      tkInteger: Result :=  'integer';
+      tkFloat: Result := 'number';
+      tkInt64: Result := 'integer';
+      tkClass: Result := 'object';
+      tkDynArray, tkArray: Result := 'array';
+    else
+      Result := 'string';
+    end;
+  end;
+
+  function CreateResponseSchema(AResourceMethod: TRttiMethod) :TJSONObject;
+  begin
+    Result := TJSONObject.Create(TJSONPair.Create('type', GetTypeName(AResourceMethod.ReturnType.TypeKind)));
+  end;
+
   function FindOrCreateOperation(APath: TJSONObject; const AMethodName: string) :TJSONObject;
   begin
     Result := APath.GetValue(AMethodName) as TJSONObject;
@@ -158,6 +177,7 @@ var
   LProduces: TJSONArray;
   LConsumes: TJSONArray;
   LRttiParameter: TRttiParameter;
+  LOkResponse: TJSONObject;
 begin
   // Operation = Path+HttpMethod
   // If more object method use the same operation add info on the
@@ -215,8 +235,11 @@ begin
   begin
     LResponses := TJSONObject.Create;
     LOperation.AddPair('responses', LResponses);
-    LResponses.AddPair('200', TJSONObject.Create(TJSONPair.Create('description', 'Ok')));
+    LOkResponse := TJSONObject.Create(TJSONPair.Create('description', 'Ok'));
+    LResponses.AddPair('200', LOkResponse);
     LResponses.AddPair('default', TJSONObject.Create(TJSONPair.Create('description', 'Error')));
+    if AResourceMethod.ReturnType.TypeKind <> tkUnknown then
+      LOkResponse.AddPair('schema', CreateResponseSchema(AResourceMethod));
   end;
 end;
 
