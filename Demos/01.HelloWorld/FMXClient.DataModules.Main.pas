@@ -15,7 +15,7 @@ uses
   System.SysUtils, System.Classes, WiRL.Client.CustomResource,
   WiRL.Client.Resource, WiRL.Client.Resource.JSON, WiRL.Client.Application,
   WiRL.Client.Client, WiRL.Client.SubResource, WiRL.Client.SubResource.JSON,
-  WiRL.Client.Messaging.Resource, System.JSON;
+  WiRL.Client.Messaging.Resource, System.JSON, IdHTTP;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -27,6 +27,7 @@ type
     EchoStringResource: TWiRLClientSubResource;
     ReverseStringResource: TWiRLClientSubResource;
     PostExampleResource: TWiRLClientSubResourceJSON;
+    procedure WiRLClient1BeforeCommand(ASender: TObject; ARequest: TIdHTTPRequest);
   private
     { Private declarations }
   public
@@ -67,6 +68,12 @@ function TMainDataModule.ReverseString(AString: string): string;
 begin
   ReverseStringResource.PathParamsValues.Text := AString;
   Result := ReverseStringResource.GETAsString();
+end;
+
+procedure TMainDataModule.WiRLClient1BeforeCommand(ASender: TObject; ARequest:
+    TIdHTTPRequest);
+begin
+  ARequest.CustomHeaders.AddValue('X-App-Params', 'TestCustomHeader');
 end;
 
 end.

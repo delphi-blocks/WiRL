@@ -12,8 +12,7 @@ unit WiRL.Client.Utils;
 interface
 
 uses
-  Classes, SysUtils
-  ;
+  System.Classes, System.SysUtils;
 
 type
   TWiRLComponentHelper = class
@@ -39,10 +38,12 @@ var
 begin
   Result := nil;
   LRoot := AComponent;
-  while (LRoot.Owner <> nil) and (Result = nil) do begin
+  while (LRoot.Owner <> nil) and (Result = nil) do
+  begin
     LRoot := LRoot.Owner;
     for LIndex := 0 to LRoot.ComponentCount - 1 do
-      if LRoot.Components[LIndex] is T then begin
+      if LRoot.Components[LIndex] is T then
+      begin
         Result := T(LRoot.Components[LIndex]);
         Break;
       end;

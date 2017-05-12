@@ -21,11 +21,11 @@ uses
 type
   TWiRLClientProc = TProc;
   TWiRLClientResponseProc = TProc<TStream>;
-  TWiRLClientExecptionProc = TProc<Exception>;
+  TWiRLClientExceptionProc = TProc<Exception>;
 
-  {$ifdef DelphiXE2_UP}
+
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
-  {$endif}
+
   TWiRLClientCustomResource = class(TComponent)
   private
     FResource: string;
@@ -52,48 +52,62 @@ type
     procedure BeforePUT(AContent: TMemoryStream); virtual;
     procedure AfterPUT; virtual;
 
+    procedure BeforePATCH(AContent: TMemoryStream); virtual;
+    procedure AfterPATCH; virtual;
+
+    procedure BeforeHEAD; virtual;
+    procedure AfterHEAD; virtual;
+
     procedure BeforeDELETE; virtual;
     procedure AfterDELETE; virtual;
+
+    procedure BeforeOPTIONS; virtual;
+    procedure AfterOPTIONS; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
     // http verbs
-    procedure GET(const ABeforeExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AAfterExecute: TWiRLClientResponseProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif}); overload;
-    {$ifndef DelphiXE2_UP}
-    function GETAsString: string; overload;
-    {$endif}
-    function GETAsString(AEncoding: TEncoding {$ifdef DelphiXE2_UP} = nil{$endif};
-      const ABeforeExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif}): string; {$ifndef DelphiXE2_UP}overload;{$endif}
-    procedure POST(const ABeforeExecute: TProc<TMemoryStream>{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AAfterExecute: TWiRLClientResponseProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif});
-    procedure PUT(const ABeforeExecute: TProc<TMemoryStream>{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AAfterExecute: TWiRLClientResponseProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif});
-    procedure DELETE(const ABeforeExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AAfterExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif});
-//    procedure PATCH(const ABeforeExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-//      const AAfterExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-//      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif});
-//    procedure HEAD(const ABeforeExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-//      const AAfterExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-//      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif});
-//    procedure OPTIONS(const ABeforeExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-//      const AAfterExecute: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-//      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif});
+    procedure GET(const ABeforeExecute: TWiRLClientProc = nil;
+      const AAfterExecute: TWiRLClientResponseProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil); overload;
 
-    procedure GETAsync(const ACompletionHandler: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      ASynchronize: Boolean = True);
-    procedure POSTAsync(const ACompletionHandler: TWiRLClientProc{$ifdef DelphiXE2_UP} = nil{$endif};
-      const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif};
+    function GETAsString(AEncoding: TEncoding = nil;
+      const ABeforeExecute: TWiRLClientProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil): string; overload;
+
+    procedure GETAsync(const ACompletionHandler: TWiRLClientProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil;
       ASynchronize: Boolean = True);
 
+    procedure POST(const ABeforeExecute: TProc<TMemoryStream> = nil;
+      const AAfterExecute: TWiRLClientResponseProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil);
+
+    procedure POSTAsync(const ACompletionHandler: TWiRLClientProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil;
+      ASynchronize: Boolean = True);
+
+    procedure PUT(const ABeforeExecute: TProc<TMemoryStream> = nil;
+      const AAfterExecute: TWiRLClientResponseProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil);
+
+    procedure DELETE(const ABeforeExecute: TWiRLClientProc = nil;
+      const AAfterExecute: TWiRLClientProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil);
+
+    procedure PATCH(const ABeforeExecute: TProc<TMemoryStream> = nil;
+      const AAfterExecute: TWiRLClientResponseProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil);
+
+    procedure HEAD(const ABeforeExecute: TWiRLClientProc = nil;
+      const AAfterExecute: TWiRLClientProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil);
+
+    procedure OPTIONS(const ABeforeExecute: TWiRLClientProc = nil;
+      const AAfterExecute: TWiRLClientResponseProc = nil;
+      const AOnException: TWiRLClientExceptionProc = nil);
+  public
     property Accept: string read GetAccept;
     property Application: TWiRLClientApplication read GetApplication write FApplication;
     property Client: TWiRLClient read GetClient;
@@ -104,7 +118,6 @@ type
     property PathParamsValues: TStrings read FPathParamsValues write SetPathParamsValues;
     property QueryParams: TStrings read FQueryParams write SetQueryParams;
     property URL: string read GetURL;
-  published
   end;
 
 
@@ -127,6 +140,21 @@ begin
 
 end;
 
+procedure TWiRLClientCustomResource.AfterHEAD;
+begin
+
+end;
+
+procedure TWiRLClientCustomResource.AfterOPTIONS;
+begin
+
+end;
+
+procedure TWiRLClientCustomResource.AfterPATCH;
+begin
+
+end;
+
 procedure TWiRLClientCustomResource.AfterPOST;
 begin
 
@@ -143,6 +171,21 @@ begin
 end;
 
 procedure TWiRLClientCustomResource.BeforeGET;
+begin
+
+end;
+
+procedure TWiRLClientCustomResource.BeforeHEAD;
+begin
+
+end;
+
+procedure TWiRLClientCustomResource.BeforeOPTIONS;
+begin
+
+end;
+
+procedure TWiRLClientCustomResource.BeforePATCH(AContent: TMemoryStream);
 begin
 
 end;
@@ -208,8 +251,68 @@ begin
     Result := Result + '?' + SmartConcat(TWiRLURL.URLEncode(FQueryParams.ToStringArray), '&');
 end;
 
+procedure TWiRLClientCustomResource.HEAD(const ABeforeExecute,
+  AAfterExecute: TWiRLClientProc; const AOnException: TWiRLClientExceptionProc);
+begin
+  try
+    BeforeHEAD;
+
+    if Assigned(ABeforeExecute) then
+      ABeforeExecute();
+
+    Client.Head(URL);
+
+    AfterHEAD();
+
+    if Assigned(AAfterExecute) then
+      AAfterExecute();
+  except
+    on E: Exception do
+    begin
+      if Assigned(AOnException) then
+        AOnException(E)
+      else
+        raise Exception.Create(E.Message);
+    end;
+  end;
+end;
+
+procedure TWiRLClientCustomResource.OPTIONS(const ABeforeExecute: TWiRLClientProc = nil;
+  const AAfterExecute: TWiRLClientResponseProc = nil;
+  const AOnException: TWiRLClientExceptionProc = nil);
+var
+  LResponseStream: TMemoryStream;
+begin
+  try
+    BeforeOPTIONS();
+
+    if Assigned(ABeforeExecute) then
+      ABeforeExecute();
+
+    LResponseStream := TMemoryStream.Create;
+    try
+      Client.Options(URL, LResponseStream);
+
+      AfterOPTIONS();
+
+      if Assigned(AAfterExecute) then
+        AAfterExecute(LResponseStream);
+    finally
+      LResponseStream.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      if Assigned(AOnException) then
+        AOnException(E)
+      else
+        raise Exception.Create(E.Message);
+    end;
+  end;
+end;
+
 procedure TWiRLClientCustomResource.DELETE(const ABeforeExecute,
-  AAfterExecute: TWiRLClientProc; const AOnException: TWiRLClientExecptionProc);
+  AAfterExecute: TWiRLClientProc; const AOnException: TWiRLClientExceptionProc);
 var
   LResponseStream: TMemoryStream;
 begin
@@ -231,7 +334,7 @@ begin
       LResponseStream.Free;
     end;
   except
-    on E:Exception do
+    on E: Exception do
     begin
       if Assigned(AOnException) then
         AOnException(E)
@@ -250,7 +353,7 @@ end;
 
 procedure TWiRLClientCustomResource.GET(const ABeforeExecute: TWiRLCLientProc;
   const AAfterExecute: TWiRLClientResponseProc;
-  const AOnException: TWiRLClientExecptionProc);
+  const AOnException: TWiRLClientExceptionProc);
 var
   LResponseStream: TMemoryStream;
 begin
@@ -282,16 +385,9 @@ begin
   end;
 end;
 
-{$ifndef DelphiXE2_UP}
-function TWiRLClientCustomResource.GETAsString: string;
-begin
-  Result := GetAsString(nil, nil, nil);
-end;
-{$endif}
-
 function TWiRLClientCustomResource.GETAsString(AEncoding: TEncoding;
   const ABeforeExecute: TWiRLClientProc;
-  const AOnException: TWiRLClientExecptionProc): string;
+  const AOnException: TWiRLClientExceptionProc): string;
 var
   LResult: string;
   LEncoding: TEncoding;
@@ -333,7 +429,7 @@ end;
 
 procedure TWiRLClientCustomResource.GETAsync(
   const ACompletionHandler: TWiRLClientProc;
-  const AOnException: TWiRLClientExecptionProc;
+  const AOnException: TWiRLClientExceptionProc;
   ASynchronize: Boolean);
 begin
   Client.ExecuteAsync(
@@ -351,10 +447,50 @@ begin
   );
 end;
 
+procedure TWiRLClientCustomResource.PATCH(const ABeforeExecute: TProc<TMemoryStream> = nil;
+  const AAfterExecute: TWiRLClientResponseProc = nil;
+  const AOnException: TWiRLClientExceptionProc = nil);
+var
+  LResponseStream: TMemoryStream;
+  LContent: TMemoryStream;
+begin
+  try
+    LContent := TMemoryStream.Create;
+    try
+      BeforePATCH(LContent);
+
+      if Assigned(ABeforeExecute) then
+        ABeforeExecute(LContent);
+
+      LResponseStream := TMemoryStream.Create;
+      try
+        Client.Patch(URL, LContent, LResponseStream);
+
+        AfterPATCH();
+
+        if Assigned(AAfterExecute) then
+          AAfterExecute(LResponseStream);
+      finally
+        LResponseStream.Free;
+      end;
+    finally
+      LContent.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      if Assigned(AOnException) then
+        AOnException(E)
+      else
+        raise Exception.Create(E.Message);
+    end;
+  end;
+end;
+
 procedure TWiRLClientCustomResource.POST(
   const ABeforeExecute: TProc<TMemoryStream>;
   const AAfterExecute: TWiRLClientResponseProc;
-  const AOnException: TWiRLClientExecptionProc);
+  const AOnException: TWiRLClientExceptionProc);
 var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;
@@ -394,7 +530,7 @@ end;
 
 procedure TWiRLClientCustomResource.POSTAsync(
   const ACompletionHandler: TWiRLClientProc;
-  const AOnException: TWiRLClientExecptionProc;
+  const AOnException: TWiRLClientExceptionProc;
   ASynchronize: Boolean);
 begin
   Client.ExecuteAsync(
@@ -412,9 +548,9 @@ begin
   );
 end;
 
-procedure TWiRLClientCustomResource.PUT(const ABeforeExecute: TProc<TMemoryStream>{$ifdef DelphiXE2_UP} = nil{$endif};
-  const AAfterExecute: TWiRLClientResponseProc{$ifdef DelphiXE2_UP} = nil{$endif};
-  const AOnException: TWiRLClientExecptionProc{$ifdef DelphiXE2_UP} = nil{$endif});
+procedure TWiRLClientCustomResource.PUT(const ABeforeExecute: TProc<TMemoryStream> = nil;
+  const AAfterExecute: TWiRLClientResponseProc = nil;
+  const AOnException: TWiRLClientExceptionProc = nil);
 var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;

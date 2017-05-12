@@ -1,7 +1,7 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'Form1'
+  Caption = 'Hello World Client'
   ClientHeight = 480
   ClientWidth = 640
   FormFactor.Width = 320
@@ -22,12 +22,17 @@ object MainForm: TMainForm
     TabIndex = 0
     TabOrder = 1
     TabPosition = PlatformDefault
+    Sizes = (
+      640s
+      414s
+      640s
+      414s)
     object HelloWorldTabItem: TTabItem
       CustomIcon = <
         item
         end>
       IsSelected = True
-      Size.Width = 121.000000000000000000
+      Size.Width = 122.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
@@ -52,17 +57,11 @@ object MainForm: TMainForm
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        object Execute: TButton
+        object btnExecute: TButton
           Align = Center
           TabOrder = 0
           Text = 'Execute'
-          OnClick = ExecuteClick
-        end
-        object Button3: TButton
-          Position.X = 456.000000000000000000
-          Position.Y = 16.000000000000000000
-          TabOrder = 1
-          Text = 'Button3'
+          OnClick = btnExecuteClick
         end
       end
     end
@@ -71,7 +70,7 @@ object MainForm: TMainForm
         item
         end>
       IsSelected = False
-      Size.Width = 130.000000000000000000
+      Size.Width = 131.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
@@ -81,7 +80,7 @@ object MainForm: TMainForm
       ExplicitSize.cy = 24.000000000000000000
       object Layout2: TLayout
         Align = Top
-        Size.Width = 50.000000000000000000
+        Size.Width = 640.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
@@ -98,19 +97,19 @@ object MainForm: TMainForm
             AutoSize = True
             Position.X = -35.000000000000000000
             Position.Y = 2.000000000000000000
-            Size.Width = 34.000000000000000000
+            Size.Width = 31.000000000000000000
             Size.Height = 16.000000000000000000
             Size.PlatformDefault = False
             TextSettings.WordWrap = False
             Text = 'Input:'
           end
         end
-        object Button1: TButton
+        object btnEcho: TButton
           Position.X = 224.000000000000000000
           Position.Y = 16.000000000000000000
           TabOrder = 2
           Text = 'Echo'
-          OnClick = Button1Click
+          OnClick = btnEchoClick
         end
         object Edit2: TEdit
           Touch.InteractiveGestures = [LongTap, DoubleTap]
@@ -124,7 +123,7 @@ object MainForm: TMainForm
             AutoSize = True
             Position.X = -50.000000000000000000
             Position.Y = 2.000000000000000000
-            Size.Width = 44.000000000000000000
+            Size.Width = 41.000000000000000000
             Size.Height = 16.000000000000000000
             Size.PlatformDefault = False
             TextSettings.WordWrap = False
@@ -135,7 +134,7 @@ object MainForm: TMainForm
       object Layout3: TLayout
         Align = Top
         Position.Y = 50.000000000000000000
-        Size.Width = 50.000000000000000000
+        Size.Width = 640.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
@@ -152,19 +151,19 @@ object MainForm: TMainForm
             AutoSize = True
             Position.X = -35.000000000000000000
             Position.Y = 2.000000000000000000
-            Size.Width = 34.000000000000000000
+            Size.Width = 31.000000000000000000
             Size.Height = 16.000000000000000000
             Size.PlatformDefault = False
             TextSettings.WordWrap = False
             Text = 'Input:'
           end
         end
-        object Button2: TButton
+        object btnReverse: TButton
           Position.X = 224.000000000000000000
           Position.Y = 16.000000000000000000
           TabOrder = 2
           Text = 'Reverse'
-          OnClick = Button2Click
+          OnClick = btnReverseClick
         end
         object Edit4: TEdit
           Touch.InteractiveGestures = [LongTap, DoubleTap]
@@ -178,7 +177,7 @@ object MainForm: TMainForm
             AutoSize = True
             Position.X = -50.000000000000000000
             Position.Y = 2.000000000000000000
-            Size.Width = 44.000000000000000000
+            Size.Width = 41.000000000000000000
             Size.Height = 16.000000000000000000
             Size.PlatformDefault = False
             TextSettings.WordWrap = False
@@ -186,12 +185,12 @@ object MainForm: TMainForm
           end
         end
       end
-      object ButtonPost: TButton
+      object btnPost: TButton
         Position.X = 24.000000000000000000
         Position.Y = 120.000000000000000000
         TabOrder = 2
-        Text = 'ButtonPost'
-        OnClick = ButtonPostClick
+        Text = 'Post'
+        OnClick = btnPostClick
       end
     end
   end
