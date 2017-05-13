@@ -20,7 +20,8 @@ uses
   System.Threading,
 {$endif}
 
-  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP;
+  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
+  IdHTTPHeaderInfo;
 
 type
   TBeforeCommandEvent = procedure (ASender: TObject; ARequest: TIdHTTPRequest) of object;
@@ -38,8 +39,10 @@ type
     function GetResponse: TIdHTTPResponse;
     function GetConnectTimeout: Integer;
     function GetReadTimeout: Integer;
+    function GetProxyParams: TIdProxyConnectionInfo;
     procedure SetConnectTimeout(const Value: Integer);
     procedure SetReadTimeout(const Value: Integer);
+    procedure SetProxyParams(const Value: TIdProxyConnectionInfo);
   protected
     procedure DoBeforeCommand;
 {$ifdef DelphiXE7_UP}
@@ -68,7 +71,7 @@ type
     property WiRLEngineURL: string read FWiRLEngineURL write FWiRLEngineURL;
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
-  published
+    property ProxyParams: TIdProxyConnectionInfo read GetProxyParams write SetProxyParams;
     property OnBeforeCommand: TBeforeCommandEvent read FOnBeforeCommand write FOnBeforeCommand;
   end;
 
@@ -135,6 +138,11 @@ end;
 function TWiRLClient.GetReadTimeout: Integer;
 begin
   Result := FHttpClient.ReadTimeout;
+end;
+
+function TWiRLClient.GetProxyParams: TIdProxyConnectionInfo;
+begin
+  Result := FHttpClient.ProxyParams;
 end;
 
 function TWiRLClient.GetRequest: TIdHTTPRequest;
@@ -204,6 +212,11 @@ end;
 procedure TWiRLClient.SetReadTimeout(const Value: Integer);
 begin
   FHttpClient.ReadTimeout := Value;
+end;
+
+procedure TWiRLClient.SetProxyParams(const Value: TIdProxyConnectionInfo);
+begin
+  FHttpClient.ProxyParams := Value;
 end;
 
 end.
