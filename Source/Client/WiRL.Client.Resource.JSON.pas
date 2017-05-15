@@ -20,9 +20,7 @@ uses
   WiRL.Client.Client;
 
 type
-  {$ifdef DelphiXE2_UP}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
-  {$endif}
   TWiRLClientResourceJSON = class(TWiRLClientResource)
   private
     FResponse: TJSONValue;

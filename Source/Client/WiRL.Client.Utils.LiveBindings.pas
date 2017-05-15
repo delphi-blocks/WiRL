@@ -12,12 +12,8 @@ unit WiRL.Client.Utils.LiveBindings;
 interface
 
 uses
-  System.Classes, System.SysUtils
-
-  , Data.Bind.DBScope
-  , Data.Bind.Components
-
-  ;
+  System.Classes, System.SysUtils,
+  Data.Bind.DBScope, Data.Bind.Components;
 
 function BindListControl(const ABindSourceDB: TBindSourceDB; const AControl: TComponent;
   const AAfterCreateProc: TProc<TLinkListControlToField> = nil): TLinkListControlToField;

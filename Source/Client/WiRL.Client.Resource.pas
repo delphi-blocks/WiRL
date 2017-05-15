@@ -18,9 +18,7 @@ uses
   WiRL.Client.CustomResource;
 
 type
-  {$ifdef DelphiXE2_UP}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
-  {$endif}
   TWiRLClientResource = class(TWiRLClientCustomResource)
   private
   protected

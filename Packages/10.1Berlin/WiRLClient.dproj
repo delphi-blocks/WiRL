@@ -152,51 +152,8 @@
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Cookie.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
-        <RcItem Include="..\..\media\TWiRLClientMessagingResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTMESSAGINGRESOURCE</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTRESOURCE</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTRESOURCEJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTRESOURCESTREAM</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTSUBRESOURCE</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTSUBRESOURCEJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTSUBRESOURCESTREAM</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientToken.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTTOKEN</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLFDResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLFDRESOURCE</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClient.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENT</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientApplication.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTAPPLICATION</ResourceId>
-        </RcItem>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -254,7 +211,16 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -594,16 +560,7 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
