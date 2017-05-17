@@ -25,7 +25,7 @@ type
     function Size: Integer;
     function IsEmpty: Boolean;
   end;
-  {$IFEND}
+  {$ENDIF}
 
 
 implementation
@@ -43,6 +43,6 @@ function TStringArrayHelper.Size: Integer;
 begin
   Result := Length(Self);
 end;
-{$IFEND}
+{$ENDIF}
 
 end.

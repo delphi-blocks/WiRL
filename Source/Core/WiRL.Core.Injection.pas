@@ -4,9 +4,13 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Rtti, System.Generics.Defaults,
-  System.Generics.Collections, System.Contnrs,
-  WiRL.Core.Context, WiRL.Core.Attributes, WiRL.Core.Singleton,
-  WiRL.Core.Exceptions, WiRL.Rtti.Utils;
+  System.Generics.Collections,
+
+  WiRL.Core.Context,
+  WiRL.Core.Attributes,
+  WiRL.Core.Singleton,
+  WiRL.Core.Exceptions,
+  WiRL.Rtti.Utils;
 
 type
   IContextFactory = interface
@@ -49,7 +53,7 @@ implementation
 uses
   WiRL.Core.Engine,
   WiRL.Core.Application,
-  WiRL.Core.Url,
+  WiRL.Core.URL,
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.Auth.Context;
@@ -68,7 +72,7 @@ var
   LType: TClass;
   LEntry: TEntryInfo;
   LContextFactory: IContextFactory;
-  LContextOwned :Boolean;
+  LContextOwned: Boolean;
 begin
   Result := False;
   LType := TRttiHelper.GetType(AObject).AsInstance.MetaclassType;

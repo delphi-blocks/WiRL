@@ -12,33 +12,37 @@ unit WiRL.Core.Context;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, System.Contnrs,
+  System.Classes, System.SysUtils, System.Rtti,
+  System.Generics.Collections,
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.URL,
   WiRL.Core.Auth.Context;
 
 type
-  TCustomContextEnumerator = class
+  TCustomContextEnumerator<T> = class(TEnumerator<T>)
   private
+    FList: TList<T>;
     FIndex: Integer;
-    FList: TList;
+    function GetCurrent: T;
+  protected
+    function DoGetCurrent: T; override;
+    function DoMoveNext: Boolean; override;
   public
-    constructor Create(AList: TList);
-    function GetCurrent: TObject; inline;
+    constructor Create(const AList: TList<T>);
+    property Current: T read GetCurrent;
     function MoveNext: Boolean;
-    property Current: TObject read GetCurrent;
   end;
 
   TWiRLCustomContext = class
   private
-    FList: TObjectList;
-    FOwnedObjects: TObjectList;
+    FList: TObjectList<TObject>;
+    FOwnedObjects: TObjectList<TObject>;
   public
     constructor Create;
     destructor Destroy; override;
 
-    function GetEnumerator: TCustomContextEnumerator;
+    function GetEnumerator: TCustomContextEnumerator<TObject>;
     procedure Add(AValue: TObject; AOwned: Boolean);
   end;
 
@@ -100,8 +104,8 @@ end;
 constructor TWiRLCustomContext.Create;
 begin
   inherited;
-  FList := TObjectList.Create(False);
-  FOwnedObjects := TObjectList.Create(True);
+  FList := TObjectList<TObject>.Create(False);
+  FOwnedObjects := TObjectList<TObject>.Create(True);
 end;
 
 destructor TWiRLCustomContext.Destroy;
@@ -111,29 +115,41 @@ begin
   inherited;
 end;
 
-function TWiRLCustomContext.GetEnumerator: TCustomContextEnumerator;
+function TWiRLCustomContext.GetEnumerator: TCustomContextEnumerator<TObject>;
 begin
-  Result := TCustomContextEnumerator.Create(FList);
+  Result := TCustomContextEnumerator<TObject>.Create(FList);
 end;
 
-{ TCustomContextEnumerator }
+{ TCustomContextEnumerator<T> }
 
-constructor TCustomContextEnumerator.Create(AList: TList);
+constructor TCustomContextEnumerator<T>.Create(const AList: TList<T>);
 begin
-  FIndex := -1;
+  inherited Create;
   FList := AList;
+  FIndex := -1;
 end;
 
-function TCustomContextEnumerator.GetCurrent: TObject;
+function TCustomContextEnumerator<T>.DoGetCurrent: T;
+begin
+  Result := GetCurrent;
+end;
+
+function TCustomContextEnumerator<T>.DoMoveNext: Boolean;
+begin
+  Result := MoveNext;
+end;
+
+function TCustomContextEnumerator<T>.GetCurrent: T;
 begin
   Result := FList[FIndex];
 end;
 
-function TCustomContextEnumerator.MoveNext: Boolean;
+function TCustomContextEnumerator<T>.MoveNext: Boolean;
 begin
-  Result := FIndex < FList.Count - 1;
-  if Result then
-    Inc(FIndex);
+  if FIndex >= FList.Count then
+    Exit(False);
+  Inc(FIndex);
+  Result := FIndex < FList.Count;
 end;
 
 end.
