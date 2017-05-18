@@ -18,6 +18,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriters,
+  WiRL.Core.MessageBodyReaders,
   WiRL.Data.FireDAC.MessageBodyWriters,
   Server.Entities;
 

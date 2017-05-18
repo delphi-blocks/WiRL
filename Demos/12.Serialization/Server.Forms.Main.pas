@@ -101,7 +101,7 @@ procedure TMainForm.btnDataSetClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ObjectToJSON(dsPersons);
+  LJSON := TNeonMapperJSON.ObjectToJSON(dsPersons, TNeonConfiguration.Default);
   try
     Log('DataSet', TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -123,12 +123,13 @@ begin
     LPerson.Note.Date := Now;
     LPerson.Note.Text := 'Note Text';
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, TNeonConfiguration.Default);
     try
       memoSerialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
       LJSON.Free;
     end;
+
   finally
     LPerson.Free;
   end;
@@ -138,9 +139,9 @@ function TMainForm.GetStringFromValue(const AValue: TValue): string;
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.TValueToJSON(AValue);
+  LJSON := TNeonMapperJSON.ValueToJSON(AValue, TNeonConfiguration.Default);
   try
-    Result := LJSON.ToJSON;
+    Result :=  TJSONHelper.ToJSON(LJSON);
   finally
     LJSON.Free;
   end;
@@ -157,7 +158,11 @@ begin
   LRec.Due := 42;
   Log('Record', GetStringFromValue(TValue.From<TMyRecord>(LRec)));
 
-  LArr := [12, 34, 797, 5252636];
+  SetLength(LArr, 4);
+  LArr[0] := 12;
+  LArr[1] := 34;
+  LArr[2] := 797;
+  LArr[3] := 5236;
   Log('Array of Integer', GetStringFromValue(TValue.From<TIntArray>(LArr)));
 end;
 
@@ -175,7 +180,7 @@ begin
       LJSON.Free;
     end;
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, TNeonConfiguration.Default);
     try
       memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
@@ -196,7 +201,7 @@ begin
     LList.Add(34.9);
     LList.Add(10.0);
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LList);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LList, TNeonConfiguration.Default);
     try
       Log('List', TJSONHelper.PrettyPrint(LJSON));
     finally
@@ -219,7 +224,7 @@ begin
     LBook.NoteList.Add('Note 1');
     LBook.NoteList.Add('Note 2');
     LBook.NoteList.Add('Note 3');
-    LJSON := TNeonMapperJSON.ObjectToJSON(LBook);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LBook, TNeonConfiguration.Default);
     try
       Log('List', TJSONHelper.PrettyPrint(LJSON));
     finally
@@ -234,7 +239,7 @@ procedure TMainForm.btnImageClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ObjectToJSON(imgSample);
+  LJSON := TNeonMapperJSON.ObjectToJSON(imgSample, TNeonConfiguration.Default);
   try
     Log('Image', TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -291,10 +296,17 @@ begin
   end;
 
   // Dynamic Array
-  LArr := [12, 34, 797, 5252636];
+  SetLength(LArr, 4);
+  LArr[0] := 12;
+  LArr[1] := 34;
+  LArr[2] := 797;
+  LArr[3] := 5236;
+
   LJString := GetStringFromValue(TValue.From<TIntArray>(LArr));
   Log('Array', LJString);
-  LArr := [100];
+
+  SetLength(LArr, 1);
+  LArr[0] := 100;
 
   LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
   try

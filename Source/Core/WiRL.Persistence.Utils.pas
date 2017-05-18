@@ -14,7 +14,7 @@ unit WiRL.Persistence.Utils;
 interface
 
 uses
-  System.Classes, System.SysUtils, Data.DB,
+  System.Classes, System.SysUtils, Data.DB, System.Rtti,
   WiRL.Core.JSON;
 
 type
@@ -39,7 +39,7 @@ type
 implementation
 
 uses
-  System.Rtti, System.StrUtils, System.DateUtils,
+  System.StrUtils, System.DateUtils,
 
   WiRL.Rtti.Utils,
   WiRL.Core.Utils;

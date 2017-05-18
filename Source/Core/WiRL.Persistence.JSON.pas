@@ -12,7 +12,7 @@ unit WiRL.Persistence.JSON;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
+  System.SysUtils, System.Classes, System.Rtti, System.SyncObjs, System.TypInfo,
   System.JSON, Data.DB,
   WiRL.Persistence.Attributes,
   WiRL.Persistence.Core,
@@ -28,7 +28,12 @@ type
     function WriteEnum(const AValue: TValue): TJSONValue;
     function WriteInteger(const AValue: TValue): TJSONValue;
     function WriteFloat(const AValue: TValue): TJSONValue;
-    function WriteInterface(const AValue: TValue): TJSONValue;
+    /// <summary>
+    ///   Writer for Variant types
+    /// </summary>
+    /// <remarks>
+    ///   The variant will be written as string
+    /// </remarks>
     function WriteVariant(const AValue: TValue): TJSONValue;
     /// <summary>
     ///   Writer for static and dynamic arrays
@@ -42,15 +47,24 @@ type
     /// </remarks>
     /// <returns>[First,Second,Third]</returns>
     function WriteSet(const AValue: TValue): TJSONValue;
-
     /// <summary>
     ///   Writer for a record type
     /// </summary>
+    /// <remarks>
+    ///   For records the engine serialize the fields by default
+    /// </remarks>
     function WriteRecord(const AValue: TValue): TJSONValue;
     /// <summary>
     ///   Writer for a standard TObject (descendants)  type (no list, stream or streamable)
     /// </summary>
     function WriteObject(const AValue: TValue): TJSONValue;
+    /// <summary>
+    ///   Writer for an Interface type
+    /// </summary>
+    /// <remarks>
+    ///   The object that implements the interface is serialized
+    /// </remarks>
+    function WriteInterface(const AValue: TValue): TJSONValue;
     /// <summary>
     ///   Writer for TStream (descendants) objects
     /// </summary>
@@ -79,9 +93,14 @@ type
     /// </summary>
     function WriteDataMember(const AValue: TValue): TJSONValue;
   public
-    function RecordToJSON(const ARecord: TValue): TJSONValue;
+    /// <summary>
+    ///   Serialize any Delphi type into a JSONValue, the Delphi type must be passed as a TValue
+    /// </summary>
+    function ValueToJSON(const AValue: TValue): TJSONValue;
+    /// <summary>
+    ///   Serialize any Delphi objects into a JSONValue
+    /// </summary>
     function ObjectToJSON(AObject: TObject): TJSONValue;
-    function TValueToJSON(const AValue: TValue): TJSONValue;
   end;
 
   TNeonDeserializerJSON = class(TNeonBase)
@@ -103,6 +122,9 @@ type
     function ReadDataSet(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
     function ReadStream(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
 
+    function ReadStreamable(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
+    function ReadEnumerator(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
+
     function ReadDataMember(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
     procedure SetMemberValue(const AValue: TValue; AMember: TRttiMember; AInstance: Pointer);
     function CreateNewValue(AType: TRttiType; AItemJSON: TJSONValue; var AAllocatedData: Pointer): TValue;
@@ -115,17 +137,24 @@ type
 
   TNeonMapperJSON = class
   public
-    class function ObjectToJSON(AObject: TObject): TJSONValue;
-    class function TValueToJSON(const AValue: TValue): TJSONValue;
-    class function ObjectToJSONString(AObject: TObject): string;
+    class function ValueToJSON(const AValue: TValue): TJSONValue; overload;
+    class function ValueToJSON(const AValue: TValue; const AConfig: TNeonConfiguration): TJSONValue; overload;
+
+    class function ObjectToJSON(AObject: TObject): TJSONValue; overload;
+    class function ObjectToJSON(AObject: TObject; const AConfig: TNeonConfiguration): TJSONValue; overload;
+
+    class function ObjectToJSONString(AObject: TObject): string; overload;
+    class function ObjectToJSONString(AObject: TObject; const AConfig: TNeonConfiguration): string; overload;
   public
     class procedure JSONToObject(AObject: TObject; AJSON: TJSONValue); overload;
+    class function JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject; overload;
+    class function JSONToObject<T: class, constructor>(const AJSON: string): T; overload;
+    class function JSONToObject(AType: TRttiType; const AJSON: string): TObject; overload;
   end;
 
 implementation
 
 uses
-  Winapi.Windows, System.TypInfo, System.NetEncoding,
   WiRL.Rtti.Utils,
   WiRL.Core.Utils;
 
@@ -137,16 +166,9 @@ begin
     Exit(TJSONObject.Create);
 
   Result := WriteDataMember(AObject);
-  if Assigned(Result) then
-    Exit;
 end;
 
-function TNeonSerializerJSON.RecordToJSON(const ARecord: TValue): TJSONValue;
-begin
-  Result := WriteRecord(ARecord);
-end;
-
-function TNeonSerializerJSON.TValueToJSON(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.ValueToJSON(const AValue: TValue): TJSONValue;
 begin
   Result := WriteDataMember(AValue);
 end;
@@ -434,24 +456,19 @@ end;
 
 function TNeonSerializerJSON.WriteSet(const AValue: TValue): TJSONValue;
 begin
-  Result := TJSONString.Create(SetToString(AValue.TypeInfo, AValue.GetReferenceToRawData, True));
+  Result := TJSONString.Create(SetToString(AValue.TypeInfo, Integer(AValue.GetReferenceToRawData^), True));
 end;
 
 function TNeonSerializerJSON.WriteStream(const AValue: TValue): TJSONValue;
 var
   LStream: TStream;
-  LBase64Stream: TStringStream;
+  LBase64: string;
 begin
   LStream := AValue.AsObject as TStream;
 
-  LBase64Stream := TStringStream.Create;
-  try
-    LStream.Position := soFromBeginning;
-    TNetEncoding.Base64.Encode(LStream, LBase64Stream);
-    Result := TJSONString.Create(LBase64Stream.DataString);
-  finally
-    LBase64Stream.Free;
-  end;
+  LStream.Position := soFromBeginning;
+  LBase64 := TBase64.Encode(LStream);
+  Result := TJSONString.Create(LBase64);
 end;
 
 function TNeonSerializerJSON.WriteStreamable(const AValue: TValue): TJSONValue;
@@ -460,7 +477,7 @@ var
   LType: TRttiType;
   LMethodLoadFromStream, LMethodSaveToStream: TRttiMethod;
   LBinaryStream: TMemoryStream;
-  LBase64Stream: TStringStream;
+  LBase64: string;
 begin
   Result := nil;
   LObject := AValue.AsObject;
@@ -480,15 +497,13 @@ begin
     Exit;
 
   LBinaryStream := TMemoryStream.Create;
-  LBase64Stream := TStringStream.Create;
   try
     LMethodSaveToStream.Invoke(LObject, [LBinaryStream]);
     LBinaryStream.Position := soFromBeginning;
-    TNetEncoding.Base64.Encode(LBinaryStream, LBase64Stream);
-    Result := TJSONString.Create(LBase64Stream.DataString);
+    LBase64 := TBase64.Encode(LBinaryStream);
+    Result := TJSONString.Create(LBase64);
   finally
     LBinaryStream.Free;
-    LBase64Stream.Free;
   end;
 end;
 
@@ -571,7 +586,7 @@ begin
 
   case AKind of
     // AnsiChar
-    tkChar:  Result := TValue.From<AnsiChar>(AnsiChar(AJSONValue.Value.Chars[0]));
+    tkChar:  Result := TValue.From<UTF8Char>(UTF8Char(AJSONValue.Value.Chars[0]));
 
     // WideChar
     tkWChar: Result := TValue.From<Char>(AJSONValue.Value.Chars[0]);
@@ -598,11 +613,13 @@ begin
     tkArray:       Result := ReadArray(AJSONValue, AType, AData);
     tkDynArray:    Result := ReadDynArray(AJSONValue, AType, AData);
 
-    // Complex types recursive calls
+    // Complex types
     tkClass:
     begin
       if AData.AsObject is TDataSet then
         Result := ReadDataSet(AJSONValue, AType, AData)
+      else if AData.AsObject is TStream then
+        Result := ReadStream(AJSONValue, AType, AData)
       else
         Result := ReadObject(AJSONValue, AType, AData);
     end;
@@ -673,8 +690,13 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadFloat(AJSONValue: TJSONValue; AType:
-    TRttiType): TValue;
+function TNeonDeserializerJSON.ReadEnumerator(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): TValue;
+begin
+
+end;
+
+function TNeonDeserializerJSON.ReadFloat(AJSONValue: TJSONValue; AType: TRttiType): TValue;
 begin
   if AJSONValue is TJSONNull then
     Exit(0);
@@ -802,6 +824,18 @@ end;
 
 function TNeonDeserializerJSON.ReadStream(AJSONValue: TJSONValue;
   AType: TRttiType; const AData: TValue): TValue;
+var
+  LStream: TStream;
+begin
+  Result := AData;
+  LStream := AData.AsObject as TStream;
+  LStream.Position := soFromBeginning;
+
+  TBase64.Decode(AJSONValue.Value, LStream);
+end;
+
+function TNeonDeserializerJSON.ReadStreamable(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): TValue;
 begin
 
 end;
@@ -811,16 +845,16 @@ function TNeonDeserializerJSON.ReadString(AJSONValue: TJSONValue; AType:
 begin
   case AKind of
     // AnsiString
-    tkLString: Result := TValue.From<AnsiString>(AnsiString(AJSONValue.Value));
+    tkLString: Result := TValue.From<UTF8String>(UTF8String(AJSONValue.Value));
 
     //WideString
-    tkWString: Result := TValue.From<WideString>(AJSONValue.Value);
+    tkWString: Result := TValue.From<string>(AJSONValue.Value);
 
     //UnicodeString
     tkUString: Result := TValue.From<string>(AJSONValue.Value);
 
     //ShortString
-    tkString:  Result := TValue.From<ShortString>(AnsiString(AJSONValue.Value));
+    tkString:  Result := TValue.From<UTF8String>(UTF8String(AJSONValue.Value));
 
     // Future string types treated as unicode strings
     else
@@ -853,12 +887,12 @@ begin
   case aType.TypeKind of
     tkInteger: Result := TValue.From<Integer>(0);
     tkInt64:   Result := TValue.From<Int64>(0);
-    tkChar:    Result := TValue.From<Char>(#0);
-    tkWChar:   Result := TValue.From<WideChar>(#0);
+    tkChar:    Result := TValue.From<UTF8Char>(#0);
+    tkWChar:   Result := TValue.From<Char>(#0);
     tkFloat:   Result := TValue.From<Double>(0);
     tkString:  Result := TValue.From<string>('');
-    tkWString: Result := TValue.From<WideString>('');
-    tkLString: Result := TValue.From<AnsiString>('');
+    tkWString: Result := TValue.From<string>('');
+    tkLString: Result := TValue.From<UTF8String>('');
     tkUString: Result := TValue.From<string>('');
     tkClass:   Result := TRttiHelper.CreateInstanceValue(AType);
     {
@@ -902,7 +936,31 @@ end;
 
 { TNeonMapperJSON }
 
-class function TNeonMapperJSON.ObjectToJSON(AObject: TObject): TJSONValue;
+class function TNeonMapperJSON.JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject;
+begin
+  Result := TRttiHelper.CreateInstance(AType);
+  JSONToObject(Result, AJSON);
+end;
+
+class function TNeonMapperJSON.JSONToObject(AType: TRttiType; const AJSON: string): TObject;
+var
+  LJSON: TJSONValue;
+begin
+  LJSON := TJSONObject.ParseJSONValue(AJSON);
+  try
+    Result := TRttiHelper.CreateInstance(AType);
+    JSONToObject(Result, LJSON);
+  finally
+    LJSON.Free;
+  end;
+end;
+
+class function TNeonMapperJSON.JSONToObject<T>(const AJSON: string): T;
+begin
+  { TODO -opaolo -c : WIP 18/05/2017 17:59:03 }
+end;
+
+class function TNeonMapperJSON.ObjectToJSON(AObject: TObject; const AConfig: TNeonConfiguration): TJSONValue;
 var
   LWriter: TNeonSerializerJSON;
 begin
@@ -915,10 +973,20 @@ begin
 end;
 
 class function TNeonMapperJSON.ObjectToJSONString(AObject: TObject): string;
+begin
+  Result := TNeonMapperJSON.ObjectToJSONString(AObject, TNeonConfiguration.Default);
+end;
+
+class function TNeonMapperJSON.ObjectToJSON(AObject: TObject): TJSONValue;
+begin
+  Result := TNeonMapperJSON.ObjectToJSON(AObject, TNeonConfiguration.Default);
+end;
+
+class function TNeonMapperJSON.ObjectToJSONString(AObject: TObject; const AConfig: TNeonConfiguration): string;
 var
   LJSON: TJSONValue;
 begin
-  LJSON := ObjectToJSON(AObject);
+  LJSON := ObjectToJSON(AObject, AConfig);
   try
     Result := TJSONHelper.ToJSON(LJSON);
   finally
@@ -926,13 +994,18 @@ begin
   end;
 end;
 
-class function TNeonMapperJSON.TValueToJSON(const AValue: TValue): TJSONValue;
+class function TNeonMapperJSON.ValueToJSON(const AValue: TValue): TJSONValue;
+begin
+  Result := TNeonMapperJSON.ValueToJSON(AValue, TNeonConfiguration.Default);
+end;
+
+class function TNeonMapperJSON.ValueToJSON(const AValue: TValue; const AConfig: TNeonConfiguration): TJSONValue;
 var
   LWriter: TNeonSerializerJSON;
 begin
-  LWriter := TNeonSerializerJSON.Create(TNeonConfiguration.Default);
+  LWriter := TNeonSerializerJSON.Create(AConfig);
   try
-    Result := LWriter.TValueToJSON(AValue);
+    Result := LWriter.ValueToJSON(AValue);
   finally
     LWriter.Free;
   end;

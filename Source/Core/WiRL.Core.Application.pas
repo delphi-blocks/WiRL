@@ -669,7 +669,6 @@ var
   LParamClassType: TClass;
   LContextValue: TValue;
   LReader: IMessageBodyReader;
-
 begin
   LParamName := '';
   for LAttr in AAttrArray do
@@ -702,10 +701,14 @@ begin
       end;
 
       tkChar: begin
-        Result := TValue.From(AnsiChar(ParamAsString(LAttr)[1]));
+        Result := TValue.From(UTF8Char(ParamAsString(LAttr)[1]));
         ValidateMethodParam(AAttrArray, Char(Result.AsOrdinal));
       end;
-      tkWChar: ;
+      tkWChar:
+      begin
+        Result := TValue.From(Char(ParamAsString(LAttr)[1]));
+        ValidateMethodParam(AAttrArray, Char(Result.AsOrdinal));
+      end;
       tkEnumeration: ;
       tkSet: ;
       tkClass:

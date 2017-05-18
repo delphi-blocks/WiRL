@@ -102,7 +102,8 @@ begin
   LAddress.Rec.Uno := 'Pippo';
   LAddress.Rec.Due := 12;
 
-  FAddresses := FAddresses + [LAddress];
+  SetLength(FAddresses, Length(FAddresses) + 1);
+  FAddresses[Length(FAddresses) - 1] := LAddress;
 end;
 
 constructor TPerson.Create;
@@ -120,7 +121,7 @@ var
 begin
   for LIndex := High(FAddresses) downto Low(FAddresses) do
     FAddresses[LIndex].Free;
-
+  SetLength(FAddresses, 0);
   FNote.Free;
   inherited;
 end;
