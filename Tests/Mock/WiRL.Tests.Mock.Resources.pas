@@ -11,16 +11,20 @@ uses
   WiRL.Core.MessageBodyWriters,
   WiRL.Core.Request,
   WiRL.Core.Response,
-  WiRL.Core.Registry;
+  WiRL.Core.Registry,
+  WiRL.Tests.Mock.Filters;
 
 
 type
   [Path('/helloworld')]
   THelloWorldResource = class
   public
-    [GET]
-    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    [GET, Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
     function HelloWorld(): string;
+
+    [ResponseBindingTest, RequestBindingTest]
+    [GET, Path('/bindingfilter'), Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function BindingFilter(): string;
 
     [GET, Path('/echostring/{AString}')]
     [Produces(TMediaType.TEXT_PLAIN)]
@@ -63,6 +67,11 @@ type
 implementation
 
 { THelloWorldResource }
+
+function THelloWorldResource.BindingFilter: string;
+begin
+  Result := 'Binding filter';
+end;
 
 function THelloWorldResource.EchoString(AString: string): string;
 begin

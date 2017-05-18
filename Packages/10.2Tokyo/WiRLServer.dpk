@@ -1,0 +1,123 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
+package WiRLServer;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'WiRL Server Package'}
+{$LIBSUFFIX '250'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  inet,
+  dbrtl,
+  FireDAC,
+  FireDACCommonDriver,
+  FireDACCommon,
+  fmxFireDAC,
+  IndySystem,
+  IndyProtocols,
+  IndyCore,
+  DbxCommonDriver,
+  dsnap,
+  DataSnapFireDAC,
+  RESTComponents;
+
+contains
+  WiRL.Data.MessageBodyWriters in '..\..\Source\Data\WiRL.Data.MessageBodyWriters.pas',
+  WiRL.Data.Utils in '..\..\Source\Data\WiRL.Data.Utils.pas',
+  WiRL.Data.FireDAC.DataModule in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas' {WiRLFDDataModuleResource: TDataModule},
+  WiRL.Data.FireDAC.MessageBodyWriters in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBodyWriters.pas',
+  WiRL.Data.FireDAC in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas',
+  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  JOSE.Cryptography.RSA in '..\..\Libs\JWT\Source\Common\JOSE.Cryptography.RSA.pas',
+  JOSE.Encoding.Base64 in '..\..\Libs\JWT\Source\Common\JOSE.Encoding.Base64.pas',
+  JOSE.Hashing.HMAC in '..\..\Libs\JWT\Source\Common\JOSE.Hashing.HMAC.pas',
+  JOSE.Types.Bytes in '..\..\Libs\JWT\Source\Common\JOSE.Types.Bytes.pas',
+  JOSE.Types.JSON in '..\..\Libs\JWT\Source\Common\JOSE.Types.JSON.pas',
+  JOSE.Core.Base in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Base.pas',
+  JOSE.Core.Builder in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Builder.pas',
+  JOSE.Core.JWA.Compression in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Compression.pas',
+  JOSE.Core.JWA.Encryption in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Encryption.pas',
+  JOSE.Core.JWA.Factory in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Factory.pas',
+  JOSE.Core.JWA.Signing in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Signing.pas',
+  JOSE.Core.JWA in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.pas',
+  JOSE.Core.JWE in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWE.pas',
+  JOSE.Core.JWK in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWK.pas',
+  JOSE.Core.JWS in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWS.pas',
+  JOSE.Core.JWT in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWT.pas',
+  JOSE.Core.Parts in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas',
+  WiRL.Core.Application in '..\..\Source\Core\WiRL.Core.Application.pas',
+  WiRL.Core.Attributes in '..\..\Source\Core\WiRL.Core.Attributes.pas',
+  WiRL.Core.Auth.Context in '..\..\Source\Core\WiRL.Core.Auth.Context.pas',
+  WiRL.Core.Auth.Resource in '..\..\Source\Core\WiRL.Core.Auth.Resource.pas',
+  WiRL.Core.Cache in '..\..\Source\Core\WiRL.Core.Cache.pas',
+  WiRL.Core.Classes in '..\..\Source\Core\WiRL.Core.Classes.pas',
+  WiRL.Core.Context in '..\..\Source\Core\WiRL.Core.Context.pas',
+  WiRL.Core.Declarations in '..\..\Source\Core\WiRL.Core.Declarations.pas',
+  WiRL.Core.Engine in '..\..\Source\Core\WiRL.Core.Engine.pas',
+  WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
+  WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
+  WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
+  WiRL.Core.MessageBodyReaders in '..\..\Source\Core\WiRL.Core.MessageBodyReaders.pas',
+  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
+  WiRL.Core.MessageBodyWriters in '..\..\Source\Core\WiRL.Core.MessageBodyWriters.pas',
+  WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
+  WiRL.Core.Request in '..\..\Source\Core\WiRL.Core.Request.pas',
+  WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas',
+  WiRL.Core.Resource in '..\..\Source\Core\WiRL.Core.Resource.pas',
+  WiRL.Core.Serialization in '..\..\Source\Core\WiRL.Core.Serialization.pas',
+  WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
+  WiRL.Core.URL in '..\..\Source\Core\WiRL.Core.URL.pas',
+  WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
+  WiRL.Core.Validators in '..\..\Source\Core\WiRL.Core.Validators.pas',
+  WiRL.http.Accept.Charset in '..\..\Source\Core\WiRL.http.Accept.Charset.pas',
+  WiRL.http.Accept.Encoding in '..\..\Source\Core\WiRL.http.Accept.Encoding.pas',
+  WiRL.http.Accept.Language in '..\..\Source\Core\WiRL.http.Accept.Language.pas',
+  WiRL.http.Accept.MediaType in '..\..\Source\Core\WiRL.http.Accept.MediaType.pas',
+  WiRL.http.Accept.Parser in '..\..\Source\Core\WiRL.http.Accept.Parser.pas',
+  WiRL.http.Core in '..\..\Source\Core\WiRL.http.Core.pas',
+  WiRL.http.Filters in '..\..\Source\Core\WiRL.http.Filters.pas',
+  WiRL.http.Server.Indy in '..\..\Source\Core\WiRL.http.Server.Indy.pas',
+  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
+  WiRL.Data.Resolver in '..\..\Source\Extensions\WiRL.Data.Resolver.pas',
+  WiRL.Diagnostics.Manager in '..\..\Source\Extensions\WiRL.Diagnostics.Manager.pas',
+  WiRL.Diagnostics.Resources in '..\..\Source\Extensions\WiRL.Diagnostics.Resources.pas',
+  WiRL.Stateful.Dictionary in '..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas',
+  WiRL.Stateful.WrappedResource in '..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas',
+  WiRL.WebServer.Resources in '..\..\Source\Extensions\WiRL.WebServer.Resources.pas';
+
+end.
+

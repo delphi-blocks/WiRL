@@ -15,6 +15,7 @@ uses
   System.SysUtils,
   System.Rtti,
   WiRL.Core.JSON,
+  WiRL.Core.Context,
   WiRL.Core.Response;
 
 type
@@ -94,6 +95,8 @@ type
     destructor Destroy; override;
 
     class function ExceptionToJSON(E: Exception): string;
+    class procedure HandleException(AContext: TWiRLContext; E: Exception); static;
+
     function ToJSON: string;
     property Status: Integer read FStatus write FStatus;
   end;
@@ -135,7 +138,9 @@ type
 implementation
 
 uses
-  System.TypInfo;
+  System.TypInfo,
+  WiRL.http.Accept.MediaType,
+  WiRL.Core.Application;
 
 { Pair }
 
@@ -297,6 +302,36 @@ begin
     Result := TJSONHelper.ToJSON(LJSON);
   finally
     LJSON.Free;
+  end;
+end;
+
+class procedure EWiRLWebApplicationException.HandleException(AContext: TWiRLContext; E: Exception);
+var
+  LWebException: EWiRLWebApplicationException;
+  LAuthChallengeHeader: string;
+begin
+  if Assigned(AContext.Application) and (AContext.Application is TWiRLApplication) then
+    LAuthChallengeHeader := TWiRLApplication(AContext.Application).AuthChallengeHeader
+  else
+    LAuthChallengeHeader := '';
+
+  if E is EWiRLWebApplicationException then
+  begin
+    LWebException := E as EWiRLWebApplicationException;
+
+    AContext.Response.StatusCode := LWebException.Status;
+    AContext.Response.Content := LWebException.ToJSON;
+    AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
+
+    // Set the Authorization challenge
+    if (LWebException.Status = 401) and (LAuthChallengeHeader <> '') then
+      AContext.Response.HeaderFields['WWW-Authenticate'] := LAuthChallengeHeader;
+  end
+  else if E is Exception then
+  begin
+    AContext.Response.StatusCode := 500;
+    AContext.Response.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
+    AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
   end;
 end;
 

@@ -6,6 +6,7 @@ object MainDataModule: TMainDataModule
     WiRLEngineURL = 'http://localhost:8080/rest'
     ConnectTimeout = 0
     ReadTimeout = -1
+    OnBeforeCommand = WiRLClient1BeforeCommand
     Left = 280
     Top = 16
   end

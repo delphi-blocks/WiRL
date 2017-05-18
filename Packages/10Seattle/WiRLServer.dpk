@@ -51,7 +51,8 @@ requires
   DataSnapFireDAC,
   IndySystem,
   IndyProtocols,
-  IndyCore;
+  IndyCore,
+  RESTComponents;
 
 contains
   WiRL.Data.MessageBodyWriters in '..\..\Source\Data\WiRL.Data.MessageBodyWriters.pas',
@@ -72,6 +73,10 @@ contains
   JOSE.Types.JSON in '..\..\Libs\JWT\Source\Common\JOSE.Types.JSON.pas',
   JOSE.Core.Base in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Base.pas',
   JOSE.Core.Builder in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Builder.pas',
+  JOSE.Core.JWA.Compression in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Compression.pas',
+  JOSE.Core.JWA.Encryption in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Encryption.pas',
+  JOSE.Core.JWA.Factory in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Factory.pas',
+  JOSE.Core.JWA.Signing in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Signing.pas',
   JOSE.Core.JWA in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.pas',
   JOSE.Core.JWE in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWE.pas',
   JOSE.Core.JWK in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWK.pas',
@@ -96,6 +101,7 @@ contains
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
   WiRL.Core.Request in '..\..\Source\Core\WiRL.Core.Request.pas',
   WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas',
+  WiRL.Core.Resource in '..\..\Source\Core\WiRL.Core.Resource.pas',
   WiRL.Core.Serialization in '..\..\Source\Core\WiRL.Core.Serialization.pas',
   WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
   WiRL.Core.URL in '..\..\Source\Core\WiRL.Core.URL.pas',

@@ -18,19 +18,54 @@ uses
   WiRL.Core.Singleton,
   WiRL.Core.Exceptions,
   WiRL.Core.Attributes,
+  WiRL.Core.Context,
   WiRL.Core.Request,
   WiRL.Core.Response,
+  WiRL.Core.Resource,
   WiRL.Rtti.Utils;
 
 type
+  TWiRLContainerRequestContext = class(TObject)
+  private
+    FRequest: TWiRLRequest;
+    FResponse: TWiRLResponse;
+    FAborted: Boolean;
+    FContext: TWiRLContext;
+    FResource: TWiRLResource;
+    function GetResource: TWiRLResource;
+  public
+    property Context: TWiRLContext read FContext;
+    property Request: TWiRLRequest read FRequest;
+    property Response: TWiRLResponse read FResponse;
+    property Resource: TWiRLResource read GetResource;
+    property Aborted: Boolean read FAborted;
+    procedure Abort;
+    constructor Create(AContext: TWiRLContext; AResource: TWiRLResource = nil);
+  end;
+
+  TWiRLContainerResponseContext = class(TObject)
+  private
+    FRequest: TWiRLRequest;
+    FResponse: TWiRLResponse;
+    FContext: TWiRLContext;
+    FResource: TWiRLResource;
+    function GetResource: TWiRLResource;
+  public
+    property Context: TWiRLContext read FContext;
+    property Request: TWiRLRequest read FRequest;
+    property Response: TWiRLResponse read FResponse;
+    property Resource: TWiRLResource read GetResource;
+    constructor Create(AContext: TWiRLContext; AResource: TWiRLResource);
+  end;
+
   IWiRLContainerRequestFilter = interface
   ['{58406938-14A1-438F-946A-F0723920B511}']
-    procedure Filter(Request: TWiRLRequest);
+    procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
   IWiRLContainerResponseFilter = interface
   ['{F952495E-00DB-44C6-ACED-33F1F2F25527}']
-    procedure Filter(Request: TWiRLRequest; Response: TWiRLResponse);
+    procedure Filter(AResponseContext: TWiRLContainerResponseContext);
   end;
 
   // the lower the number the higher the priority
@@ -293,6 +328,47 @@ end;
 function TWiRLFilterRegistry.RegisterFilter<T>: TWiRLFilterConstructorInfo;
 begin
   Result := RegisterFilter<T>(nil);
+end;
+
+{ TWiRLContainerRequestContext }
+
+procedure TWiRLContainerRequestContext.Abort;
+begin
+  FAborted := True;
+end;
+
+constructor TWiRLContainerRequestContext.Create(AContext: TWiRLContext; AResource: TWiRLResource);
+begin
+  inherited Create;
+  FContext := AContext;
+  FRequest := AContext.Request;
+  FResponse := AContext.Response;
+  FResource := AResource;
+end;
+
+function TWiRLContainerRequestContext.GetResource: TWiRLResource;
+begin
+  if not Assigned(FResource) then
+    raise EWiRLException.Create('Resource info not available');
+  Result := FResource;
+end;
+
+{ TWiRLContainerResponseContext }
+
+constructor TWiRLContainerResponseContext.Create(AContext: TWiRLContext; AResource: TWiRLResource);
+begin
+  inherited Create;
+  FContext := AContext;
+  FRequest := AContext.Request;
+  FResponse := AContext.Response;
+  FResource := AResource;
+end;
+
+function TWiRLContainerResponseContext.GetResource: TWiRLResource;
+begin
+  if not Assigned(FResource) then
+    raise EWiRLException.Create('Resource info not available');
+  Result := FResource;
 end;
 
 end.

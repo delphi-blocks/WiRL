@@ -25,6 +25,9 @@ type
   public
     // TRttiObject helpers functions
     class function HasAttribute<T: TCustomAttribute>(
+      AClass: TClass): Boolean; overload; static;
+
+    class function HasAttribute<T: TCustomAttribute>(
       ARttiObj: TRttiObject): Boolean; overload; static;
 
     class function HasAttribute<T: TCustomAttribute>(
@@ -76,6 +79,8 @@ type
 
     class function ForEachFieldWithAttribute<T: TCustomAttribute>(AInstance: TObject; const ADoSomething: TFunc<TRttiField, T, Boolean>): Integer; overload;
     class function ForEachField(AInstance: TObject; const ADoSomething: TFunc<TRttiField, Boolean>): Integer;
+
+    class function GetType(AObject: TRttiObject): TRttiType;
 
     class property Context: TRttiContext read FContext;
   end;
@@ -454,6 +459,25 @@ begin
     if LBreak then
       Break;
   end;
+end;
+
+class function TRttiHelper.GetType(AObject: TRttiObject): TRttiType;
+begin
+  if AObject is TRttiParameter then
+    Result := TRttiParameter(AObject).ParamType
+  else if AObject is TRttiField then
+    Result := TRttiField(AObject).FieldType
+  else if AObject is TRttiProperty then
+    Result := TRttiProperty(AObject).PropertyType
+  else if AObject is TRttiManagedField then
+    Result := TRttiManagedField(AObject).FieldType
+  else
+    raise Exception.Create('Object doesn''t have a type');
+end;
+
+class function TRttiHelper.HasAttribute<T>(AClass: TClass): Boolean;
+begin
+  Result := HasAttribute<T>(Context.GetType(AClass));
 end;
 
 class function TRttiHelper.IsDynamicArrayOf(ARttiType: TRttiType;

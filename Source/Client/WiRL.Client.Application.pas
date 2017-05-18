@@ -18,9 +18,7 @@ uses
   WiRL.Client.Client;
 
 type
-  {$ifdef DelphiXE2_UP}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
-  {$endif}
   TWiRLClientApplication = class(TComponent)
   private
     FAppName: string;
@@ -30,7 +28,6 @@ type
     function GetPath: string; virtual;
   public
     constructor Create(AOwner: TComponent); override;
-
   published
     property DefaultMediaType: string read FDefaultMediaType write FDefaultMediaType;
     property AppName: string read FAppName write FAppName;
@@ -57,7 +54,7 @@ constructor TWiRLClientApplication.Create(AOwner: TComponent);
 begin
   inherited;
   FDefaultMediaType := 'application/json';
-  FAppName := 'default';
+  FAppName := 'app';
   if TWiRLComponentHelper.IsDesigning(Self) then
     FClient := TWiRLComponentHelper.FindDefault<TWiRLClient>(Self);
 

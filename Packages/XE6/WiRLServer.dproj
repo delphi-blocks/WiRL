@@ -7,7 +7,7 @@
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <TargetedPlatforms>1</TargetedPlatforms>
+        <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Package</AppType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -20,6 +20,11 @@
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
         <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
@@ -69,6 +74,11 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
@@ -105,26 +115,7 @@
         <DCCReference Include="IndySystem.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
         <DCCReference Include="IndyCore.dcp"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Cache.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Classes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Engine.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MediaType.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriters.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Token.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Token.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
+        <DCCReference Include="soaprtl.dcp"/>
         <DCCReference Include="..\..\Source\Data\WiRL.Data.MessageBodyWriters.pas"/>
         <DCCReference Include="..\..\Source\Data\WiRL.Data.Utils.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas">
@@ -146,14 +137,49 @@
         <DCCReference Include="..\..\Libs\JWT\Source\Common\JOSE.Types.JSON.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.Base.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.Builder.pas"/>
+        <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Compression.pas"/>
+        <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Encryption.pas"/>
+        <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Factory.pas"/>
+        <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Signing.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWE.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWK.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWS.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWT.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Context.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Resource.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Cache.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Classes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Context.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Engine.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReaders.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriters.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Resource.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Serialization.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Validators.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Filters.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -503,7 +529,7 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
@@ -511,12 +537,12 @@
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
             </Deployment>
             <Platforms>
                 <Platform value="Android">False</Platform>
                 <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
+                <Platform value="Win64">True</Platform>
             </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

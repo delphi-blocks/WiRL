@@ -12,15 +12,14 @@ unit WiRL.Client.CustomResource.Editor;
 interface
 
 uses
-  Classes, SysUtils
-  , DesignEditors
-  , WiRL.Client.CustomResource;
+  System.Classes, System.SysUtils,
+  DesignEditors,
+  WiRL.Client.CustomResource;
 
 type
   TWiRLClientCustomResourceEditor = class(TComponentEditor)
   private
     function CurrentObj: TWiRLClientCustomResource;
-  protected
   public
     procedure ExecuteVerb(Index: Integer); override;
     function GetVerb(Index: Integer): string; override;
@@ -32,9 +31,7 @@ procedure Register;
 implementation
 
 uses
-  Dialogs
-  , DesignIntf
-  , Windows;
+  Dialogs, DesignIntf, Winapi.Windows;
 
 procedure Register;
 begin
@@ -56,10 +53,10 @@ begin
     0: CurrentObj.GET(nil, nil, nil);
     1: CurrentObj.POST(nil, nil, nil);
     2: CurrentObj.DELETE(nil, nil, nil);
-//    3: CurrentObj.PUT;
-//    4: CurrentObj.PATCH;
-//    5: CurrentObj.HEAD;
-//    6: CurrentObj.OPTIONS;
+    3: CurrentObj.PUT(nil, nil, nil);
+    4: CurrentObj.PATCH(nil, nil, nil);
+    5: CurrentObj.HEAD(nil, nil, nil);
+    6: CurrentObj.OPTIONS(nil, nil, nil);
   end;
 
   if (GetKeyState(VK_LSHIFT) < 0) then
@@ -74,16 +71,16 @@ begin
     0: Result := 'GET';
     1: Result := 'POST';
     2: Result := 'DELETE';
-//    3: Result := 'PUT';
-//    4: Result := 'PATCH';
-//    5: Result := 'HEAD';
-//    6: Result := 'OPTIONS';
+    3: Result := 'PUT';
+    4: Result := 'PATCH';
+    5: Result := 'HEAD';
+    6: Result := 'OPTIONS';
   end;
 end;
 
 function TWiRLClientCustomResourceEditor.GetVerbCount: Integer;
 begin
-  Result := 3;
+  Result := 7;
 end;
 
 end.

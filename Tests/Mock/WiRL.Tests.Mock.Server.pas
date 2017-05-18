@@ -18,6 +18,7 @@ uses
   WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Engine,
+  WiRL.http.Cookie,
   WiRL.Core.Response,
   WiRL.Core.Request,
   WiRL.Core.Context;
@@ -73,7 +74,7 @@ type
 
   TWiRLTestRequest = class(TWiRLRequest)
   private
-    FCookieFields: TWiRLCookie;
+    FCookieFields: TWiRLCookies;
     FQueryFields: TWiRLParam;
     FContentFields: TWiRLParam;
     FUrl: string;
@@ -87,22 +88,19 @@ type
     FHeaderFields: TWiRLHeaderList;
     procedure ParseQueryParams;
     procedure SetUrl(const Value: string);
-    function GetContent: string;
-    procedure SetContent(const Value: string);
   protected
-    function GetPathInfo: string; override;
-    function GetQuery: string; override;
+    function GetHttpPathInfo: string; override;
+    function GetHttpQuery: string; override;
     function GetServerPort: Integer; override;
     function GetQueryFields: TWiRLParam; override;
     function GetContentFields: TWiRLParam; override;
-    function GetCookieFields: TWiRLCookie; override;
+    function GetCookieFields: TWiRLCookies; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
-    function GetRawPathInfo: string; override;
     function GetHeaderFields: TWiRLHeaderList; override;
+    function GetRemoteIP: string; override;
   public
     property Url: string read FUrl write SetUrl;
-    property Content: string read GetContent write SetContent;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -152,13 +150,17 @@ begin
       if AResponse.ContentType = TMediaType.APPLICATION_JSON then
       begin
         LContentJson := TJSONObject.ParseJSONValue(AResponse.Content);
-        (AResponse as TWiRLTestResponse).Error.Message := LContentJson.GetValue<string>('message');
-        (AResponse as TWiRLTestResponse).Error.Status := LContentJson.GetValue<string>('status');
-        (AResponse as TWiRLTestResponse).Error.Exception := LContentJson.GetValue<string>('exception');
+        try
+          (AResponse as TWiRLTestResponse).Error.Message := LContentJson.GetValue<string>('message');
+          (AResponse as TWiRLTestResponse).Error.Status := LContentJson.GetValue<string>('status');
+          (AResponse as TWiRLTestResponse).Error.Exception := LContentJson.GetValue<string>('exception');
+        finally
+          LContentJson.Free;
+        end;
         //raise TWiRLTestException.Create(LMessage, LStatus, LException);
       end
       else
-      raise Exception.Create(IntToStr(AResponse.StatusCode) + ' - ' + AResponse.ReasonString);
+        raise Exception.Create(IntToStr(AResponse.StatusCode) + ' - ' + AResponse.ReasonString);
     end;
 
   finally
@@ -172,7 +174,7 @@ constructor TWiRLTestRequest.Create;
 begin
   inherited;
   FContentStream := TMemoryStream.Create;
-  FCookieFields := TWiRLCookie.Create;
+  FCookieFields := TWiRLCookies.Create;
   FQueryFields := TWiRLParam.Create;
   FContentFields := TWiRLParam.Create;
   FMethod := 'GET';
@@ -184,12 +186,9 @@ begin
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
+  FHeaderFields.Free;
+  FContentStream.Free;
   inherited;
-end;
-
-function TWiRLTestRequest.GetContent: string;
-begin
-  Result := inherited Content;
 end;
 
 function TWiRLTestRequest.GetContentFields: TWiRLParam;
@@ -202,7 +201,7 @@ begin
   Result := FContentStream;
 end;
 
-function TWiRLTestRequest.GetCookieFields: TWiRLCookie;
+function TWiRLTestRequest.GetCookieFields: TWiRLCookies;
 begin
   Result := FCookieFields;
 end;
@@ -216,12 +215,12 @@ begin
   Result := FHeaderFields;
 end;
 
-function TWiRLTestRequest.GetPathInfo: string;
+function TWiRLTestRequest.GetHttpPathInfo: string;
 begin
   Result := FPathInfo;
 end;
 
-function TWiRLTestRequest.GetQuery: string;
+function TWiRLTestRequest.GetHttpQuery: string;
 begin
   Result := FQuery;
 end;
@@ -231,9 +230,9 @@ begin
   Result := FQueryFields;
 end;
 
-function TWiRLTestRequest.GetRawPathInfo: string;
+function TWiRLTestRequest.GetRemoteIP: string;
 begin
-  Result := FRawPathInfo;
+  Result := '127.0.0.1';
 end;
 
 function TWiRLTestRequest.GetServerPort: Integer;
@@ -257,20 +256,18 @@ begin
       EqualIndex := Param.IndexOf('=');
       if EqualIndex > 0 then
       begin
-        FQueryFields.AddPair(TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)), TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1)));
+        {$IFDEF CompilerVersion >=28} //XE7
+          FQueryFields.AddPair(TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)), TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1)));
+        {$ELSE}
+          FQueryFields.Add(
+            TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)) + '=' +
+            TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1))
+          );
+        {$ENDIF}
       end;
     end;
   end;
 
-end;
-
-procedure TWiRLTestRequest.SetContent(const Value: string);
-var
-  Buffer: TBytes;
-begin
-  Buffer := EncodingFromCharSet(ContentMediaType.Charset).GetBytes(Value);
-  FContentStream.Write(Buffer[0], Length(Buffer));
-  FContentStream.Position := 0;
 end;
 
 procedure TWiRLTestRequest.SetContentStream(const Value: TStream);
@@ -325,6 +322,8 @@ end;
 
 destructor TWiRLTestResponse.Destroy;
 begin
+  FResponseError.Free;
+  FContentStream.Free;
   inherited;
 end;
 

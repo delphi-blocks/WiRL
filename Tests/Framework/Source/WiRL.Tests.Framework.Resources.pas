@@ -108,10 +108,8 @@ end;
 procedure TTestResource.TearDown;
 begin
   FServer.Free;
-
-// Destroyed by TWiRLContext
-//  FRequest.Free;
-//  FResponse.Free;
+  FRequest.Free;
+  FResponse.Free;
 end;
 
 procedure TTestResource.TestBinary;

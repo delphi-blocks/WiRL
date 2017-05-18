@@ -137,12 +137,13 @@
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Token.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
@@ -151,51 +152,8 @@
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
-        <RcItem Include="..\..\media\TWiRLClientMessagingResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTMESSAGINGRESOURCE</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTRESOURCE</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTRESOURCEJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTRESOURCESTREAM</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTSUBRESOURCE</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTSUBRESOURCEJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTSUBRESOURCESTREAM</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientToken.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTTOKEN</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLFDResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLFDRESOURCE</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClient.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENT</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientApplication.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLCLIENTAPPLICATION</ResourceId>
-        </RcItem>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Cookie.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

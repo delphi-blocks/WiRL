@@ -15,11 +15,13 @@ uses
   System.SysUtils, System.Classes,
 
   WiRL.Http.Core,
+  WiRL.http.Cookie,
   WiRL.http.Accept.MediaType;
 
 type
   TWiRLResponse = class
   private
+    FCookie: TWiRLCookies;
     FMediaType: TMediaType;
     FHeaderFields :TWiRLHeaderList;
     FHasContentLength: Boolean;
@@ -50,6 +52,7 @@ type
     procedure SetLocation(const Value: string);
     function GetContentLanguage: string;
     procedure SetContentLanguage(const Value: string);
+    function GetCookies: TWiRLCookies;
   protected
     function GetHeaderFields: TWiRLHeaderList;
     function GetContent: string; virtual; abstract;
@@ -84,19 +87,7 @@ type
     property Server: string read GetServer write SetServer;
     property WWWAuthenticate: string read GetWWWAuthenticate write SetWWWAuthenticate;
     property Location: string read GetLocation write SetLocation;
-
-  {
-    procedure SendRedirect(const URI: string); virtual; abstract;
-    procedure SetCookieField(Values: TStrings; const ADomain, APath: string;
-      AExpires: TDateTime; ASecure: Boolean);
-    property Cookies: TCookieCollection read FCookies;
-    property Version: string index 0 read GetStringVariable write SetStringVariable;
-    property Realm: string index 4 read GetStringVariable write SetStringVariable;
-    property ContentVersion: string index 9 read GetStringVariable write SetStringVariable;
-    property DerivedFrom: string index 10 read GetStringVariable write SetStringVariable;
-    property Title: string index 11 read GetStringVariable write SetStringVariable;
-
-   }
+    property Cookies: TWiRLCookies read GetCookies;
   end;
 
 
@@ -111,6 +102,7 @@ destructor TWiRLResponse.Destroy;
 begin
   FHeaderFields.Free;
   FMediaType.Free;
+  FCookie.Free;
   inherited;
 end;
 
@@ -149,6 +141,13 @@ end;
 function TWiRLResponse.GetContentType: string;
 begin
   Result := HeaderFields.Values['Content-Type'];
+end;
+
+function TWiRLResponse.GetCookies: TWiRLCookies;
+begin
+  if not Assigned(FCookie) then
+    FCookie := TWiRLCookies.Create;
+  Result := FCookie;
 end;
 
 function TWiRLResponse.GetDate: TDateTime;

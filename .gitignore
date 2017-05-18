@@ -61,3 +61,6 @@ __history/
 
 # DUnitX result info
 /Tests/Framework/Win32/Debug/dunitx-results.xml
+
+# TestInsight config
+/Tests/Framework/Win32/TestInsight

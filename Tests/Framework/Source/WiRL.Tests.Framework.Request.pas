@@ -94,9 +94,15 @@ type
     [Test]
     procedure TestAcceptableLanguagesNotFound;
     [Test]
-    procedure TestRawPathInfo;
-    [Test]
     procedure TestContentMediaType;
+    [Test]
+    procedure TestReadPathInfo;
+    [Test]
+    procedure TestWritePathInfo;
+    [Test]
+    procedure TestReadQuery;
+    [Test]
+    procedure TestWriteQuery;
   end;
 
 implementation
@@ -283,8 +289,21 @@ end;
 procedure TTestRequest.TestRawContent;
 var
   LBuffer: TBytes;
+  {$IF CompilerVersion <=28} //XE7
+  LRawContent: TBytes;
+  {$IFEND}
 begin
-  FRequest.RawContent := [0, 22, 65, 200];
+  {$IF CompilerVersion >28} //XE7
+    FRequest.RawContent := [0, 22, 65, 200];
+  {$ELSE}
+    SetLength(LRawContent, 4);
+    LRawContent[0] := 0;
+    LRawContent[1] := 22;
+    LRawContent[2] := 65;
+    LRawContent[3] := 200;
+    FRequest.RawContent := LRawContent;
+  {$IFEND}
+
   Assert.AreEqual(4, Integer(FRequest.ContentStream.Size), 'Some bytes has been lost');
   FRequest.ContentStream.Position := 0;
   SetLength(LBuffer, FRequest.ContentStream.Size);
@@ -295,10 +314,30 @@ begin
   Assert.AreEqual(Integer(200), Integer(LBuffer[3]));
 end;
 
-procedure TTestRequest.TestRawPathInfo;
+procedure TTestRequest.TestReadPathInfo;
 begin
-  FRequest.Url := 'http://wirl.delphiblocks.com/demo/test?param=value';
-  Assert.AreEqual('/demo/test', FRequest.RawPathInfo);
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postecho';
+  Assert.AreEqual('/rest/app/helloworld/postecho', FRequest.PathInfo);
+end;
+
+procedure TTestRequest.TestWritePathInfo;
+begin
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postecho';
+  FRequest.PathInfo := '/test';
+  Assert.AreEqual('/test', FRequest.PathInfo);
+end;
+
+procedure TTestRequest.TestReadQuery;
+begin
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postecho?1234567890';
+  Assert.AreEqual('1234567890', FRequest.Query);
+end;
+
+procedure TTestRequest.TestWriteQuery;
+begin
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postecho?1234567890';
+  FRequest.Query := '0987654321';
+  Assert.AreEqual('0987654321', FRequest.Query);
 end;
 
 initialization

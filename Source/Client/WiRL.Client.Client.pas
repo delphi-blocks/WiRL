@@ -20,17 +20,18 @@ uses
   System.Threading,
 {$endif}
 
-  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP;
+  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
+  IdHTTPHeaderInfo;
 
 type
-  {$ifdef DelphiXE2_UP}
+  TBeforeCommandEvent = procedure (ASender: TObject; ARequest: TIdHTTPRequest) of object;
+
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
-  {$endif}
   TWiRLClient = class(TComponent)
   private
     FHttpClient: TIdHTTP;
     FWiRLEngineURL: string;
-
+    FOnBeforeCommand: TBeforeCommandEvent;
 {$ifdef DelphiXE7_UP}
     FWorkerTask: ITask;
 {$endif}
@@ -38,9 +39,12 @@ type
     function GetResponse: TIdHTTPResponse;
     function GetConnectTimeout: Integer;
     function GetReadTimeout: Integer;
+    function GetProxyParams: TIdProxyConnectionInfo;
     procedure SetConnectTimeout(const Value: Integer);
     procedure SetReadTimeout(const Value: Integer);
+    procedure SetProxyParams(const Value: TIdProxyConnectionInfo);
   protected
+    procedure DoBeforeCommand;
 {$ifdef DelphiXE7_UP}
     property WorkerTask: ITask read FWorkerTask;
 {$endif}
@@ -52,6 +56,9 @@ type
     procedure Get(const AURL: string; AResponseContent: TStream; const AAccept: string);
     procedure Post(const AURL: string; AContent, AResponse: TStream);
     procedure Put(const AURL: string; AContent, AResponse: TStream);
+    procedure Patch(const AURL: string; AContent, AResponse: TStream);
+    procedure Head(const AURL: string);
+    procedure Options(const AURL: string; AResponse: TStream);
     function LastCmdSuccess: Boolean;
     function ResponseText: string;
 
@@ -64,7 +71,8 @@ type
     property WiRLEngineURL: string read FWiRLEngineURL write FWiRLEngineURL;
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
-
+    property ProxyParams: TIdProxyConnectionInfo read GetProxyParams write SetProxyParams;
+    property OnBeforeCommand: TBeforeCommandEvent read FOnBeforeCommand write FOnBeforeCommand;
   end;
 
 procedure Register;
@@ -87,6 +95,7 @@ end;
 
 procedure TWiRLClient.Delete(const AURL: string; AResponseContent: TStream);
 begin
+  DoBeforeCommand;
   FHttpClient.Delete(AURL, AResponseContent);
 end;
 
@@ -94,6 +103,12 @@ destructor TWiRLClient.Destroy;
 begin
   FHttpClient.Free;
   inherited;
+end;
+
+procedure TWiRLClient.DoBeforeCommand;
+begin
+  if Assigned(FOnBeforeCommand) then
+    FOnBeforeCommand(Self, FHttpClient.Request);
 end;
 
 procedure TWiRLClient.ExecuteAsync(const AProc: TProc);
@@ -111,6 +126,7 @@ procedure TWiRLClient.Get(const AURL: string; AResponseContent: TStream;
   const AAccept: string);
 begin
   FHttpClient.Request.Accept := AAccept;
+  DoBeforeCommand;
   FHttpClient.Get(AURL, AResponseContent);
 end;
 
@@ -124,6 +140,11 @@ begin
   Result := FHttpClient.ReadTimeout;
 end;
 
+function TWiRLClient.GetProxyParams: TIdProxyConnectionInfo;
+begin
+  Result := FHttpClient.ProxyParams;
+end;
+
 function TWiRLClient.GetRequest: TIdHTTPRequest;
 begin
   Result := FHttpClient.Request;
@@ -132,6 +153,12 @@ end;
 function TWiRLClient.GetResponse: TIdHTTPResponse;
 begin
   Result := FHttpClient.Response;
+end;
+
+procedure TWiRLClient.Head(const AURL: string);
+begin
+  DoBeforeCommand;
+  FHttpClient.Head(AURL);
 end;
 
 function TWiRLClient.IsRunningAsync: Boolean;
@@ -148,13 +175,27 @@ begin
   Result := FHttpClient.ResponseCode = 200;
 end;
 
+procedure TWiRLClient.Options(const AURL: string; AResponse: TStream);
+begin
+  DoBeforeCommand;
+  FHttpClient.Options(AURL, AResponse);
+end;
+
+procedure TWiRLClient.Patch(const AURL: string; AContent, AResponse: TStream);
+begin
+  DoBeforeCommand;
+  FHttpClient.Patch(AURL, AContent, AResponse);
+end;
+
 procedure TWiRLClient.Post(const AURL: string; AContent, AResponse: TStream);
 begin
+  DoBeforeCommand;
   FHttpClient.Post(AURL, AContent, AResponse);
 end;
 
 procedure TWiRLClient.Put(const AURL: string; AContent, AResponse: TStream);
 begin
+  DoBeforeCommand;
   FHttpClient.Put(AURL, AContent, AResponse);
 end;
 
@@ -171,6 +212,11 @@ end;
 procedure TWiRLClient.SetReadTimeout(const Value: Integer);
 begin
   FHttpClient.ReadTimeout := Value;
+end;
+
+procedure TWiRLClient.SetProxyParams(const Value: TIdProxyConnectionInfo);
+begin
+  FHttpClient.ProxyParams := Value;
 end;
 
 end.

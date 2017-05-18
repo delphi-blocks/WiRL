@@ -16,17 +16,28 @@ uses
 
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
+  WiRL.Core.MessageBodyReaders,
   WiRL.Core.JSON,
-  WiRL.Core.Validators;
+  WiRL.Core.Validators,
+
+  Server.Validators;
 
 type
+  TForwardedFor = class(TObject)
+  private
+    FValue: string;
+  public
+    constructor Create(AValue: string);
+    function ToString: string; override;
+  end;
+
   [Path('validator')]
   TValidatorDemoResource = class
   public
     [GET, Produces(TMediaType.TEXT_PLAIN)]
     function SampleText: string;
 
-    [GET, Path('/echostring/{AString}')]
+    [GET, Path('/echostring/{AString}'), Produces(TMediaType.TEXT_PLAIN)]
     function EchoString([PathParam] AString: string): string;
 
     [GET, Path('/double/{AValue}'), Produces(TMediaType.TEXT_PLAIN)]
@@ -34,6 +45,16 @@ type
 
     [GET, Path('/concat?s1={s1}&s2={s2}'), Produces(TMediaType.TEXT_PLAIN)]
     function Concat([QueryParam('email'), Pattern('.+@.+\..+', 'E-Mail is not valid')] EMail: string; [QueryParam('name'), NotNull('Name required')] Name: string): string;
+
+    // Crazy test with a lot of attributes
+    [GET, Path('/test?i={i}'), Produces(TMediaType.TEXT_PLAIN)]
+    function Test([Max(10), NotNull, DefaultValue('0'), Pattern('1'), Size(2, 2), QueryParam('i')] i: Integer): Integer;
+
+    [POST, Path('/body'), Produces(TMediaType.TEXT_PLAIN)]
+    function TestBody([Pattern('c'), BodyParam] Body: string): string;
+
+    [POST, Path('/json'), Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.TEXT_PLAIN)]
+    function TestJson([BodyParam][NotNull, HasName] Json: TJSONObject; [HeaderParam('X-Forwarded-For')] ForwardedFor: TForwardedFor): string;
   end;
 
 implementation
@@ -41,7 +62,7 @@ implementation
 uses
   WiRL.Core.Registry;
 
-{ TFilterDemoResource }
+{ TValidatorDemoResource }
 
 function TValidatorDemoResource.Concat(EMail, Name: string): string;
 begin
@@ -61,6 +82,36 @@ end;
 function TValidatorDemoResource.SampleText: string;
 begin
   Result := 'Hello World, I am a validator! ';
+end;
+
+function TValidatorDemoResource.Test(i: Integer): Integer;
+begin
+  Result := i * 2;
+end;
+
+function TValidatorDemoResource.TestBody(Body: string): string;
+begin
+  Result := 'Hello body:' + Body;
+end;
+
+function TValidatorDemoResource.TestJson(Json: TJSONObject; ForwardedFor: TForwardedFor): string;
+begin
+  Result :=
+    ForwardedFor.ToString + sLineBreak +
+    sLineBreak +
+    Json.ToJSON;
+end;
+
+{ TForwardedFor }
+
+constructor TForwardedFor.Create(AValue: string);
+begin
+  FValue := AValue;
+end;
+
+function TForwardedFor.ToString: string;
+begin
+  Result := FValue;
 end;
 
 initialization

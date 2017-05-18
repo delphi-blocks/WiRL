@@ -24,27 +24,26 @@ type
     MainTabControl: TTabControl;
     HelloWorldTabItem: TTabItem;
     StringDemosTabItem: TTabItem;
-    Execute: TButton;
+    btnExecute: TButton;
     Memo1: TMemo;
     Layout1: TLayout;
     Layout2: TLayout;
     Edit1: TEdit;
     Label1: TLabel;
-    Button1: TButton;
+    btnEcho: TButton;
     Edit2: TEdit;
     Label2: TLabel;
     Layout3: TLayout;
     Edit3: TEdit;
     Label3: TLabel;
-    Button2: TButton;
+    btnReverse: TButton;
     Edit4: TEdit;
     Label4: TLabel;
-    ButtonPost: TButton;
-    Button3: TButton;
-    procedure ExecuteClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
-    procedure ButtonPostClick(Sender: TObject);
+    btnPost: TButton;
+    procedure btnExecuteClick(Sender: TObject);
+    procedure btnEchoClick(Sender: TObject);
+    procedure btnReverseClick(Sender: TObject);
+    procedure btnPostClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -65,17 +64,17 @@ uses
   WiRL.Client.Utils,
   WiRL.Core.JSON;
 
-procedure TMainForm.Button1Click(Sender: TObject);
+procedure TMainForm.btnEchoClick(Sender: TObject);
 begin
   Edit2.Text := MainDataModule.EchoString(Edit1.Text);
 end;
 
-procedure TMainForm.Button2Click(Sender: TObject);
+procedure TMainForm.btnReverseClick(Sender: TObject);
 begin
   Edit4.Text := MainDataModule.ReverseString(Edit3.Text);
 end;
 
-procedure TMainForm.ButtonPostClick(Sender: TObject);
+procedure TMainForm.btnPostClick(Sender: TObject);
 var
   LArray: TJSONArray;
 begin
@@ -112,9 +111,9 @@ begin
   end;
 end;
 
-procedure TMainForm.ExecuteClick(Sender: TObject);
+procedure TMainForm.btnExecuteClick(Sender: TObject);
 begin
-  Memo1.Text := MainDataModule.ExecuteHelloWorld;
+  Memo1.Lines.Add(MainDataModule.ExecuteHelloWorld);
 end;
 
 end.

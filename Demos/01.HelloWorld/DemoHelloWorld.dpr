@@ -12,7 +12,8 @@ program DemoHelloWorld;
 uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
-  Server.Resources in 'Server.Resources.pas';
+  Server.Resources in 'Server.Resources.pas',
+  WiRL.Schemas.Swagger in '..\..\Source\Extensions\WiRL.Schemas.Swagger.pas';
 
 {$R *.res}
 

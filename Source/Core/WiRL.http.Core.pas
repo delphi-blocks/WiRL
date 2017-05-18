@@ -27,9 +27,6 @@ type
     property Values[const Name: string]: string read GetValue write SetValue; default;
   end;
 
-  TWiRLCookie = class(TStringList)
-  end;
-
   TWiRLParam = class(TStringList)
   private
     function GetValue(const Name: string): string;

@@ -15,7 +15,6 @@ uses
   System.Classes, System.SysUtils, System.Generics.Collections, System.Rtti,
   System.TypInfo,
 
-  WiRL.http.Filters,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Context,
@@ -382,6 +381,9 @@ function TWiRLResourceMethod.HasFilter(AAttribute: TCustomAttribute): Boolean;
 var
   LFilter: TWiRLFilter;
 begin
+  // Any non decorated filter should be used
+  if not Assigned(AAttribute) then
+    Exit(True);
   Result := False;
   for LFilter in FFilters do
   begin

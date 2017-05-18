@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils,
 
   WiRL.Http.Core,
+  WiRL.http.Cookie,
   WiRL.Http.Accept.Parser,
   WiRL.Http.Accept.Charset,
   WiRL.Http.Accept.Encoding,
@@ -38,6 +39,8 @@ type
 
   TWiRLRequest = class
   private
+    FPathInfo: string;
+    FQuery: string;
     FContentMediaType: TMediaType;
     FAcceptableCharSets: TAcceptCharsetList;
     FAcceptableEncodings: TAcceptEncodingList;
@@ -70,30 +73,35 @@ type
     procedure SetContentVersion(const Value: string);
     function GetHost: string;
     procedure SetHost(const Value: string);
+    function GetPathInfo: string;
+    function GetQuery: string;
+    procedure SetPathInfo(const Value: string);
+    procedure SetQuery(const Value: string);
   protected
     FMethod: string;
-    function GetPathInfo: string; virtual; abstract;
-    function GetQuery: string; virtual; abstract;
+    function GetHttpQuery: string; virtual; abstract;
+    function GetRemoteIP: string; virtual; abstract;
     function GetServerPort: Integer; virtual; abstract;
     function GetHeaderFields: TWiRLHeaderList; virtual; abstract;
     function GetQueryFields: TWiRLParam; virtual; abstract;
     function GetContentFields: TWiRLParam; virtual; abstract;
-    function GetCookieFields: TWiRLCookie; virtual; abstract;
+    function GetCookieFields: TWiRLCookies; virtual; abstract;
     function GetContentStream: TStream; virtual; abstract;
     procedure SetContentStream(const Value: TStream); virtual; abstract;
-    function GetRawPathInfo: string; virtual; abstract;
+    function GetHttpPathInfo: string; virtual; abstract;
   public
     destructor Destroy; override;
 
-    property PathInfo: string read GetPathInfo;
-    property Query: string read GetQuery;
+    property PathInfo: string read GetPathInfo write SetPathInfo;
+    property Query: string read GetQuery write SetQuery;
     property Method: string read FMethod write FMethod;
     property Host: string read GetHost write SetHost;
+    property RemoteIP: string read GetRemoteIP;
     property ServerPort: Integer read GetServerPort;
     property QueryFields: TWiRLParam read GetQueryFields;
     property ContentFields: TWiRLParam read GetContentFields;
     property HeaderFields: TWiRLHeaderList read GetHeaderFields;
-    property CookieFields: TWiRLCookie read GetCookieFields;
+    property CookieFields: TWiRLCookies read GetCookieFields;
     property Content: string read GetContent write SetContent;
     property RawContent: TBytes read GetRawContent write SetRawContent;
     property ContentStream: TStream read GetContentStream write SetContentStream;
@@ -109,7 +117,6 @@ type
     property AcceptableEncodings: TAcceptEncodingList read GetAcceptableEncodings;
     property AcceptLanguage: string read GetAcceptLanguage write SetAcceptLanguage;
     property AcceptableLanguages: TAcceptLanguageList read GetAcceptableLanguages;
-    property RawPathInfo: string read GetRawPathInfo;
     property ContentMediaType: TMediaType read GetContentMediaType;
   end;
 
@@ -123,7 +130,7 @@ begin
   FAcceptableCharSets.Free;
   FAcceptableLanguages.Free;
   FAcceptableMediaTypes.Free;
-
+  FAcceptableEncodings.Free;
   inherited;
 end;
 
@@ -231,6 +238,22 @@ begin
   Result := HeaderFields.Values['Host'];
 end;
 
+function TWiRLRequest.GetPathInfo: string;
+begin
+  if FPathInfo <> '' then
+    Result := FPathInfo
+  else
+    Result := GetHttpPathInfo;
+end;
+
+function TWiRLRequest.GetQuery: string;
+begin
+  if FQuery <> '' then
+    Result := FQuery
+  else
+    Result := GetHttpQuery;
+end;
+
 function TWiRLRequest.GetRawContent: TBytes;
 var
   LPos :Int64;
@@ -299,6 +322,16 @@ end;
 procedure TWiRLRequest.SetHost(const Value: string);
 begin
   HeaderFields.Values['Host'] := Value;
+end;
+
+procedure TWiRLRequest.SetPathInfo(const Value: string);
+begin
+  FPathInfo := Value;
+end;
+
+procedure TWiRLRequest.SetQuery(const Value: string);
+begin
+  FQuery := Value;
 end;
 
 procedure TWiRLRequest.SetRawContent(const Value: TBytes);
