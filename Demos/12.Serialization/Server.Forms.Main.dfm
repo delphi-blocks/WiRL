@@ -1851,7 +1851,7 @@ object MainForm: TMainForm
   end
   object btnDesComplexObject: TButton
     Left = 532
-    Top = 88
+    Top = 86
     Width = 131
     Height = 25
     Caption = 'ComplexObject'
@@ -1942,6 +1942,51 @@ object MainForm: TMainForm
     TitleFont.Name = 'Tahoma'
     TitleFont.Style = []
   end
+  object Button3: TButton
+    Left = 16
+    Top = 413
+    Width = 75
+    Height = 25
+    Caption = 'Button3'
+    TabOrder = 13
+    OnClick = Button3Click
+  end
+  object Button4: TButton
+    Left = 584
+    Top = 416
+    Width = 75
+    Height = 25
+    Caption = 'Button4'
+    TabOrder = 14
+    OnClick = Button4Click
+  end
+  object Button5: TButton
+    Left = 584
+    Top = 296
+    Width = 75
+    Height = 25
+    Caption = 'Button5'
+    TabOrder = 15
+    OnClick = Button5Click
+  end
+  object Button6: TButton
+    Left = 584
+    Top = 328
+    Width = 75
+    Height = 25
+    Caption = 'Button6'
+    TabOrder = 16
+    OnClick = Button6Click
+  end
+  object Button7: TButton
+    Left = 16
+    Top = 444
+    Width = 75
+    Height = 25
+    Caption = 'Button7'
+    TabOrder = 17
+    OnClick = Button7Click
+  end
   object MainActionList: TActionList
     Left = 384
     Top = 24
@@ -1968,7 +2013,7 @@ object MainForm: TMainForm
     Left = 112
     Top = 376
     Content = {
-      414442530F00CE35AC010000FF00010001FF02FF030400120000006400730050
+      414442530F00AB2EAC010000FF00010001FF02FF030400120000006400730050
       006500720073006F006E007300050000000000060000070032000000080000FF
       09FF0A0400080000004E0061006D0065000B00010000000D000C000E00320000
       000F00011000011100011200011300011400011500080000004E0061006D0065

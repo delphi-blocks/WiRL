@@ -12,13 +12,14 @@ unit WiRL.Persistence.JSON;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Rtti, System.SyncObjs, System.TypInfo,
-  System.JSON, Data.DB,
+  System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
+  System.TypInfo, System.JSON, Data.DB,
+
   WiRL.Persistence.Attributes,
   WiRL.Persistence.Core,
+  WiRL.Persistence.DynamicTypes,
   WiRL.Persistence.Utils,
   WiRL.Core.JSON;
-
 
 type
   TNeonSerializerJSON = class(TNeonBase)
@@ -122,8 +123,8 @@ type
     function ReadDataSet(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
     function ReadStream(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
 
-    function ReadStreamable(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
-    function ReadEnumerator(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
+    function ReadStreamable(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
+    function ReadEnumerator(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
 
     function ReadDataMember(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
     procedure SetMemberValue(const AValue: TValue; AMember: TRttiMember; AInstance: Pointer);
@@ -162,6 +163,7 @@ uses
 
 function TNeonSerializerJSON.ObjectToJSON(AObject: TObject): TJSONValue;
 begin
+  FOriginalInstance := AObject;
   if not Assigned(AObject) then
     Exit(TJSONObject.Create);
 
@@ -170,6 +172,8 @@ end;
 
 function TNeonSerializerJSON.ValueToJSON(const AValue: TValue): TJSONValue;
 begin
+  FOriginalInstance := AValue;
+
   Result := WriteDataMember(AValue);
 end;
 
@@ -474,36 +478,28 @@ end;
 function TNeonSerializerJSON.WriteStreamable(const AValue: TValue): TJSONValue;
 var
   LObject: TObject;
-  LType: TRttiType;
-  LMethodLoadFromStream, LMethodSaveToStream: TRttiMethod;
   LBinaryStream: TMemoryStream;
   LBase64: string;
+  LStreamable: IDynamicStreamable;
 begin
   Result := nil;
   LObject := AValue.AsObject;
-  LType := TRttiHelper.Context.GetType(LObject.ClassType);
 
-  if not Assigned(LObject) then
-    Exit;
-
-  LMethodLoadFromStream := LType.GetMethod('LoadFromStream');
-  { TODO -opaolo -c : check parameters (number and type) 24/04/2017 17:50:43 }
-  if not Assigned(LMethodLoadFromStream) then
-    Exit;
-
-  LMethodSaveToStream := LType.GetMethod('SaveToStream');
-  { TODO -opaolo -c : check parameters (number and type) 24/04/2017 17:50:43 }
-  if not Assigned(LMethodSaveToStream) then
-    Exit;
-
-  LBinaryStream := TMemoryStream.Create;
-  try
-    LMethodSaveToStream.Invoke(LObject, [LBinaryStream]);
-    LBinaryStream.Position := soFromBeginning;
-    LBase64 := TBase64.Encode(LBinaryStream);
-    Result := TJSONString.Create(LBase64);
-  finally
-    LBinaryStream.Free;
+  LStreamable := TDynamicStreamable.GuessType(LObject);
+  if Assigned(LStreamable) then
+  begin
+    LBinaryStream := TMemoryStream.Create;
+    try
+      LStreamable.SaveToStream(LBinaryStream);
+      LBinaryStream.Position := soFromBeginning;
+      LBase64 := TBase64.Encode(LBinaryStream);
+      if IsOriginalInstance(AValue) then
+        Result := TJSONObject.Create.AddPair('$value', LBase64)
+      else
+        Result := TJSONString.Create(LBase64);
+    finally
+      LBinaryStream.Free;
+    end;
   end;
 end;
 
@@ -616,12 +612,20 @@ begin
     // Complex types
     tkClass:
     begin
+      { TODO -opaolo -c : Refactor Read*Object function (boolean result) 20/05/2017 12:25:19 }
       if AData.AsObject is TDataSet then
         Result := ReadDataSet(AJSONValue, AType, AData)
       else if AData.AsObject is TStream then
         Result := ReadStream(AJSONValue, AType, AData)
       else
-        Result := ReadObject(AJSONValue, AType, AData);
+      begin
+        if ReadStreamable(AJSONValue, AType, AData) then
+          Result := AData
+        else if ReadEnumerator(AJSONValue, AType, AData) then
+          Result := AData
+        else
+          Result := ReadObject(AJSONValue, AType, AData);
+      end;
     end;
     tkInterface:   Result := ReadInterface(AJSONValue, AType, AData);
     tkRecord:      Result := ReadRecord(AJSONValue, AType, AData);
@@ -690,10 +694,10 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadEnumerator(AJSONValue: TJSONValue;
-  AType: TRttiType; const AData: TValue): TValue;
+function TNeonDeserializerJSON.ReadEnumerator(AJSONValue: TJSONValue; AType:
+    TRttiType; const AData: TValue): Boolean;
 begin
-
+  Result := False;
 end;
 
 function TNeonDeserializerJSON.ReadFloat(AJSONValue: TJSONValue; AType: TRttiType): TValue;
@@ -778,8 +782,8 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadRecord(AJSONValue: TJSONValue; AType:
-    TRttiType; const AData: TValue): TValue;
+function TNeonDeserializerJSON.ReadRecord(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): TValue;
 var
   LField: TRttiField;
   LJSONObject: TJSONObject;
@@ -834,14 +838,36 @@ begin
   TBase64.Decode(AJSONValue.Value, LStream);
 end;
 
-function TNeonDeserializerJSON.ReadStreamable(AJSONValue: TJSONValue;
-  AType: TRttiType; const AData: TValue): TValue;
+function TNeonDeserializerJSON.ReadStreamable(AJSONValue: TJSONValue; AType:
+    TRttiType; const AData: TValue): Boolean;
+var
+  LStream: TMemoryStream;
+  LStreamable: IDynamicStreamable;
+  LJSONValue: TJSONValue;
 begin
+  Result := False;
+  LStreamable := TDynamicStreamable.GuessType(AData.AsObject);
+  if Assigned(LStreamable) then
+  begin
+    Result := True;
+    LStream := TMemoryStream.Create;
+    try
+      if IsOriginalInstance(AData) then
+        LJSONValue := (AJSONValue as TJSONObject).GetValue('$value')
+      else
+        LJSONValue := AJSONValue;
 
+      TBase64.Decode(LJSONValue.Value, LStream);
+      LStream.Position := soFromBeginning;
+      LStreamable.LoadFromStream(LStream);
+    finally
+      LStream.Free;
+    end;
+  end;
 end;
 
-function TNeonDeserializerJSON.ReadString(AJSONValue: TJSONValue; AType:
-    TRttiType; AKind: TTypeKind): TValue;
+function TNeonDeserializerJSON.ReadString(AJSONValue: TJSONValue;
+  AType: TRttiType; AKind: TTypeKind): TValue;
 begin
   case AKind of
     // AnsiString
@@ -918,6 +944,7 @@ var
   LType: TRttiType;
   LValue: TValue;
 begin
+  FOriginalInstance := AObject;
   LType := TRttiHelper.Context.GetType(AObject.ClassType);
   LValue := AObject;
   ReadDataMember(AJSON, LType, AObject);
@@ -926,11 +953,13 @@ end;
 function TNeonDeserializerJSON.JSONToTValue(AJSON: TJSONValue; AType: TRttiType;
   const AData: TValue): TValue;
 begin
+  FOriginalInstance := AData;
   Result := ReadDataMember(AJSON, AType, AData);
 end;
 
 function TNeonDeserializerJSON.JSONToTValue(AJSON: TJSONValue; AType: TRttiType): TValue;
 begin
+  //FOriginalInstance := AData;
   Result := ReadDataMember(AJSON, AType, TValue.Empty);
 end;
 

@@ -646,19 +646,25 @@ begin
 
     case AParam.ParamType.TypeKind of
       tkInt64,
-      tkInteger: begin
+      tkInteger:
+      begin
         Result := TValue.From<Integer>(LParamReader.AsInteger(LAttr));
       end;
-      tkFloat: begin
+
+      tkFloat:
+      begin
         Result := TValue.From<Double>(LParamReader.AsFloat(LAttr));
       end;
 
-      tkChar: begin
+      tkChar,
+      tkWChar:
+      begin
         Result := TValue.From(LParamReader.AsChar(LAttr));
       end;
-//      tkWChar: ;
+
 //      tkEnumeration: ;
 //      tkSet: ;
+
       tkClass:
       begin
         if HasRowConstraints(AAttrArray) then
@@ -687,11 +693,13 @@ begin
       tkLString,
       tkUString,
       tkWString,
-      tkString: begin
+      tkString:
+      begin
         Result := TValue.From(LParamReader.AsString(LAttr));
       end;
 
-      tkVariant: begin
+      tkVariant:
+      begin
         Result := TValue.From(LParamReader.AsString(LAttr));
       end;
 

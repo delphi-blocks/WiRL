@@ -55,6 +55,11 @@ type
     Button2: TButton;
     DBGrid1: TDBGrid;
     DataSource1: TDataSource;
+    Button3: TButton;
+    Button4: TButton;
+    Button5: TButton;
+    Button6: TButton;
+    Button7: TButton;
     procedure btnDataSetClick(Sender: TObject);
     procedure btnSerComplexObjectClick(Sender: TObject);
     procedure btnSimpleTypesClick(Sender: TObject);
@@ -64,6 +69,11 @@ type
     procedure btnImageClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
+    procedure Button5Click(Sender: TObject);
+    procedure Button6Click(Sender: TObject);
+    procedure Button7Click(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -354,6 +364,116 @@ begin
     LDes.Free;
   end;
   memoDeserialize.Lines.Add('DataSet: ' + dsPersons.Fields[0].AsString);
+end;
+
+procedure TMainForm.Button3Click(Sender: TObject);
+var
+  LStreamable: TStreamableSample;
+  LJSON: TJSONValue;
+begin
+  LStreamable := TStreamableSample.Create;
+  LStreamable.AsString := 'Paolo';
+
+  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
+  try
+    memoSerialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+  finally
+    LJSON.Free;
+  end;
+
+  LStreamable.Free;
+end;
+
+procedure TMainForm.Button4Click(Sender: TObject);
+var
+  LStreamable: TStreamableSample;
+  LJSON: TJSONValue;
+begin
+  LStreamable := TStreamableSample.Create;
+
+  LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
+  try
+    TNeonMapperJSON.JSONToObject(LStreamable, LJSON);
+  finally
+    LJSON.Free;
+  end;
+
+  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
+  try
+    memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+  finally
+    LJSON.Free;
+  end;
+
+  LStreamable.Free;
+end;
+
+procedure TMainForm.Button5Click(Sender: TObject);
+var
+  LValue: TValue;
+  I: Integer;
+  LP1, LP2: Pointer;
+
+  LR: TMyRecord;
+begin
+  //I := 22;
+
+  LR.Uno := 'Paolo';
+  LR.Due := 20;
+
+  LValue := TValue.From<TMyRecord>(LR);
+
+  LP1 := LValue.GetReferenceToRawData;
+
+  LP2 := Pointer(Button1);
+
+  if LP1 = LP2 then
+    memoSerialize.Lines.Add('equal');
+
+end;
+
+procedure TMainForm.Button6Click(Sender: TObject);
+var
+  LStreamable: TStreamableComposition;
+  LJSON: TJSONValue;
+begin
+  LStreamable := TStreamableComposition.Create;
+
+  LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
+  try
+    TNeonMapperJSON.JSONToObject(LStreamable, LJSON);
+  finally
+    LJSON.Free;
+  end;
+
+  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
+  try
+    memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+  finally
+    LJSON.Free;
+  end;
+
+  LStreamable.Free;
+
+end;
+
+procedure TMainForm.Button7Click(Sender: TObject);
+var
+  LStreamable: TStreamableComposition;
+  LJSON: TJSONValue;
+begin
+  LStreamable := TStreamableComposition.Create;
+  LStreamable.InValue := 233;
+  LStreamable.Stream.AsString := 'Paolo';
+
+  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
+  try
+    memoSerialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+  finally
+    LJSON.Free;
+  end;
+
+  LStreamable.Free;
 end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);

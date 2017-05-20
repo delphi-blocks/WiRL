@@ -9,6 +9,28 @@ uses
 
 type
 
+  TStreamableSample = class
+  private
+    FPayload: TBytes;
+    procedure SetAsString(const Value: string);
+  public
+    procedure LoadFromStream(AStream: TStream);
+    procedure SaveToStream(AStream: TStream);
+    function GetAsString: string;
+    property AsString: string read GetAsString write SetAsString;
+  end;
+
+  TStreamableComposition = class
+  private
+    FInValue: Integer;
+    FStream: TStreamableSample;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property InValue: Integer read FInValue write FInValue;
+    property Stream: TStreamableSample read FStream write FStream;
+  end;
+
   TIntArray = TArray<Integer>;
 
   {$SCOPEDENUMS ON}
@@ -160,6 +182,44 @@ end;
 function TMyRecord.ToString: string;
 begin
   Result := Uno + '|' + Due.ToString;
+end;
+
+{ TStreamableSample }
+
+function TStreamableSample.GetAsString: string;
+begin
+  Result := TEncoding.UTF8.GetString(FPayload);
+end;
+
+procedure TStreamableSample.LoadFromStream(AStream: TStream);
+begin
+  AStream.Position := soFromBeginning;
+  SetLength(FPayload, AStream.Size);
+  AStream.Read(FPayload[0], AStream.Size);
+end;
+
+procedure TStreamableSample.SaveToStream(AStream: TStream);
+begin
+  AStream.Position := soFromBeginning;
+  AStream.Write(FPayload[0], Length(FPayload));
+end;
+
+procedure TStreamableSample.SetAsString(const Value: string);
+begin
+  FPayload := TEncoding.UTF8.GetBytes(Value);
+end;
+
+{ TStreamableComposition }
+
+constructor TStreamableComposition.Create;
+begin
+  FStream := TStreamableSample.Create;
+end;
+
+destructor TStreamableComposition.Destroy;
+begin
+  FStream.Free;
+  inherited;
 end;
 
 end.

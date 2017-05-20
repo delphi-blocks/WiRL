@@ -19,18 +19,14 @@ type
 
   IDynamicList = interface(IDynamicType)
   ['{9F4A2D72-078B-4EA2-B86E-068206AD0F16}']
-    procedure Add(AObject: TObject);
+    function Add: TObject;
+    procedure AddObject(AObject: TObject);
     procedure AddValue(const AValue: TValue);
     procedure Clear;
-    procedure SetObject(AObject: TObject);
     function Count: Integer;
     function GetEnumerator: IEnumerator;
-    function GetItem(AIndex: Integer): TObject;
-    function GetItemValue(AIndex: Integer): TValue;
-    function GetItemTypeInfo: PTypeInfo;
-    // OwnsObjects property
-    procedure SetOwnsObjects(AOwnsObjects: Boolean);
-    function GetOwnsObjects: Boolean;
+    function GetObject(AIndex: Integer): TObject;
+    function GetValue(AIndex: Integer): TValue;
   end;
 
   TDynamicStreamable = class(TInterfacedObject, IDynamicStreamable)
@@ -41,27 +37,107 @@ type
   public
     constructor Create(AInstance: TObject; ALoadMethod, ASaveMethod: TRttiMethod);
   public
+    class function GuessType(AInstance: TObject): IDynamicStreamable;
     procedure LoadFromStream(AStream: TStream);
     procedure SaveToStream(AStream: TStream);
   end;
 
+  TDynamicList = class(TInterfacedObject, IDynamicList)
+  public
+    function Add: TObject;
+    procedure AddObject(AObject: TObject);
+    procedure AddValue(const AValue: TValue);
+    procedure Clear;
+    function Count: Integer;
+    function GetEnumerator: IEnumerator;
+    function GetObject(AIndex: Integer): TObject;
+    function GetValue(AIndex: Integer): TValue;
+  end;
 
 implementation
+
+uses
+  WiRL.Rtti.Utils;
 
 { TDynamicStreamable }
 
 constructor TDynamicStreamable.Create(AInstance: TObject; ALoadMethod,
   ASaveMethod: TRttiMethod);
 begin
+  FInstance := AInstance;
+  FLoadMethod := ALoadMethod;
+  FSaveMethod := ASaveMethod;
+end;
 
+class function TDynamicStreamable.GuessType(AInstance: TObject): IDynamicStreamable;
+var
+  LType: TRttiType;
+  LLoadMethod, LSaveMethod: TRttiMethod;
+begin
+  LType := TRttiHelper.Context.GetType(AInstance.ClassType);
+
+  if not Assigned(LType) then
+    Exit(nil);
+
+  LLoadMethod := LType.GetMethod('LoadFromStream');
+  if not Assigned(LLoadMethod) then
+    Exit(nil);
+
+  LSaveMethod := LType.GetMethod('SaveToStream');
+  if not Assigned(LSaveMethod) then
+    Exit(nil);
+
+  Result := Self.Create(AInstance, LLoadMethod, LSaveMethod);
 end;
 
 procedure TDynamicStreamable.LoadFromStream(AStream: TStream);
 begin
-
+  FLoadMethod.Invoke(FInstance, [AStream]);
 end;
 
 procedure TDynamicStreamable.SaveToStream(AStream: TStream);
+begin
+  FSaveMethod.Invoke(FInstance, [AStream]);
+end;
+
+{ TDynamicList }
+
+function TDynamicList.Add: TObject;
+begin
+
+end;
+
+procedure TDynamicList.AddObject(AObject: TObject);
+begin
+
+end;
+
+procedure TDynamicList.AddValue(const AValue: TValue);
+begin
+
+end;
+
+procedure TDynamicList.Clear;
+begin
+
+end;
+
+function TDynamicList.Count: Integer;
+begin
+
+end;
+
+function TDynamicList.GetEnumerator: IEnumerator;
+begin
+
+end;
+
+function TDynamicList.GetObject(AIndex: Integer): TObject;
+begin
+
+end;
+
+function TDynamicList.GetValue(AIndex: Integer): TValue;
 begin
 
 end;

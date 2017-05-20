@@ -36,8 +36,10 @@ type
 
   TNeonBase = class
   protected
+    FOriginalInstance: TValue;
     FConfig: TNeonConfiguration;
     FErrors: TStrings;
+    function IsOriginalInstance(const AValue: TValue): Boolean;
   public
     constructor Create(AConfig: TNeonConfiguration);
     destructor Destroy; override;
@@ -61,6 +63,14 @@ destructor TNeonBase.Destroy;
 begin
   FErrors.Free;
   inherited;
+end;
+
+function TNeonBase.IsOriginalInstance(const AValue: TValue): Boolean;
+begin
+  if NativeInt(AValue.GetReferenceToRawData^) = NativeInt(FOriginalInstance.GetReferenceToRawData^) then
+    Result := True
+  else
+    Result := False;
 end;
 
 procedure TNeonBase.LogError(const AMessage: string);
