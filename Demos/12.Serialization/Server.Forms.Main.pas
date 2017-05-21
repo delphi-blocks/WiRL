@@ -19,6 +19,7 @@ uses
   WiRL.Core.Application,
   WiRL.http.Server.Indy,
 
+  System.Contnrs,
   WiRL.Persistence.Core,
   WiRL.Persistence.JSON,
 
@@ -39,41 +40,47 @@ type
     Label1: TLabel;
     btnSerComplexObject: TButton;
     memoSerialize: TMemo;
-    btnSimpleTypes: TButton;
+    btnSerSimpleTypes: TButton;
     btnDesComplexObject: TButton;
     memoDeserialize: TMemo;
-    btnGenericList: TButton;
-    btnGenericObjectList: TButton;
+    btnSerGenericList: TButton;
+    btnSerGenericObjectList: TButton;
     imgSample: TImage;
-    btnImage: TButton;
+    btnSerImage: TButton;
     dsPersons: TFDMemTable;
     dsPersonsName: TStringField;
     dsPersonsSurname: TStringField;
     dsPersonsAge: TIntegerField;
-    btnDataSet: TButton;
-    Button1: TButton;
-    Button2: TButton;
+    btnSerDataSet: TButton;
+    btnDesSimpleTypes: TButton;
+    btnDesDataSet: TButton;
     DBGrid1: TDBGrid;
     DataSource1: TDataSource;
-    Button3: TButton;
-    Button4: TButton;
+    btnSerStreamable: TButton;
+    btnDesStreamable: TButton;
     Button5: TButton;
-    Button6: TButton;
-    Button7: TButton;
-    procedure btnDataSetClick(Sender: TObject);
+    btnDesStreamableProp: TButton;
+    btnStreamableProp: TButton;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    btnDesGenericList: TButton;
+    btnDesGenericObjectList: TButton;
+    procedure btnSerDataSetClick(Sender: TObject);
     procedure btnSerComplexObjectClick(Sender: TObject);
-    procedure btnSimpleTypesClick(Sender: TObject);
+    procedure btnSerSimpleTypesClick(Sender: TObject);
     procedure btnDesComplexObjectClick(Sender: TObject);
-    procedure btnGenericListClick(Sender: TObject);
-    procedure btnGenericObjectListClick(Sender: TObject);
-    procedure btnImageClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
-    procedure Button4Click(Sender: TObject);
+    procedure btnSerGenericListClick(Sender: TObject);
+    procedure btnSerGenericObjectListClick(Sender: TObject);
+    procedure btnSerImageClick(Sender: TObject);
+    procedure btnDesSimpleTypesClick(Sender: TObject);
+    procedure btnDesDataSetClick(Sender: TObject);
+    procedure btnDesGenericListClick(Sender: TObject);
+    procedure btnDesGenericObjectListClick(Sender: TObject);
+    procedure btnSerStreamableClick(Sender: TObject);
+    procedure btnDesStreamableClick(Sender: TObject);
     procedure Button5Click(Sender: TObject);
-    procedure Button6Click(Sender: TObject);
-    procedure Button7Click(Sender: TObject);
+    procedure btnDesStreamablePropClick(Sender: TObject);
+    procedure btnStreamablePropClick(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -82,7 +89,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FServer: TWiRLhttpServerIndy;
-    procedure Log(const ATitle, ALog: string);
+    procedure Log(const ALog: string); overload;
+    procedure Log(const ATitle, ALog: string); overload;
     function GetStringFromValue(const AValue: TValue): string;
   public
 
@@ -107,13 +115,13 @@ uses
   Server.Entities;
 
 
-procedure TMainForm.btnDataSetClick(Sender: TObject);
+procedure TMainForm.btnSerDataSetClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
   LJSON := TNeonMapperJSON.ObjectToJSON(dsPersons, TNeonConfiguration.Default);
   try
-    Log('DataSet', TJSONHelper.PrettyPrint(LJSON));
+    Log(TJSONHelper.PrettyPrint(LJSON));
   finally
     LJSON.Free;
   end;
@@ -135,7 +143,7 @@ begin
 
     LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, TNeonConfiguration.Default);
     try
-      memoSerialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+      Log(TJSONHelper.PrettyPrint(LJSON));
     finally
       LJSON.Free;
     end;
@@ -157,7 +165,12 @@ begin
   end;
 end;
 
-procedure TMainForm.btnSimpleTypesClick(Sender: TObject);
+procedure TMainForm.Log(const ALog: string);
+begin
+  memoSerialize.Lines.Text := ALog;
+end;
+
+procedure TMainForm.btnSerSimpleTypesClick(Sender: TObject);
 var
   LRec: TMyRecord;
   LArr: TIntArray;
@@ -201,7 +214,7 @@ begin
   end;
 end;
 
-procedure TMainForm.btnGenericListClick(Sender: TObject);
+procedure TMainForm.btnSerGenericListClick(Sender: TObject);
 var
   LList: TList<Double>;
   LJSON: TJSONValue;
@@ -213,7 +226,7 @@ begin
 
     LJSON := TNeonMapperJSON.ObjectToJSON(LList, TNeonConfiguration.Default);
     try
-      Log('List', TJSONHelper.PrettyPrint(LJSON));
+      Log(TJSONHelper.PrettyPrint(LJSON));
     finally
       LJSON.Free;
     end;
@@ -222,7 +235,7 @@ begin
   end;
 end;
 
-procedure TMainForm.btnGenericObjectListClick(Sender: TObject);
+procedure TMainForm.btnSerGenericObjectListClick(Sender: TObject);
 var
   LBook: TAddressBook;
   LJSON: TJSONValue;
@@ -236,7 +249,7 @@ begin
     LBook.NoteList.Add('Note 3');
     LJSON := TNeonMapperJSON.ObjectToJSON(LBook, TNeonConfiguration.Default);
     try
-      Log('List', TJSONHelper.PrettyPrint(LJSON));
+      Log(TJSONHelper.PrettyPrint(LJSON));
     finally
       LJSON.Free;
     end;
@@ -245,7 +258,7 @@ begin
   end;
 end;
 
-procedure TMainForm.btnImageClick(Sender: TObject);
+procedure TMainForm.btnSerImageClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
@@ -257,7 +270,7 @@ begin
   end;
 end;
 
-procedure TMainForm.Button1Click(Sender: TObject);
+procedure TMainForm.btnDesSimpleTypesClick(Sender: TObject);
 var
   LArr: TIntArray;
   LJString: string;
@@ -340,7 +353,7 @@ begin
   end;
 end;
 
-procedure TMainForm.Button2Click(Sender: TObject);
+procedure TMainForm.btnDesDataSetClick(Sender: TObject);
 var
   LJString: string;
   LJSON: TJSONValue;
@@ -366,7 +379,57 @@ begin
   memoDeserialize.Lines.Add('DataSet: ' + dsPersons.Fields[0].AsString);
 end;
 
-procedure TMainForm.Button3Click(Sender: TObject);
+procedure TMainForm.btnDesGenericListClick(Sender: TObject);
+var
+  LList: TList<Double>;
+  LJSON: TJSONValue;
+begin
+  LList := TList<Double>.Create;
+  try
+    LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
+    try
+      TNeonMapperJSON.JSONToObject(LList, LJSON);
+    finally
+      LJSON.Free;
+    end;
+
+    LJSON := TNeonMapperJSON.ObjectToJSON(LList, TNeonConfiguration.Default);
+    try
+      memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LList.Free;
+  end;
+end;
+
+procedure TMainForm.btnDesGenericObjectListClick(Sender: TObject);
+var
+  LList: TAddressBook;
+  LJSON: TJSONValue;
+begin
+  LList := TAddressBook.Create;
+  try
+    LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
+    try
+      TNeonMapperJSON.JSONToObject(LList, LJSON);
+    finally
+      LJSON.Free;
+    end;
+
+    LJSON := TNeonMapperJSON.ObjectToJSON(LList, TNeonConfiguration.Default);
+    try
+      memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LList.Free;
+  end;
+end;
+
+procedure TMainForm.btnSerStreamableClick(Sender: TObject);
 var
   LStreamable: TStreamableSample;
   LJSON: TJSONValue;
@@ -376,7 +439,7 @@ begin
 
   LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
   try
-    memoSerialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+    Log(TJSONHelper.PrettyPrint(LJSON));
   finally
     LJSON.Free;
   end;
@@ -384,7 +447,7 @@ begin
   LStreamable.Free;
 end;
 
-procedure TMainForm.Button4Click(Sender: TObject);
+procedure TMainForm.btnDesStreamableClick(Sender: TObject);
 var
   LStreamable: TStreamableSample;
   LJSON: TJSONValue;
@@ -416,7 +479,7 @@ var
 
   LR: TMyRecord;
 begin
-  //I := 22;
+  I := 22;
 
   LR.Uno := 'Paolo';
   LR.Due := 20;
@@ -425,14 +488,14 @@ begin
 
   LP1 := LValue.GetReferenceToRawData;
 
-  LP2 := Pointer(Button1);
+  LP2 := Pointer(btnSerGenericList);
 
   if LP1 = LP2 then
     memoSerialize.Lines.Add('equal');
 
 end;
 
-procedure TMainForm.Button6Click(Sender: TObject);
+procedure TMainForm.btnDesStreamablePropClick(Sender: TObject);
 var
   LStreamable: TStreamableComposition;
   LJSON: TJSONValue;
@@ -457,7 +520,7 @@ begin
 
 end;
 
-procedure TMainForm.Button7Click(Sender: TObject);
+procedure TMainForm.btnStreamablePropClick(Sender: TObject);
 var
   LStreamable: TStreamableComposition;
   LJSON: TJSONValue;
@@ -468,7 +531,7 @@ begin
 
   LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
   try
-    memoSerialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+    Log(TJSONHelper.PrettyPrint(LJSON));
   finally
     LJSON.Free;
   end;

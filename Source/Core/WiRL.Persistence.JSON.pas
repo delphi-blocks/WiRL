@@ -80,7 +80,7 @@ type
     /// <remarks>
     ///   Objects must have GetEnumerator, Clear, Add methods
     /// </remarks>
-    function WriteEnumerator(const AValue: TValue): TJSONValue;
+    function WriteEnumerable(const AValue: TValue): TJSONValue;
     /// <summary>
     ///   Writer for "Streamable" objects
     /// </summary>
@@ -124,11 +124,10 @@ type
     function ReadStream(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
 
     function ReadStreamable(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
-    function ReadEnumerator(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
+    function ReadEnumerable(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
 
     function ReadDataMember(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
     procedure SetMemberValue(const AValue: TValue; AMember: TRttiMember; AInstance: Pointer);
-    function CreateNewValue(AType: TRttiType; AItemJSON: TJSONValue; var AAllocatedData: Pointer): TValue;
   public
     procedure JSONToObject(AObject: TObject; AJSON: TJSONValue);
     function JSONToTValue(AJSON: TJSONValue; AType: TRttiType): TValue; overload;
@@ -240,7 +239,7 @@ begin
         Result := WriteStream(AValue)
       else
       begin
-        Result := WriteEnumerator(AValue);
+        Result := WriteEnumerable(AValue);
         if not Assigned(Result) then
           Result := WriteStreamable(AValue);
         if not Assigned(Result) then
@@ -371,7 +370,7 @@ begin
   end;
 end;
 
-function TNeonSerializerJSON.WriteEnumerator(const AValue: TValue): TJSONValue;
+function TNeonSerializerJSON.WriteEnumerable(const AValue: TValue): TJSONValue;
 var
   LObject: TObject;
   LMethodGetEnumerator, LMethodAdd: TRttiMethod;
@@ -480,12 +479,12 @@ var
   LObject: TObject;
   LBinaryStream: TMemoryStream;
   LBase64: string;
-  LStreamable: IDynamicStreamable;
+  LStreamable: IDynamicStream;
 begin
   Result := nil;
   LObject := AValue.AsObject;
 
-  LStreamable := TDynamicStreamable.GuessType(LObject);
+  LStreamable := TDynamicStream.GuessType(LObject);
   if Assigned(LStreamable) then
   begin
     LBinaryStream := TMemoryStream.Create;
@@ -523,11 +522,9 @@ var
   LItemType: TRttiType;
   LJSONArray: TJSONArray;
   LJSONItem: TJSONValue;
-  LAllocated: Pointer;
 begin
   // TValue record copy (but the TValue only copy the reference to Data)
   Result := AData;
-  LAllocated := nil;
 
   // Clear (and Free) previous elements?
   LJSONArray := AJSONValue as TJSONArray;
@@ -537,7 +534,7 @@ begin
   for LIndex := 0 to LJSONArray.Count - 1 do
   begin
     LJSONItem := LJSONArray.Items[LIndex];
-    LItemValue := CreateNewValue(LItemType, LJSONItem, LAllocated);
+    LItemValue := TRttiHelper.CreateNewValue(LItemType);
     LItemValue := ReadDataMember(LJSONItem, LItemType, Result);
     Result.SetArrayElement(LIndex, LItemValue);
   end;
@@ -552,10 +549,8 @@ var
   LArrayLength: NativeInt;
   LJSONArray: TJSONArray;
   LJSONItem: TJSONValue;
-  LAllocated: Pointer;
 begin
   Result := AData;
-  LAllocated := nil;
 
   // Clear (and Free) previous elements?
   LJSONArray := AJSONValue as TJSONArray;
@@ -567,7 +562,7 @@ begin
   begin
     LJSONItem := LJSONArray.Items[LIndex];
 
-    LItemValue := CreateNewValue(LItemType, LJSONItem, LAllocated);
+    LItemValue := TRttiHelper.CreateNewValue(LItemType);
     LItemValue := ReadDataMember(LJSONItem, LItemType, LItemValue);
 
     Result.SetArrayElement(LIndex, LItemValue);
@@ -619,9 +614,9 @@ begin
         Result := ReadStream(AJSONValue, AType, AData)
       else
       begin
-        if ReadStreamable(AJSONValue, AType, AData) then
+        if ReadEnumerable(AJSONValue, AType, AData) then
           Result := AData
-        else if ReadEnumerator(AJSONValue, AType, AData) then
+        else if ReadStreamable(AJSONValue, AType, AData) then
           Result := AData
         else
           Result := ReadObject(AJSONValue, AType, AData);
@@ -694,10 +689,36 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadEnumerator(AJSONValue: TJSONValue; AType:
+function TNeonDeserializerJSON.ReadEnumerable(AJSONValue: TJSONValue; AType:
     TRttiType; const AData: TValue): Boolean;
+var
+  LItemValue: TValue;
+  LList: IDynamicList;
+  LJSONArray: TJSONArray;
+  LJSONItem: TJSONValue;
+  LIndex: Integer;
+  LItemType: TRttiType;
 begin
   Result := False;
+  LList := TDynamicList.GuessType(AData.AsObject);
+  if Assigned(LList) then
+  begin
+    Result := True;
+    LItemType := LList.GetItemType;
+    LList.Clear;
+
+    LJSONArray := AJSONValue as TJSONArray;
+
+    for LIndex := 0 to LJSONArray.Count - 1 do
+    begin
+      LJSONItem := LJSONArray.Items[LIndex];
+
+      LItemValue := LList.NewItem;
+      LItemValue := ReadDataMember(LJSONItem, LItemType, LItemValue);
+
+      LList.Add(LItemValue);
+    end;
+  end;
 end;
 
 function TNeonDeserializerJSON.ReadFloat(AJSONValue: TJSONValue; AType: TRttiType): TValue;
@@ -838,15 +859,15 @@ begin
   TBase64.Decode(AJSONValue.Value, LStream);
 end;
 
-function TNeonDeserializerJSON.ReadStreamable(AJSONValue: TJSONValue; AType:
-    TRttiType; const AData: TValue): Boolean;
+function TNeonDeserializerJSON.ReadStreamable(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): Boolean;
 var
   LStream: TMemoryStream;
-  LStreamable: IDynamicStreamable;
+  LStreamable: IDynamicStream;
   LJSONValue: TJSONValue;
 begin
   Result := False;
-  LStreamable := TDynamicStreamable.GuessType(AData.AsObject);
+  LStreamable := TDynamicStream.GuessType(AData.AsObject);
   if Assigned(LStreamable) then
   begin
     Result := True;
@@ -905,34 +926,6 @@ begin
     (AMember as TRttiProperty).SetValue(AInstance, AValue)
 end;
 
-
-function TNeonDeserializerJSON.CreateNewValue(AType: TRttiType; AItemJSON:
-    TJSONValue; var AAllocatedData: Pointer): TValue;
-begin
-  AAllocatedData := nil;
-  case aType.TypeKind of
-    tkInteger: Result := TValue.From<Integer>(0);
-    tkInt64:   Result := TValue.From<Int64>(0);
-    tkChar:    Result := TValue.From<UTF8Char>(#0);
-    tkWChar:   Result := TValue.From<Char>(#0);
-    tkFloat:   Result := TValue.From<Double>(0);
-    tkString:  Result := TValue.From<string>('');
-    tkWString: Result := TValue.From<string>('');
-    tkLString: Result := TValue.From<UTF8String>('');
-    tkUString: Result := TValue.From<string>('');
-    tkClass:   Result := TRttiHelper.CreateInstanceValue(AType);
-    {
-    tkRecord:
-    begin
-      AAllocatedData := AllocMem(aType.TypeSize);
-      TValue.Make(AAllocatedData, aType.Handle, Result);
-      CheckRecordForCreateClasses(Result.GetReferenceToRawData, aType, aItemNode);
-    end;
-    }
-  else
-    raise ENeonException.Create('Item not supported');
-  end;
-end;
 
 function TNeonDeserializerJSON.JSONToArray(AJSON: TJSONValue; AType: TRttiType): TValue;
 begin
