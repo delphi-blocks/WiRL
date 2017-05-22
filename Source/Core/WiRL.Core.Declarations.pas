@@ -15,6 +15,10 @@ uses
   System.SysUtils, System.Rtti;
 
 type
+  {$IF CompilerVersion < 31}
+  UTF8Char = AnsiChar;
+  {$ENDIF}
+
   TAttributeArray = TArray<TCustomAttribute>;
   TArgumentArray = array of TValue;
 

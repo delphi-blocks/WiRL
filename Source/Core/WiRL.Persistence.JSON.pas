@@ -15,11 +15,13 @@ uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
   System.TypInfo, System.JSON, Data.DB,
 
+  WiRL.Core.JSON,
+  WiRL.Core.Declarations,
+
   WiRL.Persistence.Attributes,
   WiRL.Persistence.Core,
   WiRL.Persistence.DynamicTypes,
-  WiRL.Persistence.Utils,
-  WiRL.Core.JSON;
+  WiRL.Persistence.Utils;
 
 type
   TNeonSerializerJSON = class(TNeonBase)

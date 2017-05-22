@@ -47,12 +47,13 @@ requires
   FireDACCommonDriver,
   FireDACCommon,
   fmxFireDAC,
-  dsnap,
-  DataSnapFireDAC,
   IndySystem,
   IndyProtocols,
   IndyCore,
-  soaprtl;
+  DbxCommonDriver,
+  dsnap,
+  DataSnapFireDAC,
+  RESTComponents;
 
 contains
   WiRL.Data.MessageBodyWriters in '..\..\Source\Data\WiRL.Data.MessageBodyWriters.pas',
@@ -61,11 +62,6 @@ contains
   WiRL.Data.FireDAC.MessageBodyWriters in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBodyWriters.pas',
   WiRL.Data.FireDAC in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas',
   WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
-  WiRL.Diagnostics.Manager in '..\..\Source\Extensions\WiRL.Diagnostics.Manager.pas',
-  WiRL.Diagnostics.Resources in '..\..\Source\Extensions\WiRL.Diagnostics.Resources.pas',
-  WiRL.Stateful.Dictionary in '..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas',
-  WiRL.Stateful.WrappedResource in '..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas',
-  WiRL.WebServer.Resources in '..\..\Source\Extensions\WiRL.WebServer.Resources.pas',
   JOSE.Cryptography.RSA in '..\..\Libs\JWT\Source\Common\JOSE.Cryptography.RSA.pas',
   JOSE.Encoding.Base64 in '..\..\Libs\JWT\Source\Common\JOSE.Encoding.Base64.pas',
   JOSE.Hashing.HMAC in '..\..\Libs\JWT\Source\Common\JOSE.Hashing.HMAC.pas',
@@ -93,6 +89,7 @@ contains
   WiRL.Core.Declarations in '..\..\Source\Core\WiRL.Core.Declarations.pas',
   WiRL.Core.Engine in '..\..\Source\Core\WiRL.Core.Engine.pas',
   WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
+  WiRL.Core.Injection in '..\..\Source\Core\WiRL.Core.Injection.pas',
   WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
   WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
   WiRL.Core.MessageBodyReaders in '..\..\Source\Core\WiRL.Core.MessageBodyReaders.pas',
@@ -100,9 +97,8 @@ contains
   WiRL.Core.MessageBodyWriters in '..\..\Source\Core\WiRL.Core.MessageBodyWriters.pas',
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
   WiRL.Core.Request in '..\..\Source\Core\WiRL.Core.Request.pas',
-  WiRL.Core.Resource in '..\..\Source\Core\WiRL.Core.Resource.pas',
   WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas',
-  WiRL.Core.Serialization in '..\..\Source\Core\WiRL.Core.Serialization.pas',
+  WiRL.Core.Resource in '..\..\Source\Core\WiRL.Core.Resource.pas',
   WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
   WiRL.Core.URL in '..\..\Source\Core\WiRL.Core.URL.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
@@ -113,9 +109,21 @@ contains
   WiRL.http.Accept.MediaType in '..\..\Source\Core\WiRL.http.Accept.MediaType.pas',
   WiRL.http.Accept.Parser in '..\..\Source\Core\WiRL.http.Accept.Parser.pas',
   WiRL.http.Core in '..\..\Source\Core\WiRL.http.Core.pas',
+  WiRL.http.Cookie in '..\..\Source\Core\WiRL.http.Cookie.pas',
   WiRL.http.Filters in '..\..\Source\Core\WiRL.http.Filters.pas',
   WiRL.http.Server.Indy in '..\..\Source\Core\WiRL.http.Server.Indy.pas',
-  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas';
+  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
+  WiRL.Data.Resolver in '..\..\Source\Extensions\WiRL.Data.Resolver.pas',
+  WiRL.Diagnostics.Manager in '..\..\Source\Extensions\WiRL.Diagnostics.Manager.pas',
+  WiRL.Diagnostics.Resources in '..\..\Source\Extensions\WiRL.Diagnostics.Resources.pas',
+  WiRL.Stateful.Dictionary in '..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas',
+  WiRL.Stateful.WrappedResource in '..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas',
+  WiRL.WebServer.Resources in '..\..\Source\Extensions\WiRL.WebServer.Resources.pas',
+  WiRL.Persistence.Attributes in '..\..\Source\Core\WiRL.Persistence.Attributes.pas',
+  WiRL.Persistence.Core in '..\..\Source\Core\WiRL.Persistence.Core.pas',
+  WiRL.Persistence.DynamicTypes in '..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas',
+  WiRL.Persistence.JSON in '..\..\Source\Core\WiRL.Persistence.JSON.pas',
+  WiRL.Persistence.Utils in '..\..\Source\Core\WiRL.Persistence.Utils.pas';
 
 end.
 

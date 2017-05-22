@@ -15,7 +15,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.TypInfo,
-  WiRL.Core.JSON;
+
+  WiRL.Core.JSON,
+  WiRL.Core.Declarations;
 
 type
 
