@@ -86,6 +86,7 @@ contains
   WiRL.http.Accept.Language in '..\..\Source\Core\WiRL.http.Accept.Language.pas',
   WiRL.http.Accept.MediaType in '..\..\Source\Core\WiRL.http.Accept.MediaType.pas',
   WiRL.http.Accept.Parser in '..\..\Source\Core\WiRL.http.Accept.Parser.pas',
+  WiRL.http.Cookie in '..\..\Source\Core\WiRL.http.Cookie.pas',
   WiRL.http.Core in '..\..\Source\Core\WiRL.http.Core.pas';
 
 end.

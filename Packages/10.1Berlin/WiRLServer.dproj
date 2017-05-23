@@ -156,6 +156,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Engine.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Injection.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReaders.pas"/>
@@ -165,7 +166,6 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Serialization.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
@@ -176,6 +176,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Cookie.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Filters.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
@@ -185,6 +186,11 @@
         <DCCReference Include="..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.WebServer.Resources.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Attributes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Core.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.JSON.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Utils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -237,7 +243,16 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -577,16 +592,7 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>

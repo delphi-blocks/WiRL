@@ -33,8 +33,6 @@ type
 
   [Produces(TMediaType.APPLICATION_JSON)]
   TObjectWriter = class(TInterfacedObject, IMessageBodyWriter)
-  private
-    //[Context] Request: TWiRLRequest;
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
@@ -70,7 +68,8 @@ uses
   WiRL.Core.JSON,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
-  WiRL.Core.Serialization;
+  WiRL.Persistence.Core,
+  WiRL.Persistence.JSON;
 
 
 { TDateTimeWriter }
@@ -100,15 +99,15 @@ procedure TObjectWriter.WriteTo(const AValue: TValue; const AAttributes: TAttrib
   AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
-  LObj: TJSONObject;
+  LJSON: TJSONValue;
 begin
   LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
-    LObj := TWiRLJSONMapper.ObjectToJSON(AValue.AsObject);
+    LJSON := TNeonMapperJSON.ObjectToJSON(AValue.AsObject, TNeonConfiguration.Default);
     try
-      LStreamWriter.Write(TJSONHelper.ToJSON(LObj));
+      LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally
-      LObj.Free;
+      LJSON.Free;
     end;
   finally
     LStreamWriter.Free;

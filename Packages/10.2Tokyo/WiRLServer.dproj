@@ -6,7 +6,7 @@
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Linux64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>131</TargetedPlatforms>
         <AppType>Package</AppType>
     </PropertyGroup>
@@ -156,6 +156,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Engine.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Injection.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReaders.pas"/>
@@ -165,7 +166,6 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Serialization.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
@@ -176,6 +176,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Cookie.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Filters.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
@@ -185,6 +186,11 @@
         <DCCReference Include="..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.WebServer.Resources.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Attributes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Core.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.JSON.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Utils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -231,7 +237,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLServer240.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\WiRLServer250.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>WiRLServer.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

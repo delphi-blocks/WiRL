@@ -35,6 +35,8 @@ type
 
   TJSONHelper = class
   public
+    class function PrettyPrint(AJSONValue: TJSONValue): string; static;
+
     class function ToJSON(AJSONValue: TJSONValue): string; static;
     class function StringArrayToJsonArray(const values: TArray<string>): string; static;
     class procedure JSONCopyFrom(ASource, ADestination: TJSONObject); static;
@@ -105,6 +107,62 @@ var
 begin
   for LPair in ASource do
     ADestination.AddPair(TJSONPair(LPair.Clone));
+end;
+
+class function TJSONHelper.PrettyPrint(AJSONValue: TJSONValue): string;
+var
+  LJSONString: string;
+  LChar: Char;
+  LOffset: Integer;
+
+  function Spaces(AOffset: Integer): string;
+  begin
+    Result := StringOfChar(#32, AOffset * 2);
+  end;
+
+begin
+  Result := '';
+  LOffset := 0;
+  LJSONString := AJSONValue.ToString;
+  for LChar in LJSONString do
+  begin
+    if LChar = '{' then
+    begin
+      Inc(LOffset);
+      Result := Result + LChar;
+      Result := Result + sLineBreak;
+      Result := Result + Spaces(LOffset);
+    end
+    else if LChar = '}' then
+    begin
+      Dec(LOffset);
+      Result := Result + sLineBreak;
+      Result := Result + Spaces(LOffset);
+      Result := Result + LChar;
+    end
+    else if LChar = ',' then
+    begin
+      Result := Result + LChar;
+      Result := Result + sLineBreak;
+      Result := Result + Spaces(LOffset);
+    end
+    else if LChar = '[' then
+    begin
+      Inc(LOffset);
+      Result := Result + LChar;
+      Result := Result + sLineBreak;
+      Result := Result + Spaces(LOffset);
+    end
+    else if LChar = ']' then
+    begin
+      Dec(LOffset);
+      Result := Result + sLineBreak;
+      Result := Result + Spaces(LOffset);
+      Result := Result + LChar;
+    end
+    else
+      Result := Result + LChar;
+  end;
 end;
 
 end.

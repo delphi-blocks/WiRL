@@ -15,7 +15,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.TypInfo,
-  WiRL.Core.JSON;
+
+  WiRL.Core.JSON,
+  WiRL.Core.Declarations;
 
 type
 
@@ -57,6 +59,12 @@ type
 
     class function IsObjectOfType(ARttiType: TRttiType; const AClass: TClass;
       const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
+    // Create new value data
+    class function CreateNewValue(AType: TRttiType): TValue; static;
+
+    // Create instance of class with parameterless constructor
+    class function CreateInstanceValue(AType: TRttiType): TValue; overload;
 
     // Create instance of class with parameterless constructor
     class function CreateInstance(AClass: TClass): TObject;  overload;
@@ -182,32 +190,46 @@ end;
 
 { TRttiHelper }
 
+class function TRttiHelper.CreateNewValue(AType: TRttiType): TValue;
+var
+  LAllocatedMem: Pointer;
+begin
+  case AType.TypeKind of
+    tkInteger: Result := TValue.From<Integer>(0);
+    tkInt64:   Result := TValue.From<Int64>(0);
+    tkChar:    Result := TValue.From<UTF8Char>(#0);
+    tkWChar:   Result := TValue.From<Char>(#0);
+    tkFloat:   Result := TValue.From<Double>(0);
+    tkString:  Result := TValue.From<UTF8String>('');
+    tkWString: Result := TValue.From<string>('');
+    tkLString: Result := TValue.From<UTF8String>('');
+    tkUString: Result := TValue.From<string>('');
+    tkClass:   Result := CreateInstance(AType);
+    tkRecord:
+    begin
+      LAllocatedMem := AllocMem(AType.TypeSize);
+      try
+        TValue.Make(LAllocatedMem, AType.Handle, Result);
+      finally
+        FreeMem(LAllocatedMem);
+      end;
+    end;
+  else
+    raise Exception.CreateFmt('Error creating type', [AType.Name]);
+  end;
+end;
+
 class function TRttiHelper.CreateInstance(AClass: TClass): TObject;
 var
   LType: TRttiType;
 begin
   LType := FContext.GetType(AClass);
-  Result := CreateInstance(LType);
+  Result := CreateInstanceValue(LType).AsObject;
 end;
 
 class function TRttiHelper.CreateInstance(AType: TRttiType): TObject;
-var
-  LMethod: TRTTIMethod;
-  LMetaClass: TClass;
 begin
-  Result := nil;
-  if Assigned(AType) then
-    for LMethod in AType.GetMethods do
-    begin
-      if LMethod.HasExtendedInfo and LMethod.IsConstructor then
-      begin
-        if Length(LMethod.GetParameters) = 0 then
-        begin
-          LMetaClass := AType.AsInstance.MetaclassType;
-          Exit(LMethod.Invoke(LMetaClass, []).AsObject);
-        end;
-      end;
-    end;
+  Result := CreateInstanceValue(AType).AsObject;
 end;
 
 class function TRttiHelper.CreateInstance(const ATypeName: string): TObject;
@@ -215,11 +237,10 @@ var
   LType: TRttiType;
 begin
   LType := Context.FindType(ATypeName);
-  Result := CreateInstance(LType);
+  Result := CreateInstanceValue(LType).AsObject;
 end;
 
-class function TRttiHelper.CreateInstance(AClass: TClass;
-  const AValue: string): TObject;
+class function TRttiHelper.CreateInstance(AClass: TClass; const AValue: string): TObject;
 var
   LType: TRttiType;
 begin
@@ -253,13 +274,32 @@ begin
   end;
 end;
 
-class function TRttiHelper.CreateInstance(const ATypeName,
-  AValue: string): TObject;
+class function TRttiHelper.CreateInstance(const ATypeName, AValue: string): TObject;
 var
   LType: TRttiType;
 begin
   LType := Context.FindType(ATypeName);
   Result := CreateInstance(LType, AValue);
+end;
+
+class function TRttiHelper.CreateInstanceValue(AType: TRttiType): TValue;
+var
+  LMethod: TRTTIMethod;
+  LMetaClass: TClass;
+begin
+  Result := nil;
+  if Assigned(AType) then
+    for LMethod in AType.GetMethods do
+    begin
+      if LMethod.HasExtendedInfo and LMethod.IsConstructor then
+      begin
+        if Length(LMethod.GetParameters) = 0 then
+        begin
+          LMetaClass := AType.AsInstance.MetaclassType;
+          Exit(LMethod.Invoke(LMetaClass, []));
+        end;
+      end;
+    end;
 end;
 
 class function TRttiHelper.ForEachAttribute<T>(AInstance: TObject;

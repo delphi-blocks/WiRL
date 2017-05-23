@@ -11,13 +11,27 @@ unit WiRL.Core.Utils;
 
 {$I WiRL.inc}
 
+{$IF CompilerVersion >= 28}
+  {$DEFINE HAS_NET_ENCODING}
+{$ENDIF}
+
 interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
+  {$IFDEF HAS_NET_ENCODING}
+  System.NetEncoding,
+  {$ELSE}
+  IdCoder, IdCoderMIME, IdGlobal,
+  {$ENDIF}
   WiRL.Core.JSON;
 
 type
+  TBase64 = class
+    class function Encode(const ASource: TStream): string; overload;
+    class procedure Decode(const ASource: string; ADest: TStream); overload;
+  end;
+
   TCustomAttributeClass = class of TCustomAttribute;
 
   function CreateCompactGuidStr: string;
@@ -54,7 +68,6 @@ implementation
 uses
   System.TypInfo, System.StrUtils, System.DateUtils, System.Masks,
   WiRL.Core.Exceptions;
-
 
 function StreamToString(AStream: TStream): string;
 var
@@ -221,6 +234,44 @@ begin
   Result := APath;
   for LIndexLevel := 0 to ALevel - 1 do
     Result := ExtractFilePath(ExcludeTrailingPathDelimiter(Result));
+end;
+
+class function TBase64.Encode(const ASource: TStream): string;
+{$IFDEF HAS_NET_ENCODING}
+var
+  LBase64Stream: TStringStream;
+{$ENDIF}
+begin
+{$IFDEF HAS_NET_ENCODING}
+  LBase64Stream := TStringStream.Create;
+  try
+    TNetEncoding.Base64.Encode(ASource, LBase64Stream);
+    Result := LBase64Stream.DataString;
+  finally
+    LBase64Stream.Free;
+  end;
+{$ELSE}
+  Result := TIdEncoderMIME.EncodeStream(ASource);
+{$ENDIF}
+end;
+
+class procedure TBase64.Decode(const ASource: string; ADest: TStream);
+{$IFDEF HAS_NET_ENCODING}
+var
+  LBase64Stream: TStringStream;
+{$ENDIF}
+begin
+{$IFDEF HAS_NET_ENCODING}
+  LBase64Stream := TStringStream.Create(ASource);
+  LBase64Stream.Position := soFromBeginning;
+  try
+    TNetEncoding.Base64.Decode(LBase64Stream, ADest);
+  finally
+    LBase64Stream.Free;
+  end;
+{$ELSE}
+  TIdDecoderMIME.DecodeStream(ASource, ADest);
+{$ENDIF}
 end;
 
 end.

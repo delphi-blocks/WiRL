@@ -1,21 +1,16 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{48E75129-EE24-48D4-AE54-2F549C909CC8}</ProjectGuid>
-        <MainSource>WiRLClient.dpk</MainSource>
-        <ProjectVersion>18.2</ProjectVersion>
-        <FrameworkType>None</FrameworkType>
+        <ProjectGuid>{F9FFFB8A-8DD0-4212-BDA6-3D93DA044B95}</ProjectGuid>
+        <MainSource>DemoSerialization.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
+        <TargetedPlatforms>1</TargetedPlatforms>
+        <AppType>Application</AppType>
+        <FrameworkType>VCL</FrameworkType>
+        <ProjectVersion>18.2</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <TargetedPlatforms>147</TargetedPlatforms>
-        <AppType>Package</AppType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Android' and '$(Base)'=='true') or '$(Base_Android)'!=''">
-        <Base_Android>true</Base_Android>
-        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
@@ -23,241 +18,115 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
-        <Base_Win64>true</Base_Win64>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
-        <Cfg_1_Win32>true</Cfg_1_Win32>
-        <CfgParent>Cfg_1</CfgParent>
-        <Cfg_1>true</Cfg_1>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-        <DllSuffix>240</DllSuffix>
-        <DesignOnlyPackage>true</DesignOnlyPackage>
-        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_Description>WiRL REST Library (Client)</DCC_Description>
-        <DCC_AdditionalSwitches>-LUDesignIDE</DCC_AdditionalSwitches>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;$(DCC_Namespace)</DCC_Namespace>
-        <GenPackage>true</GenPackage>
-        <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-        <SanitizedProjectName>WiRLClient</SanitizedProjectName>
-        <GenDll>true</GenDll>
-        <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
-        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_E>false</DCC_E>
+        <DCC_DcuOutput>./$(Platform)/$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>./$(Platform)/$(Config)</DCC_ExeOutput>
+        <DCC_UnitSearchPath>..\..\Source\Core;..\..\Libs\JWT\Source\Common;..\..\Libs\JWT\Source\JOSE;..\..\Source\Data;..\..\Source\Data\FireDAC;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_ImageBase>00400000</DCC_ImageBase>
+        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <VerInfo_Locale>1040</VerInfo_Locale>
+        <DCC_K>false</DCC_K>
+        <SanitizedProjectName>DemoSerialization</SanitizedProjectName>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
         <DCC_F>false</DCC_F>
-        <DCC_K>false</DCC_K>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Android)'!=''">
-        <EnabledSysJars>android-support-v4.dex.jar;apk-expansion.dex.jar;cloud-messaging.dex.jar;fmx.dex.jar;google-analytics-v2.dex.jar;google-play-billing.dex.jar;google-play-licensing.dex.jar;google-play-services.dex.jar</EnabledSysJars>
-        <DCC_CBuilderOutput>None</DCC_CBuilderOutput>
-        <DCC_UsePackage>rtl;inet;DbxCommonDriver;dbrtl;FireDACCommon;FireDACCommonDriver;FireDAC;DataSnapFireDAC;IndySystem;IndyProtocols;IndyCore;bindengine;bindcomp;$(DCC_UsePackage)</DCC_UsePackage>
-        <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=preferExternal;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=</VerInfo_Keys>
-        <BT_BuildType>Debug</BT_BuildType>
+        <DCC_E>false</DCC_E>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_UsePackage>rtl;inet;DbxCommonDriver;dbrtl;FireDACCommon;FireDACCommonDriver;FireDAC;DataSnapFireDAC;IndySystem;IndyProtocols;IndyCore;bindengine;bindcomp;$(DCC_UsePackage)</DCC_UsePackage>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(ModuleName);FileDescription=$(ModuleName);ProductName=$(ModuleName)</VerInfo_Keys>
-        <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UsePackage>rtl;inet;DbxCommonDriver;dbrtl;FireDACCommon;FireDACCommonDriver;FireDAC;DataSnapFireDAC;IndySystem;IndyProtocols;IndyCore;bindengine;bindcomp;$(DCC_UsePackage)</DCC_UsePackage>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(ModuleName);FileDescription=$(ModuleName);ProductName=$(ModuleName)</VerInfo_Keys>
-        <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-        <DCC_DebugDCUs>true</DCC_DebugDCUs>
-        <DCC_Optimize>false</DCC_Optimize>
-        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
-        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-        <DCC_RemoteDebug>true</DCC_RemoteDebug>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <DCC_RemoteDebug>false</DCC_RemoteDebug>
-        <DllSuffix>250</DllSuffix>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2)'!=''">
-        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
         <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_Optimize>false</DCC_Optimize>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(ModuleName);FileDescription=$(ModuleName);ProductName=$(ModuleName)</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="inet.dcp"/>
-        <DCCReference Include="DbxCommonDriver.dcp"/>
-        <DCCReference Include="dbrtl.dcp"/>
-        <DCCReference Include="FireDACCommon.dcp"/>
-        <DCCReference Include="FireDACCommonDriver.dcp"/>
-        <DCCReference Include="FireDAC.dcp"/>
-        <DCCReference Include="DataSnapFireDAC.dcp"/>
-        <DCCReference Include="IndySystem.dcp"/>
-        <DCCReference Include="IndyProtocols.dcp"/>
-        <DCCReference Include="IndyCore.dcp"/>
-        <DCCReference Include="bindengine.dcp"/>
-        <DCCReference Include="bindcomp.dcp"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Client.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.FireDAC.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Messaging.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.Stream.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.Stream.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Token.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Cookie.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
-        <RcItem Include="..\..\media\TWiRLClient.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClient</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientApplication.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientApplication</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientMessagingResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientMessagingResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResourceJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResourceStream</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResourceJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResourceStream</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientToken.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientToken</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLFDResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLFDResource</ResourceId>
-        </RcItem>
-        <BuildConfiguration Include="Release">
+        <DCCReference Include="Server.Forms.Main.pas">
+            <Form>MainForm</Form>
+        </DCCReference>
+        <DCCReference Include="Server.Resources.pas"/>
+        <DCCReference Include="Server.Entities.pas"/>
+        <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
-        <BuildConfiguration Include="Debug">
+        <BuildConfiguration Include="Release">
             <Key>Cfg_1</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Delphi.Personality.12</Borland.Personality>
-        <Borland.ProjectType>Package</Borland.ProjectType>
+        <Borland.ProjectType/>
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">WiRLClient.dpk</Source>
+                    <Source Name="MainSource">DemoSerialization.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp250.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k230.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp230.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+            </Platforms>
             <Deployment Version="3">
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libPCRE.dylib" Class="DependencyModule">
-                    <Platform Name="iOSSimulator">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="OSX32">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossim32\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="iOSSimulator">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="iOSSimulator">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLClient240.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\DemoSerialization.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>WiRLClient.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgsqlite3.dylib" Class="DependencyModule">
-                    <Platform Name="OSX32">
+                        <RemoteName>DemoSerialization.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -289,7 +158,6 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="AndroidLibnativeX86File"/>
                 <DeployClass Name="AndroidServiceOutput">
                     <Platform Name="Android">
                         <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
@@ -373,6 +241,7 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -381,6 +250,7 @@
                 </DeployClass>
                 <DeployClass Name="DependencyFramework">
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
@@ -389,7 +259,20 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="DependencyModule">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
@@ -412,6 +295,7 @@
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
@@ -434,6 +318,7 @@
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -532,9 +417,35 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
-                <DeployClass Name="ProjectiOSEntitlements"/>
-                <DeployClass Name="ProjectiOSInfoPList"/>
+                <DeployClass Name="ProjectiOSDeviceResourceRules">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSEntitlements">
+                    <Platform Name="iOSDevice32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSInfoPList">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectiOSResource">
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
@@ -546,8 +457,18 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectOSXEntitlements"/>
-                <DeployClass Name="ProjectOSXInfoPList"/>
+                <DeployClass Name="ProjectOSXEntitlements">
+                    <Platform Name="OSX32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXInfoPList">
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -572,6 +493,7 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -606,21 +528,15 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
             </Deployment>
-            <Platforms>
-                <Platform value="Android">True</Platform>
-                <Platform value="Linux64">True</Platform>
-                <Platform value="Win32">True</Platform>
-                <Platform value="Win64">True</Platform>
-            </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

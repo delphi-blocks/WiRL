@@ -45,7 +45,7 @@ type
 implementation
 
 uses
-  WiRL.Core.Serialization,
+  WiRL.Persistence.JSON,
   WiRL.Rtti.Utils;
 
 { TJSONObjectReader }
@@ -69,7 +69,7 @@ end;
 function TObjectReaderDelphi.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 begin
-  Result := TWiRLJSONMapper.JsonToObject(AParam.ParamType, ARequest.Content);
+  Result := TNeonMapperJSON.JsonToObject(AParam.ParamType, ARequest.Content);
 end;
 
 initialization

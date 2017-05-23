@@ -71,12 +71,13 @@ contains
   WiRL.Client.Token in '..\..\Source\Client\WiRL.Client.Token.pas',
   WiRL.Client.Utils.LiveBindings in '..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas',
   WiRL.Client.Utils in '..\..\Source\Client\WiRL.Client.Utils.pas',
+  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
+  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
   WiRL.Data.FireDAC.Editor in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas',
   WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
   WiRL.Core.URL in '..\..\Source\Core\WiRL.Core.URL.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
-  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
-  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  WiRL.Core.Declarations in '..\..\Source\Core\WiRL.Core.Declarations.pas',
   WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
   WiRL.Core.Request in '..\..\Source\Core\WiRL.Core.Request.pas',
   WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas',
@@ -85,11 +86,8 @@ contains
   WiRL.http.Accept.Language in '..\..\Source\Core\WiRL.http.Accept.Language.pas',
   WiRL.http.Accept.MediaType in '..\..\Source\Core\WiRL.http.Accept.MediaType.pas',
   WiRL.http.Accept.Parser in '..\..\Source\Core\WiRL.http.Accept.Parser.pas',
-  WiRL.http.Core in '..\..\Source\Core\WiRL.http.Core.pas',
-  WiRL.http.Filters in '..\..\Source\Core\WiRL.http.Filters.pas',
-  WiRL.Core.Attributes in '..\..\Source\Core\WiRL.Core.Attributes.pas',
-  WiRL.Core.Declarations in '..\..\Source\Core\WiRL.Core.Declarations.pas',
-  WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas';
+  WiRL.http.Cookie in '..\..\Source\Core\WiRL.http.Cookie.pas',
+  WiRL.http.Core in '..\..\Source\Core\WiRL.http.Core.pas';
 
 end.
 
