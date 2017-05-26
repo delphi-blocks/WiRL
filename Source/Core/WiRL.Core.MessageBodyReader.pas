@@ -95,26 +95,27 @@ var
   LCompatibleEntries: TArray<TEntryInfo>;
   LCurrentAffinity, LCandidateAffinity: Integer;
   LCandidate: TEntryInfo;
+  LConsumesMediaTypes: TMediaTypeList;
 begin
+  SetLength(LCompatibleEntries, 0);
+
   for LEntry in FRegistry do
   begin
-    LFound := False;
+    LConsumesMediaTypes := GetConsumesMediaTypes(LEntry.TypeMetadata);
+    try
+      LFound := LConsumesMediaTypes.Contains(AMediaType);
+    finally
+      LConsumesMediaTypes.Free;
+    end;
 
-    TRttiHelper.ForEachAttribute<ConsumesAttribute>(LEntry.TypeMetadata,
-      procedure (AAttrib: ConsumesAttribute)
-      begin
-        if AMediaType.ToString = AAttrib.Value then
-          LFound := True;
-      end
-    );
     if LFound and LEntry.IsReadable(AParam, AParam.GetAttributes, AMediaType) then
     begin
-      {$ifndef DelphiXE7_UP}
+      {$IFNDEF DelphiXE7_UP}
       SetLength(LCompatibleEntries, Length(LCompatibleEntries) + 1);
       LCompatibleEntries[High(LCompatibleEntries)] := LEntry;
-      {$else}
+      {$ELSE}
       LCompatibleEntries := LCompatibleEntries + [LEntry];
-      {$endif}
+      {$ENDIF}
     end;
   end;
 
