@@ -39,6 +39,7 @@ type
 
   TWiRLMethodResult = class
   private
+    FRttiObject: TRttiType;
     FResultType: TTypeKind;
     FIsClass: Boolean;
     FIsRecord: Boolean;
@@ -84,6 +85,7 @@ type
     FIsFunction: Boolean;
     FAuth: TWiRLMethodAuthorization;
     FFilters: TWiRLFilterList;
+    FAllAttributes: TArray<TCustomAttribute>;
 
     procedure ProcessAttributes;
   public
@@ -102,6 +104,7 @@ type
     property Consumes: TMediaTypeList read FConsumes;
     property Produces: TMediaTypeList read FProduces;
     property Filters: TWiRLFilterList read FFilters;
+    property AllAttributes: TArray<TCustomAttribute> read FAllAttributes;
 
     property RttiObject: TRttiMethod read FRttiMethod;
   end;
@@ -130,6 +133,9 @@ type
 
     procedure ProcessAttributes;
     procedure ProcessMethods;
+
+    function MatchProduces(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;
+    function MatchConsumes(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;
   public
     constructor Create(AContext: TWiRLContext);
     destructor Destroy; override;
@@ -220,6 +226,7 @@ end;
 
 function TWiRLResource.GetResourceMethod: TWiRLResourceMethod;
 var
+  LConsumesMatch: Boolean;
   LMethod: TWiRLResourceMethod;
   LPrototypeURL: TWiRLURL;
   LPathMatches,
@@ -239,7 +246,6 @@ begin
         Continue;
 
       LPathMatches := False;
-      LProducesMatch := False;
 
       LHttpMethodMatches := LMethod.HttpMethod = FContext.Request.Method;
 
@@ -253,26 +259,10 @@ begin
         end;
       end;
 
-      // It's a procedure, so no "Produces" mechanism
-      if not LMethod.IsFunction then
-        LProducesMatch := True
-      else
-      // Tries to match the Produces MediaType
-      begin
-        // If the method result it's an object there is no Produces let the MBWs choose the output
-        if (LMethod.MethodResult.IsClass or LMethod.MethodResult.IsRecord) and
-           (LMethod.Produces.Empty or LMethod.Produces.IsWildCard) then
-        begin
-          LProducesMatch := True;
-        end
-        else
-        begin
-          if LMethod.Produces.Contains(LMedia) then
-            LProducesMatch := True;
-        end;
-      end;
+      LProducesMatch := MatchProduces(LMethod, LMedia);
+      LConsumesMatch := MatchConsumes(LMethod, FContext.Request.ContentMediaType);
 
-      if LPathMatches and LHttpMethodMatches and LProducesMatch then
+      if LPathMatches and LHttpMethodMatches and LProducesMatch and LConsumesMatch then
       begin
         Result := LMethod;
         Break;
@@ -283,6 +273,40 @@ begin
     if Assigned(Result) then
       Break;
   end;
+end;
+
+function TWiRLResource.MatchConsumes(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;
+begin
+  Result := False;
+
+  if AMethod.Consumes.Empty then
+    Exit(True);
+
+  if AMethod.Consumes.IsWildCard then
+    Exit(True);
+
+  if AMethod.Consumes.Contains(AMediaType) then
+    Exit(True);
+end;
+
+function TWiRLResource.MatchProduces(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;
+begin
+  Result := False;
+
+  if AMethod.Produces.Empty or AMediaType.IsWildcard then
+    Exit(True);
+
+  // It's a procedure, so no "Produces" mechanism
+  if not AMethod.IsFunction then
+    Exit(True);
+
+  // If the method result it's an object there is no Produces let the MBWs choose the output
+  if (AMethod.MethodResult.IsClass or AMethod.MethodResult.IsRecord) then
+    Exit(True);
+
+  // Tries to match the Produces MediaType
+  if AMethod.Produces.Contains(AMediaType) then
+    Exit(True);
 end;
 
 procedure TWiRLResource.ProcessAttributes;
@@ -426,6 +450,10 @@ begin
   // Global loop to retrieve and process ALL attributes at once
   for LAttribute in FRttiMethod.GetAttributes do
   begin
+    // Add the attribute in the AllAttribute array
+    SetLength(FAllAttributes, Length(FAllAttributes) + 1);
+    FAllAttributes[Length(FAllAttributes) - 1] := LAttribute;
+
     // Method HTTP Method
     if LAttribute is HttpMethodAttribute then
     begin
@@ -485,6 +513,7 @@ constructor TWiRLMethodResult.Create(AResultType: TRttiType);
 begin
   if Assigned(AResultType) then
   begin
+    FRttiObject := AResultType;
     FResultType := AResultType.TypeKind;
     case FResultType of
       tkClass:  FIsClass := True;

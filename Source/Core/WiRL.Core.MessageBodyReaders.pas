@@ -13,8 +13,8 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Rtti,
-  System.JSON, REST.Json,
 
+  WiRL.Core.JSON,
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
   WiRL.Core.Request,
@@ -45,6 +45,7 @@ type
 implementation
 
 uses
+  WiRL.Persistence.Core,
   WiRL.Persistence.JSON,
   WiRL.Rtti.Utils;
 
@@ -69,7 +70,7 @@ end;
 function TObjectReaderDelphi.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 begin
-  Result := TNeonMapperJSON.JsonToObject(AParam.ParamType, ARequest.Content);
+  Result := TNeonMapperJSON.JSONToObject(AParam.ParamType, ARequest.Content);
 end;
 
 initialization

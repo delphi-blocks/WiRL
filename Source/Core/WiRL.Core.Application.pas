@@ -833,7 +833,7 @@ begin
   LInstance := FResource.CreateInstance();
   try
     TWiRLMessageBodyRegistry.Instance.FindWriter(
-      FResource.Method.RttiObject,
+      FResource.Method,
       FContext.Request.AcceptableMediaTypes,
       LWriter,
       LMediaType

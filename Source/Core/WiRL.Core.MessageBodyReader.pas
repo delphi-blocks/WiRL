@@ -43,6 +43,7 @@ type
       end;
   private
     FRegistry: TList<TEntryInfo>;
+    function GetConsumesMediaTypes(const AObject: TRttiObject): TMediaTypeList;
     class function GetInstance: TMessageBodyReaderRegistry; static; inline;
   public
     constructor Create;
@@ -61,7 +62,7 @@ type
 
     procedure RegisterReader<T: class>(const AReaderClass: TClass); overload;
 
-    function FindReader(AType: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
+    function FindReader(AParam: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
 
     class property Instance: TMessageBodyReaderRegistry read GetInstance;
     class function GetDefaultClassAffinityFunc<T: class>: TGetAffinityFunction;
@@ -87,7 +88,7 @@ begin
   inherited;
 end;
 
-function TMessageBodyReaderRegistry.FindReader(AType: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
+function TMessageBodyReaderRegistry.FindReader(AParam: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
 var
   LEntry: TEntryInfo;
   LFound: Boolean;
@@ -106,7 +107,7 @@ begin
           LFound := True;
       end
     );
-    if LFound and LEntry.IsReadable(AType, AType.GetAttributes, AMediaType) then
+    if LFound and LEntry.IsReadable(AParam, AParam.GetAttributes, AMediaType) then
     begin
       {$ifndef DelphiXE7_UP}
       SetLength(LCompatibleEntries, Length(LCompatibleEntries) + 1);
@@ -120,14 +121,14 @@ begin
   case Length(LCompatibleEntries) of
     0: Result := nil;
     1: Result := LCompatibleEntries[0].CreateInstance();
-    else
+  else
     begin  // devo scegliere quello migliore fra quelli compatibili
       LCandidate := LCompatibleEntries[0];
-      LCandidateAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType.ToString);
+      LCandidateAffinity := LCandidate.GetAffinity(AParam, AParam.GetAttributes, AMediaType.ToString);
 
       for LEntry in LCompatibleEntries do
       begin
-        LCurrentAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType.ToString);
+        LCurrentAffinity := LCandidate.GetAffinity(AParam, AParam.GetAttributes, AMediaType.ToString);
 
         if LCurrentAffinity >= LCandidateAffinity then
         begin
@@ -135,10 +136,31 @@ begin
           LCandidateAffinity := LCurrentAffinity;
         end;
       end;
-
       Result := LCandidate.CreateInstance();
     end;
   end;
+end;
+
+function TMessageBodyReaderRegistry.GetConsumesMediaTypes(const AObject: TRttiObject): TMediaTypeList;
+var
+  LList: TMediaTypeList;
+begin
+  LList := TMediaTypeList.Create;
+
+  TRttiHelper.ForEachAttribute<ConsumesAttribute>(AObject,
+    procedure (AConsumes: ConsumesAttribute)
+    var
+      LMediaList: TArray<string>;
+      LMedia: string;
+    begin
+      LMediaList := AConsumes.Value.Split([',']);
+
+      for LMedia in LMediaList do
+        LList.Add(TMediaType.Create(LMedia));
+    end
+  );
+
+  Result := LList;
 end;
 
 class function TMessageBodyReaderRegistry.GetDefaultClassAffinityFunc<T>: TGetAffinityFunction;

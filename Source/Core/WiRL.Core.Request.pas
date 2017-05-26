@@ -177,6 +177,10 @@ begin
     TAcceptHeaderParser<TMediaType>.Parse(Accept, FAcceptableMediaTypes);
   end;
 
+  // Last resort: if a request doesn't have a MediaType force */*
+  if FAcceptableMediaTypes.Empty then
+    FAcceptableMediaTypes.Add(TMediaType.Create(TMediaType.WILDCARD));
+
   Result := FAcceptableMediaTypes;
 end;
 

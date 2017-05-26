@@ -30,6 +30,12 @@ type
     [GET, Produces(TMediaType.TEXT_HTML)]
     function HelloWorld_HTML: string;
 
+    [PUT, Consumes(TMediaType.TEXT_PLAIN), Produces(TMediaType.TEXT_PLAIN)]
+    function CustomizedHelloWorld_TEXT([BodyParam] const AText: string): string;
+
+    [PUT, Consumes(TMediaType.TEXT_PLAIN), Produces(TMediaType.TEXT_HTML)]
+    function CustomizedHelloWorld_HTML([BodyParam] const AText: string): string;
+
     [GET, Produces(TMediaType.TEXT_PLAIN)]
     function HelloWorld_TEXT: string;
 
@@ -65,6 +71,16 @@ uses
 
 
 { TSampleResource }
+
+function TSampleResource.CustomizedHelloWorld_HTML(const AText: string): string;
+begin
+  Result := Format('<html><body><h2>%s</h2></body></html>', [AText]);
+end;
+
+function TSampleResource.CustomizedHelloWorld_TEXT(const AText: string): string;
+begin
+  Result := AText;
+end;
 
 function TSampleResource.DataSet1: TDataSet;
 var

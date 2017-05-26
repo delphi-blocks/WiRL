@@ -18,6 +18,7 @@ uses
   System.Generics.Defaults, System.Generics.Collections,
   WiRL.Core.Singleton,
   WiRL.Core.Response,
+  WiRL.Core.Resource,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
@@ -35,22 +36,22 @@ type
   TGetAffinityFunction = reference to function(AType: TRttiType;
     const AAttributes: TAttributeArray; AMediaType: string): Integer;
 
-  TEntryInfo = record
-    _RttiType: TRttiType;
-    RttiName: string;
-    CreateInstance: TFunc<IMessageBodyWriter>;
-    IsWritable: TIsWritableFunction;
-    GetAffinity: TGetAffinityFunction;
-  end;
-
   TWiRLMessageBodyRegistry = class
+  private type
+    TEntryInfo = record
+      _RttiType: TRttiType;
+      RttiName: string;
+      CreateInstance: TFunc<IMessageBodyWriter>;
+      IsWritable: TIsWritableFunction;
+      GetAffinity: TGetAffinityFunction;
+    end;
   private type
     TWiRLMessageBodyRegistrySingleton = TWiRLSingleton<TWiRLMessageBodyRegistry>;
   private
     FRegistry: TList<TEntryInfo>;
     FRttiContext: TRttiContext;
     class function GetInstance: TWiRLMessageBodyRegistry; static; inline;
-  protected
+  private
     function GetProducesMediaTypes(const AObject: TRttiObject): TMediaTypeList;
     function ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
   public
@@ -76,7 +77,7 @@ type
     function UnregisterWriter(const AWriterClass: TClass): Integer; overload;
     function UnregisterWriter(const AQualifiedClassName: string): Integer; overload;
 
-    procedure FindWriter(const AMethod: TRttiMethod; AAcceptMediaTypes: TMediaTypeList;
+    procedure FindWriter(const AMethod: TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList;
       out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
 
     procedure Enumerate(const AProc: TProc<TEntryInfo>);
@@ -124,18 +125,18 @@ begin
     AProc(LEntry);
 end;
 
-procedure TWiRLMessageBodyRegistry.FindWriter(const AMethod: TRttiMethod; AAcceptMediaTypes: TMediaTypeList;
-  out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
+procedure TWiRLMessageBodyRegistry.FindWriter(const AMethod:
+    TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList; out AWriter:
+    IMessageBodyWriter; out AMediaType: TMediaType);
 var
   LWriterEntry: TEntryInfo;
   LFound: Boolean;
   LCandidateAffinity: Integer;
   LCandidate: TEntryInfo;
+  LMediaType: TMediaType;
   LWriterRttiType: TRttiType;
   LWriterMediaTypes: TMediaTypeList;
   LAllowedMediaList: TMediaTypeList;
-  LMethodMediaTypes: TMediaTypeList;
-  LMediaType: TMediaType;
 begin
   if FRegistry.Count = 0 then
     raise EWiRLServerException.Create('MessageBodyWriters registry is empty. Please include the MBW''s units in your project');
@@ -144,48 +145,43 @@ begin
   AMediaType := nil;
   LFound := False;
   LCandidateAffinity := -1;
-  if not Assigned(AMethod.ReturnType) then
+  if not AMethod.IsFunction then
     Exit; // no serialization (it's a procedure!)
 
-  LMethodMediaTypes := GetProducesMediaTypes(AMethod);
+  LAllowedMediaList := ProducesAcceptIntersection(AMethod.Produces, AAcceptMediaTypes);
   try
-    LAllowedMediaList := ProducesAcceptIntersection(LMethodMediaTypes, AAcceptMediaTypes);
-    try
-      for LMediaType in LAllowedMediaList do
+    for LMediaType in LAllowedMediaList do
+    begin
+      for LWriterEntry in FRegistry do
       begin
-        for LWriterEntry in FRegistry do
-        begin
-          LWriterRttiType := FRttiContext.FindType(LWriterEntry.RttiName);
-          LWriterMediaTypes := GetProducesMediaTypes(LWriterRttiType);
-          try
-            if (LWriterMediaTypes.Contains(TMediaType.WILDCARD) or LWriterMediaTypes.Contains(LMediaType)) and
-              LWriterEntry.IsWritable(AMethod.ReturnType, AMethod.GetAttributes, LMediaType.AcceptItemOnly)
-            then
+        LWriterRttiType := FRttiContext.FindType(LWriterEntry.RttiName);
+        LWriterMediaTypes := GetProducesMediaTypes(LWriterRttiType);
+        try
+          if (LWriterMediaTypes.Contains(TMediaType.WILDCARD) or LWriterMediaTypes.Contains(LMediaType)) and
+            LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)
+          then
+          begin
+            if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)) then
             begin
-              if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.ReturnType, AMethod.GetAttributes, LMediaType.AcceptItemOnly)) then
-              begin
-                LCandidate := LWriterEntry;
-                LCandidateAffinity := LCandidate.GetAffinity(AMethod.ReturnType, AMethod.GetAttributes, LMediaType.AcceptItemOnly);
-                LFound := True;
-              end;
+              LCandidate := LWriterEntry;
+              LCandidateAffinity := LCandidate.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly);
+              LFound := True;
             end;
-          finally
-            LWriterMediaTypes.Free;
           end;
-        end;
-        if LFound then
-        begin
-          AWriter := LCandidate.CreateInstance();
-          AMediaType := LMediaType.Clone;
-
-          Break;
+        finally
+          LWriterMediaTypes.Free;
         end;
       end;
-    finally
-      LAllowedMediaList.Free;
+      if LFound then
+      begin
+        AWriter := LCandidate.CreateInstance();
+        AMediaType := LMediaType.Clone;
+
+        Break;
+      end;
     end;
   finally
-    LMethodMediaTypes.Free;
+    LAllowedMediaList.Free;
   end;
 end;
 

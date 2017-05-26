@@ -91,9 +91,8 @@ end;
 
 { TFDAdaptedDataSetWriter }
 
-procedure TFDAdaptedDataSetWriter.WriteTo(const AValue: TValue; const
-    AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse:
-    TWiRLResponse);
+procedure TFDAdaptedDataSetWriter.WriteTo(const AValue: TValue;
+  const AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LDataset: TFDAdaptedDataSet;
   LStorageFormat: TFDStorageFormat;
