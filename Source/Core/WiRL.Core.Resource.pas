@@ -41,6 +41,7 @@ type
   private
     FResultType: TTypeKind;
     FIsClass: Boolean;
+    FIsRecord: Boolean;
     FIsSingleton: Boolean;
   public
     constructor Create(AResultType: TRttiType);
@@ -48,6 +49,7 @@ type
 
     property ResultType: TTypeKind read FResultType;
     property IsClass: Boolean read FIsClass;
+    property IsRecord: Boolean read FIsRecord;
     property IsSingleton: Boolean read FIsSingleton;
   end;
 
@@ -223,57 +225,64 @@ var
   LPathMatches,
   LProducesMatch,
   LHttpMethodMatches: Boolean;
-
+  LMedia: TMediaType;
 begin
   Result := nil;
 
-  for LMethod in FMethods do
+  for LMedia in FContext.Request.AcceptableMediaTypes do
   begin
-    // Skip the non-Rest methods (no GET/POST/PUT methods)
-    if not LMethod.Rest then
-      Continue;
 
-    LPathMatches := False;
-    LProducesMatch := False;
-
-    LHttpMethodMatches := LMethod.HttpMethod = FContext.Request.Method;
-
-    if LHttpMethodMatches then
+    for LMethod in FMethods do
     begin
-      LPrototypeURL := TWiRLURL.CreateDummy(FEnginePath, FAppPath, FPath, LMethod.Path);
-      try
-        LPathMatches := LPrototypeURL.MatchPath(FContext.URL);
-      finally
-        LPrototypeURL.Free;
-      end;
-    end;
+      // Skip the non-Rest methods (no GET/POST/PUT methods)
+      if not LMethod.Rest then
+        Continue;
 
-    // It's a procedure, so no Produces mechanism
-    if not LMethod.IsFunction then
-      LProducesMatch := True
-    else
-    begin
-      // Match the Produces MediaType
-      if (LMethod.Produces.Count = 0) or
-         ((LMethod.Produces.Count = 1) and LMethod.Produces.Contains(TMediaType.WILDCARD)) then
+      LPathMatches := False;
+      LProducesMatch := False;
+
+      LHttpMethodMatches := LMethod.HttpMethod = FContext.Request.Method;
+
+      if LHttpMethodMatches then
       begin
-        if LMethod.MethodResult.IsClass then
-          LProducesMatch := True;
-      end
+        LPrototypeURL := TWiRLURL.CreateDummy(FEnginePath, FAppPath, FPath, LMethod.Path);
+        try
+          LPathMatches := LPrototypeURL.MatchPath(FContext.URL);
+        finally
+          LPrototypeURL.Free;
+        end;
+      end;
+
+      // It's a procedure, so no "Produces" mechanism
+      if not LMethod.IsFunction then
+        LProducesMatch := True
       else
+      // Tries to match the Produces MediaType
       begin
-        if FContext.Request.AcceptableMediaTypes.Intersected(LMethod.Produces) then
+        // If the method result it's an object there is no Produces let the MBWs choose the output
+        if (LMethod.MethodResult.IsClass or LMethod.MethodResult.IsRecord) and
+           (LMethod.Produces.Empty or LMethod.Produces.IsWildCard) then
+        begin
           LProducesMatch := True;
+        end
+        else
+        begin
+          if LMethod.Produces.Contains(LMedia) then
+            LProducesMatch := True;
+        end;
+      end;
+
+      if LPathMatches and LHttpMethodMatches and LProducesMatch then
+      begin
+        Result := LMethod;
+        Break;
       end;
     end;
 
-    if LPathMatches and LHttpMethodMatches and LProducesMatch then
-    begin
-      Result := LMethod;
+    // Already found for the first MediaType, no further search
+    if Assigned(Result) then
       Break;
-    end;
   end;
-
 end;
 
 procedure TWiRLResource.ProcessAttributes;
@@ -477,8 +486,10 @@ begin
   if Assigned(AResultType) then
   begin
     FResultType := AResultType.TypeKind;
-    if FResultType = tkClass then
-      FIsClass := True;
+    case FResultType of
+      tkClass:  FIsClass := True;
+      tkRecord: FIsRecord := True;
+    end;
   end;
 end;
 

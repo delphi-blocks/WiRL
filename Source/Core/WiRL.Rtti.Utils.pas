@@ -26,6 +26,8 @@ type
     class var FContext: TRttiContext;
   public
     // TRttiObject helpers functions
+    class function FindAttribute<T: TCustomAttribute>(AType: TRttiObject): T; static;
+
     class function HasAttribute<T: TCustomAttribute>(
       AClass: TClass): Boolean; overload; static;
 
@@ -546,6 +548,22 @@ class function TRttiHelper.IsObjectOfType<T>(ARttiType: TRttiType;
   const AAllowInherithance: Boolean): Boolean;
 begin
   Result := TRttiHelper.IsObjectOfType(ARttiType, TClass(T), AAllowInherithance);
+end;
+
+class function TRttiHelper.FindAttribute<T>(AType: TRttiObject): T;
+var
+  LAttribute: TCustomAttribute;
+begin
+  Result := nil;
+  for LAttribute in AType.GetAttributes do
+  begin
+    if LAttribute.InheritsFrom(TClass(T)) then
+    begin
+      Result := LAttribute as T;
+
+      Break;
+    end;
+  end;
 end;
 
 end.

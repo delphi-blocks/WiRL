@@ -52,6 +52,7 @@ type
     class function GetInstance: TWiRLMessageBodyRegistry; static; inline;
   protected
     function GetProducesMediaTypes(const AObject: TRttiObject): TMediaTypeList;
+    function ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
   public
     constructor Create;
     destructor Destroy; override;
@@ -75,7 +76,7 @@ type
     function UnregisterWriter(const AWriterClass: TClass): Integer; overload;
     function UnregisterWriter(const AQualifiedClassName: string): Integer; overload;
 
-    procedure FindWriter(const AMethod: TRttiMethod; AMediaTypeList: TMediaTypeList;
+    procedure FindWriter(const AMethod: TRttiMethod; AAcceptMediaTypes: TMediaTypeList;
       out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
 
     procedure Enumerate(const AProc: TProc<TEntryInfo>);
@@ -123,7 +124,7 @@ begin
     AProc(LEntry);
 end;
 
-procedure TWiRLMessageBodyRegistry.FindWriter(const AMethod: TRttiMethod; AMediaTypeList: TMediaTypeList;
+procedure TWiRLMessageBodyRegistry.FindWriter(const AMethod: TRttiMethod; AAcceptMediaTypes: TMediaTypeList;
   out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
 var
   LWriterEntry: TEntryInfo;
@@ -131,14 +132,10 @@ var
   LCandidateAffinity: Integer;
   LCandidate: TEntryInfo;
   LWriterRttiType: TRttiType;
-
   LWriterMediaTypes: TMediaTypeList;
-  LMethodProducesMediaTypes: TMediaTypeList;
-  LAllowedMediaTypes: TArray<string>;
-  LMediaTypes: TArray<string>;
-  LMediaType: string;
-  LCandidateMediaType: string;
-  LCandidateQualityFactor: Double;
+  LAllowedMediaList: TMediaTypeList;
+  LMethodMediaTypes: TMediaTypeList;
+  LMediaType: TMediaType;
 begin
   if FRegistry.Count = 0 then
     raise EWiRLServerException.Create('MessageBodyWriters registry is empty. Please include the MBW''s units in your project');
@@ -147,55 +144,48 @@ begin
   AMediaType := nil;
   LFound := False;
   LCandidateAffinity := -1;
-  LCandidateMediaType := '';
-  LCandidateQualityFactor := -1;
   if not Assigned(AMethod.ReturnType) then
     Exit; // no serialization (it's a procedure!)
 
-  // consider method's Produces
-  LMethodProducesMediaTypes := GetProducesMediaTypes(AMethod);
+  LMethodMediaTypes := GetProducesMediaTypes(AMethod);
   try
-    LAllowedMediaTypes := LMethodProducesMediaTypes.IntersectionWithDefault(AMediaTypeList);
-
-    // collect compatible writers
-    for LWriterEntry in FRegistry do
-    begin
-      LWriterRttiType := FRttiContext.FindType(LWriterEntry.RttiName);
-      LWriterMediaTypes := GetProducesMediaTypes(LWriterRttiType);
-      try
-        if LWriterMediaTypes.Contains(TMediaType.WILDCARD) then
-          LMediaTypes := LAllowedMediaTypes
-        else
-          LMediaTypes := LWriterMediaTypes.Intersection(LAllowedMediaTypes);
-        for LMediaType in LMediaTypes do
-          if LWriterEntry.IsWritable(AMethod.ReturnType, AMethod.GetAttributes, LMediaType) then
-          begin
-            if not LFound
-               or (
-                 (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.ReturnType, AMethod.GetAttributes, LMediaType))
-                 or (LCandidateQualityFactor < AMediaTypeList.GetQualityFactor(LMediaType))
-               )
+    LAllowedMediaList := ProducesAcceptIntersection(LMethodMediaTypes, AAcceptMediaTypes);
+    try
+      for LMediaType in LAllowedMediaList do
+      begin
+        for LWriterEntry in FRegistry do
+        begin
+          LWriterRttiType := FRttiContext.FindType(LWriterEntry.RttiName);
+          LWriterMediaTypes := GetProducesMediaTypes(LWriterRttiType);
+          try
+            if (LWriterMediaTypes.Contains(TMediaType.WILDCARD) or LWriterMediaTypes.Contains(LMediaType)) and
+              LWriterEntry.IsWritable(AMethod.ReturnType, AMethod.GetAttributes, LMediaType.AcceptItemOnly)
             then
             begin
-              LCandidate := LWriterEntry;
-              LCandidateAffinity := LCandidate.GetAffinity(AMethod.ReturnType, AMethod.GetAttributes, LMediaType);
-              LCandidateMediaType := LMediaType;
-              LCandidateQualityFactor := AMediaTypeList.GetQualityFactor(LMediaType);
-              LFound := True;
+              if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.ReturnType, AMethod.GetAttributes, LMediaType.AcceptItemOnly)) then
+              begin
+                LCandidate := LWriterEntry;
+                LCandidateAffinity := LCandidate.GetAffinity(AMethod.ReturnType, AMethod.GetAttributes, LMediaType.AcceptItemOnly);
+                LFound := True;
+              end;
             end;
+          finally
+            LWriterMediaTypes.Free;
           end;
-      finally
-        LWriterMediaTypes.Free;
-      end;
-    end;
+        end;
+        if LFound then
+        begin
+          AWriter := LCandidate.CreateInstance();
+          AMediaType := LMediaType.Clone;
 
-    if LFound then
-    begin
-      AWriter := LCandidate.CreateInstance();
-      AMediaType := TMediaType.Create(LCandidateMediaType);
+          Break;
+        end;
+      end;
+    finally
+      LAllowedMediaList.Free;
     end;
   finally
-    LMethodProducesMediaTypes.Free;
+    LMethodMediaTypes.Free;
   end;
 end;
 
@@ -239,6 +229,20 @@ begin
   );
 
   Result := LList;
+end;
+
+function TWiRLMessageBodyRegistry.ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
+begin
+  if AAccept.Empty or AAccept.IsWildCard then
+    Result := AProduces.CloneList
+  else
+    Result := AProduces.IntersectionList(AAccept);
+
+  if Result.Empty then
+  begin
+    Result.Add(TMediaType.Create(TMediaType.APPLICATION_JSON));
+    Result.Add(TMediaType.Create(TMediaType.WILDCARD));
+  end;
 end;
 
 procedure TWiRLMessageBodyRegistry.RegisterWriter(const AWriterClass: TClass;

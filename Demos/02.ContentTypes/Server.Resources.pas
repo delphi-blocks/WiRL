@@ -28,13 +28,16 @@ type
     const XML_AND_JSON = TMediaType.APPLICATION_XML + ',' + TMediaType.APPLICATION_JSON;
   public
     [GET, Produces(TMediaType.TEXT_HTML)]
-    function HtmlDocument: string;
+    function HelloWorld_HTML: string;
 
     [GET, Produces(TMediaType.TEXT_PLAIN)]
-    function SayHelloWorld: string;
+    function HelloWorld_TEXT: string;
 
     [GET, Produces(TMediaType.APPLICATION_JSON)]
-    function JSON1: TJSONObject;
+    function HelloWorld_JSON: TJSONObject;
+
+    [GET, Produces(TMediaType.APPLICATION_XML)]
+    function HelloWorld_XML: string;
 
     [GET, Produces('image/jpg')]
     function JpegImage: TStream;
@@ -96,7 +99,7 @@ begin
   Result := DataSet2;
 end;
 
-function TSampleResource.HtmlDocument: string;
+function TSampleResource.HelloWorld_HTML: string;
 begin
   Result :=
     '<html><body>' +
@@ -109,10 +112,10 @@ begin
   Result := TFileStream.Create('image.jpg', fmOpenRead or fmShareDenyWrite);
 end;
 
-function TSampleResource.JSON1: TJSONObject;
+function TSampleResource.HelloWorld_JSON: TJSONObject;
 begin
   Result := TJSONObject.Create;
-  Result.AddPair('Hello', 'World');
+  Result.AddPair('Message', 'Hello World!');
 end;
 
 function TSampleResource.PdfDocument: TStream;
@@ -120,9 +123,14 @@ begin
   Result := TFileStream.Create('document.pdf', fmOpenRead or fmShareDenyWrite);
 end;
 
-function TSampleResource.SayHelloWorld: string;
+function TSampleResource.HelloWorld_TEXT: string;
 begin
   Result := 'Hello World!';
+end;
+
+function TSampleResource.HelloWorld_XML: string;
+begin
+  Result := '<?xml version="1.0" encoding="utf-8"?><document><message>Hello World!</message></document>';
 end;
 
 initialization

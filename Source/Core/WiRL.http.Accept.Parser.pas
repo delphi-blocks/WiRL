@@ -31,9 +31,11 @@ type
     FQFactor: Double;
     function GetIsWildcard: Boolean;
     function GetWeigth: Integer; virtual;
+    procedure Assign(ASource: TAcceptItem);
   public
     constructor Create(const AAcceptItem: string); virtual;
     destructor Destroy; override;
+
 
     function ToString: string; override;
     function ToStringDebug: string; virtual;
@@ -59,10 +61,13 @@ type
   end;
 
   TAcceptItemList<T: TAcceptItem> = class(TObjectList<T>)
+  private
+    function GetEmpty: Boolean;
   public
     constructor Create; virtual;
 
     function ToArrayOfString: TArray<string>;
+    function GetWeight(const AItem: string): Integer;
     function GetQualityFactor(const AItem: string): Double;
 
     function Contains(const AAcceptItem: string): Boolean; overload;
@@ -70,10 +75,11 @@ type
 
     function Intersection(const AList: TAcceptItemList<T>): TArray<string>; overload;
     function Intersection(const AList: TArray<string>): TArray<string>; overload;
-    function IntersectionList(const AList: TAcceptItemList<T>): TAcceptItemList<T>; overload;
     function IntersectionList(const AList: TArray<string>): TAcceptItemList<T>; overload;
 
     function Intersected(AList: TAcceptItemList<T>): Boolean;
+
+    property Empty: Boolean read GetEmpty;
   end;
 
   TAcceptHeaderParser<T: TAcceptItem> = class
@@ -87,6 +93,14 @@ implementation
 
 uses
   System.StrUtils;
+
+procedure TAcceptItem.Assign(ASource: TAcceptItem);
+begin
+  Self.AcceptItemOnly := ASource.AcceptItemOnly;
+  Self.Parameters.Assign(ASource.Parameters);
+  Self.PFactor := ASource.PFactor;
+  Self.QFactor := ASource.QFactor;
+end;
 
 constructor TAcceptItem.Create(const AAcceptItem: string);
 begin
@@ -202,6 +216,11 @@ begin
   );
 end;
 
+function TAcceptItemList<T>.GetEmpty: Boolean;
+begin
+  Result := Count = 0;
+end;
+
 function TAcceptItemList<T>.GetQualityFactor(const AItem: string): Double;
 var
   LItem: T;
@@ -215,12 +234,25 @@ begin
     end;
 end;
 
+function TAcceptItemList<T>.GetWeight(const AItem: string): Integer;
+var
+  LItem: T;
+begin
+  Result := 0;
+  for LItem in Self do
+    if LItem.ToString = AItem then
+    begin
+      Result := LItem.Weight;
+      Break;
+    end;
+end;
+
 function TAcceptItemList<T>.Intersected(AList: TAcceptItemList<T>): Boolean;
 var
   LIntersection: TStringArray;
 begin
   if Self.Count = 0 then
-    Self.Add(TAcceptItemFactory<T>.CreateItem(T.GetWildcard));
+    Exit(True);
 
   LIntersection := Self.Intersection(AList);
 
@@ -256,20 +288,6 @@ begin
     for LItem in AList do
       if Self.Contains(LItem) then
         Result.Add(TAcceptItemFactory<T>.CreateItem(LItem))
-  except
-    Result.Free;
-  end;
-end;
-
-function TAcceptItemList<T>.IntersectionList(const AList: TAcceptItemList<T>): TAcceptItemList<T>;
-var
-  LItem: T;
-begin
-  Result := TAcceptItemList<T>.Create;
-  try
-    for LItem in AList do
-      if Self.Contains(LItem) then
-        Result.Add(LItem);
   except
     Result.Free;
   end;

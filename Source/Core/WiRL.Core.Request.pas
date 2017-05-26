@@ -172,9 +172,10 @@ end;
 function TWiRLRequest.GetAcceptableMediaTypes: TMediaTypeList;
 begin
   if not Assigned(FAcceptableMediaTypes) then
+  begin
     FAcceptableMediaTypes := TMediaTypeList.Create;
-
-  TAcceptHeaderParser<TMediaType>.Parse(Accept, FAcceptableMediaTypes);
+    TAcceptHeaderParser<TMediaType>.Parse(Accept, FAcceptableMediaTypes);
+  end;
 
   Result := FAcceptableMediaTypes;
 end;

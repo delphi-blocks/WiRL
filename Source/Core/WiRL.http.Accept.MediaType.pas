@@ -64,6 +64,9 @@ type
     constructor CreateEx(const AType, ASubType, AParams: string); overload;
     constructor CreateEx(const AType, ASubType: string; AParams: TStringList); overload;
 
+    function Clone: TMediaType;
+    procedure Assign(ASource: TMediaType);
+
     class function GetWildcard: string; override;
 
     property MainType: string read FMainType;
@@ -75,7 +78,12 @@ type
 
   TMediaTypeList = class(TAcceptItemList<TMediaType>)
   public
-    function IntersectionWithDefault(AList: TMediaTypeList): TArray<string>;
+    function CloneList: TMediaTypeList;
+    procedure Assign(ASource: TMediaTypeList);
+  public
+    function IsWildCard: Boolean;
+    function HasWildCard: Boolean;
+    function IntersectionList(const AList: TMediaTypeList): TMediaTypeList;  overload;
   end;
 
 implementation
@@ -84,6 +92,22 @@ uses
   System.StrUtils;
 
 { TMediaType }
+
+procedure TMediaType.Assign(ASource: TMediaType);
+begin
+  inherited Assign(ASource);
+  Self.FMainType := ASource.MainType;
+  Self.FSubType  := ASource.SubType;
+  Self.FVersion  := ASource.Version;
+  Self.FDialect  := ASource.Dialect;
+  Self.FCharset  := ASource.Charset;
+end;
+
+function TMediaType.Clone: TMediaType;
+begin
+  Result := TMediaType.Create('');
+  Result.Assign(Self);
+end;
 
 constructor TMediaType.Create(const AAcceptItem: string);
 begin
@@ -140,27 +164,42 @@ begin
   end;
 end;
 
-function TMediaTypeList.IntersectionWithDefault(AList: TMediaTypeList): TArray<string>;
+procedure TMediaTypeList.Assign(ASource: TMediaTypeList);
+var
+  LItem: TMediaType;
 begin
-  // AList: AMediaTypeList
-  // Self: LMethodProducesMediaTypes
-  if Self.Count > 0 then
-    Result := Self.Intersection(AList)
-  else
-    Result := AList.ToArrayOfString;
+  Clear;
+  for LItem in ASource do
+    Self.Add(LItem.Clone);
+end;
 
-  if (Length(Result) = 0) or
-     ((Length(Result) = 1) and (Result[0] = TMediaType.GetWildcard))
-  then // defaults
-  begin
-    if Self.Count > 0 then
-      Result := Self.ToArrayOfString
-    else
-    begin
-      SetLength(Result, 2);
-      Result[0] := TMediaType.APPLICATION_JSON;
-      Result[1] := TMediaType.WILDCARD;
-    end;
+function TMediaTypeList.CloneList: TMediaTypeList;
+begin
+  Result := TMediaTypeList.Create;
+  Result.Assign(Self);
+end;
+
+function TMediaTypeList.IsWildCard: Boolean;
+begin
+  Result := (Count = 1) and Self.Contains(TMediaType.WILDCARD);
+end;
+
+function TMediaTypeList.HasWildCard: Boolean;
+begin
+  Result := Self.Contains(TMediaType.WILDCARD);
+end;
+
+function TMediaTypeList.IntersectionList(const AList: TMediaTypeList): TMediaTypeList;
+var
+  LItem: TMediaType;
+begin
+  Result := TMediaTypeList.Create;
+  try
+    for LItem in AList do
+      if Self.Contains(LItem) then
+        Result.Add(LItem.Clone);
+  except
+    Result.Free;
   end;
 end;
 

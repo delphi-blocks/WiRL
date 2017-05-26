@@ -896,7 +896,7 @@ begin
         end;
       end;
     end
-    else if LMethodResult.Kind <> tkUnknown then // it's a procedure, not a function!
+    else if LMethodResult.Kind <> tkUnknown then
       // fallback (no MBW, no TWiRLResponse)
       raise EWiRLNotImplementedException.Create(
         'Resource''s returned type not supported',
