@@ -14,8 +14,8 @@ unit WiRL.Core.MessageBodyWriter;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti,
-  System.Generics.Defaults, System.Generics.Collections,
+  System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
+
   WiRL.Core.Singleton,
   WiRL.Core.Response,
   WiRL.Core.Resource,
@@ -33,64 +33,85 @@ type
 
   TIsWritableFunction = reference to function(AType: TRttiType;
     const AAttributes: TAttributeArray; AMediaType: string): Boolean;
+
   TGetAffinityFunction = reference to function(AType: TRttiType;
     const AAttributes: TAttributeArray; AMediaType: string): Integer;
 
-  TWiRLMessageBodyRegistry = class
-  private type
-    TEntryInfo = record
-      _RttiType: TRttiType;
-      RttiName: string;
-      CreateInstance: TFunc<IMessageBodyWriter>;
-      IsWritable: TIsWritableFunction;
-      GetAffinity: TGetAffinityFunction;
-    end;
-  private type
-    TWiRLMessageBodyRegistrySingleton = TWiRLSingleton<TWiRLMessageBodyRegistry>;
-  private
-    FRegistry: TList<TEntryInfo>;
-    FRttiContext: TRttiContext;
-    class function GetInstance: TWiRLMessageBodyRegistry; static; inline;
-  private
-    function GetProducesMediaTypes(const AObject: TRttiObject): TMediaTypeList;
-    function ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
+  TWiRLWriterRegistry = class
   public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure RegisterWriter(
-      const ACreateInstance: TFunc<IMessageBodyWriter>;
-      const AIsWritable: TIsWritableFunction;
-      const AGetAffinity: TGetAffinityFunction;
-      AWriterRttiType: TRttiType); overload;
-
-    procedure RegisterWriter(
-      const AWriterClass: TClass;
-      const AIsWritable: TIsWritableFunction;
-      const AGetAffinity: TGetAffinityFunction); overload;
-
-    procedure RegisterWriter(const AWriterClass: TClass; const ASubjectClass: TClass;
-      const AGetAffinity: TGetAffinityFunction); overload;
-
-    procedure RegisterWriter<T: class>(const AWriterClass: TClass); overload;
-
-    function UnregisterWriter(const AWriterClass: TClass): Integer; overload;
-    function UnregisterWriter(const AQualifiedClassName: string): Integer; overload;
-
-    procedure FindWriter(const AMethod: TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList;
-      out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
-
-    procedure Enumerate(const AProc: TProc<TEntryInfo>);
-
-    class property Instance: TWiRLMessageBodyRegistry read GetInstance;
-    class function GetDefaultClassAffinityFunc<T: class>: TGetAffinityFunction;
-
     const AFFINITY_VERY_HIGH = 50;
     const AFFINITY_HIGH = 30;
     const AFFINITY_LOW = 10;
     const AFFINITY_VERY_LOW = 1;
     const AFFINITY_ZERO = 0;
+  public type
+    TWriterInfo = class
+    private
+      FWriterType: TRttiType;
+      FWriterName: string;
+      FProduces: TMediaTypeList;
+      function GetProducesMediaTypes(AObject: TRttiObject): TMediaTypeList;
+    public
+      CreateInstance: TFunc<IMessageBodyWriter>;
+      IsWritable: TIsWritableFunction;
+      GetAffinity: TGetAffinityFunction;
+
+      constructor Create(AType: TRttiType);
+      destructor Destroy; override;
+
+      property Produces: TMediaTypeList read FProduces;
+      property WriterName: string read FWriterName;
+      property WriterType: TRttiType read FWriterType write FWriterType;
+    end;
+  private
+    function GetCount: Integer;
+  protected
+    FRegistry: TObjectList<TWriterInfo>;
+    FRttiContext: TRttiContext;
+    function ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
+  public
+    class function GetDefaultClassAffinityFunc<T: class>: TGetAffinityFunction;
+  public
+    constructor Create; overload;
+    constructor Create(AOwnsObjects: Boolean); overload;
+    destructor Destroy; override;
+
+    function GetEnumerator: TObjectList<TWriterInfo>.TEnumerator;
+    function GetWriterByName(const AQualifiedClassName: string): TWriterInfo;
+    function Add(AWriter: TWriterInfo): Integer;
+    procedure Assign(ARegistry: TWiRLWriterRegistry);
+    procedure Enumerate(const AProc: TProc<TWriterInfo>);
+
+    procedure FindWriter(AMethod: TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList;
+      out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
+
+    property Count: Integer read GetCount;
   end;
+
+  TMessageBodyWriterRegistry = class(TWiRLWriterRegistry)
+  private type
+    TWiRLRegistrySingleton = TWiRLSingleton<TMessageBodyWriterRegistry>;
+  private
+    class function GetInstance: TMessageBodyWriterRegistry; static; inline;
+  public
+    procedure RegisterWriter(const ACreateInstance: TFunc<IMessageBodyWriter>;
+        const AIsWritable: TIsWritableFunction; const AGetAffinity:
+        TGetAffinityFunction; AWriterRttiType: TRttiType); overload;
+
+    procedure RegisterWriter(const AWriterClass: TClass; const AIsWritable:
+        TIsWritableFunction; const AGetAffinity: TGetAffinityFunction); overload;
+
+    procedure RegisterWriter(const AWriterClass: TClass; const ASubjectClass:
+        TClass; const AGetAffinity: TGetAffinityFunction); overload;
+
+    procedure RegisterWriter<T: class>(const AWriterClass: TClass); overload;
+
+    function UnregisterWriter(const AWriterClass: TClass): Integer; overload;
+    function UnregisterWriter(const AQualifiedClassName: string): Integer; overload;
+  public
+    class property Instance: TMessageBodyWriterRegistry read GetInstance;
+  end;
+
 
 implementation
 
@@ -99,43 +120,55 @@ uses
   WiRL.Core.Utils,
   WiRL.Rtti.Utils;
 
-{ TWiRLMessageBodyRegistry }
+{ TWiRLWriterRegistry }
 
-constructor TWiRLMessageBodyRegistry.Create;
+function TWiRLWriterRegistry.Add(AWriter: TWriterInfo): Integer;
 begin
-  TWiRLMessageBodyRegistrySingleton.CheckInstance(Self);
+  Result := FRegistry.Add(AWriter);
+end;
 
-  inherited Create;
+procedure TWiRLWriterRegistry.Assign(ARegistry: TWiRLWriterRegistry);
+var
+  LWriterInfo: TWriterInfo;
+begin
+  for LWriterInfo in ARegistry.FRegistry do
+    FRegistry.Add(LWriterInfo);
+end;
 
-  FRegistry := TList<TEntryInfo>.Create;
+constructor TWiRLWriterRegistry.Create;
+begin
+  Create(True);
+end;
+
+constructor TWiRLWriterRegistry.Create(AOwnsObjects: Boolean);
+begin
+  FRegistry := TObjectList<TWriterInfo>.Create(AOwnsObjects);
   FRttiContext := TRttiContext.Create;
 end;
 
-destructor TWiRLMessageBodyRegistry.Destroy;
+destructor TWiRLWriterRegistry.Destroy;
 begin
   FRegistry.Free;
   inherited;
 end;
 
-procedure TWiRLMessageBodyRegistry.Enumerate(const AProc: TProc<TEntryInfo>);
+procedure TWiRLWriterRegistry.Enumerate(const AProc: TProc<TWriterInfo>);
 var
-  LEntry: TEntryInfo;
+  LEntry: TWriterInfo;
 begin
   for LEntry in FRegistry do
     AProc(LEntry);
 end;
 
-procedure TWiRLMessageBodyRegistry.FindWriter(const AMethod:
-    TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList; out AWriter:
-    IMessageBodyWriter; out AMediaType: TMediaType);
+procedure TWiRLWriterRegistry.FindWriter(AMethod: TWiRLResourceMethod;
+  AAcceptMediaTypes: TMediaTypeList;
+  out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
 var
-  LWriterEntry: TEntryInfo;
+  LWriterEntry: TWriterInfo;
   LFound: Boolean;
   LCandidateAffinity: Integer;
-  LCandidate: TEntryInfo;
+  LCandidate: TWriterInfo;
   LMediaType: TMediaType;
-  LWriterRttiType: TRttiType;
-  LWriterMediaTypes: TMediaTypeList;
   LAllowedMediaList: TMediaTypeList;
 begin
   if FRegistry.Count = 0 then
@@ -144,6 +177,7 @@ begin
   AWriter := nil;
   AMediaType := nil;
   LFound := False;
+  LCandidate := nil;
   LCandidateAffinity := -1;
   if not AMethod.IsFunction then
     Exit; // no serialization (it's a procedure!)
@@ -154,22 +188,16 @@ begin
     begin
       for LWriterEntry in FRegistry do
       begin
-        LWriterRttiType := FRttiContext.FindType(LWriterEntry.RttiName);
-        LWriterMediaTypes := GetProducesMediaTypes(LWriterRttiType);
-        try
-          if (LWriterMediaTypes.Contains(TMediaType.WILDCARD) or LWriterMediaTypes.Contains(LMediaType)) and
-            LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)
-          then
+        if (LWriterEntry.Produces.Contains(TMediaType.WILDCARD) or LWriterEntry.Produces.Contains(LMediaType)) and
+          LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)
+        then
+        begin
+          if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)) then
           begin
-            if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)) then
-            begin
-              LCandidate := LWriterEntry;
-              LCandidateAffinity := LCandidate.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly);
-              LFound := True;
-            end;
+            LCandidate := LWriterEntry;
+            LCandidateAffinity := LCandidate.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly);
+            LFound := True;
           end;
-        finally
-          LWriterMediaTypes.Free;
         end;
       end;
       if LFound then
@@ -185,7 +213,12 @@ begin
   end;
 end;
 
-class function TWiRLMessageBodyRegistry.GetDefaultClassAffinityFunc<T>: TGetAffinityFunction;
+function TWiRLWriterRegistry.GetCount: Integer;
+begin
+  Result := FRegistry.Count;
+end;
+
+class function TWiRLWriterRegistry.GetDefaultClassAffinityFunc<T>: TGetAffinityFunction;
 begin
   Result :=
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
@@ -199,13 +232,52 @@ begin
     end
 end;
 
-class function TWiRLMessageBodyRegistry.GetInstance: TWiRLMessageBodyRegistry;
+function TWiRLWriterRegistry.GetEnumerator: TObjectList<TWriterInfo>.TEnumerator;
 begin
-  Result := TWiRLMessageBodyRegistrySingleton.Instance;
+  Result := FRegistry.GetEnumerator;
 end;
 
-function TWiRLMessageBodyRegistry.GetProducesMediaTypes(
-  const AObject: TRttiObject): TMediaTypeList;
+function TWiRLWriterRegistry.GetWriterByName(const AQualifiedClassName: string): TWriterInfo;
+var
+  LWriterInfo: TWriterInfo;
+begin
+  Result := nil;
+  for LWriterInfo in FRegistry do
+    if SameText(LWriterInfo.FWriterName, AQualifiedClassName) then
+      Exit(LWriterInfo);
+end;
+
+function TWiRLWriterRegistry.ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
+begin
+  if AAccept.Empty or AAccept.IsWildCard then
+    Result := AProduces.CloneList
+  else
+    Result := AProduces.IntersectionList(AAccept);
+
+  if Result.Empty then
+  begin
+    Result.Add(TMediaType.Create(TMediaType.APPLICATION_JSON));
+    Result.Add(TMediaType.Create(TMediaType.WILDCARD));
+  end;
+end;
+
+
+{ TWiRLWriterRegistry.TWriterInfo }
+
+constructor TWiRLWriterRegistry.TWriterInfo.Create(AType: TRttiType);
+begin
+  FWriterType := AType;
+  FWriterName := AType.QualifiedName;
+  FProduces := GetProducesMediaTypes(AType);
+end;
+
+destructor TWiRLWriterRegistry.TWriterInfo.Destroy;
+begin
+  FProduces.Free;
+  inherited;
+end;
+
+function TWiRLWriterRegistry.TWriterInfo.GetProducesMediaTypes(AObject: TRttiObject): TMediaTypeList;
 var
   LList: TMediaTypeList;
 begin
@@ -227,22 +299,29 @@ begin
   Result := LList;
 end;
 
-function TWiRLMessageBodyRegistry.ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
+class function TMessageBodyWriterRegistry.GetInstance: TMessageBodyWriterRegistry;
 begin
-  if AAccept.Empty or AAccept.IsWildCard then
-    Result := AProduces.CloneList
-  else
-    Result := AProduces.IntersectionList(AAccept);
-
-  if Result.Empty then
-  begin
-    Result.Add(TMediaType.Create(TMediaType.APPLICATION_JSON));
-    Result.Add(TMediaType.Create(TMediaType.WILDCARD));
-  end;
+  Result := TWiRLRegistrySingleton.Instance;
 end;
 
-procedure TWiRLMessageBodyRegistry.RegisterWriter(const AWriterClass: TClass;
-  const AIsWritable: TIsWritableFunction; const AGetAffinity: TGetAffinityFunction);
+procedure TMessageBodyWriterRegistry.RegisterWriter(const ACreateInstance:
+    TFunc<IMessageBodyWriter>; const AIsWritable: TIsWritableFunction; const
+    AGetAffinity: TGetAffinityFunction; AWriterRttiType: TRttiType);
+var
+  LEntryInfo: TWriterInfo;
+begin
+  LEntryInfo := TWriterInfo.Create(AWriterRttiType);
+
+  LEntryInfo.CreateInstance := ACreateInstance;
+  LEntryInfo.IsWritable := AIsWritable;
+  LEntryInfo.GetAffinity := AGetAffinity;
+
+  FRegistry.Add(LEntryInfo)
+end;
+
+procedure TMessageBodyWriterRegistry.RegisterWriter(const AWriterClass: TClass;
+    const AIsWritable: TIsWritableFunction; const AGetAffinity:
+    TGetAffinityFunction);
 begin
   RegisterWriter(
     function : IMessageBodyWriter
@@ -260,8 +339,8 @@ begin
   );
 end;
 
-procedure TWiRLMessageBodyRegistry.RegisterWriter(const AWriterClass,
-  ASubjectClass: TClass; const AGetAffinity: TGetAffinityFunction);
+procedure TMessageBodyWriterRegistry.RegisterWriter(const AWriterClass,
+    ASubjectClass: TClass; const AGetAffinity: TGetAffinityFunction);
 begin
   RegisterWriter(
     AWriterClass,
@@ -273,7 +352,8 @@ begin
   );
 end;
 
-procedure TWiRLMessageBodyRegistry.RegisterWriter<T>(const AWriterClass: TClass);
+procedure TMessageBodyWriterRegistry.RegisterWriter<T>(const AWriterClass:
+    TClass);
 begin
   RegisterWriter(
     AWriterClass,
@@ -285,41 +365,25 @@ begin
   );
 end;
 
-procedure TWiRLMessageBodyRegistry.RegisterWriter(
-  const ACreateInstance: TFunc<IMessageBodyWriter>;
-  const AIsWritable: TIsWritableFunction;
-  const AGetAffinity: TGetAffinityFunction;
-  AWriterRttiType: TRttiType);
-var
-  LEntryInfo: TEntryInfo;
-begin
-  LEntryInfo.CreateInstance := ACreateInstance;
-  LEntryInfo.IsWritable := AIsWritable;
-  LEntryInfo._RttiType := AWriterRttiType;
-  LEntryInfo.RttiName := AWriterRttiType.QualifiedName;
-  LEntryInfo.GetAffinity := AGetAffinity;
-
-  FRegistry.Add(LEntryInfo)
-end;
-
-function TWiRLMessageBodyRegistry.UnregisterWriter(const AWriterClass: TClass): Integer;
+function TMessageBodyWriterRegistry.UnregisterWriter(const AWriterClass:
+    TClass): Integer;
 begin
   Result := UnregisterWriter(AWriterClass.QualifiedClassName);
 end;
 
-function TWiRLMessageBodyRegistry.UnregisterWriter(const AQualifiedClassName: string): Integer;
+function TMessageBodyWriterRegistry.UnregisterWriter(const AQualifiedClassName:
+    string): Integer;
 var
   LIndex: Integer;
 begin
   Result := -1;
   for LIndex := 0 to FRegistry.Count - 1 do
-    if FRegistry[LIndex].RttiName = AQualifiedClassName then
+    if FRegistry[LIndex].WriterName = AQualifiedClassName then
     begin
       FRegistry.Delete(LIndex);
       Result := LIndex;
       Break;
     end;
 end;
-
 
 end.

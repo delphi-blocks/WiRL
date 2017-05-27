@@ -35,6 +35,7 @@ type
 
     procedure Startup; override;
     procedure Shutdown; override;
+
     procedure DoCommandGet(AContext: TIdContext;
       ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo); override;
     procedure DoCommandOther(AContext: TIdContext;
@@ -196,7 +197,9 @@ end;
 
 procedure TWiRLhttpServerIndy.Shutdown;
 begin
-  inherited;
+  inherited Shutdown;
+
+  FEngine.Shutdown;
   Bindings.Clear;
 end;
 
@@ -204,14 +207,14 @@ procedure TWiRLhttpServerIndy.Startup;
 begin
   Bindings.Clear;
   DefaultPort := FEngine.Port;
+  FEngine.Startup;
 
-  inherited;
+  inherited Startup;
 end;
 
 { TWiRLHttpRequestIndy }
 
-constructor TWiRLHttpRequestIndy.Create(AContext: TIdContext;
-  ARequestInfo: TIdHTTPRequestInfo);
+constructor TWiRLHttpRequestIndy.Create(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
 begin
   inherited Create;
   FContext := AContext;

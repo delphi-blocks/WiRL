@@ -116,7 +116,7 @@ end;
 
 procedure RegisterWriters;
 begin
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TFDAdaptedDataSetWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
@@ -124,11 +124,11 @@ begin
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
     end
   );
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TArrayFDCustomQueryWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
@@ -136,7 +136,7 @@ begin
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH
     end
   );
 end;

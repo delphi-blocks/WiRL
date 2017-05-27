@@ -51,6 +51,8 @@ type
     FSecret: TBytes;
     FResourceRegistry: TObjectDictionary<string, TWiRLConstructorInfo>;
     FFilterRegistry: TWiRLFilterRegistry;
+    FWriterRegistry: TWiRLWriterRegistry;
+    FReaderRegistry: TWiRLReaderRegistry;
     FBasePath: string;
     FName: string;
     FClaimClass: TWiRLSubjectClass;
@@ -60,8 +62,10 @@ type
     FTokenLocation: TAuthTokenLocation;
     FTokenCustomHeader: string;
     function GetResources: TArray<string>;
-    function AddResource(AResource: string): Boolean;
-    function AddFilter(AFilter: string): Boolean;
+    function AddResource(const AResource: string): Boolean;
+    function AddFilter(const AFilter: string): Boolean;
+    function AddWriter(const AWriter: string): Boolean;
+    function AddReader(const AReader: string): Boolean;
     function GetSecret: TBytes;
     function GetAuthChallengeHeader: string;
   public
@@ -70,11 +74,18 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure Startup;
+    procedure Shutdown;
+
     // Fluent-like configuration methods
     function SetResources(const AResources: TArray<string>): TWiRLApplication; overload;
     function SetResources(const AResources: string): TWiRLApplication; overload;
     function SetFilters(const AFilters: TArray<string>): TWiRLApplication; overload;
     function SetFilters(const AFilters: string): TWiRLApplication; overload;
+    function SetWriters(const AWriters: TArray<string>): TWiRLApplication; overload;
+    function SetWriters(const AWriters: string): TWiRLApplication; overload;
+    function SetReaders(const AReaders: TArray<string>): TWiRLApplication; overload;
+    function SetReaders(const AReaders: string): TWiRLApplication; overload;
     function SetSecret(const ASecret: TBytes): TWiRLApplication; overload;
     function SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication; overload;
     function SetBasePath(const ABasePath: string): TWiRLApplication;
@@ -92,6 +103,7 @@ type
     property SystemApp: Boolean read FSystemApp;
     property ClaimClass: TWiRLSubjectClass read FClaimClass;
     property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
+    property WriterRegistry: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property Resources: TArray<string> read GetResources;
     property Secret: TBytes read GetSecret;
     property AuthChallengeHeader: string read GetAuthChallengeHeader;
@@ -105,21 +117,20 @@ type
   end;
 
   TWiRLApplicationWorker = class
-  private
-    type
-      TParamReader = record
-      private
-        FWorker: TWiRLApplicationWorker;
-        FContext: TWiRLContext;
-        FParam: TRttiParameter;
-        FDefaultValue: string;
-      public
-        function AsString(AAttr: TCustomAttribute): string;
-        function AsInteger(AAttr: TCustomAttribute): Integer;
-        function AsChar(AAttr: TCustomAttribute): Char;
-        function AsFloat(AAttr: TCustomAttribute): Double;
-        constructor Create(AWorker: TWiRLApplicationWorker; AParam: TRttiParameter; const ADefaultValue: string);
-      end;
+  private type
+    TParamReader = record
+    private
+      FWorker: TWiRLApplicationWorker;
+      FContext: TWiRLContext;
+      FParam: TRttiParameter;
+      FDefaultValue: string;
+    public
+      function AsString(AAttr: TCustomAttribute): string;
+      function AsInteger(AAttr: TCustomAttribute): Integer;
+      function AsChar(AAttr: TCustomAttribute): Char;
+      function AsFloat(AAttr: TCustomAttribute): Double;
+      constructor Create(AWorker: TWiRLApplicationWorker; AParam: TRttiParameter; const ADefaultValue: string);
+    end;
   private
     FContext: TWiRLContext;
     FAppConfig: TWiRLApplication;
@@ -186,7 +197,7 @@ end;
 
 { TWiRLApplication }
 
-function TWiRLApplication.AddFilter(AFilter: string): Boolean;
+function TWiRLApplication.AddFilter(const AFilter: string): Boolean;
 var
   LRegistry: TWiRLFilterRegistry;
   LInfo: TWiRLFilterConstructorInfo;
@@ -215,7 +226,31 @@ begin
   end;
 end;
 
-function TWiRLApplication.AddResource(AResource: string): Boolean;
+function TWiRLApplication.AddReader(const AReader: string): Boolean;
+var
+  LGlobalRegistry: TWiRLReaderRegistry;
+  LReader: TWiRLReaderRegistry.TReaderInfo;
+begin
+  Result := False;
+  LGlobalRegistry := TMessageBodyReaderRegistry.Instance;
+
+  if IsMask(AReader) then // has wildcards and so on...
+  begin
+    FReaderRegistry.Assign(LGlobalRegistry);
+    Result := True;
+  end
+  else // exact match
+  begin
+    LReader := LGlobalRegistry.GetReaderByName(AReader);
+    if Assigned(LReader) then
+    begin
+      FReaderRegistry.Add(LReader);
+      Result := True;
+    end;
+  end;
+end;
+
+function TWiRLApplication.AddResource(const AResource: string): Boolean;
 
   function AddResourceToApplicationRegistry(const AInfo: TWiRLConstructorInfo): Boolean;
   var
@@ -268,6 +303,30 @@ begin
       Result := AddResourceToApplicationRegistry(LInfo);
 end;
 
+function TWiRLApplication.AddWriter(const AWriter: string): Boolean;
+var
+  LGlobalRegistry: TWiRLWriterRegistry;
+  LWriter: TWiRLWriterRegistry.TWriterInfo;
+begin
+  Result := False;
+  LGlobalRegistry := TMessageBodyWriterRegistry.Instance;
+
+  if IsMask(AWriter) then // has wildcards and so on...
+  begin
+    FWriterRegistry.Assign(LGlobalRegistry);
+    Result := True;
+  end
+  else // exact match
+  begin
+    LWriter := LGlobalRegistry.GetWriterByName(AWriter);
+    if Assigned(LWriter) then
+    begin
+      FWriterRegistry.Add(LWriter);
+      Result := True;
+    end;
+  end;
+end;
+
 function TWiRLApplication.SetAuthChallenge(AChallenge: TAuthChallenge;
   const ARealm: string): TWiRLApplication;
 begin
@@ -288,6 +347,20 @@ begin
   Result := Self;
 end;
 
+function TWiRLApplication.SetReaders(const AReaders: TArray<string>): TWiRLApplication;
+var
+  LReader: string;
+begin
+  Result := Self;
+  for LReader in AReaders do
+    Self.AddReader(LReader);
+end;
+
+function TWiRLApplication.SetReaders(const AReaders: string): TWiRLApplication;
+begin
+  Result := SetReaders(AReaders.Split([',']));
+end;
+
 function TWiRLApplication.SetResources(const AResources: string): TWiRLApplication;
 begin
   Result := SetResources(AResources.Split([',']));
@@ -302,6 +375,34 @@ end;
 function TWiRLApplication.SetFilters(const AFilters: string): TWiRLApplication;
 begin
   Result := SetFilters(AFilters.Split([',']));
+end;
+
+function TWiRLApplication.SetWriters(const AWriters: TArray<string>): TWiRLApplication;
+var
+  LWriter: string;
+begin
+  Result := Self;
+  for LWriter in AWriters do
+    Self.AddWriter(LWriter);
+end;
+
+function TWiRLApplication.SetWriters(const AWriters: string): TWiRLApplication;
+begin
+  Result := SetWriters(AWriters.Split([',']));
+end;
+
+procedure TWiRLApplication.Shutdown;
+begin
+
+end;
+
+procedure TWiRLApplication.Startup;
+begin
+  if FWriterRegistry.Count = 0 then
+    FWriterRegistry.Assign(TMessageBodyWriterRegistry.Instance);
+
+  if FReaderRegistry.Count = 0 then
+    FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
 end;
 
 function TWiRLApplication.SetFilters(const AFilters: TArray<string>): TWiRLApplication;
@@ -328,13 +429,17 @@ begin
   FResourceRegistry := TObjectDictionary<string, TWiRLConstructorInfo>.Create([doOwnsValues]);
   FFilterRegistry := TWiRLFilterRegistry.Create;
   FFilterRegistry.OwnsObjects := False;
+  FWriterRegistry := TWiRLWriterRegistry.Create(False);
+  FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FSecret := TEncoding.ANSI.GetBytes(SCRT_SGN);
 end;
 
 destructor TWiRLApplication.Destroy;
 begin
-  FResourceRegistry.Free;
+  FReaderRegistry.Free;
+  FWriterRegistry.Free;
   FFilterRegistry.Free;
+  FResourceRegistry.Free;
   inherited;
 end;
 
@@ -832,7 +937,7 @@ begin
 
   LInstance := FResource.CreateInstance();
   try
-    TWiRLMessageBodyRegistry.Instance.FindWriter(
+    FAppConfig.WriterRegistry.FindWriter(
       FResource.Method,
       FContext.Request.AcceptableMediaTypes,
       LWriter,
@@ -887,7 +992,7 @@ begin
       try
         LStream.Position := 0;
         FContext.Response.ContentStream := LStream;
-        AWriter.WriteTo(LMethodResult, FResource.Method.RttiObject.GetAttributes, AMediaType, FContext.Response);
+        AWriter.WriteTo(LMethodResult, FResource.Method.AllAttributes, AMediaType, FContext.Response);
         LStream.Position := 0;
       except
         on E: Exception do

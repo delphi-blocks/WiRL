@@ -135,7 +135,7 @@ end;
 
 procedure RegisterWriters;
 begin
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TDataSetWriterJSON
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
@@ -143,11 +143,11 @@ begin
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+        Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
       end
   );
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TArrayDataSetWriter
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
@@ -155,11 +155,11 @@ begin
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH
+        Result := TMessageBodyWriterRegistry.AFFINITY_HIGH
       end
   );
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TDataSetWriterXML
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
@@ -167,11 +167,11 @@ begin
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+        Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
       end
   );
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TDataSetWriterCSV
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
       begin
@@ -179,7 +179,7 @@ begin
       end
     , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
       begin
-        Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+        Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
       end
   );
 

@@ -84,6 +84,9 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure Startup;
+    procedure Shutdown;
+
     procedure HandleRequest(AContext: TWiRLContext);
 
     function AddApplication(const ABasePath: string): TWiRLApplication; overload; virtual;
@@ -365,6 +368,32 @@ function TWiRLEngine.SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLEngine;
 begin
   FThreadPoolSize := AThreadPoolSize;
   Result := Self;
+end;
+
+procedure TWiRLEngine.Shutdown;
+var
+  LPair: TPair<string, TWiRLApplication>;
+begin
+  FCriticalSection.Enter;
+  try
+    for LPair in FApplications do
+      LPair.Value.Shutdown;
+  finally
+    FCriticalSection.Leave;
+  end;
+end;
+
+procedure TWiRLEngine.Startup;
+var
+  LPair: TPair<string, TWiRLApplication>;
+begin
+  FCriticalSection.Enter;
+  try
+    for LPair in FApplications do
+      LPair.Value.Startup;
+  finally
+    FCriticalSection.Leave;
+  end;
 end;
 
 class function TWiRLEngine.GetServerDirectory: string;

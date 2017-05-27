@@ -249,7 +249,7 @@ end;
 
 procedure RegisterWriters;
 begin
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TDatetimeWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
@@ -257,13 +257,13 @@ begin
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
     end
   );
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter<TJSONValue>(TJSONValueWriter);
+  TMessageBodyWriterRegistry.Instance.RegisterWriter<TJSONValue>(TJSONValueWriter);
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TStreamValueWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
@@ -271,11 +271,11 @@ begin
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
     end
   );
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TObjectWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
@@ -283,11 +283,11 @@ begin
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      Result := TWiRLMessageBodyRegistry.AFFINITY_VERY_LOW;
+      Result := TMessageBodyWriterRegistry.AFFINITY_VERY_LOW;
     end
   );
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TWildCardMediaTypeWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
@@ -295,7 +295,7 @@ begin
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      Result := TWiRLMessageBodyRegistry.AFFINITY_VERY_LOW;
+      Result := TMessageBodyWriterRegistry.AFFINITY_VERY_LOW;
     end
   );
 end;

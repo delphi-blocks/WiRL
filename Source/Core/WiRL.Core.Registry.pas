@@ -32,9 +32,8 @@ type
   end;
 
   TWiRLResourceRegistry = class(TObjectDictionary<string, TWiRLConstructorInfo>)
-  private
-    type
-      TWiRLResourceRegistrySingleton = TWiRLSingleton<TWiRLResourceRegistry>;
+  private type
+    TWiRLResourceRegistrySingleton = TWiRLSingleton<TWiRLResourceRegistry>;
   protected
     class function GetInstance: TWiRLResourceRegistry; static; inline;
   public
