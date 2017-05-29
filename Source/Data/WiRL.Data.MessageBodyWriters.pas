@@ -136,51 +136,51 @@ end;
 procedure RegisterWriters;
 begin
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TDataSetWriterJSON
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and  TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/json
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
-      end
+    TDataSetWriterJSON,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and  TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/json
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
+    end
   );
 
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TArrayDataSetWriter
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TDataSet>(AType); // and AMediaType = application/json
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMessageBodyWriterRegistry.AFFINITY_HIGH
-      end
+    TArrayDataSetWriter,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TDataSet>(AType); // and AMediaType = application/json
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH
+    end
   );
 
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TDataSetWriterXML
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/xml
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
-      end
+    TDataSetWriterXML,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/xml
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
+    end
   );
 
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TDataSetWriterCSV
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-      begin
-        Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/xml
-      end
-    , function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-      begin
-        Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
-      end
+    TDataSetWriterCSV,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/xml
+    end,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
+    end
   );
 
 end;

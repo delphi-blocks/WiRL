@@ -79,6 +79,8 @@ begin
     // Application configuration
     .AddApplication('/app')
       .SetName('Content App')
+      .SetWriters('*')
+      .SetReaders('*')
       .SetResources('Server.Resources.TSampleResource')
   ;
 

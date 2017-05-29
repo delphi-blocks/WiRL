@@ -122,11 +122,11 @@ initialization
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+      Result := TMessageBodyReaderRegistry.AFFINITY_HIGH;
     end
   );
 
-  TWiRLMessageBodyRegistry.Instance.RegisterWriter(TObjectWriterDJSON,
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(TObjectWriterDJSON,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
       Result := Assigned(AType) and
@@ -135,7 +135,7 @@ initialization
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
     begin
-      Result := TWiRLMessageBodyRegistry.AFFINITY_HIGH;
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
     end
   );
 

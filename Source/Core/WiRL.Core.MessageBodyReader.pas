@@ -33,6 +33,12 @@ type
     const AAttributes: TAttributeArray; AMediaType: string): Integer;
 
   TWiRLReaderRegistry = class
+  public
+    const AFFINITY_VERY_HIGH = 50;
+    const AFFINITY_HIGH = 30;
+    const AFFINITY_LOW = 10;
+    const AFFINITY_VERY_LOW = 1;
+    const AFFINITY_ZERO = 0;
   public type
     TReaderInfo = class
     private
