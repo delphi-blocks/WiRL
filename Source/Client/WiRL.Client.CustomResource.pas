@@ -23,9 +23,7 @@ type
   TWiRLClientResponseProc = TProc<TStream>;
   TWiRLClientExceptionProc = TProc<Exception>;
 
-
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
-
   TWiRLClientCustomResource = class(TComponent)
   private
     FResource: string;
@@ -34,6 +32,7 @@ type
     FPathParamsValues: TStrings;
     FQueryParams: TStrings;
     FSpecificAccept: string;
+    FSpecificContentType: string;
     procedure SetPathParamsValues(const Value: TStrings);
     procedure SetQueryParams(const Value: TStrings);
   protected
@@ -42,6 +41,7 @@ type
     function GetURL: string; virtual;
     function GetApplication: TWiRLClientApplication; virtual;
     function GetAccept: string;
+    function GetContentType: string;
 
     procedure BeforeGET; virtual;
     procedure AfterGET; virtual;
@@ -109,9 +109,11 @@ type
       const AOnException: TWiRLClientExceptionProc = nil);
   public
     property Accept: string read GetAccept;
+    property ContentType: string read GetContentType;
     property Application: TWiRLClientApplication read GetApplication write FApplication;
     property Client: TWiRLClient read GetClient;
     property SpecificAccept: string read FSpecificAccept write FSpecificAccept;
+    property SpecificContentType: string read FSpecificContentType write FSpecificContentType;
     property SpecificClient: TWiRLClient read FSpecificClient write FSpecificClient;
     property Resource: string read FResource write FResource;
     property Path: string read GetPath;
@@ -222,6 +224,13 @@ begin
   end;
 end;
 
+function TWiRLClientCustomResource.GetContentType: string;
+begin
+  Result := FSpecificContentType;
+  if (Result = '') and Assigned(Application) then
+    Result := Application.DefaultMediaType;
+end;
+
 function TWiRLClientCustomResource.GetPath: string;
 var
   LEngine: string;
@@ -260,7 +269,7 @@ begin
     if Assigned(ABeforeExecute) then
       ABeforeExecute();
 
-    Client.Head(URL);
+    Client.Head(URL, Accept, ContentType);
 
     AfterHEAD();
 
@@ -291,7 +300,7 @@ begin
 
     LResponseStream := TMemoryStream.Create;
     try
-      Client.Options(URL, LResponseStream);
+      Client.Options(URL, Accept, ContentType, LResponseStream);
 
       AfterOPTIONS();
 
@@ -324,7 +333,7 @@ begin
 
     LResponseStream := TMemoryStream.Create;
     try
-      Client.Delete(URL, LResponseStream);
+      Client.Delete(URL, Accept, ContentType, LResponseStream);
 
       AfterDELETE();
 
@@ -365,7 +374,7 @@ begin
 
     LResponseStream := TMemoryStream.Create;
     try
-      Client.Get(URL, LResponseStream, Accept);
+      Client.Get(URL, Accept, ContentType, LResponseStream);
 
       AfterGET();
 
@@ -464,7 +473,7 @@ begin
 
       LResponseStream := TMemoryStream.Create;
       try
-        Client.Patch(URL, LContent, LResponseStream);
+        Client.Patch(URL, Accept, ContentType, LContent, LResponseStream);
 
         AfterPATCH();
 
@@ -505,7 +514,7 @@ begin
 
       LResponseStream := TMemoryStream.Create;
       try
-        Client.Post(URL, LContent, LResponseStream);
+        Client.Post(URL, Accept, ContentType, LContent, LResponseStream);
 
         AfterPOST();
 
@@ -565,7 +574,7 @@ begin
 
       LResponseStream := TMemoryStream.Create;
       try
-        Client.Put(URL, LContent, LResponseStream);
+        Client.Put(URL, Accept, ContentType, LContent, LResponseStream);
 
         AfterPUT();
 

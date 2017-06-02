@@ -52,13 +52,14 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure Delete(const AURL: string; AResponseContent: TStream);
-    procedure Get(const AURL: string; AResponseContent: TStream; const AAccept: string);
-    procedure Post(const AURL: string; AContent, AResponse: TStream);
-    procedure Put(const AURL: string; AContent, AResponse: TStream);
-    procedure Patch(const AURL: string; AContent, AResponse: TStream);
-    procedure Head(const AURL: string);
-    procedure Options(const AURL: string; AResponse: TStream);
+    procedure Delete(const AURL, AAccept, AContentType: string; AResponseContent: TStream);
+    procedure Get(const AURL, AAccept, AContentType: string; AResponseContent: TStream);
+    procedure Post(const AURL, AAccept, AContentType: string; AContent, AResponse: TStream);
+    procedure Put(const AURL, AAccept, AContentType: string; AContent, AResponse: TStream);
+    procedure Patch(const AURL, AAccept, AContentType: string; AContent, AResponse: TStream);
+    procedure Head(const AURL, AAccept, AContentType: string);
+    procedure Options(const AURL, AAccept, AContentType: string; AResponse: TStream);
+
     function LastCmdSuccess: Boolean;
     function ResponseText: string;
 
@@ -93,12 +94,6 @@ begin
   FWiRLEngineURL := 'http://localhost:8080/rest';
 end;
 
-procedure TWiRLClient.Delete(const AURL: string; AResponseContent: TStream);
-begin
-  DoBeforeCommand;
-  FHttpClient.Delete(AURL, AResponseContent);
-end;
-
 destructor TWiRLClient.Destroy;
 begin
   FHttpClient.Free;
@@ -120,14 +115,6 @@ begin
 {$else}
   raise Exception.Create('Async execution not yet supported');
 {$endif}
-end;
-
-procedure TWiRLClient.Get(const AURL: string; AResponseContent: TStream;
-  const AAccept: string);
-begin
-  FHttpClient.Request.Accept := AAccept;
-  DoBeforeCommand;
-  FHttpClient.Get(AURL, AResponseContent);
 end;
 
 function TWiRLClient.GetConnectTimeout: Integer;
@@ -155,12 +142,6 @@ begin
   Result := FHttpClient.Response;
 end;
 
-procedure TWiRLClient.Head(const AURL: string);
-begin
-  DoBeforeCommand;
-  FHttpClient.Head(AURL);
-end;
-
 function TWiRLClient.IsRunningAsync: Boolean;
 begin
 {$ifdef DelphiXE7_UP}
@@ -175,26 +156,65 @@ begin
   Result := FHttpClient.ResponseCode = 200;
 end;
 
-procedure TWiRLClient.Options(const AURL: string; AResponse: TStream);
+procedure TWiRLClient.Delete(const AURL, AAccept, AContentType: string; AResponseContent: TStream);
 begin
+  FHttpClient.Request.Accept := AAccept;
+  FHttpClient.Request.ContentType := AContentType;
+
+  DoBeforeCommand;
+  FHttpClient.Delete(AURL, AResponseContent);
+end;
+
+procedure TWiRLClient.Get(const AURL, AAccept, AContentType: string; AResponseContent: TStream);
+begin
+  FHttpClient.Request.Accept := AAccept;
+  FHttpClient.Request.ContentType := AContentType;
+
+  DoBeforeCommand;
+  FHttpClient.Get(AURL, AResponseContent);
+end;
+
+procedure TWiRLClient.Head(const AURL, AAccept, AContentType: string);
+begin
+  FHttpClient.Request.Accept := AAccept;
+  FHttpClient.Request.ContentType := AContentType;
+
+  DoBeforeCommand;
+  FHttpClient.Head(AURL);
+end;
+
+procedure TWiRLClient.Options(const AURL, AAccept, AContentType: string; AResponse: TStream);
+begin
+  FHttpClient.Request.Accept := AAccept;
+  FHttpClient.Request.ContentType := AContentType;
+
   DoBeforeCommand;
   FHttpClient.Options(AURL, AResponse);
 end;
 
-procedure TWiRLClient.Patch(const AURL: string; AContent, AResponse: TStream);
+procedure TWiRLClient.Patch(const AURL, AAccept, AContentType: string; AContent, AResponse: TStream);
 begin
+  FHttpClient.Request.Accept := AAccept;
+  FHttpClient.Request.ContentType := AContentType;
+
   DoBeforeCommand;
   FHttpClient.Patch(AURL, AContent, AResponse);
 end;
 
-procedure TWiRLClient.Post(const AURL: string; AContent, AResponse: TStream);
+procedure TWiRLClient.Post(const AURL, AAccept, AContentType: string; AContent, AResponse: TStream);
 begin
+  FHttpClient.Request.Accept := AAccept;
+  FHttpClient.Request.ContentType := AContentType;
+
   DoBeforeCommand;
   FHttpClient.Post(AURL, AContent, AResponse);
 end;
 
-procedure TWiRLClient.Put(const AURL: string; AContent, AResponse: TStream);
+procedure TWiRLClient.Put(const AURL, AAccept, AContentType: string; AContent, AResponse: TStream);
 begin
+  FHttpClient.Request.Accept := AAccept;
+  FHttpClient.Request.ContentType := AContentType;
+
   DoBeforeCommand;
   FHttpClient.Put(AURL, AContent, AResponse);
 end;

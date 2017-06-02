@@ -17,7 +17,7 @@ uses
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.MessageBodyReaders,
+  WiRL.Core.MessageBody.Default,
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.Exceptions,

@@ -20,6 +20,9 @@ Ext.define('SecondDemo.model.Employee', {
 
     proxy: {
         type: 'rest',
+        headers: {
+          'Accept': 'application/json'
+        },
         url: 'http://localhost:8080/rest/default/main/employee',
         reader: {
             type: 'json',

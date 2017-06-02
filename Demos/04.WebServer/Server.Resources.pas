@@ -15,13 +15,12 @@ uses
   System.SysUtils, System.Classes, System.IOUtils,
 
   WiRL.Core.Attributes,
-  WiRL.http.Accept.MediaType,
-  WiRL.Core.Response,
+  WiRL.Core.MessageBody.Default,
   WiRL.WebServer.Resources;
 
 type
-  [Path('helloworld')]
-  THelloWorldResource = class(TFileSystemResource)
+  [Path('home')]
+  TStaticWebResource = class(TFileSystemResource)
   public
     constructor Create; override;
   end;
@@ -31,21 +30,19 @@ implementation
 uses
   WiRL.Core.Registry;
 
-{ THelloWorldResource }
+{ TStaticWebResource }
 
-constructor THelloWorldResource.Create;
+constructor TStaticWebResource.Create;
 begin
   inherited;
   RootFolder := TDirectory.GetParent(
-    TDirectory.GetParent(
-      TPath.GetDirectoryName(ParamStr(0))
-    )
+    TPath.GetDirectoryName(ParamStr(0))
   ) + PathDelim + 'www';
   IncludeSubFolders := True;
 end;
 
 
 initialization
-  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TStaticWebResource>;
 
 end.

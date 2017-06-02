@@ -245,24 +245,25 @@ begin
       if not LMethod.Rest then
         Continue;
 
-      LPathMatches := False;
-
       LHttpMethodMatches := LMethod.HttpMethod = FContext.Request.Method;
 
-      if LHttpMethodMatches then
-      begin
-        LPrototypeURL := TWiRLURL.CreateDummy(FEnginePath, FAppPath, FPath, LMethod.Path);
-        try
-          LPathMatches := LPrototypeURL.MatchPath(FContext.URL);
-        finally
-          LPrototypeURL.Free;
-        end;
+      if not LHttpMethodMatches then
+        Continue;
+
+      LPrototypeURL := TWiRLURL.CreateDummy(FEnginePath, FAppPath, FPath, LMethod.Path);
+      try
+        LPathMatches := LPrototypeURL.MatchPath(FContext.URL);
+      finally
+        LPrototypeURL.Free;
       end;
+
+      if not LPathMatches then
+        Continue;
 
       LProducesMatch := MatchProduces(LMethod, LMedia);
       LConsumesMatch := MatchConsumes(LMethod, FContext.Request.ContentMediaType);
 
-      if LPathMatches and LHttpMethodMatches and LProducesMatch and LConsumesMatch then
+      if LProducesMatch and LConsumesMatch then
       begin
         Result := LMethod;
         Break;
@@ -300,12 +301,13 @@ begin
   if not AMethod.IsFunction then
     Exit(True);
 
-  // If the method result it's an object there is no Produces let the MBWs choose the output
-  if (AMethod.MethodResult.IsClass or AMethod.MethodResult.IsRecord) then
-    Exit(True);
-
   // Tries to match the Produces MediaType
   if AMethod.Produces.Contains(AMediaType) then
+    Exit(True);
+
+
+  // If the method result it's an object there is no Produces let the MBWs choose the output
+  if AMethod.Produces.IsWildCard and (AMethod.MethodResult.IsClass or AMethod.MethodResult.IsRecord) then
     Exit(True);
 end;
 

@@ -22,7 +22,8 @@ uses
   Data.Bind.Components, Data.Bind.Grid, Data.Bind.DBScope, FMX.Layouts,
   FMX.Grid, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
   FMX.Controls.Presentation, FMX.StdCtrls, Data.Bind.Controls,
-  Fmx.Bind.Navigator, FMX.ListView.Types, FMX.ListView;
+  Fmx.Bind.Navigator, FMX.ListView.Types, FMX.ListView, FMX.Grid.Style,
+  FMX.ScrollBox;
 
 type
   TForm1 = class(TForm)
@@ -31,14 +32,15 @@ type
     WiRLFDResource1: TWiRLFDResource;
     StringGrid1: TStringGrid;
     BindingsList1: TBindingsList;
-    ButtonPOST: TButton;
+    btnPUT: TButton;
     BindNavigator1: TBindNavigator;
     Layout1: TLayout;
     employee1: TFDMemTable;
     BindSourceDB2: TBindSourceDB;
     LinkGridToDataSourceBindSourceDB2: TLinkGridToDataSource;
-    procedure FormCreate(Sender: TObject);
-    procedure ButtonPOSTClick(Sender: TObject);
+    btnGET: TButton;
+    procedure btnGETClick(Sender: TObject);
+    procedure btnPUTClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -52,14 +54,14 @@ implementation
 
 {$R *.fmx}
 
-procedure TForm1.ButtonPOSTClick(Sender: TObject);
-begin
-  WiRLFDResource1.POST();
-end;
-
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TForm1.btnGETClick(Sender: TObject);
 begin
   WiRLFDResource1.GET();
+end;
+
+procedure TForm1.btnPUTClick(Sender: TObject);
+begin
+  WiRLFDResource1.PUT();
 end;
 
 end.

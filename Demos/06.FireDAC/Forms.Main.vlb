@@ -1,4 +1,4 @@
-[WiRLClientApplication1]
+﻿[WiRLClientApplication1]
 Coordinates=216,1,131,33
 
 [WiRLFDResource1]
@@ -18,9 +18,6 @@ Visible=False
 [BindingsList1]
 Coordinates=135,87,82,33
 
-[ButtonPOST]
-Coordinates=139,116,75,51
-
 [Layout1]
 Coordinates=251,116,53,33
 
@@ -33,4 +30,7 @@ Coordinates=10,10,92,267
 
 [BindNavigator1]
 Coordinates=10,116,90,51
+
+[btnPUT]
+Coordinates=139,116,75,51
 

@@ -15,7 +15,8 @@ uses
   System.SysUtils, System.Classes, System.Generics.Defaults, System.Generics.Collections,
 
   WiRL.http.Accept.Parser,
-  WiRL.Core.Declarations;
+  WiRL.Core.Declarations,
+  WiRL.Core.Classes;
 
 type
   TMediaType = class(TAcceptItem)
@@ -66,6 +67,8 @@ type
 
     function Clone: TMediaType;
     procedure Assign(ASource: TMediaType);
+
+    function GetDelphiEncoding: TEncoding;
 
     class function GetWildcard: string; override;
 
@@ -129,6 +132,20 @@ end;
 constructor TMediaType.CreateEx(const AType, ASubType: string; AParams: TStringList);
 begin
 
+end;
+
+function TMediaType.GetDelphiEncoding: TEncoding;
+begin
+  if Self.Charset = CHARSET_UTF8 then
+    Result := TUTF8EncodingNoBOM.Create
+  else if Self.Charset = CHARSET_UTF16BE then
+    Result := TUnicodeBEEncodingNoBOM.Create
+  else if Self.Charset = CHARSET_UTF16LE then
+    Result := TUnicodeLEEncodingNoBOM.Create
+  else if Self.Charset = CHARSET_UTF16 then
+    Result := TUnicodeLEEncodingNoBOM.Create
+  else
+    Result := TMBCSEncoding.Create;
 end;
 
 class function TMediaType.GetWildcard: string;

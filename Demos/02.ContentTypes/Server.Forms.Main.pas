@@ -49,10 +49,7 @@ implementation
 
 uses
   WiRL.Core.JSON,
-  WiRL.Rtti.Utils,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Data.MessageBodyWriters;
+  WiRL.Rtti.Utils;
 
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -81,7 +78,8 @@ begin
       .SetName('Content App')
       .SetWriters('*')
       .SetReaders('*')
-      .SetResources('Server.Resources.TSampleResource')
+      .SetResources(
+        'Server.Resources.TSampleResource,Server.Resources.Entities.TLibraryResource')
   ;
 
   if not FServer.Active then

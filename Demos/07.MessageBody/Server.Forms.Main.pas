@@ -60,7 +60,7 @@ uses
   WiRL.Core.JSON,
   WiRL.Rtti.Utils,
   WiRL.Core.MessageBodyWriter,
-  WiRL.Data.MessageBodyWriters;
+  WiRL.Data.MessageBody.Default;
 
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);

@@ -12,13 +12,15 @@ unit Server.Resources;
 interface
 
 uses
-  SysUtils, Classes, DB,
+  System.SysUtils, System.Classes, Data.DB,
   FireDAC.Comp.Client,
 
+  WiRL.Core.Engine,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Data.FireDAC.MessageBodyWriters,
+  WiRL.Core.MessageBody.Default,
+  WiRL.Data.MessageBody.Default,
+  WiRL.Data.FireDAC.MessageBody.Default,
   WiRL.Core.JSON;
 
 type
@@ -56,17 +58,25 @@ type
     function DataSet1: TDataSet;
 
     [GET, Path('/dataset2')]
-    [Produces(XML_AND_JSON)]
+    //[Produces(XML_AND_JSON)]
     function DataSet2: TFDMemTable;
 
-    [GET, Path('/dataset3'), Produces(TMediaType.APPLICATION_JSON)]
-    function DataSet3: TDataset;
+    [GET, Path('/datasets'), Produces(TMediaType.APPLICATION_JSON)]
+    function DataSets: TArray<TDataset>;
+
+    [GET, Path('/array')]
+    function SimpleArray: TArray<Integer>;
+
+    [GET, Path('/int')]
+    function GetInteger: Integer;
+
+
   end;
 
 implementation
 
 uses
-  Datasnap.DBClient,
+  System.IOUtils, Datasnap.DBClient,
   WiRL.Core.Registry;
 
 
@@ -87,6 +97,7 @@ var
   LCDS: TClientDataSet;
 begin
   LCDS := TClientDataSet.Create(nil);
+  LCDS.Name := 'CDS';
   LCDS.FieldDefs.Add('Name', ftString, 100);
   LCDS.FieldDefs.Add('Surname', ftString, 100);
   LCDS.CreateDataSet;
@@ -102,7 +113,8 @@ end;
 function TSampleResource.DataSet2: TFDMemTable;
 begin
   Result := TFDMemTable.Create(nil);
-  Result.FieldDefs.Add('Name', ftString, 100);
+  Result.Name := 'FDMT';
+  Result.FieldDefs.Add('Firstname', ftString, 100);
   Result.FieldDefs.Add('Surname', ftString, 100);
   Result.CreateDataSet;
   Result.AppendRecord(['Alberto', 'Dal Dosso']);
@@ -110,9 +122,14 @@ begin
   Result.AppendRecord(['Luca', 'Minuti']);
 end;
 
-function TSampleResource.DataSet3: TDataset;
+function TSampleResource.DataSets: TArray<TDataset>;
 begin
-  Result := DataSet2;
+  Result := [DataSet1, DataSet2];
+end;
+
+function TSampleResource.GetInteger: Integer;
+begin
+  Result := 42;
 end;
 
 function TSampleResource.HelloWorld_HTML: string;
@@ -124,8 +141,15 @@ begin
 end;
 
 function TSampleResource.JpegImage: TStream;
+var
+  LFileName: string;
 begin
-  Result := TFileStream.Create('image.jpg', fmOpenRead or fmShareDenyWrite);
+  LFileName := IncludeTrailingPathDelimiter(
+    TDirectory.GetParent(
+      TDirectory.GetParent(
+        TDirectory.GetParent(TWiRLEngine.ServerDirectory)))) +
+    'WiRL-logo.png';
+  Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
 
 function TSampleResource.HelloWorld_JSON: TJSONObject;
@@ -137,6 +161,11 @@ end;
 function TSampleResource.PdfDocument: TStream;
 begin
   Result := TFileStream.Create('document.pdf', fmOpenRead or fmShareDenyWrite);
+end;
+
+function TSampleResource.SimpleArray: TArray<Integer>;
+begin
+  Result := [23, 44, 567];
 end;
 
 function TSampleResource.HelloWorld_TEXT: string;

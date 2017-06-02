@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Data.FireDAC.MessageBodyWriters;
+unit WiRL.Data.FireDAC.MessageBody.Default;
 
 {$I WiRL.inc}
 
@@ -19,17 +19,27 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
   WiRL.http.Accept.MediaType,
+  WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.Classes,
+  WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Utils,
   WiRL.Data.Utils;
 
 type
   [Produces(TMediaType.APPLICATION_XML), Produces(TMediaType.APPLICATION_JSON)]
+  [Produces(TMediaType.APPLICATION_OCTET_STREAM)]
   TFDAdaptedDataSetWriter = class(TInterfacedObject, IMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
+  end;
+
+  [Consumes(TMediaType.APPLICATION_XML), Consumes(TMediaType.APPLICATION_JSON)]
+  [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
+  TFDAdaptedDataSetReader = class(TInterfacedObject, IMessageBodyReader)
+    function ReadFrom(AParam: TRttiParameter;
+      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
   [Produces(TMediaType.APPLICATION_JSON)]
@@ -114,20 +124,33 @@ begin
   LDataSet.SaveToStream(AResponse.ContentStream, LStorageFormat);
 end;
 
-procedure RegisterWriters;
+{ TFDAdaptedDataSetReader }
+
+function TFDAdaptedDataSetReader.ReadFrom(AParam: TRttiParameter;
+  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+var
+  LDataset: TFDMemTable;
 begin
-  TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TFDAdaptedDataSetWriter,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
-    begin
-      Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TFDAdaptedDataSet>(AType); // and AMediaType = application/json;dialect=FireDAC
-    end,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
-    begin
-      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
-    end
+  LDataSet := TFDMemTable.Create(nil);
+  LDataset.LoadFromStream(ARequest.ContentStream);
+
+  Result := TValue.From<TFDMemTable>(LDataSet);
+end;
+
+{ RegisterMessageBodyClasses }
+
+procedure RegisterMessageBodyClasses;
+begin
+
+  // TFDAdaptedDataSetWriter
+  TMessageBodyWriterRegistry.Instance.RegisterWriter<TFDAdaptedDataSet>(
+    TFDAdaptedDataSetWriter, TMessageBodyWriterRegistry.AFFINITY_HIGH
   );
 
+  // TObjectMBReader
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TFDAdaptedDataSet>(TFDAdaptedDataSetReader);
+
+  // TArrayFDCustomQueryWriter
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TArrayFDCustomQueryWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
@@ -139,9 +162,10 @@ begin
       Result := TMessageBodyWriterRegistry.AFFINITY_HIGH
     end
   );
+
 end;
 
 initialization
-  RegisterWriters;
+  RegisterMessageBodyClasses;
 
 end.

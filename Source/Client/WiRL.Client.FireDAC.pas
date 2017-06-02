@@ -16,7 +16,7 @@ uses
   WiRL.Core.JSON,
   FireDAC.Comp.Client,
   WiRL.Client.Resource,
-  WiRL.Client.Client;
+  WiRL.Client.Client, System.JSON;
 
 type
   TWiRLFDResourceDatasetsItem = class(TCollectionItem)
@@ -50,18 +50,23 @@ type
   TWiRLFDResource = class(TWiRLClientResource)
   private
     FResourceDataSets: TWiRLFDResourceDatasets;
-    FPOSTResponse: TJSONValue;
+    FJSONResponse: TJSONValue;
+
+    procedure ReadDeltas;
+    procedure WriteDeltas(AContent: TMemoryStream);
   protected
     procedure AfterGET(); override;
     procedure BeforePOST(AContent: TMemoryStream); override;
     procedure AfterPOST(); override;
+    procedure BeforePUT(AContent: TMemoryStream); override;
+    procedure AfterPUT(); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation);
       override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
-    property POSTResponse: TJSONValue read FPOSTResponse write FPOSTResponse;
+    property JSONResponse: TJSONValue read FJSONResponse write FJSONResponse;
     property ResourceDataSets: TWiRLFDResourceDatasets read FResourceDataSets write FResourceDataSets;
   end;
 
@@ -156,6 +161,59 @@ end;
 procedure TWiRLFDResource.AfterPOST();
 begin
   inherited;
+  ReadDeltas;
+end;
+
+procedure TWiRLFDResource.AfterPUT;
+begin
+  inherited;
+  ReadDeltas;
+end;
+
+procedure TWiRLFDResource.BeforePOST(AContent: TMemoryStream);
+begin
+  inherited;
+  WriteDeltas(AContent);
+end;
+
+procedure TWiRLFDResource.BeforePUT(AContent: TMemoryStream);
+begin
+  inherited;
+  WriteDeltas(AContent);
+end;
+
+constructor TWiRLFDResource.Create(AOwner: TComponent);
+begin
+  inherited;
+  FResourceDataSets := TWiRLFDResourceDatasets.Create(TWiRLFDResourceDatasetsItem);
+end;
+
+destructor TWiRLFDResource.Destroy;
+begin
+  FJSONResponse.Free;
+  FResourceDataSets.Free;
+  inherited;
+end;
+
+procedure TWiRLFDResource.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited;
+  if Operation = TOperation.opRemove then
+  begin
+    FResourceDataSets.ForEach(
+      procedure (AItem: TWiRLFDResourceDatasetsItem)
+      begin
+        if AItem.DataSet = AComponent then
+          AItem.DataSet := nil;
+      end
+    );
+  end;
+
+end;
+
+procedure TWiRLFDResource.ReadDeltas;
+begin
   if Client.LastCmdSuccess then
     FResourceDataSets.ForEach(
       procedure (AItem: TWiRLFDResourceDatasetsItem)
@@ -165,19 +223,17 @@ begin
       end
     );
 
-  if Assigned(FPOSTResponse) then
-    FPOSTResponse.Free;
-  FPOSTResponse := StreamToJSONValue(Client.Response.ContentStream);
+  if Assigned(FJSONResponse) then
+    FJSONResponse.Free;
+  FJSONResponse := StreamToJSONValue(Client.Response.ContentStream);
 end;
 
-procedure TWiRLFDResource.BeforePOST(AContent: TMemoryStream);
+procedure TWiRLFDResource.WriteDeltas(AContent: TMemoryStream);
 var
   LDeltas: TFDJSONDeltas;
   LJSONObj: TJSONObject;
   LWriter: TStreamWriter;
 begin
-  inherited;
-
   LDeltas := TFDJSONDeltas.Create;
   try
     FResourceDataSets.ForEach(
@@ -205,36 +261,6 @@ begin
   finally
     LDeltas.Free;
   end;
-end;
-
-constructor TWiRLFDResource.Create(AOwner: TComponent);
-begin
-  inherited;
-  FResourceDataSets := TWiRLFDResourceDatasets.Create(TWiRLFDResourceDatasetsItem);
-end;
-
-destructor TWiRLFDResource.Destroy;
-begin
-  FPOSTResponse.Free;
-  FResourceDataSets.Free;
-  inherited;
-end;
-
-procedure TWiRLFDResource.Notification(AComponent: TComponent;
-  Operation: TOperation);
-begin
-  inherited;
-  if Operation = TOperation.opRemove then
-  begin
-    FResourceDataSets.ForEach(
-      procedure (AItem: TWiRLFDResourceDatasetsItem)
-      begin
-        if AItem.DataSet = AComponent then
-          AItem.DataSet := nil;
-      end
-    );
-  end;
-
 end;
 
 { TWiRLFDResourceDatasets }

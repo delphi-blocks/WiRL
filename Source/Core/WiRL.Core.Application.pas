@@ -104,6 +104,7 @@ type
     property ClaimClass: TWiRLSubjectClass read FClaimClass;
     property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property WriterRegistry: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
+    property ReaderRegistry: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
     property Resources: TArray<string> read GetResources;
     property Secret: TBytes read GetSecret;
     property AuthChallengeHeader: string read GetAuthChallengeHeader;
@@ -778,7 +779,7 @@ begin
         end;
         if LAttr is BodyParamAttribute then
         begin
-          LReader := TMessageBodyReaderRegistry.Instance.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
+          LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
           if Assigned(LReader) then
             Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request)
           else
@@ -944,7 +945,15 @@ begin
       LMediaType
     );
 
+    if FResource.Method.IsFunction and not Assigned(LWriter) then
+      raise EWiRLUnsupportedMediaTypeException.Create(
+        Format('MediaType [%s] not supported on resource [%s]',
+          [FContext.Request.AcceptableMediaTypes.ToString, FResource.Path]),
+        Self.ClassName, 'InternalHandleRequest'
+      );
+
     ContextInjection(LInstance);
+
     if Assigned(LWriter) then
       ContextInjection(LWriter as TObject);
 
@@ -978,6 +987,9 @@ begin
     LContentType := FContext.Response.ContentType;
     FillResourceMethodParameters(AInstance, LArgumentArray);
     LMethodResult := FResource.Method.RttiObject.Invoke(AInstance, LArgumentArray);
+
+    if not FResource.Method.IsFunction then
+      Exit;
 
     if LMethodResult.IsInstanceOf(TWiRLResponse) then
     begin

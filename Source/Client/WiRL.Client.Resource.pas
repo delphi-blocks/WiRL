@@ -20,14 +20,13 @@ uses
 type
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
   TWiRLClientResource = class(TWiRLClientCustomResource)
-  private
-  protected
-  public
   published
     property Accept;
+    property ContentType;
     property Application;
     property Client;
     property SpecificAccept;
+    property SpecificContentType;
     property SpecificClient;
     property Resource;
     property Path;

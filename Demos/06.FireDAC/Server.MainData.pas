@@ -23,7 +23,7 @@ uses
   WiRL.Data.FireDAC.DataModule,
   WiRL.Core.Attributes,
   WiRL.Core.URL,
-  WiRL.Core.Auth.Context;
+  WiRL.Core.Auth.Context, FireDAC.Phys.SQLiteDef;
 
 type
   [Path('/maindata')]

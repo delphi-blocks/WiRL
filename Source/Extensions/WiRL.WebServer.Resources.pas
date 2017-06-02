@@ -1,9 +1,12 @@
-(*
-  Copyright 2015-2017, WiRL - RESTful Library for Delphi
-
-  Authors:
-
-*)
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.WebServer.Resources;
 
 interface
@@ -16,11 +19,9 @@ uses
   WiRL.Core.Response;
 
 type
-  TFileSystemResource = class; // FWD
+  TFileSystemResource = class;
 
   WebAttribute = class(TCustomAttribute)
-  private
-  protected
   public
     procedure ApplyToResource(const AResource: TFileSystemResource); virtual;
   end;
@@ -42,7 +43,7 @@ type
     FContentType: string;
     FFileExt: string;
   public
-    constructor Create(AContentType: string; const AFileExt: string);
+    constructor Create(const AContentType, AFileExt: string);
     procedure ApplyToResource(const AResource: TFileSystemResource); override;
 
     property ContentType: string read FContentType;
@@ -52,7 +53,6 @@ type
   WebFilterAttribute = class(WebAttribute)
   private
     FPattern: string;
-  protected
   public
     constructor Create(const APattern: string = '*.*');
     property Pattern: string read FPattern;
@@ -67,7 +67,6 @@ type
   public
     procedure ApplyToResource(const AResource: TFileSystemResource); override;
   end;
-
 
   TFileSystemResource = class
   private
@@ -316,8 +315,7 @@ begin
   AResource.ContentTypesForExt.Add(FFileExt, FContentType);
 end;
 
-constructor ContentTypeForFileExt.Create(AContentType: string;
-  const AFileExt: string);
+constructor ContentTypeForFileExt.Create(const AContentType, AFileExt: string);
 begin
   inherited Create;
   FContentType := AContentType;
@@ -341,8 +339,7 @@ end;
 
 { IncludeAttribute }
 
-procedure IncludeAttribute.ApplyToResource(
-  const AResource: TFileSystemResource);
+procedure IncludeAttribute.ApplyToResource(const AResource: TFileSystemResource);
 begin
   inherited;
   AResource.InclusionFilters.Add(Pattern);
@@ -350,8 +347,7 @@ end;
 
 { ExcludeAttribute }
 
-procedure ExcludeAttribute.ApplyToResource(
-  const AResource: TFileSystemResource);
+procedure ExcludeAttribute.ApplyToResource(const AResource: TFileSystemResource);
 begin
   inherited;
   AResource.ExclusionFilters.Add(Pattern);

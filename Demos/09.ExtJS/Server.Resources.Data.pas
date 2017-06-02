@@ -25,9 +25,9 @@ uses
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.URL,
-  WiRL.Core.MessageBodyReaders,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Data.MessageBodyWriters,
+  WiRL.Core.Request,
+  WiRL.Core.MessageBody.Default,
+  WiRL.Data.MessageBody.Default,
   WiRL.Core.Exceptions,
   WiRL.Data.Resolver, FireDAC.Phys.SQLiteDef;
 
@@ -52,6 +52,8 @@ type
     FDGUIxWaitCursor1: TFDGUIxWaitCursor;
     qryEmpNoGen: TFDQuery;
     procedure DataModuleCreate(Sender: TObject);
+  private
+    [Context] FRequest: TWiRLRequest;
   public
     [GET, Path('/employee/')]
     function Employee(): TDataSet;

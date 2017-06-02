@@ -108,10 +108,6 @@ uses
   System.Generics.Collections,
   WiRL.Core.JSON,
   WiRL.Rtti.Utils,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Data.MessageBodyWriters,
-
   Server.Entities;
 
 
@@ -474,13 +470,10 @@ end;
 procedure TMainForm.Button5Click(Sender: TObject);
 var
   LValue: TValue;
-  I: Integer;
   LP1, LP2: Pointer;
 
   LR: TMyRecord;
 begin
-  I := 22;
-
   LR.Uno := 'Paolo';
   LR.Due := 20;
 

@@ -17,16 +17,15 @@ uses
 
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.MessageBodyReaders,
-  WiRL.Core.MessageBodyWriters,
+  WiRL.Core.MessageBody.Default,
   {$IFDEF DJSON}
   WiRL.MessageBody.DJSON,
   {$ENDIF}
   {$IFDEF OXML}
   WiRL.MessageBody.OXML,
   {$ENDIF}
-  WiRL.Data.MessageBodyWriters,
-  WiRL.Data.FireDAC.MessageBodyWriters,
+  WiRL.Data.MessageBody.Default,
+  WiRL.Data.FireDAC.MessageBody.Default,
   WiRL.Core.JSON;
 
 type

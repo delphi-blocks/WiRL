@@ -50,9 +50,9 @@ implementation
 
 uses
   WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Data.MessageBodyWriters,
-  WiRL.Data.FireDAC.MessageBodyWriters;
+  WiRL.Core.MessageBody.Default,
+  WiRL.Data.MessageBody.Default,
+  WiRL.Data.FireDAC.MessageBody.Default;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin

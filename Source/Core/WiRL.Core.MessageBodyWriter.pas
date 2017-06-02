@@ -104,7 +104,7 @@ type
     procedure RegisterWriter(const AWriterClass: TClass; const ASubjectClass:
         TClass; const AGetAffinity: TGetAffinityFunction); overload;
 
-    procedure RegisterWriter<T: class>(const AWriterClass: TClass); overload;
+    procedure RegisterWriter<T: class>(const AWriterClass: TClass; AAffinity: Integer = 0); overload;
 
     function UnregisterWriter(const AWriterClass: TClass): Integer; overload;
     function UnregisterWriter(const AQualifiedClassName: string): Integer; overload;
@@ -188,9 +188,8 @@ begin
     begin
       for LWriterEntry in FRegistry do
       begin
-        if (LWriterEntry.Produces.Contains(TMediaType.WILDCARD) or LWriterEntry.Produces.Contains(LMediaType)) and
-          LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)
-        then
+        if LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly) then
+        if (LMediaType.IsWildcard or LWriterEntry.Produces.Contains(TMediaType.WILDCARD) or LWriterEntry.Produces.Contains(LMediaType)) then
         begin
           if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)) then
           begin
@@ -249,11 +248,14 @@ end;
 
 function TWiRLWriterRegistry.ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
 begin
-  if AAccept.Empty or AAccept.IsWildCard then
+  if AProduces.Empty then
+    Result := AAccept.CloneList
+  else if AAccept.Empty or AAccept.IsWildCard then
     Result := AProduces.CloneList
   else
     Result := AProduces.IntersectionList(AAccept);
 
+  { TODO -opaolo -c : This have to be configuration-related 02/06/2017 18:00:25 }
   if Result.Empty then
   begin
     Result.Add(TMediaType.Create(TMediaType.APPLICATION_JSON));
@@ -320,8 +322,7 @@ begin
 end;
 
 procedure TMessageBodyWriterRegistry.RegisterWriter(const AWriterClass: TClass;
-    const AIsWritable: TIsWritableFunction; const AGetAffinity:
-    TGetAffinityFunction);
+    const AIsWritable: TIsWritableFunction; const AGetAffinity: TGetAffinityFunction);
 begin
   RegisterWriter(
     function : IMessageBodyWriter
@@ -352,27 +353,35 @@ begin
   );
 end;
 
-procedure TMessageBodyWriterRegistry.RegisterWriter<T>(const AWriterClass:
-    TClass);
+procedure TMessageBodyWriterRegistry.RegisterWriter<T>(const AWriterClass: TClass; AAffinity: Integer = 0);
+var
+  LAffinity: TGetAffinityFunction;
 begin
+  if AAffinity = 0 then
+    LAffinity := Self.GetDefaultClassAffinityFunc<T>()
+  else
+    LAffinity :=
+      function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+      begin
+        Result := AAffinity;
+      end;
+
   RegisterWriter(
     AWriterClass,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType);
     end,
-    Self.GetDefaultClassAffinityFunc<T>()
+    LAffinity
   );
 end;
 
-function TMessageBodyWriterRegistry.UnregisterWriter(const AWriterClass:
-    TClass): Integer;
+function TMessageBodyWriterRegistry.UnregisterWriter(const AWriterClass: TClass): Integer;
 begin
   Result := UnregisterWriter(AWriterClass.QualifiedClassName);
 end;
 
-function TMessageBodyWriterRegistry.UnregisterWriter(const AQualifiedClassName:
-    string): Integer;
+function TMessageBodyWriterRegistry.UnregisterWriter(const AQualifiedClassName: string): Integer;
 var
   LIndex: Integer;
 begin

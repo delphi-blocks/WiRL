@@ -52,9 +52,8 @@ implementation
 uses
   WiRL.Core.JSON,
   WiRL.Rtti.Utils,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Data.MessageBodyWriters;
+  WiRL.Core.MessageBody.Default,
+  WiRL.Data.MessageBody.Default;
 
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);

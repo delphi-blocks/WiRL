@@ -66,6 +66,8 @@ type
   public
     constructor Create; virtual;
 
+    function ToString: string; override;
+
     function ToArrayOfString: TArray<string>;
     function GetWeight(const AItem: string): Integer;
     function GetQualityFactor(const AItem: string): Double;
@@ -300,6 +302,16 @@ begin
   SetLength(Result, Count);
   for LIndex := 0 to Count - 1 do
     Result[LIndex] := Items[LIndex].ToString;
+end;
+
+function TAcceptItemList<T>.ToString: string;
+var
+  LItem: T;
+begin
+  for LItem in Self do
+    Result := Result + LItem.ToString + ',';
+  if Result.Length > 0 then
+    Result := Result.Substring(0, Result.Length - 1);
 end;
 
 class procedure TAcceptHeaderParser<T>.Parse(const AAcceptHeader: string; AList: TAcceptItemList<T>);

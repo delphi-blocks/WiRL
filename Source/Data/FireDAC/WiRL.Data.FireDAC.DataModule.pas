@@ -22,10 +22,10 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.Core.URL,
   // WiRL Data units
-  WiRL.Data.MessageBodyWriters,
+  WiRL.Data.MessageBody.Default,
   // WiRL FireDAC units
   WiRL.Data.FireDAC,
-  WiRL.Data.FireDAC.MessageBodyWriters;
+  WiRL.Data.FireDAC.MessageBody.Default;
 
 type
   RESTIncludeDefault = class(TCustomAttribute)
@@ -56,8 +56,8 @@ type
     [GET][Produces(TMediaType.APPLICATION_JSON)]
     function Retrieve: TArray<TFDCustomQuery>; virtual;
 
-    [POST, Produces(TMediaType.APPLICATION_JSON), Consumes(TMediaType.APPLICATION_JSON)]
-    function Update: TJSONArray; virtual;
+    [PUT, Produces(TMediaType.APPLICATION_JSON), Consumes(TMediaType.APPLICATION_JSON)]
+    function Update([BodyParam] AJSONObj: TJSONObject): TJSONArray; virtual;
 
   published
     property ResourceName: string read GetResourceName;
@@ -156,20 +156,17 @@ begin
   Result := LDataSets;
 end;
 
-function TWiRLFDDataModuleResource.Update: TJSONArray;
+function TWiRLFDDataModuleResource.Update(AJSONObj: TJSONObject): TJSONArray;
 var
-  LJSONDeltas: TJSONObject;
   LDeltas: TFDJSONDeltas;
   LResult: TJSONArray;
 begin
   Result := nil;
-  // parse JSON content
-  LJSONDeltas := TJSONObject.ParseJSONValue(Request.Content) as TJSONObject;
 
   LDeltas := TFDJSONDeltas.Create;
   try
     // build FireDAC delta objects
-    if not TFDJSONInterceptor.JSONObjectToDataSets(LJSONDeltas, LDeltas) then
+    if not TFDJSONInterceptor.JSONObjectToDataSets(AJSONObj, LDeltas) then
       raise Exception.Create('Error de-serializing deltas');
 
     // apply updates

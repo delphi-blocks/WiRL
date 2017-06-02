@@ -19,8 +19,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.URL,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Core.MessageBodyReaders,
+  WiRL.Core.MessageBody.Default,
   WiRL.Core.Auth.Context,
   WiRL.Core.Request,
   WiRL.Core.Response;
@@ -37,7 +36,7 @@ type
     function HelloWorld(): string;
 
     [GET, Path('/time')]
-    [Produces(TMediaType.APPLICATION_JSON)]
+    [Produces(TMediaType.TEXT_PLAIN)]
     function WhatTimeIsIt: TDateTime;
 
     [GET, Path('/echostring/{AString}')]

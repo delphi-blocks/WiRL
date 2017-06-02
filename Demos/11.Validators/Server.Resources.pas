@@ -16,7 +16,7 @@ uses
 
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.MessageBodyReaders,
+  WiRL.Core.MessageBody.Default,
   WiRL.Core.JSON,
   WiRL.Core.Validators,
 

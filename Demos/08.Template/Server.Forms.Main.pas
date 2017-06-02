@@ -50,8 +50,7 @@ implementation
 uses
   WiRL.Core.JSON,
   WiRL.Rtti.Utils,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters;
+  WiRL.Core.MessageBody.Default;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin

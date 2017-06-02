@@ -41,7 +41,6 @@ type
     procedure FormDestroy(Sender: TObject);
   private
     FServer: TWiRLhttpServerIndy;
-    FEngine: TWiRLEngine;
   public
   end;
 
@@ -54,9 +53,7 @@ implementation
 
 uses
   WiRL.Core.JSON,
-  WiRL.Rtti.Utils,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters;
+  WiRL.Rtti.Utils;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -81,9 +78,9 @@ begin
     .SetThreadPoolSize(5)
 
     // Add and configure an application
-    .AddApplication('/default')
+    .AddApplication('/web')
       .SetName('Default')
-      .SetResources('Server.Resources.THelloWorldResource');
+      .SetResources('Server.Resources.TStaticWebResource');
 
   if not FServer.Active then
     FServer.Active := True;
@@ -107,9 +104,9 @@ end;
 
 procedure TMainForm.TestActionExecute(Sender: TObject);
 const
-  LTemplateURL = 'http://localhost:%d/rest/default/helloworld/';
+  LTemplateURL = 'http://localhost:%d/rest/web/home/';
 begin
-  ShellExecute(Handle, 'open', PChar(Format(LTemplateURL, [FEngine.Port])), '', '', SW_NORMAL);
+  ShellExecute(Handle, 'open', PChar(Format(LTemplateURL, [FServer.Engine.Port])), '', '', SW_NORMAL);
 end;
 
 initialization

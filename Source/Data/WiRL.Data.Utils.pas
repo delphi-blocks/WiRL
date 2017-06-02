@@ -51,13 +51,6 @@ class function TDataUtils.RecordToCSV(const ADataSet: TDataSet): string;
 var
   LField: TField;
 begin
-  if not Assigned(ADataSet) then
-    raise Exception.Create('DataSet not assigned');
-  if not ADataSet.Active then
-    raise Exception.Create('DataSet is not active');
-  if ADataSet.IsEmpty then
-    raise Exception.Create('DataSet is empty');
-
   Result := '';
   for LField in ADataSet.Fields do
   begin
@@ -73,11 +66,9 @@ var
 begin
   if not Assigned(ADataSet) then
     raise Exception.Create('DataSet not assigned');
+
   if not ADataSet.Active then
     raise Exception.Create('DataSet is not active');
-  if ADataSet.IsEmpty then
-    raise Exception.Create('DataSet is empty');
-
 
   Result := TJSONObject.Create;
 
