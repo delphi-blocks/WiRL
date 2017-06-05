@@ -56,12 +56,6 @@ requires
   RESTComponents;
 
 contains
-  WiRL.Data.MessageBodyWriters in '..\..\Source\Data\WiRL.Data.MessageBodyWriters.pas',
-  WiRL.Data.Utils in '..\..\Source\Data\WiRL.Data.Utils.pas',
-  WiRL.Data.FireDAC.DataModule in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas' {WiRLFDDataModuleResource: TDataModule},
-  WiRL.Data.FireDAC.MessageBodyWriters in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBodyWriters.pas',
-  WiRL.Data.FireDAC in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas',
-  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
   JOSE.Cryptography.RSA in '..\..\Libs\JWT\Source\Common\JOSE.Cryptography.RSA.pas',
   JOSE.Encoding.Base64 in '..\..\Libs\JWT\Source\Common\JOSE.Encoding.Base64.pas',
   JOSE.Hashing.HMAC in '..\..\Libs\JWT\Source\Common\JOSE.Hashing.HMAC.pas',
@@ -92,9 +86,8 @@ contains
   WiRL.Core.Injection in '..\..\Source\Core\WiRL.Core.Injection.pas',
   WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
   WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
-  WiRL.Core.MessageBodyReaders in '..\..\Source\Core\WiRL.Core.MessageBodyReaders.pas',
   WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
-  WiRL.Core.MessageBodyWriters in '..\..\Source\Core\WiRL.Core.MessageBodyWriters.pas',
+  WiRL.Core.MessageBody.Default in '..\..\Source\Core\WiRL.Core.MessageBody.Default.pas',
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
   WiRL.Core.Request in '..\..\Source\Core\WiRL.Core.Request.pas',
   WiRL.Core.Response in '..\..\Source\Core\WiRL.Core.Response.pas',
@@ -103,6 +96,12 @@ contains
   WiRL.Core.URL in '..\..\Source\Core\WiRL.Core.URL.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
   WiRL.Core.Validators in '..\..\Source\Core\WiRL.Core.Validators.pas',
+  WiRL.Data.Utils in '..\..\Source\Data\WiRL.Data.Utils.pas',
+  WiRL.Data.MessageBody.Default in '..\..\Source\Data\WiRL.Data.MessageBody.Default.pas',
+  WiRL.Data.FireDAC in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas',
+  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  WiRL.Data.FireDAC.DataModule in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas' {WiRLFDDataModuleResource: TDataModule},
+  WiRL.Data.FireDAC.MessageBody.Default in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBody.Default.pas',
   WiRL.http.Accept.Charset in '..\..\Source\Core\WiRL.http.Accept.Charset.pas',
   WiRL.http.Accept.Encoding in '..\..\Source\Core\WiRL.http.Accept.Encoding.pas',
   WiRL.http.Accept.Language in '..\..\Source\Core\WiRL.http.Accept.Language.pas',
@@ -113,17 +112,17 @@ contains
   WiRL.http.Filters in '..\..\Source\Core\WiRL.http.Filters.pas',
   WiRL.http.Server.Indy in '..\..\Source\Core\WiRL.http.Server.Indy.pas',
   WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
+  WiRL.Persistence.Attributes in '..\..\Source\Core\WiRL.Persistence.Attributes.pas',
+  WiRL.Persistence.Core in '..\..\Source\Core\WiRL.Persistence.Core.pas',
+  WiRL.Persistence.DynamicTypes in '..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas',
+  WiRL.Persistence.JSON in '..\..\Source\Core\WiRL.Persistence.JSON.pas',
+  WiRL.Persistence.Utils in '..\..\Source\Core\WiRL.Persistence.Utils.pas',
   WiRL.Data.Resolver in '..\..\Source\Extensions\WiRL.Data.Resolver.pas',
   WiRL.Diagnostics.Manager in '..\..\Source\Extensions\WiRL.Diagnostics.Manager.pas',
   WiRL.Diagnostics.Resources in '..\..\Source\Extensions\WiRL.Diagnostics.Resources.pas',
   WiRL.Stateful.Dictionary in '..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas',
   WiRL.Stateful.WrappedResource in '..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas',
-  WiRL.WebServer.Resources in '..\..\Source\Extensions\WiRL.WebServer.Resources.pas',
-  WiRL.Persistence.Attributes in '..\..\Source\Core\WiRL.Persistence.Attributes.pas',
-  WiRL.Persistence.Core in '..\..\Source\Core\WiRL.Persistence.Core.pas',
-  WiRL.Persistence.DynamicTypes in '..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas',
-  WiRL.Persistence.JSON in '..\..\Source\Core\WiRL.Persistence.JSON.pas',
-  WiRL.Persistence.Utils in '..\..\Source\Core\WiRL.Persistence.Utils.pas';
+  WiRL.WebServer.Resources in '..\..\Source\Extensions\WiRL.WebServer.Resources.pas';
 
 end.
 

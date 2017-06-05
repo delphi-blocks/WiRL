@@ -117,15 +117,6 @@
         <DCCReference Include="dsnap.dcp"/>
         <DCCReference Include="DataSnapFireDAC.dcp"/>
         <DCCReference Include="RESTComponents.dcp"/>
-        <DCCReference Include="..\..\Source\Data\WiRL.Data.MessageBodyWriters.pas"/>
-        <DCCReference Include="..\..\Source\Data\WiRL.Data.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas">
-            <Form>WiRLFDDataModuleResource</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBodyWriters.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\Common\JOSE.Cryptography.RSA.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\Common\JOSE.Encoding.Base64.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\Common\JOSE.Hashing.HMAC.pas"/>
@@ -156,9 +147,8 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Injection.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReaders.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriters.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Default.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
@@ -167,6 +157,15 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Validators.pas"/>
+        <DCCReference Include="..\..\Source\Data\WiRL.Data.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Data\WiRL.Data.MessageBody.Default.pas"/>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas"/>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas">
+            <Form>WiRLFDDataModuleResource</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBody.Default.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
@@ -177,17 +176,17 @@
         <DCCReference Include="..\..\Source\Core\WiRL.http.Filters.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Attributes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Core.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.JSON.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Utils.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.Data.Resolver.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.Diagnostics.Manager.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.Diagnostics.Resources.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas"/>
         <DCCReference Include="..\..\Source\Extensions\WiRL.WebServer.Resources.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Attributes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Core.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Utils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
