@@ -1,9 +1,12 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{C4C302C6-E6EB-4B67-9FF2-41638A6F88E3}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="DemoHelloWorld.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DemoHelloWorldConsole.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="FMXClientProject.dproj">
@@ -26,6 +29,15 @@
     <Target Name="DemoHelloWorld:Make">
         <MSBuild Projects="DemoHelloWorld.dproj" Targets="Make"/>
     </Target>
+    <Target Name="DemoHelloWorldConsole">
+        <MSBuild Projects="DemoHelloWorldConsole.dproj"/>
+    </Target>
+    <Target Name="DemoHelloWorldConsole:Clean">
+        <MSBuild Projects="DemoHelloWorldConsole.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoHelloWorldConsole:Make">
+        <MSBuild Projects="DemoHelloWorldConsole.dproj" Targets="Make"/>
+    </Target>
     <Target Name="FMXClientProject">
         <MSBuild Projects="FMXClientProject.dproj"/>
     </Target>
@@ -36,13 +48,13 @@
         <MSBuild Projects="FMXClientProject.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="DemoHelloWorld;FMXClientProject"/>
+        <CallTarget Targets="DemoHelloWorld;DemoHelloWorldConsole;FMXClientProject"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DemoHelloWorld:Clean;FMXClientProject:Clean"/>
+        <CallTarget Targets="DemoHelloWorld:Clean;DemoHelloWorldConsole:Clean;FMXClientProject:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DemoHelloWorld:Make;FMXClientProject:Make"/>
+        <CallTarget Targets="DemoHelloWorld:Make;DemoHelloWorldConsole:Make;FMXClientProject:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
