@@ -22,6 +22,9 @@ type
   TWiRLConfigProc = reference to procedure (AServer: TWiRLhttpServerIndy);
 
 type
+  /// <summary>
+  ///   Console const strings definition
+  /// </summary>
   TWiRLConsoleDef = class
   public const
     ServerRunning    = 'WiRL service already running';
@@ -32,9 +35,9 @@ type
     ServerStopped    = 'WiRL service stopped';
     InvalidCommand   = ' Console Error -> Invalid Command';
   public const
-    Active = ' Active: ';
-    OSVer  = ' Running on: ';
-    Port   = ' Port: ';
+    Active = 'Active: ';
+    OSVer  = 'Running on: ';
+    Port   = 'Port: ';
     Logo   =
      ' ' + sLineBreak +
      ' .--------------. .--------------. .--------------. .--------------. ' + sLineBreak +

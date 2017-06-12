@@ -20,15 +20,21 @@ uses
   Posix.SysTypes,
   Posix.Unistd,
   Posix.Signal,
-  System.IOUtils;
+  System.IOUtils,
+  WiRL.Console.Posix.Syslog;
 
-  // 1. If SIGTERM is received, shut down the daemon and exit cleanly.
-  // 2. If SIGHUP is received, reload the configuration files, if this applies.
+  /// <summary>
+  ///   cdecl procedure to handle signals
+  /// </summary>
   procedure HandleSignals(ASigNum: Integer); cdecl;
 
 type
+  { TODO -opaolo -c : supports more signals 12/06/2017 11:43:40 }
   TPosixSignal = (Termination, Reload);
 
+  /// <summary>
+  ///   Anonymous method signature
+  /// </summary>
   TSignalProc = reference to procedure (ASignal: TPosixSignal);
 
   /// <summary>
@@ -39,6 +45,7 @@ type
   private const
     LOG_PATH = '/var/tmp/';
   private class var
+    FRunning: Boolean;
     FProcessID: pid_t;
     FSignalProc: TSignalProc;
     FLogFile: string;
@@ -58,7 +65,7 @@ type
     class procedure ForkProcess; static;
 
     /// <summary>
-    ///   Close all open file descriptors
+    ///   Close all opened file descriptors
     /// </summary>
     class procedure CloseDescriptors; static;
 
@@ -70,7 +77,7 @@ type
     /// <summary>
     ///   Kill the first process and leave only the daemon
     /// </summary>
-    class procedure KillFirstChild; static;
+    class procedure KillParent; static;
 
     /// <summary>
     ///   Detach from any terminal and create an independent session.
@@ -120,16 +127,17 @@ implementation
 
 procedure HandleSignals(ASigNum: Integer);
 begin
-  TPosixDaemon.LogLn('Signal received: ' + ASigNum.ToString);
   case ASigNum of
     SIGTERM:
     begin
+      TPosixDaemon.LogLn('Signal SIGTERM received');
       TPosixDaemon.FSignalProc(TPosixSignal.Termination);
-      TPosixDaemon.LogLn('Halting program...');
-      Halt(TPosixDaemon.EXIT_SUCCESS);
+      //Halt(TPosixDaemon.EXIT_SUCCESS);
+      TPosixDaemon.FRunning := False;
     end;
     SIGHUP:
     begin
+      TPosixDaemon.LogLn('Signal SIGHUP received');
       TPosixDaemon.FSignalProc(TPosixSignal.Reload);
     end;
   end;
@@ -155,7 +163,8 @@ end;
 class procedure TPosixDaemon.ForkProcess;
 begin
   FProcessID := fork();
-  KillFirstChild;
+  if FProcessID < 0 then
+    raise Exception.Create('Cannot create the fork');
 end;
 
 class procedure TPosixDaemon.CatchHandleSignals;
@@ -165,7 +174,7 @@ begin
   signal(SIGTERM, HandleSignals);
 end;
 
-class procedure TPosixDaemon.KillFirstChild;
+class procedure TPosixDaemon.KillParent;
 begin
   // Call exit() in the first child, so that only the second
   // child (the actual daemon process) stays around
@@ -193,10 +202,12 @@ end;
 
 class procedure TPosixDaemon.Run(AInterval: Integer);
 begin
-  while True do
+  FRunning := True;
+  while FRunning do
   begin
     Sleep(AInterval);
   end;
+  LogLn('The daemon is finally killed!');
 end;
 
 class procedure TPosixDaemon.Setup(const ALogFile: string;
@@ -206,7 +217,10 @@ begin
   FSignalProc := ASignalProc;
 
   ForkProcess;
+  KillParent;
   DetachTerminal;
+  ForkProcess;
+  KillParent;
   CatchHandleSignals;
   CloseDescriptors;
   SetRootDirectory;

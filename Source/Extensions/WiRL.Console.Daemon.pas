@@ -48,7 +48,7 @@ begin
         TPosixSignal.Reload:
         begin
           ServerStop;
-          ServerSetup;
+          //ServerSetup;
           ServerStart;
         end;
       end;
@@ -61,8 +61,7 @@ end;
 procedure TWiRLConsoleDaemon.ConsoleStart;
 begin
   TPosixDaemon.LogLn('WiRL Daemon is running...');
-  while True do
-    Sleep(1000);
+  TPosixDaemon.Run(1000);
 end;
 
 procedure TWiRLConsoleDaemon.ConsoleHelp;
