@@ -42,13 +42,10 @@ type
   ///   read the Linux manpages: man 7 daemon
   /// </summary>
   TPosixDaemon = class
-  private const
-    LOG_PATH = '/var/tmp/';
   private class var
     FRunning: Boolean;
     FProcessID: pid_t;
     FSignalProc: TSignalProc;
-    FLogFile: string;
   public const
     /// <summary>
     ///   Missing from linux/StdlibTypes.inc !!!!
@@ -95,7 +92,7 @@ type
     ///   Console setup method, to be called before Run and before starting
     ///   any thread in the application
     /// </summary>
-    class procedure Setup(const ALogFile: string; ASignalProc: TSignalProc);
+    class procedure Setup(ASignalProc: TSignalProc);
 
     /// <summary>
     ///   Infinte console loop
@@ -103,17 +100,22 @@ type
     class procedure Run(AInterval: Integer); static;
 
     /// <summary>
-    ///   Log method. DateTime and no new line appended
+    ///   Log Info message
     /// </summary>
-    class procedure Log(const AMessage: string); static;
+    class procedure LogInfo(const AMessage: string); static;
 
     /// <summary>
-    ///   Log method. DateTime and new line appended
+    ///   Log Warning message
     /// </summary>
-    class procedure LogLn(const AMessage: string); static;
+    class procedure LogWarning(const AMessage: string); static;
 
     /// <summary>
-    ///   Log method. Raw content and no new line appended
+    ///   Log Error message
+    /// </summary>
+    class procedure LogError(const AMessage: string); static;
+
+    /// <summary>
+    ///   Log Info Raw message
     /// </summary>
     class procedure LogRaw(const AMessage: string); static;
 
@@ -130,14 +132,13 @@ begin
   case ASigNum of
     SIGTERM:
     begin
-      TPosixDaemon.LogLn('Signal SIGTERM received');
+      TPosixDaemon.LogInfo('Signal SIGTERM received');
       TPosixDaemon.FSignalProc(TPosixSignal.Termination);
-      //Halt(TPosixDaemon.EXIT_SUCCESS);
       TPosixDaemon.FRunning := False;
     end;
     SIGHUP:
     begin
-      TPosixDaemon.LogLn('Signal SIGHUP received');
+      TPosixDaemon.LogInfo('Signal SIGHUP received');
       TPosixDaemon.FSignalProc(TPosixSignal.Reload);
     end;
   end;
@@ -182,22 +183,24 @@ begin
     Halt(TPosixDaemon.EXIT_SUCCESS);
 end;
 
-class procedure TPosixDaemon.Log(const AMessage: string);
+class procedure TPosixDaemon.LogError(const AMessage: string);
 begin
-  LogRaw(DateTimeToStr(Now) + ' - ' + AMessage);
+  syslog(LOG_ERR, AMessage);
 end;
 
-class procedure TPosixDaemon.LogLn(const AMessage: string);
+class procedure TPosixDaemon.LogInfo(const AMessage: string);
 begin
-  LogRaw(DateTimeToStr(Now) + ' - ' + AMessage + sLineBreak);
+  syslog(LOG_INFO, AMessage);
+end;
+
+class procedure TPosixDaemon.LogWarning(const AMessage: string);
+begin
+  syslog(LOG_WARNING, AMessage);
 end;
 
 class procedure TPosixDaemon.LogRaw(const AMessage: string);
 begin
-  // Best write on /var/log/ but we haven't privileges
-  // Could be using syslog but there is no header (yet) in Delphi
-  // you can find some translation here: https://svn.freepascal.org/svn/fpc/trunk/packages/syslog/src/systemlog.pp
-  TFile.AppendAllText(TPosixDaemon.FLogFile, AMessage);
+  syslog(LOG_INFO, AMessage);
 end;
 
 class procedure TPosixDaemon.Run(AInterval: Integer);
@@ -207,13 +210,11 @@ begin
   begin
     Sleep(AInterval);
   end;
-  LogLn('The daemon is finally killed!');
+  LogInfo('The daemon is finally killed!');
 end;
 
-class procedure TPosixDaemon.Setup(const ALogFile: string;
-  ASignalProc: TSignalProc);
+class procedure TPosixDaemon.Setup(ASignalProc: TSignalProc);
 begin
-  FLogFile := LOG_PATH + ALogFile + '.log';
   FSignalProc := ASignalProc;
 
   ForkProcess;

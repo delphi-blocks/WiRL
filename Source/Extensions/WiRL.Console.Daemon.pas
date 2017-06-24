@@ -23,8 +23,9 @@ type
     procedure ConsoleStart; override;
     procedure ConsoleHelp; override;
   public
-    class procedure Log(const AMessage: string); override;
-    class procedure LogLn(const AMessage: string); override;
+    class procedure LogInfo(const AMessage: string); override;
+    class procedure LogWarning(const AMessage: string); override;
+    class procedure LogError(const AMessage: string); override;
     class procedure LogRaw(const AMessage: string); override;
   end;
 
@@ -36,7 +37,7 @@ var
 begin
   LAppName := ExtractFileName(ParamStr(0));
 
-  TPosixDaemon.Setup(LAppName,
+  TPosixDaemon.Setup(
     procedure (ASignal: TPosixSignal)
     begin
       case ASignal of
@@ -60,29 +61,34 @@ end;
 
 procedure TWiRLConsoleDaemon.ConsoleStart;
 begin
-  TPosixDaemon.LogLn('WiRL Daemon is running...');
+  TPosixDaemon.LogInfo('WiRL Daemon is running...');
   TPosixDaemon.Run(1000);
 end;
 
 procedure TWiRLConsoleDaemon.ConsoleHelp;
 begin
-  LogLn(TWiRLConsoleDef.Logo);
-  LogLn(TWiRLConsoleDef.OSVer + OSVersion);
+  LogInfo(TWiRLConsoleDef.Logo);
+  LogInfo(TWiRLConsoleDef.OSVer + OSVersion);
 end;
 
-class procedure TWiRLConsoleDaemon.Log(const AMessage: string);
+class procedure TWiRLConsoleDaemon.LogError(const AMessage: string);
 begin
-  TPosixDaemon.Log(AMessage);
+  TPosixDaemon.LogError(AMessage);
 end;
 
-class procedure TWiRLConsoleDaemon.LogLn(const AMessage: string);
+class procedure TWiRLConsoleDaemon.LogInfo(const AMessage: string);
 begin
-  TPosixDaemon.LogLn(AMessage);
+  TPosixDaemon.LogInfo(AMessage);
 end;
 
 class procedure TWiRLConsoleDaemon.LogRaw(const AMessage: string);
 begin
   TPosixDaemon.LogRaw(AMessage);
+end;
+
+class procedure TWiRLConsoleDaemon.LogWarning(const AMessage: string);
+begin
+  TPosixDaemon.LogWarning(AMessage);
 end;
 
 end.

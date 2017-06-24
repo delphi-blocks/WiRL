@@ -25,44 +25,86 @@ type
     FConsoleClass: TWiRLConsoleClass;
   public
     class function NewConsole(AConfigProc: TWiRLConfigProc): TWiRLConsoleBase;
+  end;
+
+  TWiRLConsoleLogger = class
+  private class var
+    FConsoleClass: TWiRLConsoleClass;
+  private
+    function GetConsoleClass: TWiRLConsoleClass;
   public
-    class procedure Log(const AMessage: string);
-    class procedure LogLn(const AMessage: string);
+    class procedure LogInfo(const AMessage: string);
+    class procedure LogWarning(const AMessage: string);
+    class procedure LogError(const AMessage: string);
     class procedure LogRaw(const AMessage: string);
+
   end;
 
 implementation
+
+{ TWiRLConsoleFactory }
 
 class function TWiRLConsoleFactory.NewConsole(AConfigProc: TWiRLConfigProc): TWiRLConsoleBase;
 begin
   {$IFDEF LINUX}
     {$IFDEF DEBUG}
-    Result := TWiRLConsoleStandard.Create(AConfigProc);
+    FConsoleClass := TWiRLConsoleStandard;
     {$ELSE}
       {$IFDEF DAEMON}
-      Result := TWiRLConsoleDaemon.Create(AConfigProc);
+      FConsoleClass := TWiRLConsoleDaemon;
       {$ELSE}
-      Result := TWiRLConsoleStandard.Create(AConfigProc);
+      FConsoleClass := TWiRLConsoleStandard;
       {$ENDIF}
     {$ENDIF}
   {$ELSE}
-  Result := TWiRLConsoleStandard.Create(AConfigProc);
+  FConsoleClass := TWiRLConsoleStandard;
   {$ENDIF}
+
+  Result := FConsoleClass.Create(AConfigProc);
 end;
 
-class procedure TWiRLConsoleFactory.Log(const AMessage: string);
+{ TWiRLConsoleLogger }
+
+function TWiRLConsoleLogger.GetConsoleClass: TWiRLConsoleClass;
 begin
-  FConsoleClass.Log(AMessage);
+  if not Assigned(FConsoleClass) then
+  begin
+    {$IFDEF LINUX}
+      {$IFDEF DEBUG}
+      FConsoleClass := TWiRLConsoleStandard;
+      {$ELSE}
+        {$IFDEF DAEMON}
+        FConsoleClass := TWiRLConsoleDaemon;
+        {$ELSE}
+        FConsoleClass := TWiRLConsoleStandard;
+        {$ENDIF}
+      {$ENDIF}
+    {$ELSE}
+    FConsoleClass := TWiRLConsoleStandard;
+    {$ENDIF}
+  end;
+
+  Result := FConsoleClass;
 end;
 
-class procedure TWiRLConsoleFactory.LogLn(const AMessage: string);
+class procedure TWiRLConsoleLogger.LogError(const AMessage: string);
 begin
-  FConsoleClass.LogLn(AMessage);
+  FConsoleClass.LogError(AMessage);
 end;
 
-class procedure TWiRLConsoleFactory.LogRaw(const AMessage: string);
+class procedure TWiRLConsoleLogger.LogInfo(const AMessage: string);
+begin
+  FConsoleClass.LogInfo(AMessage);
+end;
+
+class procedure TWiRLConsoleLogger.LogRaw(const AMessage: string);
 begin
   FConsoleClass.LogRaw(AMessage);
+end;
+
+class procedure TWiRLConsoleLogger.LogWarning(const AMessage: string);
+begin
+  FConsoleClass.LogWarning(AMessage);
 end;
 
 end.

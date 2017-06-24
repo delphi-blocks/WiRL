@@ -96,8 +96,9 @@ type
     destructor Destroy; override;
     procedure Start;
   public
-    class procedure Log(const AMessage: string); virtual; abstract;
-    class procedure LogLn(const AMessage: string); virtual; abstract;
+    class procedure LogInfo(const AMessage: string); virtual; abstract;
+    class procedure LogWarning(const AMessage: string); virtual; abstract;
+    class procedure LogError(const AMessage: string); virtual; abstract;
     class procedure LogRaw(const AMessage: string); virtual; abstract;
   end;
 
@@ -145,24 +146,24 @@ procedure TWiRLConsoleBase.ServerStart;
 begin
   if not FServer.Active then
   begin
-    LogLn(Format(TWiRLConsoleDef.ServerStarting, [FServer.DefaultPort]));
+    LogInfo(Format(TWiRLConsoleDef.ServerStarting, [FServer.DefaultPort]));
     FServer.Active := True;
-    LogLn(TWiRLConsoleDef.ServerStarted);
+    LogInfo(TWiRLConsoleDef.ServerStarted);
   end
   else
-    LogLn(TWiRLConsoleDef.ServerRunning);
+    LogInfo(TWiRLConsoleDef.ServerRunning);
 end;
 
 procedure TWiRLConsoleBase.ServerStop;
 begin
   if FServer.Active  then
   begin
-    LogLn(TWiRLConsoleDef.ServerStopping);
+    LogInfo(TWiRLConsoleDef.ServerStopping);
     FServer.Active := False;
-    LogLn(TWiRLConsoleDef.ServerStopped);
+    LogInfo(TWiRLConsoleDef.ServerStopped);
   end
   else
-    LogLn(TWiRLConsoleDef.ServerNotRunning);
+    LogWarning(TWiRLConsoleDef.ServerNotRunning);
 end;
 
 procedure TWiRLConsoleBase.Start;
@@ -175,9 +176,9 @@ end;
 
 procedure TWiRLConsoleBase.WriteStatus;
 begin
-  LogLn(TWiRLConsoleDef.Active + FServer.Active.ToString(TUseBoolStrs.True));
-  LogLn(TWiRLConsoleDef.Port + FPort.ToString);
-  LogLn(TWiRLConsoleDef.OSVer + OSVersion);
+  LogInfo(TWiRLConsoleDef.Active + FServer.Active.ToString(TUseBoolStrs.True));
+  LogInfo(TWiRLConsoleDef.Port + FPort.ToString);
+  LogInfo(TWiRLConsoleDef.OSVer + OSVersion);
 end;
 
 end.

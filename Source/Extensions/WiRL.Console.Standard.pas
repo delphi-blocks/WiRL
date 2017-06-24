@@ -26,9 +26,11 @@ type
     procedure ConsoleStart; override;
     procedure ConsoleHelp; override;
   public
-    class procedure Log(const AMessage: string); override;
-    class procedure LogLn(const AMessage: string); override;
+    class procedure LogInfo(const AMessage: string); override;
+    class procedure LogWarning(const AMessage: string); override;
+    class procedure LogError(const AMessage: string); override;
     class procedure LogRaw(const AMessage: string); override;
+
   end;
 
 implementation
@@ -36,13 +38,13 @@ implementation
 procedure TWiRLConsoleStandard.ServerStart;
 begin
   inherited;
-  Log(TWiRLConsoleDef.CommandPrompt);
+  LogRaw(TWiRLConsoleDef.CommandPrompt);
 end;
 
 procedure TWiRLConsoleStandard.ServerStop;
 begin
   inherited;
-  Log(TWiRLConsoleDef.CommandPrompt);
+  LogRaw(TWiRLConsoleDef.CommandPrompt);
 end;
 
 procedure TWiRLConsoleStandard.ConsoleSetup;
@@ -52,26 +54,26 @@ end;
 
 procedure TWiRLConsoleStandard.ConsoleHelp;
 begin
-  LogLn(TWiRLConsoleDef.Logo);
-  LogLn(TWiRLConsoleDef.OSVer + OSVersion);
-  LogLn('');
-  LogLn(TWiRLConsoleDef.Help);
+  LogInfo(TWiRLConsoleDef.Logo);
+  LogInfo(TWiRLConsoleDef.OSVer + OSVersion);
+  LogInfo('');
+  LogInfo(TWiRLConsoleDef.Help);
 
-  Log(TWiRLConsoleDef.CommandPrompt);
+  LogRaw(TWiRLConsoleDef.CommandPrompt);
 end;
 
 procedure TWiRLConsoleStandard.WriteStatus;
 begin
   inherited;
-  Log(TWiRLConsoleDef.CommandPrompt);
+  LogRaw(TWiRLConsoleDef.CommandPrompt);
 end;
 
-class procedure TWiRLConsoleStandard.Log(const AMessage: string);
+class procedure TWiRLConsoleStandard.LogError(const AMessage: string);
 begin
-  Write(AMessage);
+  Writeln(AMessage);
 end;
 
-class procedure TWiRLConsoleStandard.LogLn(const AMessage: string);
+class procedure TWiRLConsoleStandard.LogInfo(const AMessage: string);
 begin
   Writeln(AMessage);
 end;
@@ -79,6 +81,11 @@ end;
 class procedure TWiRLConsoleStandard.LogRaw(const AMessage: string);
 begin
   Write(AMessage);
+end;
+
+class procedure TWiRLConsoleStandard.LogWarning(const AMessage: string);
+begin
+  Writeln(AMessage);
 end;
 
 procedure TWiRLConsoleStandard.ConsoleStart;
@@ -106,8 +113,8 @@ begin
     end
     else
     begin
-      LogLn(TWiRLConsoleDef.InvalidCommand);
-      LogLn(TWiRLConsoleDef.CommandPrompt);
+      LogInfo(TWiRLConsoleDef.InvalidCommand);
+      LogInfo(TWiRLConsoleDef.CommandPrompt);
     end;
   end;
 end;
