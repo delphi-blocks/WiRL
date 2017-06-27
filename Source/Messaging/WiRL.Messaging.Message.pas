@@ -9,15 +9,11 @@
 {******************************************************************************}
 unit WiRL.Messaging.Message;
 
-{$I WiRL.inc}
-
 interface
 
 uses
-  Classes, SysUtils
-  , Rtti
-  , WiRL.Core.JSON
-  ;
+  System.Classes, System.SysUtils, System.Rtti,
+  WiRL.Core.JSON;
 
 type
   TWiRLMessage = class
@@ -66,9 +62,8 @@ type
 implementation
 
 uses
-  DateUtils
-  , WiRL.Core.Utils
-  ;
+  System.DateUtils,
+  WiRL.Core.Utils;
 
 { TWiRLMessage }
 
@@ -97,7 +92,6 @@ begin
   Result := T.Create;
   Result.Assign(ASource);
 end;
-
 
 { TWiRLStringMessage }
 

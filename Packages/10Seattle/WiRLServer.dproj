@@ -133,6 +133,7 @@
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWT.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Worker.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Context.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Resource.pas"/>
@@ -146,6 +147,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Default.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>

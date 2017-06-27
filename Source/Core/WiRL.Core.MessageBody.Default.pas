@@ -22,6 +22,7 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyReader,
+  WiRL.Core.MessageBody.Classes,
   WiRL.Core.Exceptions;
 
 type
@@ -29,10 +30,10 @@ type
   ///   This is the <b>default</b> MessageBodyWriter for all Delphi string types.
   /// </summary>
   [Produces(TMediaType.WILDCARD)]
-  TStringTypesMBWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TStringTypesMBWriter = class(TMessageBodyWriter)
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   /// <summary>
@@ -40,20 +41,20 @@ type
   ///   double, etc...
   /// </summary>
   [Produces(TMediaType.TEXT_PLAIN)]
-  TSimpleTypesMBWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TSimpleTypesMBWriter = class(TMessageBodyWriter)
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   /// <summary>
   ///   This is the <b>default</b> MessageBodyWriter for Delphi array and record types
   /// </summary>
   [Produces(TMediaType.APPLICATION_JSON)]
-  TValueTypesMBWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TValueTypesMBWriter = class(TMessageBodyWriter)
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   /// <summary>
@@ -61,10 +62,10 @@ type
   ///   (Neon Library), it's matched by the <see cref="WiRL.Core.MessageBody.Default|TObjectMBReader" />
   /// </summary>
   [Produces(TMediaType.APPLICATION_JSON)]
-  TObjectMBWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TObjectMBWriter = class(TMessageBodyWriter)
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   /// <summary>
@@ -72,9 +73,9 @@ type
   ///   (Neon Library), it's matched by the <see cref="WiRL.Core.MessageBody.Default|TObjectMBWriter" />
   /// </summary>
   [Consumes(TMediaType.APPLICATION_JSON)]
-  TObjectMBReader = class(TInterfacedObject, IMessageBodyReader)
-    function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+  TObjectMBReader = class(TMessageBodyReader)
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; override;
   end;
 
   /// <summary>
@@ -82,10 +83,10 @@ type
   ///   It's matched by the <see cref="WiRL.Core.MessageBody.Default|TJSONValueMBReader" />
   /// </summary>
   [Produces(TMediaType.APPLICATION_JSON)]
-  TJSONValueMBWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TJSONValueMBWriter = class(TMessageBodyWriter)
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
     function AsObject: TObject;
   end;
 
@@ -94,9 +95,9 @@ type
   ///   matched by the <see cref="WiRL.Core.MessageBody.Default|TJSONValueMBWriter" />
   /// </summary>
   [Consumes(TMediaType.APPLICATION_JSON)]
-  TJSONValueMBReader = class(TInterfacedObject, IMessageBodyReader)
-    function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+  TJSONValueMBReader = class(TMessageBodyReader)
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; override;
   end;
 
   /// <summary>
@@ -105,10 +106,10 @@ type
   /// </summary>
   [Produces(TMediaType.APPLICATION_OCTET_STREAM)]
   [Produces(TMediaType.WILDCARD)]
-  TStreamMBWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TStreamMBWriter = class(TMessageBodyWriter)
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   /// <summary>
@@ -116,9 +117,9 @@ type
   ///   It's matched by the <see cref="WiRL.Core.MessageBody.Default|TStreamMBWriter" />
   /// </summary>
   [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
-  TStreamMBReader = class(TInterfacedObject, IMessageBodyReader)
-    function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+  TStreamMBReader = class(TMessageBodyReader)
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; override;
   end;
 
 implementation

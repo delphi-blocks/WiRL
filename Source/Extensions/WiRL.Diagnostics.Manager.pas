@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Diagnostics.Manager;
 
-{$I WiRL.inc}
-
 interface
 
 uses

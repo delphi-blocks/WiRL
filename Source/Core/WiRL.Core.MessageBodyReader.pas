@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Core.MessageBodyReader;
 
-{$I WiRL.inc}
-
 interface
 
 uses

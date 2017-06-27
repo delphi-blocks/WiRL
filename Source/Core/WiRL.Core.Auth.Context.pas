@@ -60,9 +60,9 @@ type
     FVerified: Boolean;
     FSubject: TWiRLSubject;
   public
-    {$IF CompilerVersion < 30} //10Seattle
+    {$IFNDEF HAS_HMAC_HASH}
     class constructor Create;
-    {$IFEND}
+    {$ENDIF}
 
     constructor Create; overload;
     constructor Create(ASubjectClass: TWiRLSubjectClass); overload;
@@ -86,14 +86,14 @@ type
 implementation
 
 uses
-  {$IFDEF DelphiXE8_UP}
+  {$IFDEF HAS_NET_ENCODING}
   System.NetEncoding,
   {$ENDIF}
   System.DateUtils;
 
 { TWiRLAuthContext }
 
-{$IF CompilerVersion < 30}
+{$IFNDEF HAS_HMAC_HASH}
 class constructor TWiRLAuthContext.Create;
 var
   LToken: TWiRLAuthContext;
@@ -113,7 +113,7 @@ begin
     LToken.Free;
   end;
 end;
-{$IFEND}
+{$ENDIF}
 
 procedure TWiRLAuthContext.Clear;
 begin

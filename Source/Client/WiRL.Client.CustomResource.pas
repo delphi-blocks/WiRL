@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Client.CustomResource;
 
-{$I WiRL.inc}
-
 interface
 
 uses

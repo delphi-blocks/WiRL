@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Client.Resource.Stream;
 
-{$I WiRL.inc}
-
 interface
 
 uses

@@ -17,26 +17,27 @@ uses
   WiRL.Core.Response,
   WiRL.Core.Declarations,
   WiRL.http.Accept.MediaType,
+  WiRL.Core.MessageBody.Classes,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter;
 
 type
   [Produces(TMediaType.APPLICATION_JSON)]
-  TArrayDataSetWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TArrayDataSetWriter = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   [Produces(TMediaType.APPLICATION_XML)]
-  TDataSetWriterXML = class(TInterfacedObject, IMessageBodyWriter)
+  TDataSetWriterXML = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   [Produces(TMediaType.TEXT_CSV)]
-  TDataSetWriterCSV = class(TInterfacedObject, IMessageBodyWriter)
+  TDataSetWriterCSV = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
 implementation

@@ -9,29 +9,22 @@
 {******************************************************************************}
 unit WiRL.Core.JSON;
 
-{$I WiRL.inc}
-
 interface
 
 uses
-  {$IFDEF DelphiXE6_UP} // XE6 and higher
-  System.JSON,
-  {$ELSE}
-  Data.DBXJSON,
-  {$ENDIF}
-  System.SysUtils, System.Generics.Collections;
+  System.JSON, System.SysUtils, System.Generics.Collections;
 
 type
-  TJSONAncestor = {$IFDEF DelphiXE6_UP}System.JSON.TJSONAncestor{$ELSE}Data.DBXJSON.TJSONAncestor{$ENDIF};
-  TJSONPair = {$IFDEF DelphiXE6_UP}System.JSON.TJSONPair{$ELSE}Data.DBXJSON.TJSONPair{$ENDIF};
-  TJSONValue = {$IFDEF DelphiXE6_UP}System.JSON.TJSONValue{$ELSE}Data.DBXJSON.TJSONValue{$ENDIF};
-  TJSONTrue = {$IFDEF DelphiXE6_UP}System.JSON.TJSONTrue{$ELSE}Data.DBXJSON.TJSONTrue{$ENDIF};
-  TJSONString = {$IFDEF DelphiXE6_UP}System.JSON.TJSONString{$ELSE}Data.DBXJSON.TJSONString{$ENDIF};
-  TJSONNumber = {$IFDEF DelphiXE6_UP}System.JSON.TJSONNumber{$ELSE}Data.DBXJSON.TJSONNumber{$ENDIF};
-  TJSONObject = {$IFDEF DelphiXE6_UP}System.JSON.TJSONObject{$ELSE}Data.DBXJSON.TJSONObject{$ENDIF};
-  TJSONNull = {$IFDEF DelphiXE6_UP}System.JSON.TJSONNull{$ELSE}Data.DBXJSON.TJSONNull{$ENDIF};
-  TJSONFalse = {$IFDEF DelphiXE6_UP}System.JSON.TJSONFalse{$ELSE}Data.DBXJSON.TJSONFalse{$ENDIF};
-  TJSONArray = {$IFDEF DelphiXE6_UP}System.JSON.TJSONArray{$ELSE}Data.DBXJSON.TJSONArray{$ENDIF};
+  TJSONAncestor = System.JSON.TJSONAncestor;
+  TJSONPair     = System.JSON.TJSONPair;
+  TJSONValue    = System.JSON.TJSONValue;
+  TJSONTrue     = System.JSON.TJSONTrue;
+  TJSONFalse    = System.JSON.TJSONFalse;
+  TJSONString   = System.JSON.TJSONString;
+  TJSONNumber   = System.JSON.TJSONNumber;
+  TJSONObject   = System.JSON.TJSONObject;
+  TJSONNull     = System.JSON.TJSONNull;
+  TJSONArray    = System.JSON.TJSONArray;
 
   TJSONHelper = class
   public

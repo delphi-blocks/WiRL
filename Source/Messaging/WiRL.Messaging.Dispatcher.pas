@@ -16,9 +16,9 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
   System.SyncObjs,
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   System.Threading,
-{$endif}
+{$ENDIF}
 
   WiRL.Core.Singleton, 
   WiRL.Core.Utils, 
@@ -34,9 +34,9 @@ type
     FSubscribers: TList<IWiRLMessageSubscriber>;
     FQueue: TThreadedQueue<TWiRLMessage>;
     FCriticalSection: TCriticalSection;
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
     FWorkerTask: ITask;
-{$endif}
+{$ENDIF}
   protected
     class function GetInstance: TWiRLMessageDispatcher; static; inline;
 
@@ -71,7 +71,7 @@ begin
   FQueue := TThreadedQueue<TWiRLMessage>.Create(MESSAGE_QUEUE_DEPTH);
   FCriticalSection := TCriticalSection.Create;
 
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   FWorkerTask := TTask.Create(
     procedure
     var
@@ -103,15 +103,15 @@ begin
   );
 
   FWorkerTask.Start;
-{$endif}
+{$ENDIF}
 end;
 
 destructor TWiRLMessageDispatcher.Destroy;
 begin
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   if Assigned(FWorkerTask) and (FWorkerTask.Status < TTaskStatus.Canceled) then
     FWorkerTask.Cancel;
-{$endif}
+{$ENDIF}
 
   FCriticalSection.Free;
   FSubscribers.Free;

@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Client.Application;
 
-{$I WiRL.inc}
-
 interface
 
 uses

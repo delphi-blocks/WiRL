@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Diagnostics.Resources;
 
-{$I WiRL.inc}
-
 interface
 
 uses

@@ -13,7 +13,9 @@ uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
   Server.Resources in 'Server.Resources.pas',
-  Server.Entities in 'Server.Entities.pas';
+  Server.Entities in 'Server.Entities.pas',
+  WiRL.Core.MessageBody.Classes in '..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
+  WiRL.Core.Application.Worker in '..\..\Source\Core\WiRL.Core.Application.Worker.pas';
 
 {$R *.res}
 

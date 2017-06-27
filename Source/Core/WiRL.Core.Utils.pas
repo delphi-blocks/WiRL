@@ -11,10 +11,6 @@ unit WiRL.Core.Utils;
 
 {$I WiRL.inc}
 
-{$IF CompilerVersion >= 28}
-  {$DEFINE HAS_NET_ENCODING}
-{$ENDIF}
-
 interface
 
 uses

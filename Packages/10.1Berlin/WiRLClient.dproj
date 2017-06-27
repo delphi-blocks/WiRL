@@ -53,7 +53,6 @@
         <DCC_AdditionalSwitches>-LUDesignIDE</DCC_AdditionalSwitches>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;$(DCC_Namespace)</DCC_Namespace>
         <GenPackage>true</GenPackage>
-        <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>WiRLClient</SanitizedProjectName>
         <GenDll>true</GenDll>
         <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>

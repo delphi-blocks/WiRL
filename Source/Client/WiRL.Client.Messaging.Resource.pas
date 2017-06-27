@@ -17,9 +17,9 @@ uses
   System.SysUtils, System.Classes,
   WiRL.Core.JSON,
 
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   System.Threading,
-{$endif}
+{$ENDIF}
 
   WiRL.Client.Resource.JSON,
   WiRL.Client.SubResource.JSON;
@@ -29,9 +29,9 @@ type
 
   TWiRLClientMessagingResource = class(TWiRLClientResourceJSON)
   private
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
     FWorkerTask: ITask;
-{$endif}
+{$ENDIF}
     FListenSubRes: TWiRLClientSubResourceJSON;
     FMyQueueSubRes: TWiRLClientSubResourceJSON;
     FPollingInterval: Integer;
@@ -134,7 +134,7 @@ begin
   if not ([csLoading, csReading] * ComponentState = []) then
     Exit;
 
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   FWorkerTask := TTask.Create(
     procedure
     var
@@ -165,15 +165,15 @@ begin
       end; // while
     end // task
   ).Start;
-{$endif}
+{$ENDIF}
 end;
 
 procedure TWiRLClientMessagingResource.StopPolling;
 begin
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   if Assigned(FWorkerTask) and (FWorkerTask.Status < TTaskStatus.Completed) then
     FWorkerTask.Cancel;
-{$endif}
+{$ENDIF}
 end;
 
 end.

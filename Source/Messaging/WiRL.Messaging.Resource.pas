@@ -9,28 +9,24 @@
 {******************************************************************************}
 unit WiRL.Messaging.Resource;
 
-{$I WiRL.inc}
-
 interface
 
 uses
-  SysUtils, Classes
+  System.SysUtils, System.Classes,
 
-  , WiRL.Core.JSON
-  , WiRL.Core.Attributes
-  , WiRL.Core.Token
-  , WiRL.http.Accept.MediaType
+  WiRL.Core.JSON,
+  WiRL.Core.Attributes,
+  WiRL.Core.Auth.Context,
+  WiRL.http.Accept.MediaType,
 
-  , WiRL.Messaging.Message
-  , WiRL.Messaging.Queue
-
-  ;
+  WiRL.Messaging.Message,
+  WiRL.Messaging.Queue;
 
 type
   TWiRLMessagingResourceForToken<T: TWiRLCustomMessage, constructor> = class
   private
   protected
-  [Context] Token: TWiRLToken;
+  [Context] Token: TWiRLAuthContext;
   public
     [Path('listen'), GET]
     [Produces(TMediaType.APPLICATION_JSON)]
@@ -45,7 +41,7 @@ type
 implementation
 
 uses
-  Generics.Collections;
+  System.Generics.Collections;
 
 { TWiRLMessagingResourceForToken<T> }
 

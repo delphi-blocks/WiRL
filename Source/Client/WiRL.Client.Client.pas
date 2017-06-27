@@ -16,9 +16,9 @@ interface
 uses
   System.SysUtils, System.Classes,
 
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   System.Threading,
-{$endif}
+{$ENDIF}
 
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
   IdHTTPHeaderInfo;
@@ -32,9 +32,9 @@ type
     FHttpClient: TIdHTTP;
     FWiRLEngineURL: string;
     FOnBeforeCommand: TBeforeCommandEvent;
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
     FWorkerTask: ITask;
-{$endif}
+{$ENDIF}
     function GetRequest: TIdHTTPRequest;
     function GetResponse: TIdHTTPResponse;
     function GetConnectTimeout: Integer;
@@ -45,9 +45,9 @@ type
     procedure SetProxyParams(const Value: TIdProxyConnectionInfo);
   protected
     procedure DoBeforeCommand;
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
     property WorkerTask: ITask read FWorkerTask;
-{$endif}
+{$ENDIF}
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -108,13 +108,13 @@ end;
 
 procedure TWiRLClient.ExecuteAsync(const AProc: TProc);
 begin
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   if IsRunningAsync then
     raise Exception.Create('Multiple async execution not yet supported');
   FWorkerTask := TTask.Create(AProc).Start;
-{$else}
+{$ELSE}
   raise Exception.Create('Async execution not yet supported');
-{$endif}
+{$ENDIF}
 end;
 
 function TWiRLClient.GetConnectTimeout: Integer;
@@ -144,11 +144,11 @@ end;
 
 function TWiRLClient.IsRunningAsync: Boolean;
 begin
-{$ifdef DelphiXE7_UP}
+{$IFDEF HAS_SYSTEM_THREADING}
   Result := Assigned(FWorkerTask) and (FWorkerTask.Status < TTaskStatus.Completed);
-{$else}
+{$ELSE}
   Result := False;
-{$endif}
+{$ENDIF}
 end;
 
 function TWiRLClient.LastCmdSuccess: Boolean;

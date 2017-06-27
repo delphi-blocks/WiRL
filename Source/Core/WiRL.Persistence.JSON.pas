@@ -385,6 +385,10 @@ var
 begin
   Result := nil;
   LObject := AValue.AsObject;
+
+  if not Assigned(LObject) then
+    Exit;
+
   LListType := TRttiHelper.Context.GetType(LObject.ClassType);
 
   LMethodGetEnumerator := LListType.GetMethod('GetEnumerator');

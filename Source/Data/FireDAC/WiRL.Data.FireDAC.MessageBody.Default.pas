@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Data.FireDAC.MessageBody.Default;
 
-{$I WiRL.inc}
-
 interface
 
 uses
@@ -22,6 +20,7 @@ uses
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.Classes,
+  WiRL.Core.MessageBody.Classes,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Utils,
@@ -30,22 +29,22 @@ uses
 type
   [Produces(TMediaType.APPLICATION_XML), Produces(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_OCTET_STREAM)]
-  TFDAdaptedDataSetWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TFDAdaptedDataSetWriter = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   [Consumes(TMediaType.APPLICATION_XML), Consumes(TMediaType.APPLICATION_JSON)]
   [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
-  TFDAdaptedDataSetReader = class(TInterfacedObject, IMessageBodyReader)
-    function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+  TFDAdaptedDataSetReader = class(TMessageBodyReader)
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; override;
   end;
 
   [Produces(TMediaType.APPLICATION_JSON)]
-  TArrayFDCustomQueryWriter = class(TInterfacedObject, IMessageBodyWriter)
+  TArrayFDCustomQueryWriter = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
 

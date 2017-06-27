@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Client.SubResource.JSON;
 
-{$I WiRL.inc}
-
 interface
 
 uses

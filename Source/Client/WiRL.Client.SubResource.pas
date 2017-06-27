@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Client.SubResource;
 
-{$I WiRL.inc}
-
 interface
 
 uses

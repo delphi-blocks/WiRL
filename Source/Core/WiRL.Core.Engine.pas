@@ -28,8 +28,6 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.http.Filters;
 
-{$M+}
-
 type
   TWiRLEngine = class;
 
@@ -116,6 +114,7 @@ implementation
 
 uses
   System.StrUtils,
+  WiRL.Core.Application.Worker,
   WiRL.Core.Utils;
 
 function TWiRLEngine.AddApplication(const AName, ABasePath: string;

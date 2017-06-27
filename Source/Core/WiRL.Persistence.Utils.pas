@@ -9,8 +9,6 @@
 {******************************************************************************}
 unit WiRL.Persistence.Utils;
 
-{$I WiRL.inc}
-
 interface
 
 uses
