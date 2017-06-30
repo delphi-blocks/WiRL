@@ -14,6 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls, System.Rtti,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
+  System.TypInfo,
 
   WiRL.Core.Engine,
   WiRL.Core.Application,
@@ -65,6 +66,8 @@ type
     Panel3: TPanel;
     btnDesGenericList: TButton;
     btnDesGenericObjectList: TButton;
+    btnDesSimpleObject: TButton;
+    btnSerSimpleObject: TButton;
     procedure btnSerDataSetClick(Sender: TObject);
     procedure btnSerComplexObjectClick(Sender: TObject);
     procedure btnSerSimpleTypesClick(Sender: TObject);
@@ -81,6 +84,8 @@ type
     procedure Button5Click(Sender: TObject);
     procedure btnDesStreamablePropClick(Sender: TObject);
     procedure btnStreamablePropClick(Sender: TObject);
+    procedure btnDesSimpleObjectClick(Sender: TObject);
+    procedure btnSerSimpleObjectClick(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -155,7 +160,7 @@ var
 begin
   LJSON := TNeonMapperJSON.ValueToJSON(AValue, TNeonConfiguration.Default);
   try
-    Result :=  TJSONHelper.ToJSON(LJSON);
+    Result := TJSONHelper.ToJSON(LJSON);
   finally
     LJSON.Free;
   end;
@@ -194,12 +199,12 @@ begin
   try
     LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text) as TJSONObject;
     try
-      TNeonMapperJSON.JSONToObject(LPerson, LJSON);
+      TNeonMapperJSON.JSONToObject(LPerson, LJSON, TNeonConfiguration.Snake);
     finally
       LJSON.Free;
     end;
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, TNeonConfiguration.Default);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, TNeonConfiguration.Snake);
     try
       memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
@@ -384,7 +389,7 @@ begin
   try
     LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
     try
-      TNeonMapperJSON.JSONToObject(LList, LJSON);
+      TNeonMapperJSON.JSONToObject(LList, LJSON, TNeonConfiguration.Default);
     finally
       LJSON.Free;
     end;
@@ -409,7 +414,7 @@ begin
   try
     LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
     try
-      TNeonMapperJSON.JSONToObject(LList, LJSON);
+      TNeonMapperJSON.JSONToObject(LList, LJSON, TNeonConfiguration.Default);
     finally
       LJSON.Free;
     end;
@@ -452,7 +457,7 @@ begin
 
   LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
   try
-    TNeonMapperJSON.JSONToObject(LStreamable, LJSON);
+    TNeonMapperJSON.JSONToObject(LStreamable, LJSON, TNeonConfiguration.Default);
   finally
     LJSON.Free;
   end;
@@ -497,7 +502,7 @@ begin
 
   LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
   try
-    TNeonMapperJSON.JSONToObject(LStreamable, LJSON);
+    TNeonMapperJSON.JSONToObject(LStreamable, LJSON, TNeonConfiguration.Default);
   finally
     LJSON.Free;
   end;
@@ -532,6 +537,48 @@ begin
   LStreamable.Free;
 end;
 
+procedure TMainForm.btnDesSimpleObjectClick(Sender: TObject);
+var
+  LSimple: TCaseClass;
+  LJSON: TJSONValue;
+begin
+  LSimple := TCaseClass.Create;
+  try
+    LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text) as TJSONObject;
+    try
+      TNeonMapperJSON.JSONToObject(LSimple, LJSON, TNeonConfiguration.Snake);
+    finally
+      LJSON.Free;
+    end;
+
+    LJSON := TNeonMapperJSON.ObjectToJSON(LSimple, TNeonConfiguration.Snake);
+    try
+      memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LSimple.Free;
+  end;
+end;
+
+procedure TMainForm.btnSerSimpleObjectClick(Sender: TObject);
+var
+  LJSON: TJSONValue;
+  LSimple: TCaseClass;
+begin
+  LSimple := TCaseClass.DefaultValues;
+
+  LJSON := TNeonMapperJSON.ObjectToJSON(LSimple, TNeonConfiguration.Snake);
+  try
+    Log(TJSONHelper.PrettyPrint(LJSON));
+  finally
+    LJSON.Free;
+  end;
+
+  LSimple.Free;
+end;
+
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   StopServerAction.Execute;
@@ -564,7 +611,11 @@ begin
     // Application configuration
     .AddApplication('/app')
       .SetName('Content App')
-      .SetResources('Server.Resources.TSampleResource')
+      .SetResources('Server.Resources.TEntityResource')
+      .ConfigureSerializer
+        .SetMembersType(TNeonMembersType.Properties)
+        .SetVisibility([mvPublic, mvPublished])
+        .SetMemberCase(TNeonCase.SnakeCase)
   ;
 
   if not FServer.Active then

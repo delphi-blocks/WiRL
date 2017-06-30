@@ -11,15 +11,6 @@ type
   ['{DD163E75-134C-4035-809C-D9E1EEEC4225}']
   end;
 
-  IDynamicMember = interface
-  ['{18FB3C44-DBB8-408D-B30C-16E29A738FF0}']
-    function GetValue(AInstance: Pointer): TValue;
-    procedure SetValue(AInstance: Pointer);
-    function MemberType: TRttiType;
-    function IsWritable: Boolean;
-    function IsReadable: Boolean;
-  end;
-
   IDynamicStream = interface(IDynamicType)
   ['{968D03E7-273F-4E94-A3EA-ECB7A73F0715}']
     procedure LoadFromStream(AStream: TStream);
@@ -36,20 +27,6 @@ type
     // Enumerator functions
     function Current: TValue;
     function MoveNext: Boolean;
-  end;
-
-  TDynamicMember = class(TInterfacedObject, IDynamicMember)
-  private
-    FType: TRttiType;
-    FInstance: Pointer;
-  public
-    constructor Create(AInstance: Pointer; AType: TRttiType);
-
-    function GetValue(AInstance: Pointer): TValue;
-    procedure SetValue(AInstance: Pointer);
-    function MemberType: TRttiType;
-    function IsWritable: Boolean;
-    function IsReadable: Boolean;
   end;
 
   TDynamicStream = class(TInterfacedObject, IDynamicStream)
@@ -253,39 +230,6 @@ end;
 function TDynamicList.NewItem: TValue;
 begin
   Result := TRttiHelper.CreateNewValue(FItemType);
-end;
-
-{ TDynamicMember }
-
-constructor TDynamicMember.Create(AInstance: Pointer; AType: TRttiType);
-begin
-  FInstance := AInstance;
-  FType := AType;
-end;
-
-function TDynamicMember.GetValue(AInstance: Pointer): TValue;
-begin
-
-end;
-
-function TDynamicMember.IsReadable: Boolean;
-begin
-
-end;
-
-function TDynamicMember.IsWritable: Boolean;
-begin
-
-end;
-
-function TDynamicMember.MemberType: TRttiType;
-begin
-
-end;
-
-procedure TDynamicMember.SetValue(AInstance: Pointer);
-begin
-
 end;
 
 end.

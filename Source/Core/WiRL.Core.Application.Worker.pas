@@ -573,11 +573,19 @@ var
 begin
   // The returned object MUST be initially nil (needs to be consistent with the Free method)
   LMethodResult := nil;
+  LContentType := FContext.Response.ContentType;
+  FillResourceMethodParameters(AInstance, LArgumentArray);
   try
-    LContentType := FContext.Response.ContentType;
-    FillResourceMethodParameters(AInstance, LArgumentArray);
     LMethodResult := FResource.Method.RttiObject.Invoke(AInstance, LArgumentArray);
+  except
+    on E: Exception do
+    begin
+      raise EWiRLServerException.Create(E.Message,
+        'TWiRLApplicationWorker', 'InvokeResourceMethod: RttiObject.Invoke');
+    end;
+  end;
 
+  try
     if not FResource.Method.IsFunction then
       Exit;
 

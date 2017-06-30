@@ -2,13 +2,389 @@
 	"variables": [],
 	"info": {
 		"name": "WiRLDemos",
-		"_postman_id": "5b8d6ecc-84b2-3c87-fb19-0e07202b5d1f",
+		"_postman_id": "b871f090-84cf-2b48-eac5-0ef1761300fd",
 		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Authorization",
+			"name": "01.HelloWorld",
+			"description": "",
+			"item": [
+				{
+					"name": "Hello World",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/plain",
+								"description": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Time",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/time",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/plain",
+								"description": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Echo String",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/echostring/Paolo",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Reverse String",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/reversestring/Paolo",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Sum (x + y)",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/sum/10/15",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Exception",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/exception",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "URL",
+					"request": {
+						"url": "localhost:8080/rest/app/entity/url",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Image",
+					"request": {
+						"url": "localhost:8080/rest/app/entity/image",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "image/png",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "PDF",
+					"request": {
+						"url": "localhost:8080/rest/app/entity/pdf",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/pdf",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Post",
+					"request": {
+						"url": "localhost:8080/rest/app/helloworld/postexample",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n  \t\"nome\": \"Paolo\",\n  \t\"Eta\": 47\n  },\n  {\n  \t\"nome\": \"Luca\",\n  \t\"Eta\": 40\n  }\n]"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02.ContentType",
+			"description": "",
+			"item": [
+				{
+					"name": "Sample Resource (text)",
+					"request": {
+						"url": "localhost:8080/rest/app/sample",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/plain",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Sample Resource (html)",
+					"request": {
+						"url": "localhost:8080/rest/app/sample",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/html",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Sample Resource (json)",
+					"request": {
+						"url": "localhost:8080/rest/app/sample",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03.Authorization",
 			"description": "",
 			"item": [
 				{
@@ -23,14 +399,12 @@
 								{
 									"key": "username",
 									"value": "admin",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "mypassword",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -59,10 +433,7 @@
 								"description": ""
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
+						"body": {},
 						"description": ""
 					},
 					"response": []
@@ -79,14 +450,12 @@
 								{
 									"key": "username",
 									"value": "admin",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "mypassword",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -112,92 +481,12 @@
 								{
 									"key": "username",
 									"value": "admin",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "ContentType",
-			"description": "",
-			"item": [
-				{
-					"name": "Sample Resource",
-					"request": {
-						"url": "localhost:8080/rest/app/sample",
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "text/plain",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Context",
-			"description": "",
-			"item": [
-				{
-					"name": "Hello World",
-					"request": {
-						"url": "localhost:8080/rest/app/context",
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "text/plain",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": false
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": false
+									"type": "text"
 								}
 							]
 						},
@@ -206,148 +495,23 @@
 					"response": []
 				},
 				{
-					"name": "Param context",
+					"name": "BodyAuth",
 					"request": {
-						"url": "localhost:8080/rest/app/context/inner",
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "text/plain",
-								"description": ""
+						"auth": {
+							"type": "basic",
+							"basic": {
+								"username": "paolo",
+								"password": "mypassword",
+								"saveHelperData": true,
+								"showPassword": false
 							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": false
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": false
-								}
-							]
 						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Login",
-					"request": {
-						"url": "localhost:8080/rest/app/session",
+						"url": "localhost:8080/rest/app/basic_auth/",
 						"method": "POST",
 						"header": [
 							{
-								"key": "Accept",
-								"value": "*/*",
-								"description": ""
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get session",
-					"request": {
-						"url": "localhost:8080/rest/app/session",
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "*/*",
-								"description": ""
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Change session",
-					"request": {
-						"url": "localhost:8080/rest/app/session",
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "*/*",
-								"description": ""
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "Luca",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Logout",
-					"request": {
-						"url": "localhost:8080/rest/app/session",
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "*/*",
-								"description": ""
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded",
+								"key": "Authorization",
+								"value": "Basic cGFvbG86bXlwYXNzd29yZA==",
 								"description": ""
 							}
 						],
@@ -359,7 +523,92 @@
 			]
 		},
 		{
-			"name": "Filters",
+			"name": "04.WebServer",
+			"description": "",
+			"item": [
+				{
+					"name": "WebServer",
+					"request": {
+						"url": "http://localhost:8080/rest/web/home/",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "07.MessageBody",
+			"description": "",
+			"item": [
+				{
+					"name": "TPerson Resource",
+					"request": {
+						"url": "localhost:8080/rest/app/mb/person",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "mypassword",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Insert Resource (json)",
+					"request": {
+						"url": "localhost:8080/rest/app/mb/person",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n \"BirthDate\": \"1969-11-03T00:00:00.000Z\",\n \"Name\": \"Paolo\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "10.Filters",
 			"description": "",
 			"item": [
 				{
@@ -380,14 +629,12 @@
 								{
 									"key": "username",
 									"value": "admin",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "mypassword",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -403,7 +650,7 @@
 						"header": [
 							{
 								"key": "Accept-Encoding",
-								"value": "gzip",
+								"value": "deflate",
 								"description": ""
 							}
 						],
@@ -413,248 +660,12 @@
 								{
 									"key": "username",
 									"value": "admin",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "HelloWorld",
-			"description": "",
-			"item": [
-				{
-					"name": "Hello World",
-					"request": {
-						"url": "localhost:8080/rest/app/helloworld",
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Echo String",
-					"request": {
-						"url": "localhost:8080/rest/app/helloworld/echostring/Paolo",
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Reverse String",
-					"request": {
-						"url": "localhost:8080/rest/app/helloworld/reversestring/Paolo",
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Sum (x + y)",
-					"request": {
-						"url": "localhost:8080/rest/app/helloworld/sum/10/15",
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Exception",
-					"request": {
-						"url": "localhost:8080/rest/app/helloworld/exception",
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "URL",
-					"request": {
-						"url": "localhost:8080/rest/app/entity/url",
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Image",
-					"request": {
-						"url": "localhost:8080/rest/app/entity/image",
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "image/png",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "PDF",
-					"request": {
-						"url": "localhost:8080/rest/app/entity/pdf",
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/pdf",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text",
-									"enabled": true
-								},
-								{
-									"key": "password",
-									"value": "mypassword",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},

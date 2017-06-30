@@ -23,19 +23,20 @@ uses
   Server.Entities;
 
 type
-  [Path('sample')]
-  TSampleResource = class
-  private
-    const XML_AND_JSON = TMediaType.APPLICATION_XML + ',' + TMediaType.APPLICATION_JSON;
+  [Path('entity')]
+  TEntityResource = class
   public
-    [GET, Produces(TMediaType.TEXT_HTML)]
-    function HtmlDocument: string;
-
-    [GET, Produces(TMediaType.TEXT_PLAIN)]
-    function SayHelloWorld: string;
-
+    [Path('simpleclass')]
     [GET, Produces(TMediaType.APPLICATION_JSON)]
-    function JSON1: TJSONObject;
+    function SimpleClass: TCaseClass;
+
+    [Path('complexclass')]
+    [GET, Produces(TMediaType.APPLICATION_JSON)]
+    function ComplexClass: TPerson;
+
+    [Path('record')]
+    [GET, Produces(TMediaType.APPLICATION_JSON)]
+    function GetRecord: TMyRecord;
 
     [GET, Produces('image/jpg')]
     function JpegImage: TStream;
@@ -44,11 +45,11 @@ type
     function PdfDocument: TStream;
 
     [GET, Path('/dataset1')]
-    [Produces(XML_AND_JSON)]
+    [Produces(TMediaType.APPLICATION_JSON)]
     function DataSet1: TDataSet;
 
     [GET, Path('/dataset2')]
-    [Produces(XML_AND_JSON)]
+    [Produces(TMediaType.APPLICATION_JSON)]
     function DataSet2: TFDMemTable;
 
     [GET, Path('/dataset3'), Produces(TMediaType.APPLICATION_JSON)]
@@ -62,9 +63,9 @@ uses
   WiRL.Core.Registry;
 
 
-{ TSampleResource }
+{ TEntityResource }
 
-function TSampleResource.DataSet1: TDataSet;
+function TEntityResource.DataSet1: TDataSet;
 var
   LCDS: TClientDataSet;
 begin
@@ -81,7 +82,7 @@ begin
 
 end;
 
-function TSampleResource.DataSet2: TFDMemTable;
+function TEntityResource.DataSet2: TFDMemTable;
 begin
   Result := TFDMemTable.Create(nil);
   Result.FieldDefs.Add('Name', ftString, 100);
@@ -92,41 +93,45 @@ begin
   Result.AppendRecord(['Luca', 'Minuti']);
 end;
 
-function TSampleResource.DataSet3: TDataset;
+function TEntityResource.DataSet3: TDataset;
 begin
   Result := DataSet2;
 end;
 
-function TSampleResource.HtmlDocument: string;
+function TEntityResource.GetRecord: TMyRecord;
 begin
-  Result :=
-    '<html><body>' +
-    '<h2>Hello World!</h2>' +
-    '</body></html>';
+  Result.Uno := 'First Field';
+  Result.Due := 4242;
 end;
 
-function TSampleResource.JpegImage: TStream;
+function TEntityResource.ComplexClass: TPerson;
+begin
+  Result := TPerson.Create;
+
+  Result.Name := 'Paolo';
+  Result.Surname := 'Rossi';
+  Result.AddAddress('Piacenza', 'Italy');
+  Result.AddAddress('Parma', 'Italy');
+  Result.Note.Date := Now;
+  Result.Note.Text := 'Note Text';
+end;
+
+function TEntityResource.JpegImage: TStream;
 begin
   Result := TFileStream.Create('image.jpg', fmOpenRead or fmShareDenyWrite);
 end;
 
-function TSampleResource.JSON1: TJSONObject;
-begin
-  Result := TJSONObject.Create;
-  Result.AddPair('Hello', 'World');
-end;
-
-function TSampleResource.PdfDocument: TStream;
+function TEntityResource.PdfDocument: TStream;
 begin
   Result := TFileStream.Create('document.pdf', fmOpenRead or fmShareDenyWrite);
 end;
 
-function TSampleResource.SayHelloWorld: string;
+function TEntityResource.SimpleClass: TCaseClass;
 begin
-  Result := 'Hello World!';
+  Result := TCaseClass.DefaultValues;
 end;
 
 initialization
-  TWiRLResourceRegistry.Instance.RegisterResource<TSampleResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TEntityResource>;
 
 end.

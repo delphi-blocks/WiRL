@@ -1854,7 +1854,6 @@ object MainForm: TMainForm
     ScrollBars = ssVertical
     TabOrder = 2
     WordWrap = False
-    ExplicitHeight = 524
   end
   object btnSerSimpleTypes: TButton
     Left = 8
@@ -1889,7 +1888,6 @@ object MainForm: TMainForm
     ScrollBars = ssVertical
     TabOrder = 5
     WordWrap = False
-    ExplicitHeight = 523
   end
   object btnSerGenericList: TButton
     Left = 8
@@ -2042,6 +2040,24 @@ object MainForm: TMainForm
     TabOrder = 20
     OnClick = btnDesGenericObjectListClick
   end
+  object btnDesSimpleObject: TButton
+    Left = 532
+    Top = 447
+    Width = 131
+    Height = 25
+    Caption = 'SimpleObject'
+    TabOrder = 21
+    OnClick = btnDesSimpleObjectClick
+  end
+  object btnSerSimpleObject: TButton
+    Left = 8
+    Top = 403
+    Width = 131
+    Height = 25
+    Caption = 'SimpleObject'
+    TabOrder = 22
+    OnClick = btnSerSimpleObjectClick
+  end
   object MainActionList: TActionList
     Left = 408
     Top = 24
@@ -2068,7 +2084,7 @@ object MainForm: TMainForm
     Left = 648
     Top = 40
     Content = {
-      414442530F00023CAC010000FF00010001FF02FF030400120000006400730050
+      414442530F00C41CAC010000FF00010001FF02FF030400120000006400730050
       006500720073006F006E007300050000000000060000070032000000080000FF
       09FF0A0400080000004E0061006D0065000B00010000000D000C000E00320000
       000F00011000011100011200011300011400011500080000004E0061006D0065

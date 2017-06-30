@@ -3,12 +3,12 @@ unit Server.Entities;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections;
+  System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections,
+  WiRL.Persistence.Attributes;
 
 {$M+}
 
 type
-
   TStreamableSample = class
   private
     FPayload: TBytes;
@@ -98,8 +98,9 @@ type
     destructor Destroy; override;
     procedure AddAddress(const ACity, ACountry: string);
   published
-
+    //[NeonIgnore]
     property Name: string read FName write FName;
+    [NeonProperty('Cognome')]
     property Surname: string read FSurname write FSurname;
 
     property Addresses: TAddresses read FAddresses write FAddresses;
@@ -108,6 +109,18 @@ type
     property Enum: TMyEnum read FEnum write FEnum;
     property Note: TNote read FNote write FNote;
     property Options: TMySet read FOptions write FOptions;
+  end;
+
+  TCaseClass = class
+  private
+    FFirstProp: Integer;
+    FSecondXProp: string;
+    FThirdProp: TDateTime;
+  public
+    class function DefaultValues: TCaseClass;
+    property FirstProp: Integer read FFirstProp write FFirstProp;
+    property SecondXProp: string read FSecondXProp write FSecondXProp;
+    property ThirdProp: TDateTime read FThirdProp write FThirdProp;
   end;
 
 implementation
@@ -220,6 +233,16 @@ destructor TStreamableComposition.Destroy;
 begin
   FStream.Free;
   inherited;
+end;
+
+{ TCaseClass }
+
+class function TCaseClass.DefaultValues: TCaseClass;
+begin
+  Result := TCaseClass.Create;
+  Result.FirstProp := Random(1000);
+  Result.SecondXProp := 'ABCDEFG';
+  Result.ThirdProp := EncodeDate(Random(2017), Random(12), Random(28));
 end;
 
 end.

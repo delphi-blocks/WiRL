@@ -169,7 +169,7 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
-    LJSON := TNeonMapperJSON.ObjectToJSON(AValue.AsObject, TNeonConfiguration.Default);
+    LJSON := TNeonMapperJSON.ObjectToJSON(AValue.AsObject, WiRLApplication.SerializerConfig);
     try
       LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally
@@ -263,7 +263,7 @@ begin
       tkDynArray,
       tkRecord:
       begin
-        LJSON := TNeonMapperJSON.ValueToJSON(AValue, TNeonConfiguration.Default);
+        LJSON := TNeonMapperJSON.ValueToJSON(AValue, WiRLApplication.SerializerConfig);
         try
           LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
         finally

@@ -26,6 +26,8 @@ uses
 type
   TNeonSerializerJSON = class(TNeonBase)
   private
+    procedure WriteMembers(AType: TRttiType; AInstance: Pointer; AResult: TJSONValue);
+  private
     function WriteString(const AValue: TValue): TJSONValue;
     function WriteChar(const AValue: TValue): TJSONValue;
     function WriteEnum(const AValue: TValue): TJSONValue;
@@ -108,6 +110,8 @@ type
 
   TNeonDeserializerJSON = class(TNeonBase)
   private
+    procedure ReadMembers(AType: TRttiType; AInstance: Pointer; AJSONObject: TJSONObject);
+  private
     function ReadString(AJSONValue: TJSONValue; AType: TRttiType; AKind: TTypeKind): TValue;
     function ReadChar(AJSONValue: TJSONValue; AType: TRttiType; AKind: TTypeKind): TValue;
     function ReadEnum(AJSONValue: TJSONValue; AType: TRttiType): TValue;
@@ -129,7 +133,6 @@ type
     function ReadEnumerable(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
 
     function ReadDataMember(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
-    procedure SetMemberValue(const AValue: TValue; AMember: TRttiMember; AInstance: Pointer);
   public
     procedure JSONToObject(AObject: TObject; AJSON: TJSONValue);
     function JSONToTValue(AJSON: TJSONValue; AType: TRttiType): TValue; overload;
@@ -140,15 +143,15 @@ type
   TNeonMapperJSON = class
   public
     class function ValueToJSON(const AValue: TValue): TJSONValue; overload;
-    class function ValueToJSON(const AValue: TValue; const AConfig: TNeonConfiguration): TJSONValue; overload;
+    class function ValueToJSON(const AValue: TValue; AConfig: INeonConfiguration): TJSONValue; overload;
 
     class function ObjectToJSON(AObject: TObject): TJSONValue; overload;
-    class function ObjectToJSON(AObject: TObject; const AConfig: TNeonConfiguration): TJSONValue; overload;
+    class function ObjectToJSON(AObject: TObject; AConfig: INeonConfiguration): TJSONValue; overload;
 
     class function ObjectToJSONString(AObject: TObject): string; overload;
-    class function ObjectToJSONString(AObject: TObject; const AConfig: TNeonConfiguration): string; overload;
+    class function ObjectToJSONString(AObject: TObject; AConfig: INeonConfiguration): string; overload;
   public
-    class procedure JSONToObject(AObject: TObject; AJSON: TJSONValue); overload;
+    class procedure JSONToObject(AObject: TObject; AJSON: TJSONValue; AConfig: INeonConfiguration); overload;
     class function JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject; overload;
     class function JSONToObject<T: class, constructor>(const AJSON: string): T; overload;
     class function JSONToObject(AType: TRttiType; const AJSON: string): TObject; overload;
@@ -330,12 +333,59 @@ begin
   Result := WriteObject(LObject);
 end;
 
-function TNeonSerializerJSON.WriteObject(const AValue: TValue): TJSONValue;
+procedure TNeonSerializerJSON.WriteMembers(AType: TRttiType;
+  AInstance: Pointer; AResult: TJSONValue);
 var
   LJSONValue: TJSONValue;
+  LMember: TRttiMember;
+  LMembers: TArray<TRttiMember>;
+  LNeonMember: TNeonRttiMember;
+begin
+  LMembers := GetTypeMembers(AType);
+
+  for LMember in LMembers do
+  begin
+    LNeonMember := TNeonRttiMember.Create(AInstance, LMember);
+    try
+
+      if SameText(LMember.Name, 'Parent') then
+        Continue;
+
+      if SameText(LMember.Name, 'Owner') then
+        Continue;
+
+      if not LNeonMember.IsWritable and
+         not (LNeonMember.TypeKind in [tkClass, tkInterface]) then
+        Continue;
+
+      if LNeonMember.IsReadable and (LNeonMember.Visibility in FConfig.Visibility) then
+      begin
+        try
+          // NeonIgnore Attribute: Skip the member
+          if LNeonMember.Ignore then
+            Continue;
+
+          LJSONValue := WriteDataMember(LNeonMember.GetValue);
+          if Assigned(LJSONValue) then
+          begin
+
+            (AResult as TJSONObject).AddPair(GetNameFromMember(LNeonMember), LJSONValue);
+          end;
+        except
+          LogError(Format('Error converting property [%s] [%s type] of object [%s]',
+            [LNeonMember.Name, LNeonMember.MemberType.Name, AType.Name]));
+        end;
+      end;
+    finally
+      LNeonMember.Free;
+    end;
+  end;
+end;
+
+function TNeonSerializerJSON.WriteObject(const AValue: TValue): TJSONValue;
+var
   LObject: TObject;
   LType: TRttiType;
-  LProperty: TRttiProperty;
 begin
   Result := TJSONObject.Create;
   LObject := AValue.AsObject;
@@ -345,31 +395,7 @@ begin
 
   LType := TRttiHelper.Context.GetType(LObject.ClassType);
 
-  for LProperty in LType.GetProperties do
-  begin
-
-    if LProperty.Name = 'Parent' then
-      Continue;
-
-    if LProperty.Name = 'Owner' then
-      Continue;
-
-    if not LProperty.IsWritable and
-       not (LProperty.PropertyType.TypeKind in [tkClass, tkInterface]) then
-      Continue;
-
-    if LProperty.IsReadable and (LProperty.Visibility in FConfig.Visibility) then
-    begin
-      try
-        LJSONValue := WriteDataMember(LProperty.GetValue(LObject));
-        if Assigned(LJSONValue) then
-          (Result as TJSONObject).AddPair(LProperty.Name, LJSONValue);
-      except
-        LogError(Format('Error converting property [%s] [%s type] of object [%s]',
-          [LProperty.Name, LProperty.PropertyType.Name, LObject.ClassName]));
-      end;
-    end;
-  end;
+  WriteMembers(LType,  LObject, Result);
 end;
 
 function TNeonSerializerJSON.WriteEnumerable(const AValue: TValue): TJSONValue;
@@ -442,25 +468,11 @@ end;
 function TNeonSerializerJSON.WriteRecord(const AValue: TValue): TJSONValue;
 var
   LType: TRttiType;
-  LField: TRttiField;
-  LJSONValue: TJSONValue;
 begin
   Result := TJSONObject.Create;
   LType := TRttiHelper.Context.GetType(AValue.TypeInfo);
-  for LField in LType.GetFields do
-  begin
-    if LField.Visibility in FConfig.Visibility then
-    begin
-      try
-        LJSONValue := WriteDataMember(LField.GetValue(AValue.GetReferenceToRawData));
-        if Assigned(LJSONValue) then
-          (Result as TJSONObject).AddPair(LField.Name, LJSONValue);
-      except
-        LogError(Format('Error converting field [%s] [%s type]',
-          [LField.Name, LField.FieldType.Name]));
-      end;
-    end;
-  end;
+
+  WriteMembers(LType, AValue.GetReferenceToRawData, Result);
 end;
 
 function TNeonSerializerJSON.WriteSet(const AValue: TValue): TJSONValue;
@@ -520,8 +532,8 @@ end;
 
 { TNeonDeserializerJSON }
 
-function TNeonDeserializerJSON.ReadArray(AJSONValue: TJSONValue; AType:
-    TRttiType; const AData: TValue): TValue;
+function TNeonDeserializerJSON.ReadArray(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): TValue;
 var
   LIndex: NativeInt;
   LItemValue: TValue;
@@ -770,53 +782,72 @@ begin
   Result := LNumber.AsInt;
 end;
 
-function TNeonDeserializerJSON.ReadInterface(AJSONValue: TJSONValue; AType:
-    TRttiType; const AData: TValue): TValue;
+function TNeonDeserializerJSON.ReadInterface(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): TValue;
 begin
   Result := AData;
 end;
 
-function TNeonDeserializerJSON.ReadObject(AJSONValue: TJSONValue; AType:
-    TRttiType; const AData: TValue): TValue;
+procedure TNeonDeserializerJSON.ReadMembers(AType: TRttiType;
+  AInstance: Pointer; AJSONObject: TJSONObject);
 var
-  LProperty: TRttiProperty;
-  LJSONObject: TJSONObject;
+  LMember: TRttiMember;
+  LMembers: TArray<TRttiMember>;
+
+  LNeonMember: TNeonRttiMember;
   LJSONValue: TJSONValue;
-  LPData: Pointer;
   LMemberValue: TValue;
+begin
+  LMembers := GetTypeMembers(AType);
+
+  for LMember in LMembers do
+  begin
+    LNeonMember := TNeonRttiMember.Create(AInstance, LMember);
+    try
+      if not LNeonMember.IsWritable then
+        Continue;
+
+      if LNeonMember.Visibility in FConfig.Visibility then
+      begin
+        // NeonIgnore Attribute: Skip the member
+        if LNeonMember.Ignore then
+          Continue;
+
+        //Look for a JSON with the calculated Member Name
+        LJSONValue := AJSONObject.GetValue(GetNameFromMember(LNeonMember));
+
+        // Property not found in JSON, continue to the next one
+        if not Assigned(LJSONValue) then
+          Continue;
+
+        LMemberValue := ReadDataMember(LJSONValue, LNeonMember.MemberType, LNeonMember.GetValue);
+        LNeonMember.SetValue(LMemberValue);
+      end;
+    finally
+      LNeonMember.Free;
+    end;
+  end;
+end;
+
+function TNeonDeserializerJSON.ReadObject(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): TValue;
+var
+  LJSONObject: TJSONObject;
+  LPData: Pointer;
 begin
   Result := AData;
   LPData := AData.AsObject;
   LJSONObject := AJSONValue as TJSONObject;
 
   if (AType.TypeKind = tkClass) or (AType.TypeKind = tkInterface) then
-  for LProperty in AType.GetProperties do
-  begin
-    if not LProperty.IsWritable then
-      Continue;
-
-    if LProperty.Visibility in FConfig.Visibility then
-    begin
-      LJSONValue := LJSONObject.GetValue(LProperty.Name);
-
-      // Property not found in JSON, continue to the next one
-      if not Assigned(LJSONValue) then
-        Continue;
-
-      LMemberValue := ReadDataMember(LJSONValue, LProperty.PropertyType, LProperty.GetValue(LPData));
-      SetMemberValue(LMemberValue, LProperty, LPData);
-    end;
-  end;
+    ReadMembers(AType, LPData, LJSONObject);
 end;
 
 function TNeonDeserializerJSON.ReadRecord(AJSONValue: TJSONValue;
   AType: TRttiType; const AData: TValue): TValue;
 var
-  LField: TRttiField;
   LJSONObject: TJSONObject;
-  LJSONValue: TJSONValue;
   LPData: Pointer;
-  LMemberValue: TValue;
 begin
   Result := AData;
   LPData := AData.GetReferenceToRawData;
@@ -827,20 +858,7 @@ begin
   // Objects, Records, Interfaces are all represented by JSON objects
   LJSONObject := AJSONValue as TJSONObject;
 
-  for LField in AType.GetFields do
-  begin
-    if LField.Visibility in FConfig.Visibility then
-    begin
-      LJSONValue := LJSONObject.GetValue(LField.Name);
-
-      // Property not found in JSON, continue to the next one
-      if not Assigned(LJSONValue) then
-        Continue;
-
-      LMemberValue := ReadDataMember(LJSONValue, LField.FieldType, LField.GetValue(LPData));
-      SetMemberValue(LMemberValue, LField, LPData);
-    end;
-  end;
+  ReadMembers(AType, LPData, LJSONObject);
 end;
 
 function TNeonDeserializerJSON.ReadSet(AJSONValue: TJSONValue; AType: TRttiType): TValue;
@@ -920,18 +938,6 @@ begin
 
 end;
 
-procedure TNeonDeserializerJSON.SetMemberValue(const AValue: TValue; AMember:
-    TRttiMember; AInstance: Pointer);
-begin
-  if AValue.IsEmpty then
-    Exit;
-
-  if AMember is TRttiField then
-    (AMember as TRttiField).SetValue(AInstance, AValue)
-  else if AMember is TRttiProperty then
-    (AMember as TRttiProperty).SetValue(AInstance, AValue)
-end;
-
 
 function TNeonDeserializerJSON.JSONToArray(AJSON: TJSONValue; AType: TRttiType): TValue;
 begin
@@ -967,7 +973,7 @@ end;
 class function TNeonMapperJSON.JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject;
 begin
   Result := TRttiHelper.CreateInstance(AType);
-  JSONToObject(Result, AJSON);
+  JSONToObject(Result, AJSON, TNeonConfiguration.Default);
 end;
 
 class function TNeonMapperJSON.JSONToObject(AType: TRttiType; const AJSON: string): TObject;
@@ -977,7 +983,7 @@ begin
   LJSON := TJSONObject.ParseJSONValue(AJSON);
   try
     Result := TRttiHelper.CreateInstance(AType);
-    JSONToObject(Result, LJSON);
+    JSONToObject(Result, LJSON, TNeonConfiguration.Default);
   finally
     LJSON.Free;
   end;
@@ -988,11 +994,11 @@ begin
   { TODO -opaolo -c : WIP 18/05/2017 17:59:03 }
 end;
 
-class function TNeonMapperJSON.ObjectToJSON(AObject: TObject; const AConfig: TNeonConfiguration): TJSONValue;
+class function TNeonMapperJSON.ObjectToJSON(AObject: TObject; AConfig: INeonConfiguration): TJSONValue;
 var
   LWriter: TNeonSerializerJSON;
 begin
-  LWriter := TNeonSerializerJSON.Create(TNeonConfiguration.Default);
+  LWriter := TNeonSerializerJSON.Create(AConfig);
   try
     Result := LWriter.ObjectToJSON(AObject);
   finally
@@ -1010,7 +1016,7 @@ begin
   Result := TNeonMapperJSON.ObjectToJSON(AObject, TNeonConfiguration.Default);
 end;
 
-class function TNeonMapperJSON.ObjectToJSONString(AObject: TObject; const AConfig: TNeonConfiguration): string;
+class function TNeonMapperJSON.ObjectToJSONString(AObject: TObject; AConfig: INeonConfiguration): string;
 var
   LJSON: TJSONValue;
 begin
@@ -1027,7 +1033,7 @@ begin
   Result := TNeonMapperJSON.ValueToJSON(AValue, TNeonConfiguration.Default);
 end;
 
-class function TNeonMapperJSON.ValueToJSON(const AValue: TValue; const AConfig: TNeonConfiguration): TJSONValue;
+class function TNeonMapperJSON.ValueToJSON(const AValue: TValue; AConfig: INeonConfiguration): TJSONValue;
 var
   LWriter: TNeonSerializerJSON;
 begin
@@ -1039,11 +1045,12 @@ begin
   end;
 end;
 
-class procedure TNeonMapperJSON.JSONToObject(AObject: TObject; AJSON: TJSONValue);
+class procedure TNeonMapperJSON.JSONToObject(AObject: TObject; AJSON:
+    TJSONValue; AConfig: INeonConfiguration);
 var
   LReader: TNeonDeserializerJSON;
 begin
-  LReader := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  LReader := TNeonDeserializerJSON.Create(AConfig);
   try
     LReader.JSONToObject(AObject, AJSON);
   finally

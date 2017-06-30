@@ -23,7 +23,8 @@ uses
   WiRL.Core.Context,
   WiRL.Core.Auth.Context,
   WiRL.http.Filters,
-  WiRL.Core.Injection;
+  WiRL.Core.Injection,
+  WiRL.Persistence.Core;
 
 type
   TAuthChallenge = (Basic, Digest, Bearer, Forms);
@@ -57,6 +58,7 @@ type
     FRealmChallenge: string;
     FTokenLocation: TAuthTokenLocation;
     FTokenCustomHeader: string;
+    FSerializerConfig: INeonConfiguration;
     function GetResources: TArray<string>;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
@@ -64,6 +66,7 @@ type
     function AddReader(const AReader: string): Boolean;
     function GetSecret: TBytes;
     function GetAuthChallengeHeader: string;
+    function GetSerializerConfig: INeonConfiguration;
   public
     class procedure InitializeRtti;
 
@@ -92,6 +95,7 @@ type
     function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
     function SetSystemApp(ASystem: Boolean): TWiRLApplication;
 
+    function ConfigureSerializer: INeonConfiguration;
     function GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
 
     property Name: string read FName;
@@ -106,6 +110,7 @@ type
     property AuthChallengeHeader: string read GetAuthChallengeHeader;
     property TokenLocation: TAuthTokenLocation read FTokenLocation;
     property TokenCustomHeader: string read FTokenCustomHeader;
+    property SerializerConfig: INeonConfiguration read GetSerializerConfig;
 
     class property RttiContext: TRttiContext read FRttiContext;
   end;
@@ -347,6 +352,9 @@ begin
 
   if FReaderRegistry.Count = 0 then
     FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
+
+  if not Assigned(FSerializerConfig) then
+    FSerializerConfig := TNeonConfiguration.Default;
 end;
 
 function TWiRLApplication.SetFilters(const AFilters: TArray<string>): TWiRLApplication;
@@ -365,6 +373,13 @@ begin
   Result := Self;
   for LResource in AResources do
     Self.AddResource(LResource);
+end;
+
+function TWiRLApplication.ConfigureSerializer: INeonConfiguration;
+begin
+  if not Assigned(FSerializerConfig) then
+    FSerializerConfig := TNeonConfiguration.Create;
+  Result := FSerializerConfig;
 end;
 
 constructor TWiRLApplication.Create;
@@ -408,6 +423,13 @@ end;
 function TWiRLApplication.GetSecret: TBytes;
 begin
   Result := FSecret;
+end;
+
+function TWiRLApplication.GetSerializerConfig: INeonConfiguration;
+begin
+  if not Assigned(FSerializerConfig) then
+    FSerializerConfig := TNeonConfiguration.Default;
+  Result := FSerializerConfig;
 end;
 
 class procedure TWiRLApplication.InitializeRtti;

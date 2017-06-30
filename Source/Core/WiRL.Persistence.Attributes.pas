@@ -27,6 +27,14 @@ type
   end;
 
   /// <summary>
+  ///   The attribute [NeonProperty]  is used to indicate the property name in JSON.
+  /// </summary>
+  /// <remarks>
+  ///   Read + Write Attribute
+  /// </remarks>
+  NeonPropertyAttribute = class(NeonNamedAttribute);
+
+  /// <summary>
   ///   The Neon attribute [NeonIgnore] is used to tell Neon to ignore a certain property (field)
   ///   of a Delphi object. The property is ignored both when reading JSON into Delphi objects, and
   ///   when writing Delphi objects into JSON.
@@ -37,8 +45,9 @@ type
   NeonIgnoreAttribute = class(NeonAttribute);
 
   /// <summary>
-  ///   The NeonIgnoreProperties Neon annotation is used to specify a list of properties of a class to ignore. The NeonIgnoreProperties annotation is placed above the class declaration instead
-  ///   of above the individual properties (fields) to ignore. Here is an example showing how to use the NeonIgnoreProperties annotation
+  ///   The NeonIgnoreProperties Neon annotation is used to specify a list of
+  ///   properties of a class to ignore. The NeonIgnoreProperties annotation is placed above the class declaration instead
+  ///   of above the individual properties (fields) to ignore.
   /// </summary>
   /// <remarks>
   ///   Read + Write Attribute
@@ -47,8 +56,7 @@ type
 
   /// <summary>
   ///   The NeonIgnoreType Neon annotation is used to mark a whole type (class) to be ignored
-  ///   everywhere that type is used. Here is an example that shows you how you could use the
-  ///   NeonIgnoreType annotation
+  ///   everywhere that type is used.
   /// </summary>
   /// <remarks>
   ///   Read + Write Attribute
@@ -57,8 +65,7 @@ type
 
   /// <summary>
   ///   The Neon annotation NeonAutoDetect is used to tell Neon to include properties which are not
-  ///   public, both when reading and writing objects. Here is an example class showing you how you
-  ///   can use the NeonAutoDetect annotation
+  ///   public, both when reading and writing objects.
   /// </summary>
   /// <remarks>
   ///   Read + Write Attribute
@@ -68,8 +75,7 @@ type
   /// <summary>
   ///   The Neon annotation NeonInclude tells Neon only to include properties under certain
   ///   circumstances. For instance, that properties should only be included if they are non-null,
-  ///   non-empty, or have non-default values. Here is an example that shows how you can use the
-  ///   NeonInclude annotation
+  ///   non-empty, or have non-default values.
   /// </summary>
   /// <remarks>
   ///   Write Attribute
@@ -90,11 +96,9 @@ type
 
   /// <summary>
   ///   The NeonPropertyOrder Neon annotation can be used to specify in what order the fields of
-  ///   your Delphi object should be serialized into JSON. Here is an example showing how to use
-  ///   the NeonPropertyOrder annotation
+  ///   your Delphi object should be serialized into JSON.
   /// </summary>
   NeonPropertyOrderAttribute = class(NeonAttribute);
-
 
   /// <summary>
   ///   The Neon annotation NeonValue tells Neon that Neon should not attempt to serialize the
@@ -106,7 +110,7 @@ type
   NeonValueAttribute = class(NeonAttribute);
 
   /// <summary>
-  ///   The NeonRawValue Neon annotation tells Neon that this property value should written
+  ///   The NeonRawValue annotation tells Neon that this property value should written
   ///   directly as it is to the JSON output. If the property is a String Neon would normally have
   ///   enclosed the value in quotation marks, but if annotated with the NeonRawValue property Neon
   ///   won't do that
