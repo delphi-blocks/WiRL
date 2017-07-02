@@ -14,7 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls, System.Rtti,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
-  System.TypInfo,
+  System.TypInfo, Vcl.Dialogs, System.UITypes,
 
   WiRL.Core.Engine,
   WiRL.Core.Application,
@@ -27,7 +27,8 @@ uses
   Server.Resources, Vcl.Imaging.pngimage, System.JSON, FireDAC.Stan.Intf,
   FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
   FireDAC.Phys.Intf, FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet,
-  FireDAC.Comp.Client, FireDAC.Stan.StorageBin, Vcl.Grids, Vcl.DBGrids;
+  FireDAC.Comp.Client, FireDAC.Stan.StorageBin, Vcl.Grids, Vcl.DBGrids,
+  Vcl.ToolWin;
 
 type
   TMainForm = class(TForm)
@@ -47,7 +48,6 @@ type
     btnSerGenericList: TButton;
     btnSerGenericObjectList: TButton;
     imgSample: TImage;
-    btnSerImage: TButton;
     dsPersons: TFDMemTable;
     dsPersonsName: TStringField;
     dsPersonsSurname: TStringField;
@@ -68,6 +68,26 @@ type
     btnDesGenericObjectList: TButton;
     btnDesSimpleObject: TButton;
     btnSerSimpleObject: TButton;
+    Button1: TButton;
+    Panel1: TPanel;
+    grpType: TGroupBox;
+    rbMemberStandard: TRadioButton;
+    rbMemberFields: TRadioButton;
+    rbMemberProperties: TRadioButton;
+    grpCase: TGroupBox;
+    rbCasePascal: TRadioButton;
+    rbCaseCamel: TRadioButton;
+    rbCaseSnake: TRadioButton;
+    rbCaseLower: TRadioButton;
+    rbCaseUpper: TRadioButton;
+    rbCaseCustom: TRadioButton;
+    grpPrefix: TGroupBox;
+    chkVisibilityPrivate: TCheckBox;
+    grpVisibility: TGroupBox;
+    chkIgnorePrefix: TCheckBox;
+    chkVisibilityProtected: TCheckBox;
+    chkVisibilityPublic: TCheckBox;
+    chkVisibilityPublished: TCheckBox;
     procedure btnSerDataSetClick(Sender: TObject);
     procedure btnSerComplexObjectClick(Sender: TObject);
     procedure btnSerSimpleTypesClick(Sender: TObject);
@@ -86,17 +106,20 @@ type
     procedure btnStreamablePropClick(Sender: TObject);
     procedure btnDesSimpleObjectClick(Sender: TObject);
     procedure btnSerSimpleObjectClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
     procedure StopServerActionUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure rbCaseCustomClick(Sender: TObject);
   private
     FServer: TWiRLhttpServerIndy;
     procedure Log(const ALog: string); overload;
     procedure Log(const ATitle, ALog: string); overload;
     function GetStringFromValue(const AValue: TValue): string;
+    function BuildSerializerConfig: INeonConfiguration;
   public
 
   end;
@@ -120,7 +143,7 @@ procedure TMainForm.btnSerDataSetClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ObjectToJSON(dsPersons, TNeonConfiguration.Default);
+  LJSON := TNeonMapperJSON.ObjectToJSON(dsPersons, BuildSerializerConfig);
   try
     Log(TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -142,7 +165,7 @@ begin
     LPerson.Note.Date := Now;
     LPerson.Note.Text := 'Note Text';
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, TNeonConfiguration.Default);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, BuildSerializerConfig);
     try
       Log(TJSONHelper.PrettyPrint(LJSON));
     finally
@@ -158,7 +181,7 @@ function TMainForm.GetStringFromValue(const AValue: TValue): string;
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ValueToJSON(AValue, TNeonConfiguration.Default);
+  LJSON := TNeonMapperJSON.ValueToJSON(AValue, BuildSerializerConfig);
   try
     Result := TJSONHelper.ToJSON(LJSON);
   finally
@@ -199,12 +222,12 @@ begin
   try
     LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text) as TJSONObject;
     try
-      TNeonMapperJSON.JSONToObject(LPerson, LJSON, TNeonConfiguration.Snake);
+      TNeonMapperJSON.JSONToObject(LPerson, LJSON, BuildSerializerConfig);
     finally
       LJSON.Free;
     end;
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, TNeonConfiguration.Snake);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LPerson, BuildSerializerConfig);
     try
       memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
@@ -225,7 +248,7 @@ begin
     LList.Add(34.9);
     LList.Add(10.0);
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LList, TNeonConfiguration.Default);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LList, BuildSerializerConfig);
     try
       Log(TJSONHelper.PrettyPrint(LJSON));
     finally
@@ -248,7 +271,7 @@ begin
     LBook.NoteList.Add('Note 1');
     LBook.NoteList.Add('Note 2');
     LBook.NoteList.Add('Note 3');
-    LJSON := TNeonMapperJSON.ObjectToJSON(LBook, TNeonConfiguration.Default);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LBook, BuildSerializerConfig);
     try
       Log(TJSONHelper.PrettyPrint(LJSON));
     finally
@@ -263,7 +286,7 @@ procedure TMainForm.btnSerImageClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ObjectToJSON(imgSample, TNeonConfiguration.Default);
+  LJSON := TNeonMapperJSON.ObjectToJSON(imgSample, BuildSerializerConfig);
   try
     Log('Image', TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -285,7 +308,7 @@ begin
   LInt := 42;
   LJString := GetStringFromValue(TValue.From<Integer>(LInt));
 
-  LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  LDes := TNeonDeserializerJSON.Create(BuildSerializerConfig);
   try
     LJSON := TJSONObject.ParseJSONValue(LJString);
     try
@@ -304,7 +327,7 @@ begin
   LJString := GetStringFromValue(TValue.From<TMyRecord>(LRec));
   Log('Record', LJString);
 
-  LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  LDes := TNeonDeserializerJSON.Create(BuildSerializerConfig);
   try
     LJSON := TJSONObject.ParseJSONValue(LJString);
     try
@@ -332,7 +355,7 @@ begin
   SetLength(LArr, 1);
   LArr[0] := 100;
 
-  LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  LDes := TNeonDeserializerJSON.Create(BuildSerializerConfig);
   try
     LJSON := TJSONObject.ParseJSONValue(LJString);
     try
@@ -366,7 +389,7 @@ begin
   //Log('DataSet', LJString);
   dsPersons.EmptyDataSet;
   LJString := memoSerialize.Lines.Text;
-  LDes := TNeonDeserializerJSON.Create(TNeonConfiguration.Default);
+  LDes := TNeonDeserializerJSON.Create(BuildSerializerConfig);
   try
     LJSON := TJSONObject.ParseJSONValue(LJString);
     try
@@ -389,12 +412,12 @@ begin
   try
     LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
     try
-      TNeonMapperJSON.JSONToObject(LList, LJSON, TNeonConfiguration.Default);
+      TNeonMapperJSON.JSONToObject(LList, LJSON, BuildSerializerConfig);
     finally
       LJSON.Free;
     end;
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LList, TNeonConfiguration.Default);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LList, BuildSerializerConfig);
     try
       memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
@@ -414,12 +437,12 @@ begin
   try
     LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
     try
-      TNeonMapperJSON.JSONToObject(LList, LJSON, TNeonConfiguration.Default);
+      TNeonMapperJSON.JSONToObject(LList, LJSON, BuildSerializerConfig);
     finally
       LJSON.Free;
     end;
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LList, TNeonConfiguration.Default);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LList, BuildSerializerConfig);
     try
       memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
@@ -438,7 +461,7 @@ begin
   LStreamable := TStreamableSample.Create;
   LStreamable.AsString := 'Paolo';
 
-  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
+  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, BuildSerializerConfig);
   try
     Log(TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -457,12 +480,12 @@ begin
 
   LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
   try
-    TNeonMapperJSON.JSONToObject(LStreamable, LJSON, TNeonConfiguration.Default);
+    TNeonMapperJSON.JSONToObject(LStreamable, LJSON, BuildSerializerConfig);
   finally
     LJSON.Free;
   end;
 
-  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
+  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, BuildSerializerConfig);
   try
     memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
   finally
@@ -502,12 +525,12 @@ begin
 
   LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
   try
-    TNeonMapperJSON.JSONToObject(LStreamable, LJSON, TNeonConfiguration.Default);
+    TNeonMapperJSON.JSONToObject(LStreamable, LJSON, BuildSerializerConfig);
   finally
     LJSON.Free;
   end;
 
-  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
+  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, BuildSerializerConfig);
   try
     memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
   finally
@@ -527,7 +550,7 @@ begin
   LStreamable.InValue := 233;
   LStreamable.Stream.AsString := 'Paolo';
 
-  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, TNeonConfiguration.Default);
+  LJSON := TNeonMapperJSON.ObjectToJSON(LStreamable, BuildSerializerConfig);
   try
     Log(TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -546,17 +569,18 @@ begin
   try
     LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text) as TJSONObject;
     try
-      TNeonMapperJSON.JSONToObject(LSimple, LJSON, TNeonConfiguration.Snake);
+      TNeonMapperJSON.JSONToObject(LSimple, LJSON, BuildSerializerConfig);
     finally
       LJSON.Free;
     end;
 
-    LJSON := TNeonMapperJSON.ObjectToJSON(LSimple, TNeonConfiguration.Snake);
+    LJSON := TNeonMapperJSON.ObjectToJSON(LSimple, BuildSerializerConfig);
     try
       memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
     finally
       LJSON.Free;
     end;
+
   finally
     LSimple.Free;
   end;
@@ -568,15 +592,67 @@ var
   LSimple: TCaseClass;
 begin
   LSimple := TCaseClass.DefaultValues;
+  try
+    LJSON := TNeonMapperJSON.ObjectToJSON(LSimple, BuildSerializerConfig);
+    try
+      Log(TJSONHelper.PrettyPrint(LJSON));
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LSimple.Free;
+  end;
+end;
 
-  LJSON := TNeonMapperJSON.ObjectToJSON(LSimple, TNeonConfiguration.Snake);
+function TMainForm.BuildSerializerConfig: INeonConfiguration;
+var
+  LVis: TNeonVisibility;
+begin
+  LVis := [];
+  Result := TNeonConfiguration.Default;
+
+  if rbCaseCamel.Checked then
+    Result.SetMemberCase(TNeonCase.CamelCase);
+  if rbCaseSnake.Checked then
+    Result.SetMemberCase(TNeonCase.SnakeCase);
+  if rbCaseLower.Checked then
+    Result.SetMemberCase(TNeonCase.LowerCase);
+  if rbCaseUpper.Checked then
+    Result.SetMemberCase(TNeonCase.UpperCase);
+
+  if rbMemberFields.Checked then
+    Result.SetMembersType(TNeonMembersType.Fields);
+  if rbMemberProperties.Checked then
+    Result.SetMembersType(TNeonMembersType.Properties);
+
+  if chkIgnorePrefix.Checked then
+    Result.SetIgnoreFieldPrefix(True);
+
+  if chkVisibilityPrivate.Checked then
+    LVis := LVis + [mvPrivate];
+  if chkVisibilityProtected.Checked then
+    LVis := LVis + [mvProtected];
+  if chkVisibilityPublic.Checked then
+    LVis := LVis + [mvPublic];
+  if chkVisibilityPublished.Checked then
+    LVis := LVis + [mvPublished];
+  Result.SetVisibility(LVis);
+end;
+
+procedure TMainForm.Button1Click(Sender: TObject);
+var
+  LJSON: TJSONValue;
+  LRec: TMyRecord;
+begin
+  LRec.Uno := 'Paolo';
+  LRec.Due := 47;
+
+  LJSON := TNeonMapperJSON.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
   try
     Log(TJSONHelper.PrettyPrint(LJSON));
   finally
     LJSON.Free;
   end;
-
-  LSimple.Free;
 end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -597,6 +673,12 @@ begin
   memoSerialize.Lines.Add('-----------------------');
 end;
 
+procedure TMainForm.rbCaseCustomClick(Sender: TObject);
+begin
+  MessageDlg('Custom Case not yet implemented',  mtWarning, [mbOK], 0);
+  rbCasePascal.Checked := True;
+end;
+
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
@@ -613,7 +695,7 @@ begin
       .SetName('Content App')
       .SetResources('Server.Resources.TEntityResource')
       .ConfigureSerializer
-        .SetMembersType(TNeonMembersType.Properties)
+        .SetMembersType(TNeonMembersType.Standard)
         .SetVisibility([mvPublic, mvPublished])
         .SetMemberCase(TNeonCase.SnakeCase)
   ;

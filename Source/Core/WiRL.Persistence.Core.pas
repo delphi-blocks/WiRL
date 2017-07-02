@@ -20,7 +20,7 @@ uses
 type
   ENeonException = class(Exception);
 
-  TNeonCase = (LowerCase, UpperCase, CamelCase, PascalCase, SnakeCase, CustomCase);
+  TNeonCase = (LowerCase, UpperCase, PascalCase, CamelCase, SnakeCase, CustomCase);
   TNeonMembersType = (Standard, Fields, Properties);
   TNeonVisibility = set of TMemberVisibility;
 
@@ -60,6 +60,8 @@ type
     function IsReadable: Boolean;
     function TypeKind: TTypeKind;
     function Visibility: TMemberVisibility;
+    function IsField: Boolean;
+    function IsProperty: Boolean;
 
     property Attributes: TArray<TCustomAttribute> read FAttributes write FAttributes;
 
@@ -73,6 +75,7 @@ type
     function SetMemberCase(AValue: TNeonCase): INeonConfiguration;
     function SetMemberCustomCase(AValue: TCaseFunc): INeonConfiguration;
     function SetMembersType(AValue: TNeonMembersType): INeonConfiguration;
+    function SetIgnoreFieldPrefix(AValue: Boolean): INeonConfiguration;
     function SetVisibility(AValue: TNeonVisibility): INeonConfiguration;
   end;
 
@@ -82,7 +85,10 @@ type
     FMembersType: TNeonMembersType;
     FMemberCase: TNeonCase;
     FMemberCustomCase: TCaseFunc;
+    FIgnoreFieldPrefix: Boolean;
   public
+     constructor Create;
+
     class function Default: INeonConfiguration; static;
     class function Snake: INeonConfiguration; static;
     class function Camel: INeonConfiguration; static;
@@ -90,11 +96,13 @@ type
     function SetMemberCase(AValue: TNeonCase): INeonConfiguration;
     function SetMemberCustomCase(AValue: TCaseFunc): INeonConfiguration;
     function SetMembersType(AValue: TNeonMembersType): INeonConfiguration;
+    function SetIgnoreFieldPrefix(AValue: Boolean): INeonConfiguration;
     function SetVisibility(AValue: TNeonVisibility): INeonConfiguration;
 
     property MemberCase: TNeonCase read FMemberCase write FMemberCase;
     property MemberCustomCase: TCaseFunc read FMemberCustomCase write FMemberCustomCase;
     property MembersType: TNeonMembersType read FMembersType write FMembersType;
+    property IgnoreFieldPrefix: Boolean read FIgnoreFieldPrefix write FIgnoreFieldPrefix;
     property Visibility: TNeonVisibility read FVisibility write FVisibility;
   end;
 
@@ -137,17 +145,27 @@ begin
 end;
 
 function TNeonBase.GetNameFromMember(AMember: TNeonRttiMember): string;
+var
+  LMemberName: string;
 begin
   if not AMember.ChosedName.IsEmpty then
     Exit(AMember.ChosedName);
 
+  if FConfig.IgnoreFieldPrefix and AMember.IsField then
+  begin
+    if AMember.Name.StartsWith('F') then
+      LMemberName := AMember.Name.Substring(1);
+  end
+  else
+    LMemberName := AMember.Name;
+
   case FConfig.MemberCase of
-    TNeonCase.LowerCase:  Result := LowerCase(AMember.Name);
-    TNeonCase.UpperCase:  Result := UpperCase(AMember.Name);
-    TNeonCase.CamelCase:  Result := TCaseAlgorithm.PascalToCamel(AMember.Name);
-    TNeonCase.SnakeCase:  Result := TCaseAlgorithm.PascalToSnake(AMember.Name);
-    TNeonCase.PascalCase: Result := AMember.Name;
-    TNeonCase.CustomCase: Result := FConfig.MemberCustomCase(AMember.Name);
+    TNeonCase.LowerCase:  Result := LowerCase(LMemberName);
+    TNeonCase.UpperCase:  Result := UpperCase(LMemberName);
+    TNeonCase.CamelCase:  Result := TCaseAlgorithm.PascalToCamel(LMemberName);
+    TNeonCase.SnakeCase:  Result := TCaseAlgorithm.PascalToSnake(LMemberName);
+    TNeonCase.PascalCase: Result := LMemberName;
+    TNeonCase.CustomCase: Result := FConfig.MemberCustomCase(LMemberName);
   end;
 end;
 
@@ -197,22 +215,32 @@ end;
 
 { TNeonConfiguration }
 
-class function TNeonConfiguration.Camel: INeonConfiguration;
+constructor TNeonConfiguration.Create;
 begin
-  Result := TNeonConfiguration.Create;
-
-  Result.SetMemberCase(TNeonCase.CamelCase);
-  Result.SetMembersType(TNeonMembersType.Standard);
-  Result.SetVisibility([mvPublic, mvPublished]);
+  SetMemberCase(TNeonCase.PascalCase);
+  SetMembersType(TNeonMembersType.Standard);
+  SetIgnoreFieldPrefix(False);
+  SetVisibility([mvPublic, mvPublished]);
 end;
 
 class function TNeonConfiguration.Default: INeonConfiguration;
 begin
   Result := TNeonConfiguration.Create;
+end;
 
-  Result.SetMemberCase(TNeonCase.PascalCase);
-  Result.SetMembersType(TNeonMembersType.Standard);
-  Result.SetVisibility([mvPublic, mvPublished]);
+class function TNeonConfiguration.Camel: INeonConfiguration;
+begin
+  Result := TNeonConfiguration.Create;
+
+  Result.SetMemberCase(TNeonCase.CamelCase);
+end;
+
+class function TNeonConfiguration.Snake: INeonConfiguration;
+begin
+  Result := TNeonConfiguration.Create;
+
+  Result.SetIgnoreFieldPrefix(True);
+  Result.SetMemberCase(TNeonCase.SnakeCase);
 end;
 
 function TNeonConfiguration.SetMembersType(AValue: TNeonMembersType): INeonConfiguration;
@@ -221,15 +249,19 @@ begin
   Result := Self;
 end;
 
-function TNeonConfiguration.SetMemberCase(AValue: TNeonCase):
-    INeonConfiguration;
+function TNeonConfiguration.SetIgnoreFieldPrefix(AValue: Boolean): INeonConfiguration;
+begin
+  FIgnoreFieldPrefix := AValue;
+  Result := Self;
+end;
+
+function TNeonConfiguration.SetMemberCase(AValue: TNeonCase): INeonConfiguration;
 begin
   FMemberCase := AValue;
   Result := Self;
 end;
 
-function TNeonConfiguration.SetMemberCustomCase(AValue: TCaseFunc):
-    INeonConfiguration;
+function TNeonConfiguration.SetMemberCustomCase(AValue: TCaseFunc): INeonConfiguration;
 begin
   FMemberCustomCase := AValue;
   Result := Self;
@@ -239,15 +271,6 @@ function TNeonConfiguration.SetVisibility(AValue: TNeonVisibility): INeonConfigu
 begin
   FVisibility := AValue;
   Result := Self;
-end;
-
-class function TNeonConfiguration.Snake: INeonConfiguration;
-begin
-  Result := TNeonConfiguration.Create;
-
-  Result.SetMemberCase(TNeonCase.SnakeCase);
-  Result.SetMembersType(TNeonMembersType.Standard);
-  Result.SetVisibility([mvPublic, mvPublished]);
 end;
 
 { TNeonRttiMember }
@@ -272,6 +295,22 @@ begin
     TNeonMemberType.Unknown: raise ENeonException.Create('Member type must be Field or Property');
     TNeonMemberType.Prop: Result := MemberAsProperty.GetValue(FInstance);
     TNeonMemberType.Field: Result := MemberAsField.GetValue(FInstance);
+  end;
+end;
+
+function TNeonRttiMember.IsField: Boolean;
+begin
+  Result := False;
+  case FMemberType of
+    TNeonMemberType.Field: Result := True;
+  end;
+end;
+
+function TNeonRttiMember.IsProperty: Boolean;
+begin
+  Result := False;
+  case FMemberType of
+    TNeonMemberType.Prop: Result := True;
   end;
 end;
 

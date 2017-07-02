@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'WiRL Serialization Server'
-  ClientHeight = 548
+  ClientHeight = 545
   ClientWidth = 1048
   Color = clBtnFace
   Constraints.MinHeight = 240
@@ -17,7 +17,7 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   DesignSize = (
     1048
-    548)
+    545)
   PixelsPerInch = 96
   TextHeight = 13
   object TopPanel: TPanel
@@ -1832,7 +1832,7 @@ object MainForm: TMainForm
   end
   object btnSerComplexObject: TButton
     Left = 8
-    Top = 154
+    Top = 226
     Width = 131
     Height = 25
     Caption = 'ComplexObject'
@@ -1841,9 +1841,9 @@ object MainForm: TMainForm
   end
   object memoSerialize: TMemo
     Left = 145
-    Top = 125
+    Top = 167
     Width = 381
-    Height = 409
+    Height = 370
     Anchors = [akLeft, akTop, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -1857,7 +1857,7 @@ object MainForm: TMainForm
   end
   object btnSerSimpleTypes: TButton
     Left = 8
-    Top = 185
+    Top = 257
     Width = 131
     Height = 25
     Caption = 'SimpleTypes'
@@ -1866,7 +1866,7 @@ object MainForm: TMainForm
   end
   object btnDesComplexObject: TButton
     Left = 532
-    Top = 154
+    Top = 226
     Width = 131
     Height = 25
     Caption = 'ComplexObject'
@@ -1875,9 +1875,9 @@ object MainForm: TMainForm
   end
   object memoDeserialize: TMemo
     Left = 669
-    Top = 126
+    Top = 167
     Width = 372
-    Height = 408
+    Height = 370
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -1891,7 +1891,7 @@ object MainForm: TMainForm
   end
   object btnSerGenericList: TButton
     Left = 8
-    Top = 216
+    Top = 288
     Width = 131
     Height = 25
     Caption = 'GenericList'
@@ -1900,97 +1900,88 @@ object MainForm: TMainForm
   end
   object btnSerGenericObjectList: TButton
     Left = 8
-    Top = 247
+    Top = 319
     Width = 131
     Height = 25
     Caption = 'GenericObjectList'
     TabOrder = 7
     OnClick = btnSerGenericObjectListClick
   end
-  object btnSerImage: TButton
-    Left = 8
-    Top = 310
-    Width = 131
-    Height = 25
-    Caption = 'Image'
-    TabOrder = 8
-    OnClick = btnSerImageClick
-  end
   object btnSerDataSet: TButton
     Left = 8
-    Top = 278
+    Top = 350
     Width = 131
     Height = 25
     Caption = 'DataSet'
-    TabOrder = 9
+    TabOrder = 8
     OnClick = btnSerDataSetClick
   end
   object btnDesSimpleTypes: TButton
     Left = 532
-    Top = 185
+    Top = 257
     Width = 131
     Height = 25
     Caption = 'SimpleTypes'
-    TabOrder = 10
+    TabOrder = 9
     OnClick = btnDesSimpleTypesClick
   end
   object btnSerStreamable: TButton
     Left = 8
-    Top = 341
+    Top = 382
     Width = 131
     Height = 25
     Caption = 'Streamable'
-    TabOrder = 11
+    TabOrder = 10
     OnClick = btnSerStreamableClick
   end
   object btnDesStreamable: TButton
     Left = 532
-    Top = 341
+    Top = 382
     Width = 131
     Height = 25
     Caption = 'Streamable'
-    TabOrder = 12
+    TabOrder = 11
     OnClick = btnDesStreamableClick
   end
   object Button5: TButton
     Left = 572
-    Top = 416
+    Top = 461
     Width = 75
     Height = 25
     Caption = 'Button5'
-    TabOrder = 13
+    TabOrder = 12
     OnClick = Button5Click
   end
   object btnDesStreamableProp: TButton
     Left = 532
-    Top = 372
+    Top = 413
     Width = 131
     Height = 25
     Caption = 'StreamableProp'
-    TabOrder = 14
+    TabOrder = 13
     OnClick = btnDesStreamablePropClick
   end
   object btnStreamableProp: TButton
     Left = 8
-    Top = 372
+    Top = 413
     Width = 131
     Height = 25
     Caption = 'StreamableProp'
-    TabOrder = 15
+    TabOrder = 14
     OnClick = btnStreamablePropClick
   end
   object btnDesDataSet: TButton
     Left = 532
-    Top = 278
+    Top = 350
     Width = 131
     Height = 25
     Caption = 'DataSet'
-    TabOrder = 16
+    TabOrder = 15
     OnClick = btnDesDataSetClick
   end
   object Panel2: TPanel
     Left = 8
-    Top = 125
+    Top = 166
     Width = 131
     Height = 23
     BevelOuter = bvNone
@@ -2003,11 +1994,11 @@ object MainForm: TMainForm
     Font.Style = [fsBold]
     ParentBackground = False
     ParentFont = False
-    TabOrder = 17
+    TabOrder = 16
   end
   object Panel3: TPanel
     Left = 532
-    Top = 125
+    Top = 166
     Width = 131
     Height = 23
     BevelOuter = bvNone
@@ -2020,43 +2011,218 @@ object MainForm: TMainForm
     Font.Style = [fsBold]
     ParentBackground = False
     ParentFont = False
-    TabOrder = 18
+    TabOrder = 17
   end
   object btnDesGenericList: TButton
     Left = 532
-    Top = 216
+    Top = 288
     Width = 131
     Height = 25
     Caption = 'btnDesGenericList'
-    TabOrder = 19
+    TabOrder = 18
     OnClick = btnDesGenericListClick
   end
   object btnDesGenericObjectList: TButton
     Left = 532
-    Top = 247
+    Top = 319
     Width = 131
     Height = 25
     Caption = 'btnDesGenericObjectList'
-    TabOrder = 20
+    TabOrder = 19
     OnClick = btnDesGenericObjectListClick
   end
   object btnDesSimpleObject: TButton
     Left = 532
-    Top = 447
+    Top = 195
     Width = 131
     Height = 25
     Caption = 'SimpleObject'
-    TabOrder = 21
+    TabOrder = 20
     OnClick = btnDesSimpleObjectClick
   end
   object btnSerSimpleObject: TButton
     Left = 8
-    Top = 403
+    Top = 195
     Width = 131
     Height = 25
     Caption = 'SimpleObject'
-    TabOrder = 22
+    TabOrder = 21
     OnClick = btnSerSimpleObjectClick
+  end
+  object Button1: TButton
+    Left = 8
+    Top = 444
+    Width = 75
+    Height = 25
+    Caption = 'Button1'
+    TabOrder = 22
+    OnClick = Button1Click
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 119
+    Width = 1048
+    Height = 42
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 23
+    object grpType: TGroupBox
+      Left = 361
+      Top = 0
+      Width = 224
+      Height = 42
+      Align = alLeft
+      Caption = 'Member Type '
+      TabOrder = 0
+      object rbMemberStandard: TRadioButton
+        Left = 8
+        Top = 16
+        Width = 81
+        Height = 17
+        Caption = 'Standard'
+        Checked = True
+        TabOrder = 0
+        TabStop = True
+      end
+      object rbMemberFields: TRadioButton
+        Left = 87
+        Top = 16
+        Width = 50
+        Height = 17
+        Caption = 'Fields'
+        TabOrder = 1
+      end
+      object rbMemberProperties: TRadioButton
+        Left = 151
+        Top = 16
+        Width = 74
+        Height = 17
+        Caption = 'Properties'
+        TabOrder = 2
+      end
+    end
+    object grpCase: TGroupBox
+      Left = 0
+      Top = 0
+      Width = 361
+      Height = 42
+      Align = alLeft
+      Caption = 'Case '
+      TabOrder = 1
+      object rbCasePascal: TRadioButton
+        Left = 8
+        Top = 16
+        Width = 57
+        Height = 17
+        Caption = 'Pascal'
+        Checked = True
+        TabOrder = 0
+        TabStop = True
+      end
+      object rbCaseCamel: TRadioButton
+        Left = 71
+        Top = 16
+        Width = 50
+        Height = 17
+        Caption = 'Camel'
+        TabOrder = 1
+      end
+      object rbCaseSnake: TRadioButton
+        Left = 127
+        Top = 16
+        Width = 50
+        Height = 17
+        Caption = 'Snake'
+        TabOrder = 2
+      end
+      object rbCaseLower: TRadioButton
+        Left = 183
+        Top = 16
+        Width = 50
+        Height = 17
+        Caption = 'Lower'
+        TabOrder = 3
+      end
+      object rbCaseUpper: TRadioButton
+        Left = 239
+        Top = 16
+        Width = 50
+        Height = 17
+        Caption = 'Upper'
+        TabOrder = 4
+      end
+      object rbCaseCustom: TRadioButton
+        Left = 295
+        Top = 16
+        Width = 58
+        Height = 17
+        Caption = 'Custom'
+        TabOrder = 5
+        OnClick = rbCaseCustomClick
+      end
+    end
+    object grpPrefix: TGroupBox
+      Left = 705
+      Top = 0
+      Width = 304
+      Height = 42
+      Align = alLeft
+      Caption = 'Visibility '
+      TabOrder = 2
+      object chkVisibilityPrivate: TCheckBox
+        Left = 7
+        Top = 16
+        Width = 66
+        Height = 17
+        Caption = 'Private'
+        TabOrder = 0
+      end
+      object chkVisibilityProtected: TCheckBox
+        Left = 71
+        Top = 16
+        Width = 66
+        Height = 17
+        Caption = 'Protected'
+        TabOrder = 1
+      end
+      object chkVisibilityPublic: TCheckBox
+        Left = 143
+        Top = 16
+        Width = 66
+        Height = 17
+        Caption = 'Public'
+        Checked = True
+        State = cbChecked
+        TabOrder = 2
+      end
+      object chkVisibilityPublished: TCheckBox
+        Left = 191
+        Top = 16
+        Width = 66
+        Height = 17
+        Caption = 'Published'
+        Checked = True
+        State = cbChecked
+        TabOrder = 3
+      end
+    end
+    object grpVisibility: TGroupBox
+      Left = 585
+      Top = 0
+      Width = 120
+      Height = 42
+      Align = alLeft
+      Caption = 'Field Prefix "F" '
+      TabOrder = 3
+      object chkIgnorePrefix: TCheckBox
+        Left = 7
+        Top = 16
+        Width = 107
+        Height = 17
+        Caption = 'Ignore Prefix "F"'
+        TabOrder = 0
+      end
+    end
   end
   object MainActionList: TActionList
     Left = 408
@@ -2084,7 +2250,7 @@ object MainForm: TMainForm
     Left = 648
     Top = 40
     Content = {
-      414442530F00C41CAC010000FF00010001FF02FF030400120000006400730050
+      414442530F000314AC010000FF00010001FF02FF030400120000006400730050
       006500720073006F006E007300050000000000060000070032000000080000FF
       09FF0A0400080000004E0061006D0065000B00010000000D000C000E00320000
       000F00011000011100011200011300011400011500080000004E0061006D0065
