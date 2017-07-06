@@ -14,21 +14,20 @@ interface
 uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls, System.Rtti,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
-  System.TypInfo, Vcl.Dialogs, System.UITypes,
+  System.TypInfo, Vcl.Dialogs, System.UITypes, Vcl.Imaging.pngimage, FireDAC.Stan.Intf,
+  FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
+  FireDAC.Phys.Intf, FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet,
+  FireDAC.Comp.Client, FireDAC.Stan.StorageBin, Vcl.Grids, Vcl.DBGrids,
+  Vcl.ToolWin, System.Contnrs, System.JSON,
 
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.http.Server.Indy,
 
-  System.Contnrs,
   WiRL.Persistence.Core,
   WiRL.Persistence.JSON,
 
-  Server.Resources, Vcl.Imaging.pngimage, System.JSON, FireDAC.Stan.Intf,
-  FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
-  FireDAC.Phys.Intf, FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet,
-  FireDAC.Comp.Client, FireDAC.Stan.StorageBin, Vcl.Grids, Vcl.DBGrids,
-  Vcl.ToolWin;
+  Server.Resources;
 
 type
   TMainForm = class(TForm)
@@ -59,7 +58,6 @@ type
     DataSource1: TDataSource;
     btnSerStreamable: TButton;
     btnDesStreamable: TButton;
-    Button5: TButton;
     btnDesStreamableProp: TButton;
     btnStreamableProp: TButton;
     Panel2: TPanel;
@@ -68,7 +66,6 @@ type
     btnDesGenericObjectList: TButton;
     btnDesSimpleObject: TButton;
     btnSerSimpleObject: TButton;
-    Button1: TButton;
     Panel1: TPanel;
     grpType: TGroupBox;
     rbMemberStandard: TRadioButton;
@@ -101,27 +98,28 @@ type
     procedure btnDesGenericObjectListClick(Sender: TObject);
     procedure btnSerStreamableClick(Sender: TObject);
     procedure btnDesStreamableClick(Sender: TObject);
-    procedure Button5Click(Sender: TObject);
     procedure btnDesStreamablePropClick(Sender: TObject);
     procedure btnStreamablePropClick(Sender: TObject);
     procedure btnDesSimpleObjectClick(Sender: TObject);
     procedure btnSerSimpleObjectClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
     procedure StopServerActionUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure rbCaseCustomClick(Sender: TObject);
   private
     FServer: TWiRLhttpServerIndy;
+
+    FCustomCaseAlgo: TCaseFunc;
     procedure Log(const ALog: string); overload;
     procedure Log(const ATitle, ALog: string); overload;
     function GetStringFromValue(const AValue: TValue): string;
     function BuildSerializerConfig: INeonConfiguration;
-  public
-
+  protected
+    //Various tests
+    procedure TestSerializeRecord;
+    procedure TestRecordPointers;
   end;
 
 var
@@ -138,6 +136,7 @@ uses
   WiRL.Rtti.Utils,
   Server.Entities;
 
+{ TMainForm }
 
 procedure TMainForm.btnSerDataSetClick(Sender: TObject);
 var
@@ -495,27 +494,6 @@ begin
   LStreamable.Free;
 end;
 
-procedure TMainForm.Button5Click(Sender: TObject);
-var
-  LValue: TValue;
-  LP1, LP2: Pointer;
-
-  LR: TMyRecord;
-begin
-  LR.Uno := 'Paolo';
-  LR.Due := 20;
-
-  LValue := TValue.From<TMyRecord>(LR);
-
-  LP1 := LValue.GetReferenceToRawData;
-
-  LP2 := Pointer(btnSerGenericList);
-
-  if LP1 = LP2 then
-    memoSerialize.Lines.Add('equal');
-
-end;
-
 procedure TMainForm.btnDesStreamablePropClick(Sender: TObject);
 var
   LStreamable: TStreamableComposition;
@@ -611,6 +589,8 @@ begin
   LVis := [];
   Result := TNeonConfiguration.Default;
 
+  // Case settings
+  Result.SetMemberCustomCase(nil);
   if rbCaseCamel.Checked then
     Result.SetMemberCase(TNeonCase.CamelCase);
   if rbCaseSnake.Checked then
@@ -619,15 +599,22 @@ begin
     Result.SetMemberCase(TNeonCase.LowerCase);
   if rbCaseUpper.Checked then
     Result.SetMemberCase(TNeonCase.UpperCase);
+  if rbCaseCustom.Checked then
+    Result
+      .SetMemberCase(TNeonCase.CustomCase)
+      .SetMemberCustomCase(FCustomCaseAlgo);
 
+  // Member type settings
   if rbMemberFields.Checked then
     Result.SetMembersType(TNeonMembersType.Fields);
   if rbMemberProperties.Checked then
     Result.SetMembersType(TNeonMembersType.Properties);
 
+  // F Prefix setting
   if chkIgnorePrefix.Checked then
     Result.SetIgnoreFieldPrefix(True);
 
+  // Visibility settings
   if chkVisibilityPrivate.Checked then
     LVis := LVis + [mvPrivate];
   if chkVisibilityProtected.Checked then
@@ -639,22 +626,6 @@ begin
   Result.SetVisibility(LVis);
 end;
 
-procedure TMainForm.Button1Click(Sender: TObject);
-var
-  LJSON: TJSONValue;
-  LRec: TMyRecord;
-begin
-  LRec.Uno := 'Paolo';
-  LRec.Due := 47;
-
-  LJSON := TNeonMapperJSON.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
-  try
-    Log(TJSONHelper.PrettyPrint(LJSON));
-  finally
-    LJSON.Free;
-  end;
-end;
-
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   StopServerAction.Execute;
@@ -662,6 +633,13 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  FCustomCaseAlgo :=
+    function(const AString: string): string
+    begin
+      Result := AString + 'X';
+    end
+  ;
+
   StartServerAction.Execute;
 end;
 
@@ -671,12 +649,6 @@ begin
   memoSerialize.Lines.Add(ATitle + ':');
   memoSerialize.Lines.Add(ALog);
   memoSerialize.Lines.Add('-----------------------');
-end;
-
-procedure TMainForm.rbCaseCustomClick(Sender: TObject);
-begin
-  MessageDlg('Custom Case not yet implemented',  mtWarning, [mbOK], 0);
-  rbCasePascal.Checked := True;
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
@@ -718,6 +690,42 @@ end;
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
   StopServerAction.Enabled := Assigned(FServer) and (FServer.Active = True);
+end;
+
+procedure TMainForm.TestRecordPointers;
+var
+  LValue: TValue;
+  LP1: Pointer;
+  LP2: Pointer;
+  LR: TMyRecord;
+begin
+  LR.Uno := 'Paolo';
+  LR.Due := 20;
+
+  LValue := TValue.From<TMyRecord>(LR);
+
+  LP1 := LValue.GetReferenceToRawData;
+
+  LP2 := Pointer(btnSerGenericList);
+
+  if LP1 = LP2 then
+    memoSerialize.Lines.Add('equal');
+end;
+
+procedure TMainForm.TestSerializeRecord;
+var
+  LJSON: TJSONValue;
+  LRec: TMyRecord;
+begin
+  LRec.Uno := 'Paolo';
+  LRec.Due := 47;
+
+  LJSON := TNeonMapperJSON.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
+  try
+    Log(TJSONHelper.PrettyPrint(LJSON));
+  finally
+    LJSON.Free;
+  end;
 end;
 
 initialization

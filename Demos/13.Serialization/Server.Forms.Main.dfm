@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'WiRL Serialization Server'
-  ClientHeight = 545
-  ClientWidth = 1048
+  ClientHeight = 530
+  ClientWidth = 974
   Color = clBtnFace
   Constraints.MinHeight = 240
   Constraints.MinWidth = 480
@@ -16,27 +16,29 @@ object MainForm: TMainForm
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    1048
-    545)
+    974
+    530)
   PixelsPerInch = 96
   TextHeight = 13
   object TopPanel: TPanel
     Left = 0
     Top = 0
-    Width = 1048
+    Width = 974
     Height = 119
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitTop = -6
+    ExplicitWidth = 1036
     object Label1: TLabel
-      Left = 19
-      Top = 17
+      Left = 8
+      Top = 8
       Width = 63
       Height = 13
       Caption = 'Port number:'
     end
     object imgSample: TImage
-      Left = 920
+      Left = 846
       Top = 0
       Width = 128
       Height = 119
@@ -1790,35 +1792,36 @@ object MainForm: TMainForm
         A6FC5F1051BAF8703ECAC10000000049454E44AE426082}
       Proportional = True
       Stretch = True
+      ExplicitLeft = 920
     end
     object StartButton: TButton
-      Left = 7
-      Top = 41
+      Left = 8
+      Top = 54
       Width = 75
       Height = 25
       Action = StartServerAction
       TabOrder = 0
     end
     object StopButton: TButton
-      Left = 95
-      Top = 41
+      Left = 8
+      Top = 88
       Width = 75
       Height = 25
       Action = StopServerAction
       TabOrder = 1
     end
     object PortNumberEdit: TEdit
-      Left = 88
-      Top = 14
-      Width = 82
+      Left = 8
+      Top = 27
+      Width = 75
       Height = 21
       TabOrder = 2
       Text = '8080'
     end
     object DBGrid1: TDBGrid
-      Left = 192
+      Left = 104
       Top = 0
-      Width = 728
+      Width = 742
       Height = 119
       Align = alRight
       DataSource = DataSource1
@@ -1842,8 +1845,8 @@ object MainForm: TMainForm
   object memoSerialize: TMemo
     Left = 145
     Top = 167
-    Width = 381
-    Height = 370
+    Width = 336
+    Height = 355
     Anchors = [akLeft, akTop, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -1854,6 +1857,7 @@ object MainForm: TMainForm
     ScrollBars = ssVertical
     TabOrder = 2
     WordWrap = False
+    ExplicitHeight = 370
   end
   object btnSerSimpleTypes: TButton
     Left = 8
@@ -1865,8 +1869,8 @@ object MainForm: TMainForm
     OnClick = btnSerSimpleTypesClick
   end
   object btnDesComplexObject: TButton
-    Left = 532
-    Top = 226
+    Left = 487
+    Top = 227
     Width = 131
     Height = 25
     Caption = 'ComplexObject'
@@ -1874,10 +1878,10 @@ object MainForm: TMainForm
     OnClick = btnDesComplexObjectClick
   end
   object memoDeserialize: TMemo
-    Left = 669
-    Top = 167
-    Width = 372
-    Height = 370
+    Left = 624
+    Top = 168
+    Width = 342
+    Height = 355
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -1888,6 +1892,8 @@ object MainForm: TMainForm
     ScrollBars = ssVertical
     TabOrder = 5
     WordWrap = False
+    ExplicitWidth = 344
+    ExplicitHeight = 370
   end
   object btnSerGenericList: TButton
     Left = 8
@@ -1917,8 +1923,8 @@ object MainForm: TMainForm
     OnClick = btnSerDataSetClick
   end
   object btnDesSimpleTypes: TButton
-    Left = 532
-    Top = 257
+    Left = 487
+    Top = 258
     Width = 131
     Height = 25
     Caption = 'SimpleTypes'
@@ -1935,30 +1941,21 @@ object MainForm: TMainForm
     OnClick = btnSerStreamableClick
   end
   object btnDesStreamable: TButton
-    Left = 532
-    Top = 382
+    Left = 487
+    Top = 383
     Width = 131
     Height = 25
     Caption = 'Streamable'
     TabOrder = 11
     OnClick = btnDesStreamableClick
   end
-  object Button5: TButton
-    Left = 572
-    Top = 461
-    Width = 75
-    Height = 25
-    Caption = 'Button5'
-    TabOrder = 12
-    OnClick = Button5Click
-  end
   object btnDesStreamableProp: TButton
-    Left = 532
-    Top = 413
+    Left = 487
+    Top = 414
     Width = 131
     Height = 25
     Caption = 'StreamableProp'
-    TabOrder = 13
+    TabOrder = 12
     OnClick = btnDesStreamablePropClick
   end
   object btnStreamableProp: TButton
@@ -1967,16 +1964,16 @@ object MainForm: TMainForm
     Width = 131
     Height = 25
     Caption = 'StreamableProp'
-    TabOrder = 14
+    TabOrder = 13
     OnClick = btnStreamablePropClick
   end
   object btnDesDataSet: TButton
-    Left = 532
-    Top = 350
+    Left = 487
+    Top = 351
     Width = 131
     Height = 25
     Caption = 'DataSet'
-    TabOrder = 15
+    TabOrder = 14
     OnClick = btnDesDataSetClick
   end
   object Panel2: TPanel
@@ -1994,11 +1991,11 @@ object MainForm: TMainForm
     Font.Style = [fsBold]
     ParentBackground = False
     ParentFont = False
-    TabOrder = 16
+    TabOrder = 15
   end
   object Panel3: TPanel
-    Left = 532
-    Top = 166
+    Left = 487
+    Top = 167
     Width = 131
     Height = 23
     BevelOuter = bvNone
@@ -2011,33 +2008,33 @@ object MainForm: TMainForm
     Font.Style = [fsBold]
     ParentBackground = False
     ParentFont = False
-    TabOrder = 17
+    TabOrder = 16
   end
   object btnDesGenericList: TButton
-    Left = 532
-    Top = 288
+    Left = 487
+    Top = 289
     Width = 131
     Height = 25
     Caption = 'btnDesGenericList'
-    TabOrder = 18
+    TabOrder = 17
     OnClick = btnDesGenericListClick
   end
   object btnDesGenericObjectList: TButton
-    Left = 532
-    Top = 319
+    Left = 487
+    Top = 320
     Width = 131
     Height = 25
     Caption = 'btnDesGenericObjectList'
-    TabOrder = 19
+    TabOrder = 18
     OnClick = btnDesGenericObjectListClick
   end
   object btnDesSimpleObject: TButton
-    Left = 532
-    Top = 195
+    Left = 487
+    Top = 196
     Width = 131
     Height = 25
     Caption = 'SimpleObject'
-    TabOrder = 20
+    TabOrder = 19
     OnClick = btnDesSimpleObjectClick
   end
   object btnSerSimpleObject: TButton
@@ -2046,26 +2043,18 @@ object MainForm: TMainForm
     Width = 131
     Height = 25
     Caption = 'SimpleObject'
-    TabOrder = 21
+    TabOrder = 20
     OnClick = btnSerSimpleObjectClick
-  end
-  object Button1: TButton
-    Left = 8
-    Top = 444
-    Width = 75
-    Height = 25
-    Caption = 'Button1'
-    TabOrder = 22
-    OnClick = Button1Click
   end
   object Panel1: TPanel
     Left = 0
     Top = 119
-    Width = 1048
+    Width = 974
     Height = 42
     Align = alTop
     BevelOuter = bvNone
-    TabOrder = 23
+    TabOrder = 21
+    ExplicitWidth = 1048
     object grpType: TGroupBox
       Left = 361
       Top = 0
@@ -2158,13 +2147,12 @@ object MainForm: TMainForm
         Height = 17
         Caption = 'Custom'
         TabOrder = 5
-        OnClick = rbCaseCustomClick
       end
     end
     object grpPrefix: TGroupBox
       Left = 705
       Top = 0
-      Width = 304
+      Width = 264
       Height = 42
       Align = alLeft
       Caption = 'Visibility '
@@ -2250,7 +2238,7 @@ object MainForm: TMainForm
     Left = 648
     Top = 40
     Content = {
-      414442530F000314AC010000FF00010001FF02FF030400120000006400730050
+      414442530F00FE27AC010000FF00010001FF02FF030400120000006400730050
       006500720073006F006E007300050000000000060000070032000000080000FF
       09FF0A0400080000004E0061006D0065000B00010000000D000C000E00320000
       000F00011000011100011200011300011400011500080000004E0061006D0065
