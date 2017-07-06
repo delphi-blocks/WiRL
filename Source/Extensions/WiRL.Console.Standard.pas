@@ -13,8 +13,7 @@ interface
 
 uses
   System.SysUtils,
-  WiRl.Console.Base,
-  WiRL.http.Server.Indy;
+  WiRl.Console.Base;
 
 type
   TWiRLConsoleStandard = class(TWiRLConsoleBase)
@@ -30,10 +29,11 @@ type
     class procedure LogWarning(const AMessage: string); override;
     class procedure LogError(const AMessage: string); override;
     class procedure LogRaw(const AMessage: string); override;
-
   end;
 
 implementation
+
+{ TWiRLConsoleStandard }
 
 procedure TWiRLConsoleStandard.ServerStart;
 begin

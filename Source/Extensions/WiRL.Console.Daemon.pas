@@ -31,6 +31,8 @@ type
 
 implementation
 
+{ TWiRLConsoleDaemon }
+
 procedure TWiRLConsoleDaemon.ConsoleSetup;
 var
   LAppName: string;

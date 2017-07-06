@@ -16,8 +16,6 @@ uses
   Posix.Base;
 
 const
-  _PATH_LOG = '/dev/log';
-
   LOG_EMERG   = 0;
   LOG_ALERT   = 1;
   LOG_CRIT    = 2;

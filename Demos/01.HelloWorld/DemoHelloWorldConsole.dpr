@@ -52,7 +52,7 @@ begin
     on E: Exception do
     begin
       ExitCode := 1;
-      TWiRLConsoleFactory.LogLn('Exception: ' + E.Message);
+      TWiRLConsoleLogger.LogError('Exception: ' + E.Message);
     end;
   end;
 end.
