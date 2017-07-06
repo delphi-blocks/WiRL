@@ -121,6 +121,7 @@ end;
 
 destructor TWiRLhttpServerIndy.Destroy;
 begin
+  Active := False;
   FEngine.Free;
   inherited;
 end;
