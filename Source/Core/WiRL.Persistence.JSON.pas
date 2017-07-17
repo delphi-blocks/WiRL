@@ -252,7 +252,11 @@ begin
       end;
     end;
 
-    tkArray,
+    tkArray:
+    begin
+      Result := WriteArray(AValue);
+    end;
+
     tkDynArray:
     begin
       Result := WriteArray(AValue);
@@ -292,6 +296,10 @@ var
   LDataSet: TDataSet;
 begin
   LDataSet := AValue.AsObject as TDataSet;
+
+  if not Assigned(LDataSet) then
+    Exit(TJSONNull.Create);
+
   Result := TDataSetUtils.DataSetToJSONArray(LDataSet);
 end;
 
@@ -413,7 +421,7 @@ begin
   LObject := AValue.AsObject;
 
   if not Assigned(LObject) then
-    Exit;
+    Exit(TJSONNull.Create);
 
   LListType := TRttiHelper.Context.GetType(LObject.ClassType);
 
@@ -487,6 +495,9 @@ var
 begin
   LStream := AValue.AsObject as TStream;
 
+  if not Assigned(LStream) then
+    Exit(TJSONNull.Create);
+
   LStream.Position := soFromBeginning;
   LBase64 := TBase64.Encode(LStream);
   Result := TJSONString.Create(LBase64);
@@ -501,6 +512,9 @@ var
 begin
   Result := nil;
   LObject := AValue.AsObject;
+
+  if not Assigned(LObject) then
+    Exit(TJSONNull.Create);
 
   LStreamable := TDynamicStream.GuessType(LObject);
   if Assigned(LStreamable) then
@@ -605,6 +619,9 @@ end;
 function TNeonDeserializerJSON.ReadDataMember(AJSONValue: TJSONValue; AType:
     TRttiType; const AData: TValue): TValue;
 begin
+  if AJSONValue is TJSONNull then
+    Exit(TValue.Empty);
+
   case AType.TypeKind of
     // Simple types
     tkInt64:       Result := ReadInt64(AJSONValue, AType);
