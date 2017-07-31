@@ -15,7 +15,41 @@ uses
   System.SysUtils,
   Posix.Base;
 
-const
+const // openlog() option
+  LOG_PID    = $01;
+  LOG_CONS   = $02;
+  LOG_ODELAY = $04;
+  LOG_NDELAY = $08;
+  LOG_NOWAIT = $10;
+  LOG_PERROR = $20;
+
+const // openlog() facility
+  LOG_KERN        =  0 shl 3;
+  LOG_USER        =  1 shl 3;
+  LOG_MAIL        =  2 shl 3;
+  LOG_DAEMON      =  3 shl 3;
+  LOG_AUTH        =  4 shl 3;
+  LOG_SYSLOG      =  5 shl 3;
+  LOG_LPR         =  6 shl 3;
+  LOG_NEWS        =  7 shl 3;
+  LOG_UUCP        =  8 shl 3;
+  LOG_CRON        =  9 shl 3;
+  LOG_AUTHPRIV    = 10 shl 3;
+  LOG_FTP         = 11 shl 3;
+  LOG_LOCAL0      = 16 shl 3;
+  LOG_LOCAL1      = 17 shl 3;
+  LOG_LOCAL2      = 18 shl 3;
+  LOG_LOCAL3      = 19 shl 3;
+  LOG_LOCAL4      = 20 shl 3;
+  LOG_LOCAL5      = 21 shl 3;
+  LOG_LOCAL6      = 22 shl 3;
+  LOG_LOCAL7      = 23 shl 3;
+  LOG_NFACILITIES = 24;
+  LOG_FACMASK     = $03f8;
+  INTERNAL_NOPRI  = $10;
+  INTERNAL_MARK   = LOG_NFACILITIES shl 3;
+
+const // setlogmask() level
   LOG_EMERG   = 0;
   LOG_ALERT   = 1;
   LOG_CRIT    = 2;
@@ -26,68 +60,36 @@ const
   LOG_DEBUG   = 7;
   LOG_PRIMASK = $07;
 
-  LOG_KERN      = 0 shl 3;
-  LOG_USER      = 1 shl 3;
-  LOG_MAIL      = 2 shl 3;
-  LOG_DAEMON    = 3 shl 3;
-  LOG_AUTH      = 4 shl 3;
-  LOG_SYSLOG    = 5 shl 3;
-  LOG_LPR       = 6 shl 3;
-  LOG_NEWS      = 7 shl 3;
-  LOG_UUCP      = 8 shl 3;
-  LOG_CRON      = 9 shl 3;
-  LOG_AUTHPRIV  = 10 shl 3;
-  LOG_FTP       = 11 shl 3;
-  LOG_LOCAL0    = 16 shl 3;
-  LOG_LOCAL1    = 17 shl 3;
-  LOG_LOCAL2    = 18 shl 3;
-  LOG_LOCAL3    = 19 shl 3;
-  LOG_LOCAL4    = 20 shl 3;
-  LOG_LOCAL5    = 21 shl 3;
-  LOG_LOCAL6    = 22 shl 3;
-  LOG_LOCAL7    = 23 shl 3;
-
-  LOG_NFACILITIES = 24;
-  LOG_FACMASK     = $03f8;
-  INTERNAL_NOPRI  = $10;
-  INTERNAL_MARK   = LOG_NFACILITIES shl 3;
-
- const
-  LOG_PID    = $01;
-  LOG_CONS   = $02;
-  LOG_ODELAY = $04;
-  LOG_NDELAY = $08;
-  LOG_NOWAIT = $10;
-  LOG_PERROR = $20;
-
 procedure closelog; cdecl;
   external libc name _PU + 'closelog';
 
-procedure openlog(__ident: MarshaledAString; __option: LongInt; __facilit: Longint); cdecl;
+procedure openlog(ident: MarshaledAString; option: LongInt; facility: LongInt); cdecl;
   external libc name _PU + 'openlog';
 
-function setlogmask(__mask: Longint): Longint; cdecl;
+function setlogmask(mask: LongInt): LongInt; cdecl;
   external libc name _PU + 'setlogmask';
 
-procedure _syslog(__pri: Longint; __fmt: MarshaledAString; args: array of const); cdecl;
+procedure _syslog(priority: LongInt; _format: MarshaledAString; args: array of const); cdecl;
   external libc name _PU + 'syslog';
 
-procedure syslog(__pri: Longint; __fmt: string); overload;
+procedure syslog(APriority: LongInt; const AFormat: string); overload;
 
-procedure syslog(__pri: Longint; __fmt: string; args: array of const); overload;
+procedure syslog(APriority: LongInt; const AFormat: string; AArgs: array of const); overload;
 
 implementation
 
-procedure syslog(__pri: Longint; __fmt: string); overload;
+procedure syslog(APriority: LongInt; const AFormat: string);
 var
   LMarshaller: TMarshaller;
+  str: MarshaledAString;
 begin
-  _syslog(__pri, MarshaledAString(LMarshaller.AsAnsi(__fmt, CP_UTF8).ToPointer), []);
+  str := LMarshaller.AsAnsi(AFormat, CP_UTF8).ToPointer;
+  _syslog(APriority, str, []);
 end;
 
-procedure syslog(__pri: Longint; __fmt: string; args: array of const); overload;
+procedure syslog(APriority: LongInt; const AFormat: string; AArgs: array of const);
 begin
-  syslog(__pri, Format(__fmt, args));
+  syslog(APriority, Format(AFormat, AArgs));
 end;
 
 end.

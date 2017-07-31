@@ -20,11 +20,12 @@ uses
   Posix.SysTypes,
   Posix.Unistd,
   Posix.Signal,
+  Posix.Fcntl,
   System.IOUtils,
   WiRL.Console.Posix.Syslog;
 
   /// <summary>
-  ///   cdecl procedure to handle signals
+  ///   global procedure (cdecl) to handle signals
   /// </summary>
   procedure HandleSignals(ASigNum: Integer); cdecl;
 
@@ -48,7 +49,7 @@ type
     FSignalProc: TSignalProc;
   public const
     /// <summary>
-    ///   Missing from linux/StdlibTypes.inc !!!!
+    ///   Missing from linux/StdlibTypes.inc !!! <stdlib.h>
     /// </summary>
     EXIT_SUCCESS = 0;
     EXIT_FAILURE = 1;
@@ -67,6 +68,11 @@ type
     class procedure CloseDescriptors; static;
 
     /// <summary>
+    ///   Redirect stdin, stdout, stderr to /dev/null
+    /// </summary>
+    class procedure RouteDescriptors; static;
+
+    /// <summary>
     ///   Catch, ignore and handle signals
     /// </summary>
     class procedure CatchHandleSignals; static;
@@ -82,10 +88,15 @@ type
     class procedure DetachTerminal; static;
 
     /// <summary>
+    ///   Set new file permissions: Restrict file creation mode to 750
+    /// </summary>
+    class procedure SetRootDirectory(const ADirectory: string); static;
+
+    /// <summary>
     ///   Change the current directory to the root directory (/), in order to
     ///   avoid that the daemon involuntarily blocks mount points from being unmounted
     /// </summary>
-    class procedure SetRootDirectory; static;
+    class procedure UserFileMask(AMask: Cardinal); static;
 
   public
     /// <summary>
@@ -98,6 +109,11 @@ type
     ///   Infinte console loop
     /// </summary>
     class procedure Run(AInterval: Integer); static;
+
+    /// <summary>
+    ///   Open the log connection
+    /// </summary>
+    class procedure LogOpen; static;
 
     /// <summary>
     ///   Log Info message
@@ -150,7 +166,6 @@ class procedure TPosixDaemon.CloseDescriptors;
 var
   LIndex: Integer;
 begin
-  // TODO:   connect /dev/null to standard input, output, and error
   for LIndex := sysconf(_SC_OPEN_MAX) downto 0 do
     __close(LIndex);
 end;
@@ -177,9 +192,9 @@ end;
 
 class procedure TPosixDaemon.KillParent;
 begin
-  // Call exit() in the first child, so that only the second
-  // child (the actual daemon process) stays around
-  if FProcessID <> 0 then
+  // If the PID returned from fork() is valid, the parent process
+  // must terminate gracefully
+  if FProcessID > 0 then
     Halt(TPosixDaemon.EXIT_SUCCESS);
 end;
 
@@ -198,9 +213,27 @@ begin
   syslog(LOG_WARNING, AMessage);
 end;
 
+class procedure TPosixDaemon.LogOpen;
+begin
+  // syslog() will call LogOpen() with no arguments if the log is not currently open.
+  openlog(nil, LOG_PID or LOG_NDELAY, LOG_DAEMON);
+end;
+
 class procedure TPosixDaemon.LogRaw(const AMessage: string);
 begin
   syslog(LOG_INFO, AMessage);
+end;
+
+class procedure TPosixDaemon.RouteDescriptors;
+var
+  LFileID: Integer;
+begin
+  // Open STDIN
+  LFileID := __open('/dev/null', O_RDWR);
+  // Dup STDOUT
+  dup(LFileID);
+  // Dup STDERR
+  dup(LFileID);
 end;
 
 class procedure TPosixDaemon.Run(AInterval: Integer);
@@ -217,6 +250,7 @@ class procedure TPosixDaemon.Setup(ASignalProc: TSignalProc);
 begin
   FSignalProc := ASignalProc;
 
+  LogOpen;
   ForkProcess;
   KillParent;
   DetachTerminal;
@@ -224,12 +258,19 @@ begin
   KillParent;
   CatchHandleSignals;
   CloseDescriptors;
-  SetRootDirectory;
+  RouteDescriptors;
+  UserFileMask(027);
+  SetRootDirectory('/');
 end;
 
-class procedure TPosixDaemon.SetRootDirectory;
+class procedure TPosixDaemon.UserFileMask(AMask: Cardinal);
 begin
-  ChDir('/');
+  umask(AMask);
+end;
+
+class procedure TPosixDaemon.SetRootDirectory(const ADirectory: string);
+begin
+  ChDir(ADirectory);
 end;
 
 end.
