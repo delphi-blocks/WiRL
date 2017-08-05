@@ -60,7 +60,7 @@ type
     /// <remarks>
     ///   Do not create (and run) any thread before forking a process
     /// </remarks>
-    class procedure ForkProcess; static;
+    class function ForkProcess: pid_t; static;
 
     /// <summary>
     ///   Close all opened file descriptors
@@ -80,7 +80,7 @@ type
     /// <summary>
     ///   Kill the first process and leave only the daemon
     /// </summary>
-    class procedure KillParent; static;
+    class procedure KillParent(APID: pid_t); static;
 
     /// <summary>
     ///   Detach from any terminal and create an independent session.
@@ -111,6 +111,11 @@ type
     class procedure Run(AInterval: Integer); static;
 
     /// <summary>
+    ///   Stop the daemon
+    /// </summary>
+    class procedure Stop; static;
+
+    /// <summary>
     ///   Open the log connection
     /// </summary>
     class procedure LogOpen; static;
@@ -134,6 +139,11 @@ type
     ///   Log Info Raw message
     /// </summary>
     class procedure LogRaw(const AMessage: string); static;
+
+    /// <summary>
+    ///   Close the log connection
+    /// </summary>
+    class procedure LogClose; static;
 
     /// <summary>
     ///   Posix Process ID (pid)
@@ -176,10 +186,10 @@ begin
     raise Exception.Create('Impossible to create an independent session');
 end;
 
-class procedure TPosixDaemon.ForkProcess;
+class function TPosixDaemon.ForkProcess: pid_t;
 begin
-  FProcessID := fork();
-  if FProcessID < 0 then
+  Result := fork();
+  if Result < 0 then
     raise Exception.Create('Cannot create the fork');
 end;
 
@@ -190,12 +200,17 @@ begin
   signal(SIGTERM, HandleSignals);
 end;
 
-class procedure TPosixDaemon.KillParent;
+class procedure TPosixDaemon.KillParent(APID: pid_t);
 begin
   // If the PID returned from fork() is valid, the parent process
   // must terminate gracefully
-  if FProcessID > 0 then
+  if APID > 0 then
     Halt(TPosixDaemon.EXIT_SUCCESS);
+end;
+
+class procedure TPosixDaemon.LogClose;
+begin
+  closelog;
 end;
 
 class procedure TPosixDaemon.LogError(const AMessage: string);
@@ -244,6 +259,7 @@ begin
     Sleep(AInterval);
   end;
   LogInfo('The daemon is finally killed!');
+  LogClose;
 end;
 
 class procedure TPosixDaemon.Setup(ASignalProc: TSignalProc);
@@ -251,16 +267,27 @@ begin
   FSignalProc := ASignalProc;
 
   LogOpen;
-  ForkProcess;
-  KillParent;
+
+  FProcessID := ForkProcess;
+  KillParent(FProcessID);
+
   DetachTerminal;
-  ForkProcess;
-  KillParent;
+
+  FProcessID := ForkProcess;
+  KillParent(FProcessID);
+
   CatchHandleSignals;
+
   CloseDescriptors;
   RouteDescriptors;
+
   UserFileMask(027);
   SetRootDirectory('/');
+end;
+
+class procedure TPosixDaemon.Stop;
+begin
+  FRunning := False;
 end;
 
 class procedure TPosixDaemon.UserFileMask(AMask: Cardinal);
