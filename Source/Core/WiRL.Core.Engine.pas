@@ -25,6 +25,7 @@ uses
   WiRL.Core.Request,
   WiRL.Core.Response,
   WiRL.Core.Attributes,
+  WiRL.http.Engines,
   WiRL.http.Accept.MediaType,
   WiRL.http.Filters;
 
@@ -54,7 +55,7 @@ type
     procedure HandleException(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; E: Exception);
   end;
 
-  TWiRLEngine = class
+  TWiRLEngine = class(TWirlCustomEngine)
   private
     class var FServerFileName: string;
     class var FServerDirectory: string;
@@ -65,9 +66,6 @@ type
     FApplications: TWiRLApplicationDictionary;
     FSubscribers: TList<IWiRLHandleListener>;
     FCriticalSection: TCriticalSection;
-    FBasePath: string;
-    FPort: Integer;
-    FThreadPoolSize: Integer;
     FName: string;
 
     // Filter handling
@@ -79,13 +77,13 @@ type
     procedure DoAfterRequestEnd(const AStopWatch: TStopWatch); virtual;
     procedure DoHandleException(AContext: TWiRLContext; AApplication: TWiRLApplication; E: Exception); virtual;
   public
-    constructor Create;
+    constructor Create(const ABasePath: string); override;
     destructor Destroy; override;
 
-    procedure Startup;
-    procedure Shutdown;
+    procedure Startup; override;
+    procedure Shutdown; override;
 
-    procedure HandleRequest(AContext: TWiRLContext);
+    procedure HandleRequest(AContext: TWiRLContext); override;
 
     function AddApplication(const ABasePath: string): TWiRLApplication; overload; virtual;
     function AddApplication(const AName, ABasePath: string; const AResources: TArray<string>): TWiRLApplication; overload; virtual; deprecated;
@@ -97,14 +95,9 @@ type
 
     function SetName(const AName: string): TWiRLEngine;
     function SetBasePath(const ABasePath: string): TWiRLEngine;
-    function SetPort(APort: Integer): TWiRLEngine;
-    function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLEngine;
-
+    
     property Applications: TWiRLApplicationDictionary read FApplications;
-    property BasePath: string read FBasePath write FBasePath;
     property Name: string read FName write FName;
-    property Port: Integer read FPort write FPort;
-    property ThreadPoolSize: Integer read FThreadPoolSize write FThreadPoolSize;
 
     class property ServerFileName: string read GetServerFileName;
     class property ServerDirectory: string read GetServerDirectory;
@@ -172,18 +165,14 @@ begin
   Result := LAborted;
 end;
 
-constructor TWiRLEngine.Create;
+constructor TWiRLEngine.Create(const ABasePath: string);
 begin
+  inherited;
   FRttiContext := TRttiContext.Create;
   FApplications := TWiRLApplicationDictionary.Create([doOwnsValues]);
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IWiRLHandleListener>.Create;
-  FPort := 8080;
-  FThreadPoolSize := 50;
-  FBasePath := '/rest';
   FName := 'WiRL Engine';
-
-  inherited Create;
 end;
 
 destructor TWiRLEngine.Destroy;
@@ -275,6 +264,8 @@ var
   LApplicationPath: string;
   LStopWatch, LStopWatchEx: TStopWatch;
 begin
+  if EndsText('/favicon.ico', AContext.Request.PathInfo) then
+    Exit;
   LApplication := nil;
   LStopWatchEx := TStopwatch.StartNew;
   try
@@ -343,29 +334,13 @@ end;
 
 function TWiRLEngine.SetBasePath(const ABasePath: string): TWiRLEngine;
 begin
-  if StartsText('/', ABasePath) then
-    FBasePath := ABasePath
-  else
-    FBasePath := '/' + ABasePath;
-
+  BasePath := ABasePath;
   Result := Self;
 end;
 
 function TWiRLEngine.SetName(const AName: string): TWiRLEngine;
 begin
   FName := AName;
-  Result := Self;
-end;
-
-function TWiRLEngine.SetPort(APort: Integer): TWiRLEngine;
-begin
-  FPort := APort;
-  Result := Self;
-end;
-
-function TWiRLEngine.SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLEngine;
-begin
-  FThreadPoolSize := AThreadPoolSize;
   Result := Self;
 end;
 
