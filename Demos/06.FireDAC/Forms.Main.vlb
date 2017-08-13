@@ -1,36 +1,39 @@
 ﻿[WiRLClientApplication1]
-Coordinates=216,1,131,33
+Coordinates=216,1,150,36
 
 [WiRLFDResource1]
-Coordinates=216,56,107,33
+Coordinates=216,56,125,36
 
 [StringGrid1]
-Coordinates=196,21,70,51
+Coordinates=196,21,80,58
 Visible=True
 
 [WiRLClient1]
-Coordinates=117,133,74,33
+Coordinates=117,133,86,36
 
 []
 Coordinates=10,10,106,58
 Visible=False
 
 [BindingsList1]
-Coordinates=135,87,82,33
+Coordinates=135,87,91,36
 
 [Layout1]
-Coordinates=251,116,53,33
+Coordinates=251,116,60,36
 
 [employee1]
-Coordinates=404,1,67,33
+Coordinates=404,1,77,36
 Visible=False
 
 [BindSourceDB2]
-Coordinates=10,10,92,267
+Coordinates=10,10,106,94
 
 [BindNavigator1]
-Coordinates=10,116,90,51
+Coordinates=10,116,103,58
 
 [btnPUT]
-Coordinates=139,116,75,51
+Coordinates=139,116,58,58
+
+[btnGET]
+Coordinates=135,1,59,58
 

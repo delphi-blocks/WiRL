@@ -13,7 +13,7 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  Data.FireDACJSONReflect, FireDAC.Comp.Client,
+  FireDAC.Comp.Client,
 
   // WiRL Core units
   WiRL.Core.Request,
@@ -25,6 +25,8 @@ uses
   WiRL.Data.MessageBody.Default,
   // WiRL FireDAC units
   WiRL.Data.FireDAC,
+  WiRL.Data.FireDAC.Persistence,
+  WiRL.Data.FireDAC.Updates,
   WiRL.Data.FireDAC.MessageBody.Default;
 
 type
@@ -47,17 +49,18 @@ type
     [Context] Request: TWiRLRequest;
     [Context] URL: TWiRLURL;
 
-    procedure BeforeApplyUpdates(ADeltas: TFDJSONDeltas; ADelta: TFDMemTable;
+    procedure BeforeApplyUpdates(ADeltas: TFireDACDataSets; ADelta: TFDMemTable;
       ADataSet: TFDCustomQuery); virtual;
 
-    procedure ApplyUpdates(ADeltas: TFDJSONDeltas;
-      AOnApplyUpdates: TProc<string, Integer, IFDJSONDeltasApplyUpdates> = nil); virtual;
+    procedure ApplyUpdates(ADeltas: TFireDACDataSets;
+      AOnApplyUpdates: TProc<string, Integer, TFireDACApplyUpdates> = nil); virtual;
   public
     [GET][Produces(TMediaType.APPLICATION_JSON)]
+    [Result: Singleton]
     function Retrieve: TArray<TFDCustomQuery>; virtual;
 
     [PUT, Produces(TMediaType.APPLICATION_JSON), Consumes(TMediaType.APPLICATION_JSON)]
-    function Update([BodyParam] AJSONObj: TJSONObject): TJSONArray; virtual;
+    function Update([BodyParam] ADeltas: TFireDACDataSets): TJSONArray; virtual;
 
   published
     property ResourceName: string read GetResourceName;
@@ -73,33 +76,32 @@ uses
 
 { TWiRLFDDataModuleResource }
 
-procedure TWiRLFDDataModuleResource.ApplyUpdates(ADeltas: TFDJSONDeltas;
-  AOnApplyUpdates: TProc<string, Integer, IFDJSONDeltasApplyUpdates>);
+procedure TWiRLFDDataModuleResource.ApplyUpdates(ADeltas: TFireDACDataSets;
+    AOnApplyUpdates: TProc<string, Integer, TFireDACApplyUpdates> = nil);
 var
-  LApplyUpdates: IFDJSONDeltasApplyUpdates;
-  LIndex: Integer;
-  LDelta: TPair<string, TFDMemTable>;
+  LApplyOperation: TFireDACApplyUpdates;
+  LPair: TPair<string, TFDAdaptedDataSet>;
+  LDelta: TFDMemTable;
   LDataSet: TFDCustomQuery;
   LApplyResult: Integer;
 begin
-  LApplyUpdates := TFDJSONDeltasApplyUpdates.Create(ADeltas);
+  LApplyOperation := TFireDACApplyUpdates.Create(ADeltas);
   try
-    for LIndex := 0 to TFDJSONDeltasReader.GetListCount(ADeltas) - 1 do
+    for LPair in ADeltas do
     begin
-      LDelta := TFDJSONDeltasReader.GetListItem(ADeltas, LIndex);
-      LDataSet := Self.FindComponent(LDelta.Key) as TFDCustomQuery;
-
-      BeforeApplyUpdates(ADeltas, LDelta.Value, LDataSet);
-      LApplyResult := LApplyUpdates.ApplyUpdates(LDelta.Key, LDataSet.Command);
+      LDelta := LPair.Value as TFDMemTable;
+      LDataSet := Self.FindComponent(LPair.Key) as TFDCustomQuery;
+      BeforeApplyUpdates(ADeltas, LDelta, LDataSet);
+      LApplyResult := LApplyOperation.ApplyUpdates(LDelta, LDataSet.Command);
       if Assigned(AOnApplyUpdates) then
-        AOnApplyUpdates(LDataSet.Name, LApplyResult, LApplyUpdates);
+        AOnApplyUpdates(LDataSet.Name, LApplyResult, LApplyOperation);
     end;
   finally
-    LApplyUpdates := nil; // it's an interface
+    LApplyOperation.Free;
   end;
 end;
 
-procedure TWiRLFDDataModuleResource.BeforeApplyUpdates(ADeltas: TFDJSONDeltas;
+procedure TWiRLFDDataModuleResource.BeforeApplyUpdates(ADeltas: TFireDACDataSets; 
   ADelta: TFDMemTable; ADataSet: TFDCustomQuery);
 begin
 
@@ -156,48 +158,35 @@ begin
   Result := LDataSets;
 end;
 
-function TWiRLFDDataModuleResource.Update(AJSONObj: TJSONObject): TJSONArray;
+function TWiRLFDDataModuleResource.Update(ADeltas: TFireDACDataSets): TJSONArray;
 var
-  LDeltas: TFDJSONDeltas;
   LResult: TJSONArray;
 begin
-  Result := nil;
-
-  LDeltas := TFDJSONDeltas.Create;
+  LResult := TJSONArray.Create;
   try
-    // build FireDAC delta objects
-    if not TFDJSONInterceptor.JSONObjectToDataSets(AJSONObj, LDeltas) then
-      raise Exception.Create('Error de-serializing deltas');
+    ApplyUpdates(ADeltas,
+      procedure(ADatasetName: string; AApplyResult: Integer; AApplyUpdates: TFireDACApplyUpdates)
+      var
+        LResultObj: TJSONObject;
+      begin
+        LResultObj := TJSONObject.Create;
+        try
+          LResultObj.AddPair('dataset', ADatasetName);
+          LResultObj.AddPair('result', TJSONNumber.Create(AApplyResult));
+          LResultObj.AddPair('errors', TJSONNumber.Create(AApplyUpdates.Errors.Count));
+          LResultObj.AddPair('errorText', AApplyUpdates.Errors.Errors.Text);
+          LResult.AddElement(LResultObj);
+        except
+          LResultObj.Free;
+          raise;
+        end;
+      end
+    );
 
-    // apply updates
-    LResult := TJSONArray.Create;
-    try
-      ApplyUpdates(LDeltas,
-        procedure(ADatasetName: string; AApplyResult: Integer; AApplyUpdates: IFDJSONDeltasApplyUpdates)
-        var
-          LResultObj: TJSONObject;
-        begin
-          LResultObj := TJSONObject.Create;
-          try
-            LResultObj.AddPair('dataset', ADatasetName);
-            LResultObj.AddPair('result', TJSONNumber.Create(AApplyResult));
-            LResultObj.AddPair('errors', TJSONNumber.Create(AApplyUpdates.Errors.Count));
-            LResultObj.AddPair('errorText', AApplyUpdates.Errors.Strings.Text);
-            LResult.AddElement(LResultObj);
-          except
-            LResultObj.Free;
-            raise;
-          end;
-        end
-      );
-
-      Result := LResult;
-    except
-      LResult.Free;
-      raise;
-    end;
-  finally
-    LDeltas.Free;
+    Result := LResult;
+  except
+    LResult.Free;
+    raise;
   end;
 end;
 

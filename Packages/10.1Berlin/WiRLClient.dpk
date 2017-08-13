@@ -43,12 +43,10 @@ package WiRLClient;
 requires
   rtl,
   inet,
-  DbxCommonDriver,
   dbrtl,
   FireDACCommon,
   FireDACCommonDriver,
   FireDAC,
-  DataSnapFireDAC,
   IndySystem,
   IndyProtocols,
   IndyCore,

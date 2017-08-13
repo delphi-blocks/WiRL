@@ -111,10 +111,7 @@
         <DCCReference Include="IndySystem.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
         <DCCReference Include="IndyCore.dcp"/>
-        <DCCReference Include="DbxCommonDriver.dcp"/>
         <DCCReference Include="dsnap.dcp"/>
-        <DCCReference Include="DataSnapFireDAC.dcp"/>
-        <DCCReference Include="RESTComponents.dcp"/>
         <DCCReference Include="..\..\Libs\JWT\Source\Common\JOSE.Cryptography.RSA.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\Common\JOSE.Encoding.Base64.pas"/>
         <DCCReference Include="..\..\Libs\JWT\Source\Common\JOSE.Hashing.HMAC.pas"/>
@@ -161,10 +158,12 @@
         <DCCReference Include="..\..\Source\Data\WiRL.Data.MessageBody.Default.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas">
             <Form>WiRLFDDataModuleResource</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBody.Default.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>

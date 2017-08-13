@@ -1,7 +1,7 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'WiRL FireDAC Basic'
+  Caption = 'WiRL FireDAC Server'
   ClientHeight = 289
   ClientWidth = 554
   Color = clBtnFace

@@ -50,10 +50,7 @@ requires
   IndySystem,
   IndyProtocols,
   IndyCore,
-  DbxCommonDriver,
-  dsnap,
-  DataSnapFireDAC,
-  RESTComponents;
+  dsnap;
 
 contains
   JOSE.Cryptography.RSA in '..\..\Libs\JWT\Source\Common\JOSE.Cryptography.RSA.pas',
@@ -102,7 +99,9 @@ contains
   WiRL.Data.MessageBody.Default in '..\..\Source\Data\WiRL.Data.MessageBody.Default.pas',
   WiRL.Data.FireDAC in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas',
   WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  WiRL.Data.FireDAC.Updates in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas',
   WiRL.Data.FireDAC.DataModule in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas' {WiRLFDDataModuleResource: TDataModule},
+  WiRL.Data.FireDAC.Persistence in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas',
   WiRL.Data.FireDAC.MessageBody.Default in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBody.Default.pas',
   WiRL.http.Accept.Charset in '..\..\Source\Core\WiRL.http.Accept.Charset.pas',
   WiRL.http.Accept.Encoding in '..\..\Source\Core\WiRL.http.Accept.Encoding.pas',

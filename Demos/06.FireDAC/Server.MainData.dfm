@@ -6,7 +6,6 @@ inherited MainDataResource: TMainDataResource
       'ConnectionDef=SQLite_Demo')
     FetchOptions.AssignedValues = [evMode]
     FetchOptions.Mode = fmAll
-    Connected = True
     LoginPrompt = False
     Left = 48
     Top = 24

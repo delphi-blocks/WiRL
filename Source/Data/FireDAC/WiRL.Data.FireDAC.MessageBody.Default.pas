@@ -24,7 +24,10 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Utils,
-  WiRL.Data.Utils;
+  WiRL.Data.Utils,
+  WiRL.Data.FireDAC,
+  WiRL.Data.FireDAC.Persistence,
+  WiRL.Data.FireDAC.Utils;
 
 type
   [Produces(TMediaType.APPLICATION_XML), Produces(TMediaType.APPLICATION_JSON)]
@@ -51,7 +54,7 @@ type
 implementation
 
 uses
-  FireDAC.Comp.Client, FireDAC.Stan.Intf, FireDACJSONReflect,
+  FireDAC.Comp.Client, FireDAC.Stan.Intf,
   FireDAC.Stan.StorageBIN, FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageXML,
 
   WiRL.Core.Exceptions,
@@ -65,7 +68,7 @@ procedure TArrayFDCustomQueryWriter.WriteTo(const AValue: TValue; const
     TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
-  LDatasetList: TFDJSONDataSets;
+  LDataSetList: TFireDACDataSets;
   LCurrent: TFDCustomQuery;
   LResult: TJSONObject;
   LData: TArray<TFDCustomQuery>;
@@ -74,21 +77,21 @@ begin
   try
     LResult := TJSONObject.Create;
     try
-      LDatasetList := TFDJSONDataSets.Create;
+      LDataSetList := TFireDACDataSets.Create;
+      LDataSetList.Compression := TFDStreamCompression.Over10K;
       try
         LData := AValue.AsType<TArray<TFDCustomQuery>>;
         if Length(LData) > 0 then
         begin
           for LCurrent in LData do
-            TFDJSONDataSetsWriter.ListAdd(LDatasetList, LCurrent.Name, LCurrent);
+            LDataSetList.Add(LCurrent.Name, LCurrent);
 
-          if not TFDJSONInterceptor.DataSetsToJSONObject(LDataSetList, LResult) then
-            raise Exception.Create('Error serializing datasets to JSON');
+          TFireDACJSONPersistor.DataSetsToJSON(LDataSetList, LResult);
         end;
 
         LStreamWriter.Write(TJSONHelper.ToJSON(LResult));
       finally
-        LDatasetList.Free;
+        LDataSetList.Free;
       end;
     finally
       LResult.Free;
