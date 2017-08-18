@@ -42,7 +42,21 @@ type
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
+  function ExistsInArray(AArray: TJSONArray; AValue: string): Boolean;
+
 implementation
+
+function ExistsInArray(AArray: TJSONArray; AValue: string): Boolean;
+  var
+    LValue: TJSONValue;
+  begin
+    for LValue in AArray do
+    begin
+      if LValue.Value.Equals(AValue) then
+        Exit(True);
+    end;
+    Result := False;
+  end;
 
 { TSwaggerFilter }
 
@@ -79,6 +93,7 @@ var
   LResourceType: TRttiType;
   LResourceMethod: TRttiMethod;
   LMethodName: string;
+  LResourceMethodPath: string;
   LJsonPath: TJSONObject;
 begin
   LResourceType := TRttiHelper.Context.GetType(LResource);
@@ -97,7 +112,11 @@ begin
       );
       if LMethodName <> '' then
       begin
-        LMethodPath := AApplication.BasePath + LResourcePath + GetPath(LResourceMethod);
+        LResourceMethodPath := GetPath(LResourceMethod);
+        LMethodPath := AApplication.BasePath + LResourcePath;
+        if (not LMethodPath.EndsWith('/')) and (not LResourceMethodPath.StartsWith('/')) then
+          LMethodPath := LMethodPath + '/';
+        LMethodPath := LMethodPath + LResourceMethodPath;
         // If the resource is already documented add the information on
         // the same json object
         LJsonPath := FindOrCreatePath(APaths, LMethodPath);
@@ -184,7 +203,7 @@ begin
   // same operation
   LOperation := FindOrCreateOperation(AJsonPath, AMethodName);
 
-  if not Assigned(LOperation.GetValue('summary')) then  
+  if not Assigned(LOperation.GetValue('summary')) then
     LOperation.AddPair('summary', AResourceMethod.Name);
 
   LProduces := LOperation.GetValue('produces') as TJSONArray;
@@ -196,8 +215,10 @@ begin
         LProduces := TJSONArray.Create;
         LOperation.AddPair('produces', LProduces);
       end;
-      
-      LProduces.Add(AAttr.Value);
+
+      // Check if the produce already exists
+      if not ExistsInArray(LProduces, AAttr.Value) then
+        LProduces.Add(AAttr.Value);
     end
   );
 
@@ -210,8 +231,10 @@ begin
         LConsumes := TJSONArray.Create;
         LOperation.AddPair('consumes', LConsumes);
       end;
-      
-      LConsumes.Add(AAttr.Value);
+
+      // Check if the consume already exists
+      if not ExistsInArray(LConsumes, AAttr.Value) then
+        LConsumes.Add(AAttr.Value);
     end
   );
 
@@ -238,7 +261,7 @@ begin
     LOkResponse := TJSONObject.Create(TJSONPair.Create('description', 'Ok'));
     LResponses.AddPair('200', LOkResponse);
     LResponses.AddPair('default', TJSONObject.Create(TJSONPair.Create('description', 'Error')));
-    if AResourceMethod.ReturnType.TypeKind <> tkUnknown then
+    if Assigned(AResourceMethod.ReturnType) and (AResourceMethod.ReturnType.TypeKind <> tkUnknown) then
       LOkResponse.AddPair('schema', CreateResponseSchema(AResourceMethod));
   end;
 end;
