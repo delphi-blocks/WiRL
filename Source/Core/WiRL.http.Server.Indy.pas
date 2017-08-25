@@ -19,13 +19,13 @@ uses
   WiRL.http.Cookie,
   WiRL.http.Server,
   WiRL.http.Engines,
-  WiRL.Core.Engine,
-  WiRL.Core.Response,
-  WiRL.Core.Request,
+//  WiRL.Core.Engine,
+  WiRL.http.Response,
+  WiRL.http.Request,
   WiRL.Core.Auth.Context;
 
 type
-  TWiRLEngines = TArray<TWiRLEngine>;
+//  TWiRLEngines = TArray<TWiRLEngine>;
 
   TWiRLhttpServerIndy = class(TWiRLhttpServer)
   private

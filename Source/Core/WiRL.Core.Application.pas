@@ -126,7 +126,7 @@ uses
   WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
-  WiRL.Core.URL,
+  WiRL.http.URL,
   WiRL.Core.Attributes,
   WiRL.Core.Engine;
 

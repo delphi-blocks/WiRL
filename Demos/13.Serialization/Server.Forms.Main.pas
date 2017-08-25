@@ -657,10 +657,11 @@ begin
   FServer := TWiRLhttpServerIndy.Create;
 
   // Engine configuration
-  FServer.ConfigureEngine('/rest')
+  FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('WiRL ContentType Demo')
     .SetThreadPoolSize(5)
+    .ConfigureEngine('/rest')
+    .SetName('WiRL ContentType Demo')
 
     // Application configuration
     .AddApplication('/app')

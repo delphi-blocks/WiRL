@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
 
-  WiRL.http.Engines, WiRL.Core.Exceptions, WiRL.Core.Utils, WiRL.Rtti.Utils;
+  WiRL.http.Engines, WiRL.Core.Engine, WiRL.Core.Exceptions, WiRL.Core.Utils, WiRL.Rtti.Utils;
 
 type
   TWiRLhttpServer = class abstract
@@ -26,6 +26,8 @@ type
     function GetEngine(const Url: string): TWiRLCustomEngine;
     function SetPort(APort: Integer): TWiRLhttpServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLhttpServer;
+    // TODO: Remove this method and the dependency from TWiRLEngine
+    function ConfigureEngine(const ABasePath: string) :TWiRLEngine; deprecated 'Use AddEngine<TWiRLEngine>';
 
     property Active: Boolean read GetActive write SetActive;
     property Port: Integer read FPort write FPort;
@@ -54,6 +56,11 @@ begin
   for LEngine in AEngines do
     FEngines.Add(LEngine.BasePath, LEngine);
   Result := Self;
+end;
+
+function TWiRLhttpServer.ConfigureEngine(const ABasePath: string): TWiRLEngine;
+begin
+  Result := AddEngine<TWiRLEngine>(ABasePath);
 end;
 
 constructor TWiRLhttpServer.Create;

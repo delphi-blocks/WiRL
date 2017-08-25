@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
+  WiRL.Core.Engine,
   WiRL.http.Server.Indy;
 
 type
@@ -60,24 +61,25 @@ begin
   // Create http server
   FServer := TWiRLhttpServerIndy.Create;
 
-  FServer.ConfigureEngine('/rest')
-    .SetName('WiRL HelloWorld')
+  FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(10)
+    .AddEngine<TWiRLEngine>('/rest')
+      .SetName('WiRL HelloWorld')
 
-    // Adds and configures an application
-    .AddApplication('/app')
-	  {$IF CompilerVersion >=28} //XE7
-      .SetResources([
-        'Server.Resources.THelloWorldResource',
-        'Server.Resources.TEntityResource'
-      ]);
-	  {$ELSE}
-      .SetResources(
-        'Server.Resources.THelloWorldResource,'+
-        'Server.Resources.TEntityResource'
-	    );
-    {$IFEND}
+      // Adds and configures an application
+      .AddApplication('/app')
+      {$IF CompilerVersion >=28} //XE7
+        .SetResources([
+          'Server.Resources.THelloWorldResource',
+          'Server.Resources.TEntityResource'
+        ]);
+      {$ELSE}
+        .SetResources(
+          'Server.Resources.THelloWorldResource,'+
+          'Server.Resources.TEntityResource'
+        );
+      {$IFEND}
   ;
 
   if not FServer.Active then

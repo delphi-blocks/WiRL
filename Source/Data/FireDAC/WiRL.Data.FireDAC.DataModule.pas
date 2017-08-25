@@ -16,11 +16,11 @@ uses
   FireDAC.Comp.Client,
 
   // WiRL Core units
-  WiRL.Core.Request,
+  WiRL.http.Request,
   WiRL.Core.JSON,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.URL,
+  WiRL.http.URL,
   // WiRL Data units
   WiRL.Data.MessageBody.Default,
   // WiRL FireDAC units

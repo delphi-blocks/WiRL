@@ -23,7 +23,7 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Auth.Context,
-  WiRL.Core.URL;
+  WiRL.http.URL;
 
 type
   TWiRLAuthPrincipal = class

@@ -22,7 +22,7 @@ uses
 
   WiRL.Data.FireDAC.DataModule,
   WiRL.Core.Attributes,
-  WiRL.Core.URL,
+  WiRL.http.URL,
   WiRL.Core.Auth.Context, FireDAC.Phys.SQLiteDef;
 
 type

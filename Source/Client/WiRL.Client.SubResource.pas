@@ -39,7 +39,7 @@ implementation
 
 uses
   WiRL.Client.Utils,
-  WiRL.Core.URL;
+  WiRL.http.URL;
 
 procedure Register;
 begin

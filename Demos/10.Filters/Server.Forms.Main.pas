@@ -82,10 +82,11 @@ begin
   FServer := TWiRLhttpServerIndy.Create;
 
   // Engine configuration
-  FServer.ConfigureEngine('/rest')
+  FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('WiRL Filters')
     .SetThreadPoolSize(5)
+    .ConfigureEngine('/rest')
+    .SetName('WiRL Filters')
 
     // Application configuration
     .AddApplication('/app')

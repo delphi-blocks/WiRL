@@ -15,8 +15,8 @@ uses
   System.Classes, System.SysUtils, System.Rtti,
 
   WiRL.Core.Classes,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Attributes,
   WiRL.Core.Application,
   WiRL.http.Accept.MediaType,

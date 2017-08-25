@@ -69,10 +69,11 @@ begin
   // Create http server
   FServer := TWiRLhttpServerIndy.Create;
 
-  FServer.ConfigureEngine('/rest')
+  FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('WiRL FireDAC Demo')
     .SetThreadPoolSize(5)
+    .ConfigureEngine('/rest')
+    .SetName('WiRL FireDAC Demo')
 
     // Add and configure an application
     .AddApplication('/app')

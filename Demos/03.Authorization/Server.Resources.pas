@@ -19,10 +19,10 @@ uses
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.URL,
+  WiRL.http.URL,
   WiRL.Core.MessageBody.Default,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Auth.Context,
   WiRL.Core.Auth.Resource,
 

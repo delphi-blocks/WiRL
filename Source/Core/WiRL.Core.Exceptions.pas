@@ -16,7 +16,7 @@ uses
   System.Rtti,
   WiRL.Core.JSON,
   WiRL.Core.Context,
-  WiRL.Core.Response;
+  WiRL.http.Response;
 
 type
   Pair = record

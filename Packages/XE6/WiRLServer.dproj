@@ -149,11 +149,11 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Default.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Request.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Response.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Resource.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.URL.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Validators.pas"/>
         <DCCReference Include="..\..\Source\Data\WiRL.Data.Utils.pas"/>

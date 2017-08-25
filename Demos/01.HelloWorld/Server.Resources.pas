@@ -18,11 +18,11 @@ uses
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.URL,
+  WiRL.http.URL,
   WiRL.Core.MessageBody.Default,
   WiRL.Core.Auth.Context,
-  WiRL.Core.Request,
-  WiRL.Core.Response;
+  WiRL.http.Request,
+  WiRL.http.Response;
 
 type
   [Path('/helloworld')]

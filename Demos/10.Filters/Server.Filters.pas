@@ -16,12 +16,12 @@ uses
 
   WiRL.Core.Registry,
   WiRL.http.Filters,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Attributes,
   WiRL.Core.Exceptions,
   WiRL.Core.Auth.Context,
-  WiRL.Core.URL,
+  WiRL.http.URL,
   WiRL.Core.Application,
   WiRL.http.Accept.MediaType,
 
@@ -46,7 +46,7 @@ type
   [Priority(TWiRLPriorities.USER)] // Default priority
   TRequestCheckerFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
   private
-    [Context] FAuth: TWiRLAuthContext;
+//    [Context] FAuth: TWiRLAuthContext;
     [Context] FApplication: TWiRLApplication;
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);

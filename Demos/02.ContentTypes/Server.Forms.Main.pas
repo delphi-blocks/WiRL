@@ -67,19 +67,21 @@ begin
   // Create http server
   FServer := TWiRLhttpServerIndy.Create;
 
-  // Engine configuration
-  FServer.ConfigureEngine('/rest')
+  // Server configuration
+  FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetName('WiRL ContentType Demo')
     .SetThreadPoolSize(5)
+    // Engine configuration
+    .AddEngine<TWiRLEngine>('/rest')
+      .SetName('WiRL ContentType Demo')
 
-    // Application configuration
-    .AddApplication('/app')
-      .SetName('Content App')
-      .SetWriters('*')
-      .SetReaders('*')
-      .SetResources(
-        'Server.Resources.TSampleResource,Server.Resources.Entities.TLibraryResource')
+      // Application configuration
+      .AddApplication('/app')
+        .SetName('Content App')
+        .SetWriters('*')
+        .SetReaders('*')
+        .SetResources(
+          'Server.Resources.TSampleResource,Server.Resources.Entities.TLibraryResource')
   ;
 
   if not FServer.Active then

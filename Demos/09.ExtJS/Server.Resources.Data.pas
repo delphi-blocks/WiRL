@@ -24,8 +24,8 @@ uses
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.URL,
-  WiRL.Core.Request,
+  WiRL.http.URL,
+  WiRL.http.Request,
   WiRL.Core.MessageBody.Default,
   WiRL.Data.MessageBody.Default,
   WiRL.Core.Exceptions,
@@ -53,7 +53,7 @@ type
     qryEmpNoGen: TFDQuery;
     procedure DataModuleCreate(Sender: TObject);
   private
-    [Context] FRequest: TWiRLRequest;
+//    [Context] FRequest: TWiRLRequest;
   public
     [GET, Path('/employee/')]
     function Employee(): TDataSet;

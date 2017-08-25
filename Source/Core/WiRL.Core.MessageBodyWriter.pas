@@ -15,7 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
 
   WiRL.Core.Singleton,
-  WiRL.Core.Response,
+  WiRL.http.Response,
   WiRL.Core.Resource,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,

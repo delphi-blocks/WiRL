@@ -125,7 +125,7 @@ implementation
 
 uses
   WiRL.Client.Utils,
-  WiRL.Core.URL,
+  WiRL.http.URL,
   WiRL.Core.Utils;
 
 { TWiRLClientCustomResource }

@@ -15,7 +15,7 @@ uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
   
   WiRL.Core.Declarations, 
-  WiRL.Core.Request,
+  WiRL.http.Request,
   WiRL.Core.Utils;
 
 type

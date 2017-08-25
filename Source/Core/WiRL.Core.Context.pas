@@ -14,9 +14,9 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
   System.Generics.Collections,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
-  WiRL.Core.URL,
+  WiRL.http.Request,
+  WiRL.http.Response,
+  WiRL.http.URL,
   WiRL.Core.Auth.Context;
 
 type

@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
-  WiRL.http.Server.Indy;
+  WiRL.http.Server.Indy, WiRL.Core.Engine;
 
 type
   TMainForm = class(TForm)
@@ -64,30 +64,32 @@ begin
   // Create http server
   FServer := TWiRLhttpServerIndy.Create;
 
-  // Engine configuration
-  FServer.ConfigureEngine('/rest')
-    .SetName('WiRL Auth Demo')
+  // Server configuration
+  FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(75)
+    // Engine configuration
+    .AddEngine<TWiRLEngine>('/rest')
+      .SetName('WiRL Auth Demo')
 
-    .AddApplication('/app')
-      .SetSystemApp(True)
-      .SetName('Auth Application')
-      .SetSecret(Tencoding.UTF8.GetBytes(edtSecret.Text))
-      .SetClaimsClass(TServerClaims)
-	  {$IF CompilerVersion >=28} //XE7
-      .SetResources([
-       'Server.Resources.TFormAuthResource',
-       'Server.Resources.TBasicAuthResource',
-       'Server.Resources.TUserResource'
-      ]);
-	  {$ELSE}
-      .SetResources(
-        'Server.Resources.TFormAuthResource,' +
-        'Server.Resources.TBasicAuthResource,' +
-        'Server.Resources.TUserResource'
-	    );
-    {$IFEND}
+      .AddApplication('/app')
+        .SetSystemApp(True)
+        .SetName('Auth Application')
+        .SetSecret(Tencoding.UTF8.GetBytes(edtSecret.Text))
+        .SetClaimsClass(TServerClaims)
+      {$IF CompilerVersion >=28} //XE7
+        .SetResources([
+         'Server.Resources.TFormAuthResource',
+         'Server.Resources.TBasicAuthResource',
+         'Server.Resources.TUserResource'
+        ]);
+      {$ELSE}
+        .SetResources(
+          'Server.Resources.TFormAuthResource,' +
+          'Server.Resources.TBasicAuthResource,' +
+          'Server.Resources.TUserResource'
+        );
+      {$IFEND}
 
   if not FServer.Active then
     FServer.Active := True;

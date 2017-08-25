@@ -53,9 +53,9 @@ implementation
 uses
   WiRL.Core.Engine,
   WiRL.Core.Application,
-  WiRL.Core.URL,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.URL,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Auth.Context;
 
 { TWiRLContextInjectionRegistry }

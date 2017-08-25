@@ -19,8 +19,8 @@ uses
   WiRL.Core.Exceptions,
   WiRL.Core.Attributes,
   WiRL.Core.Context,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Resource,
   WiRL.Rtti.Utils;
 

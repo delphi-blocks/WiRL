@@ -72,10 +72,11 @@ begin
   FServer := TWiRLhttpServerIndy.Create;
 
   // Configure the engine
-  FServer.ConfigureEngine('/rest')
-    .SetName('WiRL Template Demo')
+  FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
+    .ConfigureEngine('/rest')
+    .SetName('WiRL Template Demo')
 
     // Add and configure an application
     .AddApplication('/web')
@@ -106,7 +107,7 @@ procedure TMainForm.TestActionExecute(Sender: TObject);
 const
   LTemplateURL = 'http://localhost:%d/rest/web/home/';
 begin
-  ShellExecute(Handle, 'open', PChar(Format(LTemplateURL, [FServer.Engine.Port])), '', '', SW_NORMAL);
+  ShellExecute(Handle, 'open', PChar(Format(LTemplateURL, [FServer.Port])), '', '', SW_NORMAL);
 end;
 
 initialization

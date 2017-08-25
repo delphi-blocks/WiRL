@@ -138,12 +138,12 @@
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.URL.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.URL.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Request.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Response.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Request.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Response.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>

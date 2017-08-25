@@ -26,14 +26,14 @@ uses
   WiRL.Core.JSON,
   WiRL.Core.Registry,
   WiRL.Core.Classes,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Application,
   WiRL.Core.Declarations,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Auth.Context,
-  WiRL.Core.URL;
+  WiRL.http.URL;
 
 type
   ConnectionAttribute = class(TCustomAttribute)

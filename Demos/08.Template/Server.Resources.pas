@@ -16,8 +16,8 @@ uses
 
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Request,
-  WiRL.Core.Response;
+  WiRL.http.Request,
+  WiRL.http.Response;
 
 type
   [Path('helloworld')]

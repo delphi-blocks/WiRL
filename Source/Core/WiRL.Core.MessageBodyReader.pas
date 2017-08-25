@@ -16,7 +16,7 @@ uses
 
   WiRL.Core.Singleton,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Request,
+  WiRL.http.Request,
   WiRL.Core.Declarations,
   WiRL.Core.Classes;
 

@@ -83,12 +83,12 @@ implementation
 
 uses
   System.StrUtils, System.TypInfo,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
-  WiRL.Core.URL,
+  WiRL.http.URL,
   WiRL.Core.Attributes,
   WiRL.Core.Engine,
   WiRL.Core.JSON;

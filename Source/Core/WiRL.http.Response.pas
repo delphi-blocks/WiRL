@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Core.Response;
+unit WiRL.http.Response;
 
 interface
 

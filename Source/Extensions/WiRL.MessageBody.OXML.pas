@@ -25,8 +25,8 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Exceptions,
-  WiRL.Core.Request,
-  WiRL.Core.Response;
+  WiRL.http.Request,
+  WiRL.http.Response;
 
 type
   [Consumes(TMediaType.APPLICATION_XML)]

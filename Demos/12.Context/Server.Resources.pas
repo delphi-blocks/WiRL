@@ -18,8 +18,8 @@ uses
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBody.Default,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Exceptions,
 
   Server.Context,

@@ -89,7 +89,7 @@ type
 implementation
 
 uses
-  System.NetEncoding, System.ZLib;
+  System.NetEncoding, System.ZLib, System.JSON;
 
 { TFireDACDataSets }
 

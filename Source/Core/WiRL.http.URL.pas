@@ -7,15 +7,15 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Core.URL;
+unit WiRL.http.URL;
 
 interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   WiRL.Core.JSON,
-  WiRL.Core.Request,
-  WiRL.Core.Response;
+  WiRL.http.Request,
+  WiRL.http.Response;
 
 type
   TWiRLURLDictionary = class(TDictionary<Integer, string>)
