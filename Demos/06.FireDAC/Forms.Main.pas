@@ -23,7 +23,7 @@ uses
   FMX.Grid, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
   FMX.Controls.Presentation, FMX.StdCtrls, Data.Bind.Controls,
   Fmx.Bind.Navigator, FMX.ListView.Types, FMX.ListView, FMX.Grid.Style,
-  FMX.ScrollBox;
+  FMX.ScrollBox, FMX.Memo;
 
 type
   TForm1 = class(TForm)
@@ -39,8 +39,13 @@ type
     BindSourceDB2: TBindSourceDB;
     LinkGridToDataSourceBindSourceDB2: TLinkGridToDataSource;
     btnGET: TButton;
+    btnCloseDataSet: TButton;
+    btnOpenDataSet: TButton;
+    memoLog: TMemo;
     procedure btnGETClick(Sender: TObject);
     procedure btnPUTClick(Sender: TObject);
+    procedure btnCloseDataSetClick(Sender: TObject);
+    procedure btnOpenDataSetClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -62,6 +67,18 @@ end;
 procedure TForm1.btnPUTClick(Sender: TObject);
 begin
   WiRLFDResource1.PUT();
+
+  memoLog.Lines.Add(WiRLFDResource1.JSONResponse.ToJSON);
+end;
+
+procedure TForm1.btnCloseDataSetClick(Sender: TObject);
+begin
+  employee1.Close;
+end;
+
+procedure TForm1.btnOpenDataSetClick(Sender: TObject);
+begin
+  employee1.open;
 end;
 
 end.

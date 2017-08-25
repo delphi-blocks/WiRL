@@ -18,7 +18,10 @@ uses
   FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
   FireDAC.Phys, Data.DB, FireDAC.Comp.Client, FireDAC.FMXUI.Wait,
   FireDAC.Stan.StorageXML, FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageBin,
-  FireDAC.Comp.UI, FireDAC.DApt, FireDACJSONReflect,
+  FireDAC.Comp.UI, FireDAC.DApt,
+
+  WiRL.Data.FireDAC.Persistence,
+  WiRL.Data.FireDAC.Updates,
 
   WiRL.Core.JSON,
   WiRL.Core.Registry,
@@ -69,8 +72,8 @@ type
     procedure BeforeOpenDataSet(ADataSet: TFDCustomQuery); virtual;
     function ReadDataSet(const ADataSetName, ASQLStatement: string; const AAutoOpen: Boolean = True): TFDCustomQuery; virtual;
 
-    procedure ApplyUpdates(ADeltas: TFDJSONDeltas;
-      AOnApplyUpdates: TProc<string, Integer, IFDJSONDeltasApplyUpdates> = nil); virtual;
+    procedure ApplyUpdates(ADeltas: TFireDACDataSets;
+      AOnApplyUpdates: TProc<string, Integer, TFireDACApplyUpdates> = nil); virtual;
 
     property Connection: TFDConnection read FConnection write FConnection;
     property OwnsConnection: Boolean read FOwnsConnection write FOwnsConnection;
@@ -125,42 +128,38 @@ begin
 
 end;
 
-procedure TWiRLFDDatasetResource.ApplyUpdates(
-  ADeltas: TFDJSONDeltas;
-  AOnApplyUpdates: TProc<string, Integer, IFDJSONDeltasApplyUpdates>);
+procedure TWiRLFDDatasetResource.ApplyUpdates(ADeltas: TFireDACDataSets;
+    AOnApplyUpdates: TProc<string, Integer, TFireDACApplyUpdates> = nil);
 var
-  LApplyUpdates: IFDJSONDeltasApplyUpdates;
-  LIndex: Integer;
-  LDelta: TPair<string, TFDMemTable>;
+  LApplyUpdates: TFireDACApplyUpdates;
+  LDSPair: TPair<string, TFDAdaptedDataSet>;
   LStatement: string;
   LDataSet: TFDCustomQuery;
   LApplyResult: Integer;
 begin
-  LApplyUpdates := TFDJSONDeltasApplyUpdates.Create(ADeltas);
+  LApplyUpdates := TFireDACApplyUpdates.Create(ADeltas);
   try
-    for LIndex := 0 to TFDJSONDeltasReader.GetListCount(ADeltas) - 1 do
+    for LDSPair in ADeltas do
     begin
-      LDelta := TFDJSONDeltasReader.GetListItem(ADeltas, LIndex);
-
-      if Statements.TryGetValue(LDelta.Key, LStatement) then
+      if Statements.TryGetValue(LDSPair.Key, LStatement) then
       begin
-        LDataSet := ReadDataSet(LDelta.Key, LStatement, False);
+        LDataSet := ReadDataSet(LDSPair.Key, LStatement, False);
         try
-          LApplyResult := LApplyUpdates.ApplyUpdates(LDelta.Key, LDataSet.Command);
+          LApplyResult := LApplyUpdates.ApplyUpdates(LDSPair.Key, LDataSet.Command);
           if Assigned(AOnApplyUpdates) then
-            AOnApplyUpdates(LDelta.Key, LApplyResult, LApplyUpdates);
+            AOnApplyUpdates(LDSPair.Key, LApplyResult, LApplyUpdates);
         finally
           LDataSet.Free;
         end;
       end
       else
         raise EWiRLServerException.Create(
-          Format('Unable to build update command for delta: %s', [LDelta.Key]),
+          Format('Unable to build update command for delta: %s', [LDSPair.Key]),
           Self.ClassName, 'ApplyUpdates'
         );
     end;
   finally
-    LApplyUpdates := nil; // it's an interface
+    LApplyUpdates.Free;
   end;
 end;
 
@@ -266,7 +265,7 @@ end;
 function TWiRLFDDatasetResource.Update: string;
 var
   LJSONDeltas: TJSONObject;
-  LDeltas: TFDJSONDeltas;
+  LDeltas: TFireDACDataSets;
   LResult: TJSONArray;
 begin
   SetupConnection;
@@ -279,18 +278,16 @@ begin
     // parse JSON content
     LJSONDeltas := TJSONObject.ParseJSONValue(Request.Content) as TJSONObject;
 
-    LDeltas := TFDJSONDeltas.Create;
+    LDeltas := TFireDACDataSets.Create;
     try
       // build FireDAC delta objects
-      if not TFDJSONInterceptor.JSONObjectToDataSets(LJSONDeltas, LDeltas) then
-        raise EWiRLServerException.Create(
-          'Error de-serializing deltas', Self.ClassName, 'Update');
+      TFireDACJSONPersistor.JSONToDataSets(LJSONDeltas, LDeltas);
 
       // apply updates
       LResult := TJSONArray.Create;
       try
         ApplyUpdates(LDeltas,
-          procedure(ADatasetName: string; AApplyResult: Integer; AApplyUpdates: IFDJSONDeltasApplyUpdates)
+          procedure(ADatasetName: string; AApplyResult: Integer; AApplyUpdates: TFireDACApplyUpdates)
           var
             LResultObj: TJSONObject;
           begin
@@ -299,7 +296,7 @@ begin
               LResultObj.AddPair('dataset', ADatasetName);
               LResultObj.AddPair('result', TJSONNumber.Create(AApplyResult));
               LResultObj.AddPair('errors', TJSONNumber.Create(AApplyUpdates.Errors.Count));
-              LResultObj.AddPair('errorText', AApplyUpdates.Errors.Strings.Text);
+              LResultObj.AddPair('errorText', AApplyUpdates.Errors.Errors.Text);
               LResult.AddElement(LResultObj);
             except
               LResultObj.Free;

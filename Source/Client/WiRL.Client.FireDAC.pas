@@ -75,10 +75,12 @@ procedure Register;
 implementation
 
 uses
-  Data.FireDACJSONReflect,
   FireDAC.Comp.DataSet,
   WiRL.Core.Utils,
   WiRL.Client.Utils,
+
+  WiRL.Data.FireDAC.Persistence,
+  WiRL.Data.FireDAC.Updates,
   WiRL.Data.FireDAC.Utils;
 
 procedure Register;
@@ -91,29 +93,21 @@ end;
 procedure TWiRLFDResource.AfterGET();
 var
   LJSONObj: TJSONObject;
-  LDataSets: TFDJSONDataSets;
-  LName: string;
-  LData: TFDAdaptedDataSet;
-  LCount: Integer;
+  LDataSets: TFireDACDataSets;
+  LDSPair: TFireDACDataSetPair;
   LItem: TWiRLFDResourceDatasetsItem;
-  LIndex: Integer;
 begin
   inherited;
 
   LJSONObj := TJSONObject.ParseJSONValue(StreamToString(Client.Response.ContentStream)) as TJSONObject;
 
-  LDataSets := TFDJSONDataSets.Create;
+  LDataSets := TFireDACDataSets.Create;
   try
-    if not TFDJSONInterceptor.JSONObjectToDataSets(LJSONObj, LDataSets) then
-      raise Exception.Create('Error deserializing data');
+    TFireDACJSONPersistor.JSONToDataSets(LJSONObj, LDataSets);
 
-    LCount := TFDJSONDataSetsReader.GetListCount(LDataSets);
-    for LIndex := 0 to LCount-1 do
+    for LDSPair in LDataSets do
     begin
-      LName := TFDJSONDataSetsReader.GetListKey(LDataSets, LIndex);
-      LData := TFDJSONDataSetsReader.GetListValue(LDataSets, LIndex);
-
-      LItem := FResourceDataSets.FindItemByDataSetName(LName);
+      LItem := FResourceDataSets.FindItemByDataSetName(LDSPair.Key);
       if Assigned(LItem) then
       begin
         if Assigned(LItem.DataSet) then
@@ -125,8 +119,7 @@ begin
                 LItem.DataSet.DisableControls;
                 try
                   LItem.DataSet.Close;
-//                  LItem.DataSet.CopyDataSet(LData, [coStructure, coRestart, coAppend]);
-                  LItem.DataSet.Data := LData;
+                  LItem.DataSet.Data := LDSPair.Value;
                   LItem.DataSet.ApplyUpdates;
                 finally
                   LItem.DataSet.EnableControls;
@@ -138,8 +131,7 @@ begin
             LItem.DataSet.DisableControls;
             try
               LItem.DataSet.Close;
-//              LItem.DataSet.CopyDataSet(LData, [coStructure, coRestart, coAppend]);
-              LItem.DataSet.Data := LData;
+              LItem.DataSet.Data := LDSPair.Value;
               LItem.DataSet.ApplyUpdates;
             finally
               LItem.DataSet.EnableControls;
@@ -150,7 +142,7 @@ begin
       else
       begin
         LItem := FResourceDataSets.Add;
-        LItem.DataSetName := LName;
+        LItem.DataSetName := LDSPair.Key;
       end;
     end;
   finally
@@ -209,7 +201,6 @@ begin
       end
     );
   end;
-
 end;
 
 procedure TWiRLFDResource.ReadDeltas;
@@ -230,24 +221,24 @@ end;
 
 procedure TWiRLFDResource.WriteDeltas(AContent: TMemoryStream);
 var
-  LDeltas: TFDJSONDeltas;
+  LDeltas: TFireDACDataSets;
   LJSONObj: TJSONObject;
   LWriter: TStreamWriter;
 begin
-  LDeltas := TFDJSONDeltas.Create;
+  LDeltas := TFireDACDataSets.Create;
   try
     FResourceDataSets.ForEach(
       procedure(AItem: TWiRLFDResourceDatasetsItem)
       begin
         if AItem.SendDelta and Assigned(AItem.DataSet) and (AItem.DataSet.Active) then
-          TFDJSONDeltasWriter.ListAdd(LDeltas, AItem.DataSetName, AItem.DataSet);
+          LDeltas.Add(AItem.DataSetName, AItem.DataSet);
       end
     );
 
     // serialize deltas to JSON (TJSONObject)
     LJSONObj := TJSONObject.Create;
     try
-      TFDJSONInterceptor.DataSetsToJSONObject(LDeltas, LJSONObj);
+      TFireDACJSONPersistor.DataSetsToJSON(LDeltas, LJSONObj);
 
       LWriter := TStreamWriter.Create(AContent);
       try

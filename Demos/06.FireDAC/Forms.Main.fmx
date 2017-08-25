@@ -1,33 +1,16 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  Caption = 'ClientForm'
-  ClientHeight = 505
-  ClientWidth = 751
+  Caption = 'FireDAC Client'
+  ClientHeight = 513
+  ClientWidth = 779
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
-  object StringGrid1: TStringGrid
-    Align = Client
-    CanFocus = True
-    ClipChildren = True
-    Margins.Left = 10.000000000000000000
-    Margins.Top = 10.000000000000000000
-    Margins.Right = 100.000000000000000000
-    Margins.Bottom = 10.000000000000000000
-    Size.Width = 641.000000000000000000
-    Size.Height = 435.000000000000000000
-    Size.PlatformDefault = False
-    TabOrder = 4
-    RowHeight = 21.000000000000000000
-    RowCount = 42
-    Viewport.Width = 637.000000000000000000
-    Viewport.Height = 410.000000000000000000
-  end
   object Layout1: TLayout
     Align = Top
-    Size.Width = 751.000000000000000000
+    Size.Width = 779.000000000000000000
     Size.Height = 50.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 18
@@ -60,9 +43,63 @@ object Form1: TForm1
       Size.Height = 22.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 2
-      Text = 'Load From Server'
+      Text = 'Load from Server'
       OnClick = btnGETClick
     end
+    object btnOpenDataSet: TButton
+      Anchors = [akTop, akRight]
+      Position.X = 684.000000000000000000
+      Position.Y = 96.000000000000000000
+      Size.Width = 89.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      Text = 'Open DataSet'
+      OnClick = btnOpenDataSetClick
+    end
+    object btnCloseDataSet: TButton
+      Anchors = [akTop, akRight]
+      Position.X = 684.000000000000000000
+      Position.Y = 60.000000000000000000
+      Size.Width = 89.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      Text = 'Close DataSet'
+      OnClick = btnCloseDataSetClick
+    end
+  end
+  object StringGrid1: TStringGrid
+    Anchors = [akLeft, akTop, akRight]
+    CanFocus = True
+    ClipChildren = True
+    Margins.Left = 10.000000000000000000
+    Margins.Top = 10.000000000000000000
+    Margins.Right = 100.000000000000000000
+    Margins.Bottom = 10.000000000000000000
+    Position.X = 10.000000000000000000
+    Position.Y = 60.000000000000000000
+    Size.Width = 668.000000000000000000
+    Size.Height = 348.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 4
+    RowHeight = 21.000000000000000000
+    RowCount = 42
+    Viewport.Width = 664.000000000000000000
+    Viewport.Height = 323.000000000000000000
+  end
+  object memoLog: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Position.X = 10.000000000000000000
+    Position.Y = 416.000000000000000000
+    Size.Width = 669.000000000000000000
+    Size.Height = 89.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 25
+    Viewport.Width = 665.000000000000000000
+    Viewport.Height = 85.000000000000000000
   end
   object WiRLClient1: TWiRLClient
     WiRLEngineURL = 'http://localhost:8080/rest'
