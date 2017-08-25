@@ -7,9 +7,10 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-package WiRLServer;
+package WiRL;
 
 {$R *.res}
+{$R *.dres}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -34,42 +35,42 @@ package WiRLServer;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'WiRL Server Package'}
-{$LIBSUFFIX '250'}
-{$RUNONLY}
+{$DESCRIPTION 'WiRL REST Library'}
+{$LIBSUFFIX '200'}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   inet,
   dbrtl,
-  FireDAC,
-  FireDACCommonDriver,
   FireDACCommon,
-  fmxFireDAC,
+  FireDACCommonDriver,
+  FireDAC,
   IndySystem,
   IndyProtocols,
   IndyCore,
-  dsnap;
+  bindengine,
+  bindcomp,
+  DesignIDE;
 
 contains
-  JOSE.Cryptography.RSA in '..\..\Libs\JWT\Source\Common\JOSE.Cryptography.RSA.pas',
-  JOSE.Encoding.Base64 in '..\..\Libs\JWT\Source\Common\JOSE.Encoding.Base64.pas',
-  JOSE.Hashing.HMAC in '..\..\Libs\JWT\Source\Common\JOSE.Hashing.HMAC.pas',
-  JOSE.Types.Bytes in '..\..\Libs\JWT\Source\Common\JOSE.Types.Bytes.pas',
-  JOSE.Types.JSON in '..\..\Libs\JWT\Source\Common\JOSE.Types.JSON.pas',
-  JOSE.Core.Base in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Base.pas',
-  JOSE.Core.Builder in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Builder.pas',
-  JOSE.Core.JWA.Compression in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Compression.pas',
-  JOSE.Core.JWA.Encryption in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Encryption.pas',
-  JOSE.Core.JWA.Factory in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Factory.pas',
-  JOSE.Core.JWA.Signing in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Signing.pas',
-  JOSE.Core.JWA in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.pas',
-  JOSE.Core.JWE in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWE.pas',
-  JOSE.Core.JWK in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWK.pas',
-  JOSE.Core.JWS in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWS.pas',
-  JOSE.Core.JWT in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWT.pas',
-  JOSE.Core.Parts in '..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas',
+  WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
+  WiRL.Client.Client in '..\..\Source\Client\WiRL.Client.Client.pas',
+  WiRL.Client.CustomResource.Editor in '..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas',
+  WiRL.Client.CustomResource in '..\..\Source\Client\WiRL.Client.CustomResource.pas',
+  WiRL.Client.FireDAC in '..\..\Source\Client\WiRL.Client.FireDAC.pas',
+  WiRL.Client.Messaging.Resource in '..\..\Source\Client\WiRL.Client.Messaging.Resource.pas',
+  WiRL.Client.Resource.JSON in '..\..\Source\Client\WiRL.Client.Resource.JSON.pas',
+  WiRL.Client.Resource in '..\..\Source\Client\WiRL.Client.Resource.pas',
+  WiRL.Client.Resource.Stream in '..\..\Source\Client\WiRL.Client.Resource.Stream.pas',
+  WiRL.Client.SubResource.JSON in '..\..\Source\Client\WiRL.Client.SubResource.JSON.pas',
+  WiRL.Client.SubResource in '..\..\Source\Client\WiRL.Client.SubResource.pas',
+  WiRL.Client.SubResource.Stream in '..\..\Source\Client\WiRL.Client.SubResource.Stream.pas',
+  WiRL.Client.Token in '..\..\Source\Client\WiRL.Client.Token.pas',
+  WiRL.Client.Utils.LiveBindings in '..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas',
+  WiRL.Client.Utils in '..\..\Source\Client\WiRL.Client.Utils.pas',
+  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  WiRL.Data.FireDAC.Editor in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas',
   WiRL.Core.Application in '..\..\Source\Core\WiRL.Core.Application.pas',
   WiRL.Core.Application.Worker in '..\..\Source\Core\WiRL.Core.Application.Worker.pas',
   WiRL.Core.Attributes in '..\..\Source\Core\WiRL.Core.Attributes.pas',
@@ -83,47 +84,37 @@ contains
   WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
   WiRL.Core.Injection in '..\..\Source\Core\WiRL.Core.Injection.pas',
   WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
-  WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
-  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
   WiRL.Core.MessageBody.Classes in '..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
   WiRL.Core.MessageBody.Default in '..\..\Source\Core\WiRL.Core.MessageBody.Default.pas',
+  WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
+  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
-  WiRL.http.Request in '..\..\Source\Core\WiRL.http.Request.pas',
-  WiRL.http.Response in '..\..\Source\Core\WiRL.http.Response.pas',
   WiRL.Core.Resource in '..\..\Source\Core\WiRL.Core.Resource.pas',
   WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
-  WiRL.http.URL in '..\..\Source\Core\WiRL.http.URL.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
   WiRL.Core.Validators in '..\..\Source\Core\WiRL.Core.Validators.pas',
-  WiRL.Data.Utils in '..\..\Source\Data\WiRL.Data.Utils.pas',
-  WiRL.Data.MessageBody.Default in '..\..\Source\Data\WiRL.Data.MessageBody.Default.pas',
-  WiRL.Data.FireDAC in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas',
-  WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
-  WiRL.Data.FireDAC.Updates in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas',
-  WiRL.Data.FireDAC.DataModule in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.DataModule.pas' {WiRLFDDataModuleResource: TDataModule},
-  WiRL.Data.FireDAC.Persistence in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas',
-  WiRL.Data.FireDAC.MessageBody.Default in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBody.Default.pas',
   WiRL.http.Accept.Charset in '..\..\Source\Core\WiRL.http.Accept.Charset.pas',
   WiRL.http.Accept.Encoding in '..\..\Source\Core\WiRL.http.Accept.Encoding.pas',
   WiRL.http.Accept.Language in '..\..\Source\Core\WiRL.http.Accept.Language.pas',
   WiRL.http.Accept.MediaType in '..\..\Source\Core\WiRL.http.Accept.MediaType.pas',
   WiRL.http.Accept.Parser in '..\..\Source\Core\WiRL.http.Accept.Parser.pas',
-  WiRL.http.Core in '..\..\Source\Core\WiRL.http.Core.pas',
   WiRL.http.Cookie in '..\..\Source\Core\WiRL.http.Cookie.pas',
+  WiRL.http.Core in '..\..\Source\Core\WiRL.http.Core.pas',
+  WiRL.http.Engines in '..\..\Source\Core\WiRL.http.Engines.pas',
   WiRL.http.Filters in '..\..\Source\Core\WiRL.http.Filters.pas',
+  WiRL.http.Request in '..\..\Source\Core\WiRL.http.Request.pas',
+  WiRL.http.Response in '..\..\Source\Core\WiRL.http.Response.pas',
   WiRL.http.Server.Indy in '..\..\Source\Core\WiRL.http.Server.Indy.pas',
-  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
+  WiRL.http.Server in '..\..\Source\Core\WiRL.http.Server.pas',
+  WiRL.http.URL in '..\..\Source\Core\WiRL.http.URL.pas',
   WiRL.Persistence.Attributes in '..\..\Source\Core\WiRL.Persistence.Attributes.pas',
   WiRL.Persistence.Core in '..\..\Source\Core\WiRL.Persistence.Core.pas',
   WiRL.Persistence.DynamicTypes in '..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas',
   WiRL.Persistence.JSON in '..\..\Source\Core\WiRL.Persistence.JSON.pas',
   WiRL.Persistence.Utils in '..\..\Source\Core\WiRL.Persistence.Utils.pas',
-  WiRL.Data.Resolver in '..\..\Source\Extensions\WiRL.Data.Resolver.pas',
-  WiRL.Diagnostics.Manager in '..\..\Source\Extensions\WiRL.Diagnostics.Manager.pas',
-  WiRL.Diagnostics.Resources in '..\..\Source\Extensions\WiRL.Diagnostics.Resources.pas',
-  WiRL.Stateful.Dictionary in '..\..\Source\Extensions\WiRL.Stateful.Dictionary.pas',
-  WiRL.Stateful.WrappedResource in '..\..\Source\Extensions\WiRL.Stateful.WrappedResource.pas',
-  WiRL.WebServer.Resources in '..\..\Source\Extensions\WiRL.WebServer.Resources.pas';
+  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
+  WiRL.Data.FireDAC.Updates in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas',
+  WiRL.Data.FireDAC.Persistence in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas';
 
 end.
 

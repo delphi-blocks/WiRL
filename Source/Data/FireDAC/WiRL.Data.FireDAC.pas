@@ -16,7 +16,7 @@ uses
 
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
   FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
-  FireDAC.Phys, Data.DB, FireDAC.Comp.Client, FireDAC.FMXUI.Wait,
+  FireDAC.Phys, Data.DB, FireDAC.Comp.Client,
   FireDAC.Stan.StorageXML, FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageBin,
   FireDAC.Comp.UI, FireDAC.DApt,
 

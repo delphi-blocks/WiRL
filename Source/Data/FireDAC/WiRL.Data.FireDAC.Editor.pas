@@ -34,7 +34,7 @@ procedure Register;
 implementation
 
 uses
-  Windows
+  WinApi.Windows
   , VCL.Dialogs
   , DesignIntf
 
