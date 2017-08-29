@@ -20,29 +20,31 @@ uses
   System.Threading,
 {$ENDIF}
 
-  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
-  IdHTTPHeaderInfo;
+  WiRL.Client.Interfaces,
+
+  WiRL.http.Request,
+  WiRL.http.Response;
 
 type
-  TBeforeCommandEvent = procedure (ASender: TObject; ARequest: TIdHTTPRequest) of object;
+  TBeforeCommandEvent = procedure (ASender: TObject; ARequest: TWiRLRequest) of object;
 
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
   TWiRLClient = class(TComponent)
   private
-    FHttpClient: TIdHTTP;
+    FHttpClient: IWiRLClient;
+    FProxyParams: THttpProxyConnectionInfo;
     FWiRLEngineURL: string;
     FOnBeforeCommand: TBeforeCommandEvent;
 {$IFDEF HAS_SYSTEM_THREADING}
     FWorkerTask: ITask;
 {$ENDIF}
-    function GetRequest: TIdHTTPRequest;
-    function GetResponse: TIdHTTPResponse;
+    function GetRequest: TWiRLRequest;
+    function GetResponse: TWiRLResponse;
     function GetConnectTimeout: Integer;
     function GetReadTimeout: Integer;
-    function GetProxyParams: TIdProxyConnectionInfo;
     procedure SetConnectTimeout(const Value: Integer);
     procedure SetReadTimeout(const Value: Integer);
-    procedure SetProxyParams(const Value: TIdProxyConnectionInfo);
+    procedure SetProxyParams(const Value: THttpProxyConnectionInfo);
   protected
     procedure DoBeforeCommand;
 {$IFDEF HAS_SYSTEM_THREADING}
@@ -66,13 +68,14 @@ type
     procedure ExecuteAsync(const AProc: TProc);
     function IsRunningAsync: Boolean;
 
-    property Request: TIdHTTPRequest read GetRequest;
-    property Response: TIdHTTPResponse read GetResponse;
+    property Request: TWiRLRequest read GetRequest;
+    property Response: TWiRLResponse read GetResponse;
+    property HttpClient: IWiRLClient read FHttpClient;
   published
     property WiRLEngineURL: string read FWiRLEngineURL write FWiRLEngineURL;
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
-    property ProxyParams: TIdProxyConnectionInfo read GetProxyParams write SetProxyParams;
+    property ProxyParams: THttpProxyConnectionInfo read FProxyParams write SetProxyParams;
     property OnBeforeCommand: TBeforeCommandEvent read FOnBeforeCommand write FOnBeforeCommand;
   end;
 
@@ -90,13 +93,15 @@ end;
 constructor TWiRLClient.Create(AOwner: TComponent);
 begin
   inherited;
-  FHttpClient := TIdHTTP.Create(nil);
+  FHttpClient := TWiRLClientRegistry.Instance.CreateClient;
   FWiRLEngineURL := 'http://localhost:8080/rest';
+  FProxyParams := THttpProxyConnectionInfo.Create;
+  FHttpClient.ProxyParams := ProxyParams;
 end;
 
 destructor TWiRLClient.Destroy;
 begin
-  FHttpClient.Free;
+  FProxyParams.Free;
   inherited;
 end;
 
@@ -127,17 +132,12 @@ begin
   Result := FHttpClient.ReadTimeout;
 end;
 
-function TWiRLClient.GetProxyParams: TIdProxyConnectionInfo;
-begin
-  Result := FHttpClient.ProxyParams;
-end;
-
-function TWiRLClient.GetRequest: TIdHTTPRequest;
+function TWiRLClient.GetRequest: TWiRLRequest;
 begin
   Result := FHttpClient.Request;
 end;
 
-function TWiRLClient.GetResponse: TIdHTTPResponse;
+function TWiRLClient.GetResponse: TWiRLResponse;
 begin
   Result := FHttpClient.Response;
 end;
@@ -153,7 +153,7 @@ end;
 
 function TWiRLClient.LastCmdSuccess: Boolean;
 begin
-  Result := FHttpClient.ResponseCode = 200;
+  Result := FHttpClient.Response.StatusCode = 200;
 end;
 
 procedure TWiRLClient.Delete(const AURL, AAccept, AContentType: string; AResponseContent: TStream);
@@ -221,7 +221,7 @@ end;
 
 function TWiRLClient.ResponseText: string;
 begin
-  Result := FHttpClient.ResponseText;
+  Result := FHttpClient.Response.ReasonString;
 end;
 
 procedure TWiRLClient.SetConnectTimeout(const Value: Integer);
@@ -234,9 +234,9 @@ begin
   FHttpClient.ReadTimeout := Value;
 end;
 
-procedure TWiRLClient.SetProxyParams(const Value: TIdProxyConnectionInfo);
+procedure TWiRLClient.SetProxyParams(const Value: THttpProxyConnectionInfo);
 begin
-  FHttpClient.ProxyParams := Value;
+  ProxyParams.Assign(Value);
 end;
 
 end.

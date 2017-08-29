@@ -77,6 +77,14 @@ type
     function GetQuery: string;
     procedure SetPathInfo(const Value: string);
     procedure SetQuery(const Value: string);
+    function GetUserAgent: string;
+    procedure SetUserAgent(const Value: string);
+    function GetFrom: string;
+    function GetRange: string;
+    function GetReferer: string;
+    procedure SetFrom(const Value: string);
+    procedure SetRange(const Value: string);
+    procedure SetReferer(const Value: string);
   protected
     FMethod: string;
     function GetHttpQuery: string; virtual; abstract;
@@ -96,6 +104,10 @@ type
     property Query: string read GetQuery write SetQuery;
     property Method: string read FMethod write FMethod;
     property Host: string read GetHost write SetHost;
+    property UserAgent: string read GetUserAgent write SetUserAgent;
+    property From: string read GetFrom write SetFrom;
+    property Referer: string read GetReferer write SetReferer;
+    property Range: string read GetRange write SetRange;
     property RemoteIP: string read GetRemoteIP;
     property ServerPort: Integer read GetServerPort;
     property QueryFields: TWiRLParam read GetQueryFields;
@@ -238,6 +250,11 @@ begin
   Result := HeaderFields.Values['Content-Version'];
 end;
 
+function TWiRLRequest.GetFrom: string;
+begin
+  Result := HeaderFields.Values['From'];
+end;
+
 function TWiRLRequest.GetHost: string;
 begin
   Result := HeaderFields.Values['Host'];
@@ -259,6 +276,11 @@ begin
     Result := GetHttpQuery;
 end;
 
+function TWiRLRequest.GetRange: string;
+begin
+  Result := HeaderFields.Values['Range'];
+end;
+
 function TWiRLRequest.GetRawContent: TBytes;
 var
   LPos :Int64;
@@ -274,6 +296,16 @@ begin
       GetContentStream.Position := LPos;
     end;
   end;
+end;
+
+function TWiRLRequest.GetReferer: string;
+begin
+  Result := HeaderFields.Values['Referer'];
+end;
+
+function TWiRLRequest.GetUserAgent: string;
+begin
+  Result := HeaderFields.Values['User-Agent'];
 end;
 
 procedure TWiRLRequest.SetAccept(const Value: string);
@@ -324,6 +356,11 @@ begin
   HeaderFields.Values['Content-Version'] := Value;
 end;
 
+procedure TWiRLRequest.SetFrom(const Value: string);
+begin
+  HeaderFields.Values['From'] := Value;
+end;
+
 procedure TWiRLRequest.SetHost(const Value: string);
 begin
   HeaderFields.Values['Host'] := Value;
@@ -339,12 +376,27 @@ begin
   FQuery := Value;
 end;
 
+procedure TWiRLRequest.SetRange(const Value: string);
+begin
+  HeaderFields.Values['Range'] := Value;
+end;
+
 procedure TWiRLRequest.SetRawContent(const Value: TBytes);
 var
   LStream: TStream;
 begin
   LStream := TBytesStream.Create(Value);
   ContentStream := LStream;
+end;
+
+procedure TWiRLRequest.SetReferer(const Value: string);
+begin
+  HeaderFields.Values['Referer'] := Value;
+end;
+
+procedure TWiRLRequest.SetUserAgent(const Value: string);
+begin
+  HeaderFields.Values['User-Agent'] := Value;
 end;
 
 end.

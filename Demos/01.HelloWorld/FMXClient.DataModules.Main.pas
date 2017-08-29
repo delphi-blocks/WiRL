@@ -14,8 +14,10 @@ interface
 uses
   System.SysUtils, System.Classes, WiRL.Client.CustomResource,
   WiRL.Client.Resource, WiRL.Client.Resource.JSON, WiRL.Client.Application,
-  WiRL.Client.Client, WiRL.Client.SubResource, WiRL.Client.SubResource.JSON,
-  WiRL.Client.Messaging.Resource, System.JSON, IdHTTP;
+  WiRL.Client.Client, WiRL.Client.Indy, WiRL.Client.SubResource,
+  WiRL.Client.SubResource.JSON, WiRL.Client.Messaging.Resource,
+  WiRL.http.Request, WiRL.http.Response,
+  System.JSON, IdHTTP;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -27,7 +29,7 @@ type
     EchoStringResource: TWiRLClientSubResource;
     ReverseStringResource: TWiRLClientSubResource;
     PostExampleResource: TWiRLClientSubResourceJSON;
-    procedure WiRLClient1BeforeCommand(ASender: TObject; ARequest: TIdHTTPRequest);
+    procedure WiRLClient1BeforeCommand(ASender: TObject; ARequest: TWiRLRequest);
   private
     { Private declarations }
   public
@@ -71,9 +73,9 @@ begin
 end;
 
 procedure TMainDataModule.WiRLClient1BeforeCommand(ASender: TObject; ARequest:
-    TIdHTTPRequest);
+    TWiRLRequest);
 begin
-  ARequest.CustomHeaders.AddValue('X-App-Params', 'TestCustomHeader');
+  ARequest.HeaderFields['X-App-Params'] := 'TestCustomHeader';
 end;
 
 end.

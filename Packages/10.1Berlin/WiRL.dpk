@@ -114,7 +114,9 @@ contains
   WiRL.Persistence.Utils in '..\..\Source\Core\WiRL.Persistence.Utils.pas',
   WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
   WiRL.Data.FireDAC.Updates in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas',
-  WiRL.Data.FireDAC.Persistence in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas';
+  WiRL.Data.FireDAC.Persistence in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas',
+  WiRL.Client.Interfaces in '..\..\Source\Client\WiRL.Client.Interfaces.pas',
+  WiRL.Client.Indy in '..\..\Source\Client\WiRL.Client.Indy.pas';
 
 end.
 

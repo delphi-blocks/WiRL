@@ -25,6 +25,7 @@ type
     function IndexOfName(const AName: string): Integer; reintroduce;
     property Names[Index: Integer]: string read GetName;
     property Values[const Name: string]: string read GetValue write SetValue; default;
+    property ValueFromIndex[Index: Integer]: string read GetValueFromLine;
   end;
 
   TWiRLParam = class(TStringList)
