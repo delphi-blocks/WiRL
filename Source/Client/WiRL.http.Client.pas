@@ -33,12 +33,18 @@ type
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
   TWiRLClient = class(TComponent)
   private
+  const
+    DefaultConnectionTimeout = 60000;
+    DefaultReadTimeout = 60000;
+    DefaultMaxRedirects = 5;
+  var
     FHttpClient: IWiRLClient;
-    FProxyParams: THttpProxyConnectionInfo;
+    FProxyParams: TWiRLProxyConnectionInfo;
     FWiRLEngineURL: string;
     FOnBeforeCommand: TBeforeCommandEvent;
     FOnAfterCommand: TAfterCommandEvent;
     FNoProtocolErrorException: Boolean;
+    FClientVendor: string;
 {$IFDEF HAS_SYSTEM_THREADING}
     FWorkerTask: ITask;
 {$ENDIF}
@@ -48,9 +54,10 @@ type
     function GetReadTimeout: Integer;
     procedure SetConnectTimeout(const Value: Integer);
     procedure SetReadTimeout(const Value: Integer);
-    procedure SetProxyParams(const Value: THttpProxyConnectionInfo);
+    procedure SetProxyParams(const Value: TWiRLProxyConnectionInfo);
     function GetMaxRedirects: Integer;
     procedure SetMaxRedirects(const Value: Integer);
+    procedure SetClientVendor(const Value: string);
   protected
     procedure DoBeforeCommand;
     procedure DoAfterCommand;
@@ -89,19 +96,21 @@ type
   published
     property WiRLEngineURL: string read FWiRLEngineURL write FWiRLEngineURL;
     /// <summary> Property to set the ConnectionTimeout</summary>
-    property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
+    property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout default DefaultConnectionTimeout;
     /// <summary> Property to set the ResponseTimeout</summary>
-    property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
+    property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout default DefaultReadTimeout;
     /// <summary> Proxy Settings to be used by the client.</summary>
-    property ProxyParams: THttpProxyConnectionInfo read FProxyParams write SetProxyParams;
+    property ProxyParams: TWiRLProxyConnectionInfo read FProxyParams write SetProxyParams;
     /// <summary> Event fired befere the request</summary>
     property OnBeforeCommand: TBeforeCommandEvent read FOnBeforeCommand write FOnBeforeCommand;
     /// <summary> Event fired when a request finishes</summary>
     property OnAfterCommand: TAfterCommandEvent read FOnAfterCommand write FOnAfterCommand;
     /// <summary> Maximum number of redirects</summary>
-    property MaxRedirects: Integer read GetMaxRedirects write SetMaxRedirects default 5;
+    property MaxRedirects: Integer read GetMaxRedirects write SetMaxRedirects default DefaultMaxRedirects;
     /// <summary> Raise an exception for every protocol error (StatusCode >= 400) </summary>
     property NoProtocolErrorException: Boolean read FNoProtocolErrorException write FNoProtocolErrorException;
+    /// <summary> Vendor of the http client implementation </summary>
+    property ClientVendor: string read FClientVendor write SetClientVendor;
   end;
 
 procedure Register;
@@ -124,11 +133,15 @@ end;
 constructor TWiRLClient.Create(AOwner: TComponent);
 begin
   inherited;
-  FHttpClient := TWiRLClientRegistry.Instance.CreateClient;
+  FHttpClient := TWiRLClientRegistry.Instance.CreateClient(FClientVendor);
   FWiRLEngineURL := 'http://localhost:8080/rest';
-  FProxyParams := THttpProxyConnectionInfo.Create;
+  FProxyParams := TWiRLProxyConnectionInfo.Create;
   FHttpClient.ProxyParams := ProxyParams;
-  MaxRedirects := 5;
+
+  // Set defaults
+  ConnectTimeout := DefaultConnectionTimeout;
+  ReadTimeout := DefaultReadTimeout;
+  MaxRedirects := DefaultMaxRedirects;
 end;
 
 destructor TWiRLClient.Destroy;
@@ -281,6 +294,14 @@ begin
   Result := FHttpClient.Response.ReasonString;
 end;
 
+procedure TWiRLClient.SetClientVendor(const Value: string);
+begin
+  if TWiRLClientRegistry.Instance.ContainsKey(Value) then
+    FClientVendor := Value
+  else
+    FClientVendor := '';
+end;
+
 procedure TWiRLClient.SetConnectTimeout(const Value: Integer);
 begin
   FHttpClient.ConnectTimeout := Value;
@@ -296,7 +317,7 @@ begin
   FHttpClient.ReadTimeout := Value;
 end;
 
-procedure TWiRLClient.SetProxyParams(const Value: THttpProxyConnectionInfo);
+procedure TWiRLClient.SetProxyParams(const Value: TWiRLProxyConnectionInfo);
 begin
   ProxyParams.Assign(Value);
 end;

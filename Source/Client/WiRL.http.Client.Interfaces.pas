@@ -12,7 +12,7 @@ unit WiRL.http.Client.Interfaces;
 interface
 
 uses
-  System.Classes, System.SysUtils,
+  System.Classes, System.SysUtils, System.Generics.Collections,
 
   WiRL.Rtti.Utils,
   WiRL.Core.Exceptions,
@@ -33,7 +33,7 @@ type
     property StatusCode: Integer read FStatusCode write FStatusCode;
   end;
 
-  THttpProxyConnectionInfo = class(TPersistent)
+  TWiRLProxyConnectionInfo = class(TPersistent)
   private
     FBasicByDefault: boolean;
     FProxyPort: Integer;
@@ -59,8 +59,8 @@ type
     procedure SetConnectTimeout(Value: Integer);
     function GetReadTimeout: Integer;
     procedure SetReadTimeout(Value: Integer);
-    function GetProxyParams: THttpProxyConnectionInfo;
-    procedure SetProxyParams(Value: THttpProxyConnectionInfo);
+    function GetProxyParams: TWiRLProxyConnectionInfo;
+    procedure SetProxyParams(Value: TWiRLProxyConnectionInfo);
     function GetMaxRedirects: Integer;
     procedure SetMaxRedirects(const Value: Integer);
 
@@ -78,38 +78,58 @@ type
     property Response: TWiRLResponse read GetResponse;
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
-    property ProxyParams: THttpProxyConnectionInfo read GetProxyParams write SetProxyParams;
+    property ProxyParams: TWiRLProxyConnectionInfo read GetProxyParams write SetProxyParams;
     property MaxRedirects: Integer read GetMaxRedirects write SetMaxRedirects;
   end;
 
-  TWiRLClientRegistry = class
+  TWiRLClientRegistry = class(TDictionary<string, TClass>)
   private type
     TWiRLClientRegistrySingleton = TWiRLSingleton<TWiRLClientRegistry>;
-  private
-    FClientClass: TClass;
   protected
     class function GetInstance: TWiRLClientRegistry; static; inline;
+  protected
+    function GetDefaultClass: TClass;
   public
-    function CreateClient: IWiRLClient;
+    constructor Create; virtual;
+    function CreateClient(const AName: string): IWiRLClient;
     class property Instance: TWiRLClientRegistry read GetInstance;
 
-    procedure RegisterClient<T: class>;
+    procedure RegisterClient<T: class>(const AName: string);
   end;
 
 implementation
 
 { TWiRLClientRegistry }
 
-function TWiRLClientRegistry.CreateClient: IWiRLClient;
+constructor TWiRLClientRegistry.Create;
+begin
+  inherited Create;
+end;
+
+function TWiRLClientRegistry.CreateClient(const AName: string): IWiRLClient;
 var
   LObject: TObject;
+  AClientClass: TClass;
 begin
-  if not Assigned(FClientClass) then
-    raise Exception.Create('CreateClient: http client class not registered (add "WiRL.Client.Indy" unit to the project)');
+  if Self.Count < 1 then
+    raise EWiRLException.CreateFmt('CreateClient: no client registered (add "WiRL.http.Client.*" unit to the project)', [AName]);
 
-  LObject := TRttiHelper.CreateInstance(FClientClass);
+  if AName = '' then
+    AClientClass := GetDefaultClass()
+  else if not Self.TryGetValue(AName, AClientClass) then
+    raise EWiRLException.CreateFmt('CreateClient: http client [%s] not registered (add "WiRL.http.Client.*" unit to the project)', [AName]);
+
+  LObject := TRttiHelper.CreateInstance(AClientClass);
   if not Supports(LObject, IWiRLClient, Result) then
-    raise Exception.CreateFmt('CreateClient: can''t create a http client with class [%s]', [FClientClass.ClassName]);
+    raise EWiRLException.CreateFmt('CreateClient: can''t create a http client with class [%s]', [AClientClass.ClassName]);
+end;
+
+function TWiRLClientRegistry.GetDefaultClass: TClass;
+var
+  LClassList: TArray<TPair<string,TClass>>;
+begin
+  LClassList := Self.ToArray;
+  Result := LClassList[0].Value;
 end;
 
 class function TWiRLClientRegistry.GetInstance: TWiRLClientRegistry;
@@ -117,25 +137,25 @@ begin
   Result := TWiRLClientRegistrySingleton.Instance;
 end;
 
-procedure TWiRLClientRegistry.RegisterClient<T>;
+procedure TWiRLClientRegistry.RegisterClient<T>(const AName: string);
 begin
   if not Supports(TClass(T), IWiRLClient) then
-    raise Exception.Create(
+    raise EWiRLException.Create(
       Format('Client registration error: [%s] is not a valid client', [TClass(T).QualifiedClassName])
     );
 
-  FClientClass := TClass(T);
+  Self.Add(AName, TClass(T));
 end;
 
-{ THttpProxyConnectionInfo }
+{ TWiRLProxyConnectionInfo }
 
-procedure THttpProxyConnectionInfo.AssignTo(Destination: TPersistent);
+procedure TWiRLProxyConnectionInfo.AssignTo(Destination: TPersistent);
 var
-  LDest: THttpProxyConnectionInfo;
+  LDest: TWiRLProxyConnectionInfo;
 begin
-  if Destination is THttpProxyConnectionInfo then
+  if Destination is TWiRLProxyConnectionInfo then
   begin
-    LDest := THttpProxyConnectionInfo(Destination);
+    LDest := TWiRLProxyConnectionInfo(Destination);
     LDest.FPassword := FPassword;
     LDest.FProxyPort := FProxyPort;
     LDest.FProxyServer := FProxyServer;

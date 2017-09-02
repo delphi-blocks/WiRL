@@ -68,7 +68,7 @@ type
     FHttpClient: TIdHTTP;
     FRequest: TWiRLClientRequestIndy;
     FResponse: TWiRLClientResponseIndy;
-    FProxyParams: THttpProxyConnectionInfo;
+    FProxyParams: TWiRLProxyConnectionInfo;
     // Setters and getters
     function GetRequest: TWiRLRequest;
     function GetResponse: TWiRLResponse;
@@ -76,8 +76,8 @@ type
     procedure SetConnectTimeout(Value: Integer);
     function GetReadTimeout: Integer;
     procedure SetReadTimeout(Value: Integer);
-    function GetProxyParams: THttpProxyConnectionInfo;
-    procedure SetProxyParams(Value: THttpProxyConnectionInfo);
+    function GetProxyParams: TWiRLProxyConnectionInfo;
+    procedure SetProxyParams(Value: TWiRLProxyConnectionInfo);
     function GetMaxRedirects: Integer;
     procedure SetMaxRedirects(const Value: Integer);
 
@@ -166,7 +166,7 @@ begin
   Result := FHttpClient.RedirectMaximum;
 end;
 
-function TWiRLClientIndy.GetProxyParams: THttpProxyConnectionInfo;
+function TWiRLClientIndy.GetProxyParams: TWiRLProxyConnectionInfo;
 begin
   Result := FProxyParams;
 end;
@@ -297,7 +297,7 @@ begin
   FHttpClient.RedirectMaximum := Value;
 end;
 
-procedure TWiRLClientIndy.SetProxyParams(Value: THttpProxyConnectionInfo);
+procedure TWiRLClientIndy.SetProxyParams(Value: TWiRLProxyConnectionInfo);
 begin
   FProxyParams := Value;
 end;
@@ -450,6 +450,6 @@ end;
 
 initialization
 
-  TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientIndy>;
+  TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientIndy>('TIdHttp (Indy)');
 
 end.

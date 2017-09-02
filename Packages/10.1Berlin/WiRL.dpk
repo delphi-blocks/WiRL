@@ -116,7 +116,8 @@ contains
   WiRL.Data.FireDAC.Persistence in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas',
   WiRL.http.Client.Indy in '..\..\Source\Client\WiRL.http.Client.Indy.pas',
   WiRL.http.Client.Interfaces in '..\..\Source\Client\WiRL.http.Client.Interfaces.pas',
-  WiRL.http.Client in '..\..\Source\Client\WiRL.http.Client.pas';
+  WiRL.http.Client in '..\..\Source\Client\WiRL.http.Client.pas',
+  WiRL.http.Client.Editor in '..\..\Source\Client\WiRL.http.Client.Editor.pas';
 
 end.
 
