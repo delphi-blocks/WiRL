@@ -16,9 +16,8 @@ uses
 
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
   FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
-  FireDAC.Phys, Data.DB, FireDAC.Comp.Client, FireDAC.FMXUI.Wait,
-  FireDAC.Stan.StorageXML, FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageBin,
-  FireDAC.Comp.UI, FireDAC.DApt,
+  FireDAC.Phys, Data.DB, FireDAC.Comp.Client, FireDAC.Stan.StorageXML,
+  FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageBin, FireDAC.Comp.UI, FireDAC.DApt,
 
   WiRL.Data.FireDAC.Persistence,
   WiRL.Data.FireDAC.Updates,
@@ -85,9 +84,9 @@ type
     [GET][Produces(TMediaType.APPLICATION_JSON)]
     function Retrieve: TArray<TFDCustomQuery>; virtual;
 
-    [POST][Produces(TMediaType.APPLICATION_JSON)]
+    [PUT][Produces(TMediaType.APPLICATION_JSON)]
     [Consumes(TMediaType.APPLICATION_JSON)]
-    function Update: string; virtual;
+    function Update([BodyParam] ADeltas: TFireDACDataSets): string; virtual;
   end;
 
   function CreateConnectionByDefName(const AConnectionDefName: string): TFDConnection;
@@ -210,9 +209,8 @@ begin
   CheckConnection;
 
   SetLength(LData, 0);
-  //LData := [];
   try
-    // load dataset(s)
+    // Load DataSets
     SetupStatements;
     for LStatement in Statements do
     begin
@@ -222,7 +220,7 @@ begin
 
     Result := LData;
   except
-    // clean up
+    // Free the array data
     for LCurrent in LData do
       LCurrent.Free;
     SetLength(LData, 0);
@@ -250,7 +248,6 @@ begin
       Statements.Add(AAttrib.Name, AAttrib.SQLStatement);
     end
   );
-
 end;
 
 procedure TWiRLFDDatasetResource.TeardownConnection;
@@ -262,57 +259,42 @@ begin
   end;
 end;
 
-function TWiRLFDDatasetResource.Update: string;
+function TWiRLFDDatasetResource.Update(ADeltas: TFireDACDataSets): string;
 var
-  LJSONDeltas: TJSONObject;
-  LDeltas: TFireDACDataSets;
   LResult: TJSONArray;
 begin
   SetupConnection;
+
   try
     CheckConnection;
-
-    // setup
     SetupStatements;
 
-    // parse JSON content
-    LJSONDeltas := TJSONObject.ParseJSONValue(Request.Content) as TJSONObject;
-
-    LDeltas := TFireDACDataSets.Create;
+    // Apply Updates
+    LResult := TJSONArray.Create;
     try
-      // build FireDAC delta objects
-      TFireDACJSONPersistor.JSONToDataSets(LJSONDeltas, LDeltas);
+      ApplyUpdates(ADeltas,
+        procedure(ADatasetName: string; AApplyResult: Integer; AApplyUpdates: TFireDACApplyUpdates)
+        var
+          LResultObj: TJSONObject;
+        begin
+          LResultObj := TJSONObject.Create;
+          try
+            LResultObj.AddPair('dataset', ADatasetName);
+            LResultObj.AddPair('result', TJSONNumber.Create(AApplyResult));
+            LResultObj.AddPair('errors', TJSONNumber.Create(AApplyUpdates.Errors.Count));
+            LResultObj.AddPair('errorText', AApplyUpdates.Errors.Errors.Text);
+            LResult.AddElement(LResultObj);
+          except
+            LResultObj.Free;
+            raise;
+          end;
+        end
+      );
 
-      // apply updates
-      LResult := TJSONArray.Create;
-      try
-        ApplyUpdates(LDeltas,
-          procedure(ADatasetName: string; AApplyResult: Integer; AApplyUpdates: TFireDACApplyUpdates)
-          var
-            LResultObj: TJSONObject;
-          begin
-            LResultObj := TJSONObject.Create;
-            try
-              LResultObj.AddPair('dataset', ADatasetName);
-              LResultObj.AddPair('result', TJSONNumber.Create(AApplyResult));
-              LResultObj.AddPair('errors', TJSONNumber.Create(AApplyUpdates.Errors.Count));
-              LResultObj.AddPair('errorText', AApplyUpdates.Errors.Errors.Text);
-              LResult.AddElement(LResultObj);
-            except
-              LResultObj.Free;
-              raise;
-            end;
-          end
-        );
-
-        Result := TJSONHelper.ToJSON(LResult);
-      finally
-        LResult.Free;
-      end;
+      Result := TJSONHelper.ToJSON(LResult);
     finally
-      LDeltas.Free;
+      LResult.Free;
     end;
-
   finally
     TeardownConnection;
   end;

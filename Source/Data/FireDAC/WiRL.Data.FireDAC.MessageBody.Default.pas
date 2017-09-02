@@ -44,12 +44,23 @@ type
       ARequest: TWiRLRequest): TValue; override;
   end;
 
+  [Consumes(TMediaType.APPLICATION_JSON)]
+  TTFireDACDataSetsReader = class(TMessageBodyReader)
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; override;
+  end;
+
   [Produces(TMediaType.APPLICATION_JSON)]
   TArrayFDCustomQueryWriter = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
+  [Consumes(TMediaType.APPLICATION_JSON)]
+  TArrayFDMemTableReader = class(TMessageBodyReader)
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; override;
+  end;
 
 implementation
 
@@ -139,18 +150,82 @@ begin
   Result := TValue.From<TFDMemTable>(LDataSet);
 end;
 
+{ TTFireDACDataSetsReader }
+
+function TTFireDACDataSetsReader.ReadFrom(AParam: TRttiParameter;
+  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+var
+  LJSON: TJSONObject;
+  LStreamReader: TStreamReader;
+  LDataSets: TFireDACDataSets;
+begin
+  ARequest.ContentStream.Position := soFromBeginning;
+  LStreamReader := TStreamReader.Create(ARequest.ContentStream);
+  try
+    LJSON := TJSONObject.ParseJSONValue(LStreamReader.ReadToEnd) as TJSONObject;
+    try
+      LDataSets := TFireDACDataSets.Create;
+      TFireDACJSONPersistor.JSONToDataSets(LJSON, LDataSets);
+      Result := TValue.From<TFireDACDataSets>(LDataSets);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LStreamReader.Free;
+  end;
+end;
+
+{ TArrayFDMemTableReader }
+
+function TArrayFDMemTableReader.ReadFrom(AParam: TRttiParameter;
+  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+var
+  LJSON: TJSONObject;
+  LStreamReader: TStreamReader;
+  LDataSets: TFireDACDataSets;
+  LDataPair: TFireDACDataSetPair;
+  LDSArray: TArray<TFDMemTable>;
+  LMemTable: TFDMemTable;
+begin
+  ARequest.ContentStream.Position := soFromBeginning;
+  LStreamReader := TStreamReader.Create(ARequest.ContentStream);
+  try
+    LJSON := TJSONObject.ParseJSONValue(LStreamReader.ReadToEnd) as TJSONObject;
+    try
+      LDataSets := TFireDACDataSets.Create;
+      TFireDACJSONPersistor.JSONToDataSets(LJSON, LDataSets);
+
+      SetLength(LDSArray, 0);
+      for LDataPair in LDataSets do
+      begin
+        LMemTable := TFDMemTable.Create(nil);
+        SetLength(LDSArray, Length(LDSArray) + 1);
+        LDSArray[Length(LDSArray) - 1] := LMemTable;
+      end;
+
+      Result := TValue.From<TArray<TFDMemTable>>(LDSArray);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LStreamReader.Free;
+  end;
+end;
+
 { RegisterMessageBodyClasses }
 
 procedure RegisterMessageBodyClasses;
 begin
-
   // TFDAdaptedDataSetWriter
   TMessageBodyWriterRegistry.Instance.RegisterWriter<TFDAdaptedDataSet>(
     TFDAdaptedDataSetWriter, TMessageBodyWriterRegistry.AFFINITY_HIGH
   );
 
-  // TObjectMBReader
+  // TFDAdaptedDataSetReader
   TMessageBodyReaderRegistry.Instance.RegisterReader<TFDAdaptedDataSet>(TFDAdaptedDataSetReader);
+
+  // TTFireDACDataSetsReader
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TFireDACDataSets>(TTFireDACDataSetsReader);
 
   // TArrayFDCustomQueryWriter
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
@@ -165,6 +240,8 @@ begin
     end
   );
 
+  // TArrayFDMemTableReader
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TFDMemTable>(TArrayFDMemTableReader);
 end;
 
 initialization
