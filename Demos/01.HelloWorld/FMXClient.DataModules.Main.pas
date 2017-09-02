@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, WiRL.Client.CustomResource,
   WiRL.Client.Resource, WiRL.Client.Resource.JSON, WiRL.Client.Application,
-  WiRL.Client.Client, WiRL.Client.Indy, WiRL.Client.SubResource,
+  WiRL.http.Client, WiRL.Client.Indy, WiRL.Client.SubResource,
   WiRL.Client.SubResource.JSON, WiRL.Client.Messaging.Resource,
   WiRL.http.Request, WiRL.http.Response,
   System.JSON, IdHTTP;

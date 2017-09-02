@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Client.Interfaces;
+unit WiRL.http.Client.Interfaces;
 
 interface
 
@@ -15,11 +15,24 @@ uses
   System.Classes, System.SysUtils,
 
   WiRL.Rtti.Utils,
+  WiRL.Core.Exceptions,
   WiRL.Core.Singleton,
   WiRL.http.Request,
   WiRL.http.Response;
 
 type
+  EWiRLClientException = class(EWiRLException);
+
+  EWiRLSocketException = class(EWiRLClientException);
+
+  EWiRLClientProtocolException = class(EWiRLClientException)
+  private
+    FStatusCode: Integer;
+  public
+    constructor Create(const AStatusCode: Integer; const AMessage: string); reintroduce; virtual;
+    property StatusCode: Integer read FStatusCode write FStatusCode;
+  end;
+
   THttpProxyConnectionInfo = class(TPersistent)
   private
     FBasicByDefault: boolean;
@@ -48,6 +61,8 @@ type
     procedure SetReadTimeout(Value: Integer);
     function GetProxyParams: THttpProxyConnectionInfo;
     procedure SetProxyParams(Value: THttpProxyConnectionInfo);
+    function GetMaxRedirects: Integer;
+    procedure SetMaxRedirects(const Value: Integer);
 
     // Http methods
     procedure Delete(const AURL: string; AResponseContent: TStream);
@@ -64,6 +79,7 @@ type
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
     property ProxyParams: THttpProxyConnectionInfo read GetProxyParams write SetProxyParams;
+    property MaxRedirects: Integer read GetMaxRedirects write SetMaxRedirects;
   end;
 
   TWiRLClientRegistry = class
@@ -129,6 +145,14 @@ begin
   begin
     inherited AssignTo(Destination);
   end;
+end;
+
+{ EWiRLClientProtocolException }
+
+constructor EWiRLClientProtocolException.Create(const AStatusCode: Integer;
+  const AMessage: string);
+begin
+  inherited Create(AMessage);
 end;
 
 end.

@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes,
   WiRL.Client.Application,
-  WiRL.Client.Client;
+  WiRL.http.Client;
 
 type
   TWiRLClientProc = TProc;

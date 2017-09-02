@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, 
   WiRL.Client.Resource, 
-  WiRL.Client.Client, 
+  WiRL.http.Client, 
   WiRL.Client.Application;
 
 type

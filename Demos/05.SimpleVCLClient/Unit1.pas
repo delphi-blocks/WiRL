@@ -17,7 +17,7 @@ uses
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
   FireDAC.DApt.Intf, Data.DB, Vcl.Grids, Vcl.DBGrids, FireDAC.Comp.DataSet,
   FireDAC.Comp.Client, WiRL.Client.CustomResource, WiRL.Client.Resource,
-  WiRL.Client.FireDAC, WiRL.Client.Application, WiRL.Client.Client, Vcl.StdCtrls;
+  WiRL.Client.FireDAC, WiRL.Client.Application, WiRL.http.Client, Vcl.StdCtrls;
 
 type
   TForm1 = class(TForm)

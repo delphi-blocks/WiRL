@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, 
   WiRL.Client.SubResource, 
-  WiRL.Client.Client;
+  WiRL.http.Client;
 
 type
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]

@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Client.Indy;
+unit WiRL.http.Client.Indy;
 
 interface
 
@@ -15,9 +15,9 @@ uses
   System.SysUtils, System.Classes,
 
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
-  IdHTTPHeaderInfo,
+  IdHTTPHeaderInfo, IdStack,
 
-  WiRL.Client.Interfaces,
+  WiRL.http.Client.Interfaces,
   WiRL.http.Core,
   WiRL.http.Cookie,
   WiRL.http.Request,
@@ -78,6 +78,8 @@ type
     procedure SetReadTimeout(Value: Integer);
     function GetProxyParams: THttpProxyConnectionInfo;
     procedure SetProxyParams(Value: THttpProxyConnectionInfo);
+    function GetMaxRedirects: Integer;
+    procedure SetMaxRedirects(const Value: Integer);
 
     procedure BuildRequestObject;
     procedure BuildResponseObject;
@@ -116,6 +118,8 @@ end;
 constructor TWiRLClientIndy.Create;
 begin
   FHttpClient := TIdHTTP.Create(nil);
+  FHttpClient.HTTPOptions := FHttpClient.HTTPOptions + [hoNoProtocolErrorException, hoWantProtocolErrorContent];
+
   FRequest := TWiRLClientRequestIndy.Create(FHttpClient.Request);
   FResponse := TWiRLClientResponseIndy.Create(FHttpClient.Response);
 end;
@@ -123,7 +127,12 @@ end;
 procedure TWiRLClientIndy.Delete(const AURL: string; AResponseContent: TStream);
 begin
   BuildRequestObject;
-  FHttpClient.Delete(AURL, AResponseContent);
+  try
+    FHttpClient.Delete(AURL, AResponseContent);
+  except
+    on E: EIdSocketError do
+      Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
+  end;
   BuildResponseObject;
 end;
 
@@ -138,13 +147,23 @@ end;
 procedure TWiRLClientIndy.Get(const AURL: string; AResponseContent: TStream);
 begin
   BuildRequestObject;
-  FHttpClient.Get(AURL, AResponseContent);
+  try
+    FHttpClient.Get(AURL, AResponseContent);
+  except
+    on E: EIdSocketError do
+      Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
+  end;
   BuildResponseObject;
 end;
 
 function TWiRLClientIndy.GetConnectTimeout: Integer;
 begin
   Result := FHttpClient.ConnectTimeout;
+end;
+
+function TWiRLClientIndy.GetMaxRedirects: Integer;
+begin
+  Result := FHttpClient.RedirectMaximum;
 end;
 
 function TWiRLClientIndy.GetProxyParams: THttpProxyConnectionInfo;
@@ -170,7 +189,12 @@ end;
 procedure TWiRLClientIndy.Head(const AURL: string);
 begin
   BuildRequestObject;
-  FHttpClient.Head(AURL);
+  try
+    FHttpClient.Head(AURL);
+  except
+    on E: EIdSocketError do
+      Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
+  end;
   BuildResponseObject;
 end;
 
@@ -216,7 +240,12 @@ procedure TWiRLClientIndy.Options(const AURL: string;
   AResponseContent: TStream);
 begin
   BuildRequestObject;
-  FHttpClient.Options(AURL, AResponseContent);
+  try
+    FHttpClient.Options(AURL, AResponseContent);
+  except
+    on E: EIdSocketError do
+      Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
+  end;
   BuildResponseObject;
 end;
 
@@ -224,7 +253,12 @@ procedure TWiRLClientIndy.Patch(const AURL: string; AContent,
   AResponse: TStream);
 begin
   BuildRequestObject;
-  FHttpClient.Patch(AURL, AContent, AResponse);
+  try
+    FHttpClient.Patch(AURL, AContent, AResponse);
+  except
+    on E: EIdSocketError do
+      Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
+  end;
   BuildResponseObject;
 end;
 
@@ -232,20 +266,35 @@ procedure TWiRLClientIndy.Post(const AURL: string; AContent,
   AResponse: TStream);
 begin
   BuildRequestObject;
-  FHttpClient.Post(AURL, AContent, AResponse);
+  try
+    FHttpClient.Post(AURL, AContent, AResponse);
+  except
+    on E: EIdSocketError do
+      Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
+  end;
   BuildResponseObject;
 end;
 
 procedure TWiRLClientIndy.Put(const AURL: string; AContent, AResponse: TStream);
 begin
   BuildRequestObject;
-  FHttpClient.Put(AURL, AContent, AResponse);
+  try
+    FHttpClient.Put(AURL, AContent, AResponse);
+  except
+    on E: EIdSocketError do
+      Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
+  end;
   BuildResponseObject;
 end;
 
 procedure TWiRLClientIndy.SetConnectTimeout(Value: Integer);
 begin
   FHttpClient.ConnectTimeout := Value;
+end;
+
+procedure TWiRLClientIndy.SetMaxRedirects(const Value: Integer);
+begin
+  FHttpClient.RedirectMaximum := Value;
 end;
 
 procedure TWiRLClientIndy.SetProxyParams(Value: THttpProxyConnectionInfo);

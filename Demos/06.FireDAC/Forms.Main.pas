@@ -15,7 +15,7 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
   WiRL.Client.CustomResource, WiRL.Client.Resource, WiRL.Client.FireDAC,
-  WiRL.Client.Application, WiRL.Client.Client, FireDAC.Stan.Intf,
+  WiRL.Client.Application, WiRL.http.Client, FireDAC.Stan.Intf,
   FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
   FireDAC.Phys.Intf, FireDAC.DApt.Intf, System.Rtti, Data.Bind.EngExt,
   Fmx.Bind.DBEngExt, Fmx.Bind.Grid, System.Bindings.Outputs, Fmx.Bind.Editors,

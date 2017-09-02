@@ -16,7 +16,7 @@ uses
   WiRL.Core.JSON,
   FireDAC.Comp.Client,
   WiRL.Client.Resource,
-  WiRL.Client.Client, System.JSON;
+  WiRL.http.Client, System.JSON;
 
 type
   TWiRLFDResourceDatasetsItem = class(TCollectionItem)
