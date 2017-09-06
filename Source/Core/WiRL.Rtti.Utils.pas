@@ -76,6 +76,11 @@ type
     class function CreateInstance(AType: TRttiType; const AValue: string): TObject; overload;
     class function CreateInstance(const ATypeName, AValue: string): TObject; overload;
 
+    // Create instance of class with an array of TValue
+    class function CreateInstance(AClass: TClass; const Args: array of TValue): TObject;  overload;
+    class function CreateInstance(AType: TRttiType;  const Args: array of TValue): TObject; overload;
+    class function CreateInstance(const ATypeName: string; const Args: array of TValue): TObject; overload;
+
     // Rtti general helper functions
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject): Boolean; overload;
     class function IfHasAttribute<T: TCustomAttribute>(AInstance: TObject; const ADoSomething: TProc<T>): Boolean; overload;
@@ -562,6 +567,49 @@ begin
       Break;
     end;
   end;
+end;
+
+class function TRttiHelper.CreateInstance(AClass: TClass;
+  const Args: array of TValue): TObject;
+var
+  LType: TRttiType;
+begin
+  LType := FContext.GetType(AClass);
+  Result := CreateInstance(LType, Args);
+end;
+
+class function TRttiHelper.CreateInstance(AType: TRttiType;
+  const Args: array of TValue): TObject;
+var
+  LMethod: TRttiMethod;
+  LMetaClass: TClass;
+begin
+  Result := nil;
+  if Assigned(AType) then
+  begin
+    for LMethod in AType.GetMethods do
+    begin
+      if LMethod.HasExtendedInfo and LMethod.IsConstructor then
+      begin
+        if Length(LMethod.GetParameters) = Length(Args) then
+        begin
+          LMetaClass := AType.AsInstance.MetaclassType;
+          Exit(LMethod.Invoke(LMetaClass, Args).AsObject);
+        end;
+      end;
+    end;
+  end;
+  if not Assigned(Result) then
+    raise Exception.CreateFmt('TRttiHelper.CreateInstance: can''t create object [%s]', [AType.Name]);
+end;
+
+class function TRttiHelper.CreateInstance(const ATypeName: string;
+  const Args: array of TValue): TObject;
+var
+  LType: TRttiType;
+begin
+  LType := Context.FindType(ATypeName);
+  Result := CreateInstance(LType, Args);
 end;
 
 end.

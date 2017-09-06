@@ -26,6 +26,7 @@ uses
   WiRL.http.Response,
   WiRL.Core.Attributes,
   WiRL.http.Engines,
+  WiRL.http.Server,
   WiRL.http.Accept.MediaType,
   WiRL.http.Filters;
 
@@ -55,7 +56,10 @@ type
     procedure HandleException(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; E: Exception);
   end;
 
-  TWiRLEngine = class(TWirlCustomEngine)
+  TWiRLEngine = class(TWiRLCustomEngine)
+  private
+  const
+    DefaultDisplayName = 'WiRL Engine';
   private
     class var FServerFileName: string;
     class var FServerDirectory: string;
@@ -66,7 +70,7 @@ type
     FApplications: TWiRLApplicationDictionary;
     FSubscribers: TList<IWiRLHandleListener>;
     FCriticalSection: TCriticalSection;
-    FName: string;
+    FDisplayName: string;
 
     // Filter handling
     function ApplyPreMatchingFilters(AContext: TWiRLContext): Boolean;
@@ -77,7 +81,8 @@ type
     procedure DoAfterRequestEnd(const AStopWatch: TStopWatch); virtual;
     procedure DoHandleException(AContext: TWiRLContext; AApplication: TWiRLApplication; E: Exception); virtual;
   public
-    constructor Create(const ABasePath: string); override;
+    constructor Create(AOwner: TComponent); override;
+
     destructor Destroy; override;
 
     procedure Startup; override;
@@ -93,15 +98,18 @@ type
 
     procedure EnumerateApplications(const ADoSomething: TProc<string, TWiRLApplication>);
 
-    function SetName(const AName: string): TWiRLEngine;
+    function SetDisplayName(const ADisplayName: string): TWiRLEngine;
     function SetBasePath(const ABasePath: string): TWiRLEngine;
-    
+
     property Applications: TWiRLApplicationDictionary read FApplications;
-    property Name: string read FName write FName;
 
     class property ServerFileName: string read GetServerFileName;
     class property ServerDirectory: string read GetServerDirectory;
+  published
+    property DisplayName: string read FDisplayName write FDisplayName;
   end;
+
+procedure Register;
 
 implementation
 
@@ -109,6 +117,11 @@ uses
   System.StrUtils,
   WiRL.Core.Application.Worker,
   WiRL.Core.Utils;
+
+procedure Register;
+begin
+  RegisterComponents('WiRL Server', [TWiRLEngine]);
+end;
 
 function TWiRLEngine.AddApplication(const AName, ABasePath: string;
   const AResources: TArray<string>): TWiRLApplication;
@@ -165,14 +178,15 @@ begin
   Result := LAborted;
 end;
 
-constructor TWiRLEngine.Create(const ABasePath: string);
+constructor TWiRLEngine.Create(AOwner: TComponent);
 begin
   inherited;
   FRttiContext := TRttiContext.Create;
   FApplications := TWiRLApplicationDictionary.Create([doOwnsValues]);
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IWiRLHandleListener>.Create;
-  FName := 'WiRL Engine';
+  FDisplayName := DefaultDisplayName;
+  BasePath := '/rest';
 end;
 
 destructor TWiRLEngine.Destroy;
@@ -264,6 +278,7 @@ var
   LApplicationPath: string;
   LStopWatch, LStopWatchEx: TStopWatch;
 begin
+  inherited;
   if EndsText('/favicon.ico', AContext.Request.PathInfo) then
     Exit;
   LApplication := nil;
@@ -338,9 +353,9 @@ begin
   Result := Self;
 end;
 
-function TWiRLEngine.SetName(const AName: string): TWiRLEngine;
+function TWiRLEngine.SetDisplayName(const ADisplayName: string): TWiRLEngine;
 begin
-  FName := AName;
+  FDisplayName := ADisplayName;
   Result := Self;
 end;
 

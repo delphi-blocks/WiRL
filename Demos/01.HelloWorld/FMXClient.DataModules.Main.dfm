@@ -6,7 +6,10 @@ object MainDataModule: TMainDataModule
     WiRLEngineURL = 'http://localhost:8080/rest'
     ConnectTimeout = 0
     ReadTimeout = -1
+    ProxyParams.BasicAuthentication = False
+    ProxyParams.ProxyPort = 0
     OnBeforeCommand = WiRLClient1BeforeCommand
+    NoProtocolErrorException = False
     Left = 280
     Top = 16
   end

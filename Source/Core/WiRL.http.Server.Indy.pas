@@ -17,7 +17,7 @@ uses
   IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
   WiRL.http.Core,
   WiRL.http.Cookie,
-  WiRL.http.Server,
+  WiRL.http.Server.Interfaces,
   WiRL.http.Engines,
 //  WiRL.Core.Engine,
   WiRL.http.Response,
@@ -27,15 +27,24 @@ uses
 type
 //  TWiRLEngines = TArray<TWiRLEngine>;
 
-  TWiRLhttpServerIndy = class(TWiRLhttpServer)
+  TWiRLhttpServerIndy = class(TInterfacedObject, IWiRLServer)
   private
-    FServer: TIdHTTPServer;
+    FHttpServer: TIdHTTPServer;
+    FListener: IWiRLListener;
+    FThreadPoolSize: Integer;
   protected
     procedure ParseAuthorizationHeader(AContext: TIdContext; const AAuthType,
         AAuthData: string; var VUsername, VPassword: string; var VHandled: Boolean);
 
-    procedure Startup; override;
-    procedure Shutdown; override;
+    { IWiRLServer }
+    procedure Startup;
+    procedure Shutdown;
+    function GetPort: Word;
+    procedure SetPort(AValue: Word);
+    function GetThreadPoolSize: Integer;
+    procedure SetThreadPoolSize(AValue: Integer);
+    function GetListener: IWiRLListener;
+    procedure SetListener(AValue: IWiRLListener);
 
     procedure DoCommandGet(AContext: TIdContext;
       ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
@@ -45,10 +54,8 @@ type
     procedure SetupThreadPooling(const APoolSize: Integer = 25);
 
   public
-    constructor Create; override;
+    constructor Create;
     destructor Destroy; override;
-
-    property Server: TIdHTTPServer read FServer;
   end;
 
   TWiRLHttpResponseIndy = class(TWiRLResponse)
@@ -109,46 +116,38 @@ uses
 constructor TWiRLhttpServerIndy.Create;
 begin
   inherited;
-  FServer := TIdHTTPServer.Create(nil);
-  FServer.ParseParams := False;
-  FServer.OnCommandGet := DoCommandGet;
-  FServer.OnCommandOther := DoCommandOther;
-  FServer.OnParseAuthentication := ParseAuthorizationHeader;
+  FHttpServer := TIdHTTPServer.Create(nil);
+  FHttpServer.ParseParams := False;
+  FHttpServer.OnCommandGet := DoCommandGet;
+  FHttpServer.OnCommandOther := DoCommandOther;
+  FHttpServer.OnParseAuthentication := ParseAuthorizationHeader;
 end;
 
 destructor TWiRLhttpServerIndy.Destroy;
 begin
-  FServer.Active := False;
-  FServer.Free;
+  FHttpServer.Active := False;
+  FHttpServer.Free;
   inherited;
 end;
 
 procedure TWiRLhttpServerIndy.DoCommandGet(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
 var
-  LContext: TWiRLContext;
-  LEngine: TWirlCustomEngine;
+  LRequest: TWiRLRequest;
+  LResponse: TWiRLResponse;
 begin
   inherited;
-  LEngine := GetEngine(ARequestInfo.Document);
-
-  LContext := TWiRLContext.Create;
+  LRequest := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
   try
-    LContext.Engine := LEngine;
-    LContext.Request := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
-    LContext.Response := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
+    LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
     try
-
       AResponseInfo.FreeContentStream := True;
-      LEngine.HandleRequest(LContext);
-      //AResponseInfo.CustomHeaders.AddStrings(LContext.Response.CustomHeaders);
+      FListener.HandleRequest(LRequest, LResponse);
     finally
-      LContext.Request.Free;
-      LContext.Response.Free;
+      LResponse.Free;
     end;
-
   finally
-    LContext.Free;
+    LRequest.Free;
   end;
 end;
 
@@ -159,6 +158,21 @@ begin
   DoCommandGet(AContext, ARequestInfo, AResponseInfo);
 end;
 
+function TWiRLhttpServerIndy.GetListener: IWiRLListener;
+begin
+  Result := FListener;
+end;
+
+function TWiRLhttpServerIndy.GetPort: Word;
+begin
+  Result := FHttpServer.DefaultPort;
+end;
+
+function TWiRLhttpServerIndy.GetThreadPoolSize: Integer;
+begin
+  Result := FThreadPoolSize;
+end;
+
 procedure TWiRLhttpServerIndy.ParseAuthorizationHeader(AContext: TIdContext;
     const AAuthType, AAuthData: string; var VUsername, VPassword: string; var
     VHandled: Boolean);
@@ -166,35 +180,49 @@ begin
   VHandled := True;
 end;
 
+procedure TWiRLhttpServerIndy.SetListener(AValue: IWiRLListener);
+begin
+  FListener := AValue;
+end;
+
+procedure TWiRLhttpServerIndy.SetPort(AValue: Word);
+begin
+  FHttpServer.DefaultPort := AValue;
+end;
+
+procedure TWiRLhttpServerIndy.SetThreadPoolSize(AValue: Integer);
+begin
+  FThreadPoolSize := AValue;
+end;
+
 procedure TWiRLhttpServerIndy.SetupThreadPooling(const APoolSize: Integer);
 var
   LScheduler: TIdSchedulerOfThreadPool;
 begin
-  if Assigned(FServer.Scheduler) then
+  if Assigned(FHttpServer.Scheduler) then
   begin
-    FServer.Scheduler.Free;
-    FServer.Scheduler := nil;
+    FHttpServer.Scheduler.Free;
+    FHttpServer.Scheduler := nil;
   end;
 
-  LScheduler := TIdSchedulerOfThreadPool.Create(FServer);
+  LScheduler := TIdSchedulerOfThreadPool.Create(FHttpServer);
   LScheduler.PoolSize := APoolSize;
-  FServer.Scheduler := LScheduler;
-  FServer.MaxConnections := LScheduler.PoolSize;
+  FHttpServer.Scheduler := LScheduler;
+  FHttpServer.MaxConnections := LScheduler.PoolSize;
 end;
 
 procedure TWiRLhttpServerIndy.Shutdown;
 begin
   inherited;
-  FServer.Active := False;
-  FServer.Bindings.Clear;
+  FHttpServer.Active := False;
+  FHttpServer.Bindings.Clear;
 end;
 
 procedure TWiRLhttpServerIndy.Startup;
 begin
   inherited;
-  FServer.Bindings.Clear;
-  FServer.DefaultPort := Port;
-  FServer.Active := True;
+  FHttpServer.Bindings.Clear;
+  FHttpServer.Active := True;
 end;
 
 { TWiRLHttpRequestIndy }
@@ -460,5 +488,10 @@ begin
   inherited;
   FResponseInfo.ResponseNo := Value;
 end;
+
+initialization
+
+  TWiRLServerRegistry.Instance.RegisterServer<TWiRLhttpServerIndy>('TIdHttpServer (Indy)');
+
 
 end.

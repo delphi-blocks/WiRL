@@ -37,7 +37,7 @@ type
     DefaultConnectionTimeout = 60000;
     DefaultReadTimeout = 60000;
     DefaultMaxRedirects = 5;
-  var
+  private
     FHttpClient: IWiRLClient;
     FProxyParams: TWiRLProxyConnectionInfo;
     FWiRLEngineURL: string;
