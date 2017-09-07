@@ -113,14 +113,7 @@ type
     property ClientVendor: string read FClientVendor write SetClientVendor;
   end;
 
-procedure Register;
-
 implementation
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClient]);
-end;
 
 { TWiRLClient }
 

@@ -32,13 +32,6 @@ type
     property QueryParams;
   end;
 
-procedure Register;
-
 implementation
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClientResource]);
-end;
 
 end.

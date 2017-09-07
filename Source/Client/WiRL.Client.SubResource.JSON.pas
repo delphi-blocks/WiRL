@@ -35,17 +35,10 @@ type
     property ResponseAsString: string read GetResponseAsString;
   end;
 
-procedure Register;
-
 implementation
 
 uses
   WiRL.Core.Utils;
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClientSubResourceJSON]);
-end;
 
 { TWiRLClientResourceJSON }
 

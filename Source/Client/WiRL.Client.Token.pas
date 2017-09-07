@@ -43,18 +43,11 @@ type
     property Username: string read FUsername write FUsername;
   end;
 
-procedure Register;
-
 implementation
 
 uses
   WiRL.Core.Utils,
   WiRL.Rtti.Utils;
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClientToken]);
-end;
 
 { TWiRLClientToken }
 

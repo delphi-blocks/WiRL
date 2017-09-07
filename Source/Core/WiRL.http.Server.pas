@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.StrUtils,
 
-  WiRL.http.Request, WiRL.http.Response,
+  WiRL.Core.Classes, WiRL.http.Request, WiRL.http.Response,
   WiRL.http.Server.Interfaces, WiRL.Core.Exceptions,
   WiRL.Core.Utils, WiRL.Rtti.Utils, WiRL.Core.Context;
 
@@ -79,7 +79,8 @@ type
     function AddEngine<T: constructor, TWiRLCustomEngine>(const ABasePath: string; AOwnsObjects: Boolean = True) :T; overload;
     procedure AddEngine(const ABasePath: string; AEngine: TWiRLCustomEngine; AOwnsObjects: Boolean = True); overload;
     function AddEngines(AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLhttpServer;
-    procedure RemoveEngine(AEngine: TWiRLCustomEngine);
+    procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
+    procedure RemoveEngine(const ABasePath: string); overload;
     procedure ChangeEngine(AEngine: TWiRLCustomEngine);
     function GetEngine(const Url: string): TWiRLCustomEngine;
     function SetPort(APort: Integer): TWiRLhttpServer;
@@ -97,14 +98,7 @@ type
     property ServerVendor: string read FServerVendor write SetServerVendor;
   end;
 
-procedure Register;
-
 implementation
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Server', [TWiRLhttpServer]);
-end;
 
 { TWiRLhttpServer }
 
@@ -146,7 +140,8 @@ begin
     begin
       LKey := LPair.Key;
       LOwnsObjects := LPair.Value.OwnsObjects;
-      FEngines.Remove(LKey);
+      //FEngines.Remove(LKey);
+      RemoveEngine(LKey);
       AddEngine(AEngine.BasePath, AEngine, LOwnsObjects);
     end;
   end;
@@ -155,17 +150,22 @@ end;
 constructor TWiRLhttpServer.Create(AOwner: TComponent);
 begin
   inherited;
+  if not Assigned(TWiRLServerRegistry.Instance) then
+    TWiRLDebug.LogMessage('Not assigned !!!');
+  Exit;
+  FEngines := TDictionary<string,TWiRLEngineInfo>.Create;
   FHttpServer := TWiRLServerRegistry.Instance.CreateServer(FServerVendor);
   FHttpServer.Listener := Self;
   FActive := False;
   Port := DefaultPort;
   ThreadPoolSize := DefaultThreadPoolSize;
 
-  FEngines := TDictionary<string,TWiRLEngineInfo>.Create;
+  TWiRLDebug.LogMessage('TWiRLhttpServer.Create');
 end;
 
 destructor TWiRLhttpServer.Destroy;
 begin
+  TWiRLDebug.LogMessage('TWiRLhttpServer.Destroy');
   FreeEngines;
   inherited;
 end;
@@ -236,6 +236,19 @@ begin
   inherited;
   if Active then
     Startup;
+end;
+
+procedure TWiRLhttpServer.RemoveEngine(const ABasePath: string);
+var
+  LEngineInfo: TWiRLEngineInfo;
+begin
+  if FEngines.TryGetValue(ABasePath, LEngineInfo) then
+  begin
+    if LEngineInfo.FOwnsObjects then
+      LEngineInfo.Engine.Free;
+    FEngines.Remove(ABasePath);
+    LEngineInfo.Free;
+  end;
 end;
 
 procedure TWiRLhttpServer.RemoveEngine(AEngine: TWiRLCustomEngine);

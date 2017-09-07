@@ -35,17 +35,10 @@ type
     property ResponseSize: Int64 read GetResponseSize;
   end;
 
-procedure Register;
-
 implementation
 
 uses
   WiRL.Core.Utils;
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClientSubResourceStream]);
-end;
 
 { TWiRLClientResourceJSON }
 

@@ -56,6 +56,30 @@ type
     procedure HandleException(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; E: Exception);
   end;
 
+  TWiRLApplicationInfo = class
+  private
+    FEngine: TWiRLEngine;
+    FBasePath: string;
+    FApplication: TWiRLApplication;
+    function GetBasePath: string;
+  public
+    property Application: TWiRLApplication read FApplication;
+    property BasePath: string read GetBasePath;
+    constructor Create(AApplication: TWiRLApplication; AEngine: TWiRLEngine);
+  end;
+
+  TWiRLApplicationList = class(TObjectList<TWiRLApplicationInfo>)
+  private
+    FEngine: TWiRLEngine;
+  public
+    constructor Create(AEngine: TWiRLEngine);
+    destructor Destroy; override;
+
+    function TryGetValue(const ABasePath: string; out AApplication: TWiRLApplication): Boolean;
+    procedure AddApplication(AApplication: TWiRLApplication);
+    procedure RemoveApplication(AApplication: TWiRLApplication);
+  end;
+
   TWiRLEngine = class(TWiRLCustomEngine)
   private
   const
@@ -67,7 +91,7 @@ type
     class function GetServerFileName: string; static;
   private
     FRttiContext: TRttiContext;
-    FApplications: TWiRLApplicationDictionary;
+    FApplications: TWiRLApplicationList;
     FSubscribers: TList<IWiRLHandleListener>;
     FCriticalSection: TCriticalSection;
     FDisplayName: string;
@@ -80,9 +104,11 @@ type
     function DoBeforeRequestStart(): Boolean; virtual;
     procedure DoAfterRequestEnd(const AStopWatch: TStopWatch); virtual;
     procedure DoHandleException(AContext: TWiRLContext; AApplication: TWiRLApplication; E: Exception); virtual;
+
+    // Handles the parent/child relationship for the designer
+    procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
   public
     constructor Create(AOwner: TComponent); override;
-
     destructor Destroy; override;
 
     procedure Startup; override;
@@ -92,6 +118,8 @@ type
 
     function AddApplication(const ABasePath: string): TWiRLApplication; overload; virtual;
     function AddApplication(const AName, ABasePath: string; const AResources: TArray<string>): TWiRLApplication; overload; virtual; deprecated;
+    procedure AddApplication(AApplication: TWiRLApplication); overload; virtual;
+    procedure RemoveApplication(AApplication: TWiRLApplication); virtual;
 
     function AddSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
     function RemoveSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
@@ -101,15 +129,13 @@ type
     function SetDisplayName(const ADisplayName: string): TWiRLEngine;
     function SetBasePath(const ABasePath: string): TWiRLEngine;
 
-    property Applications: TWiRLApplicationDictionary read FApplications;
+    property Applications: TWiRLApplicationList read FApplications;
 
     class property ServerFileName: string read GetServerFileName;
     class property ServerDirectory: string read GetServerDirectory;
   published
     property DisplayName: string read FDisplayName write FDisplayName;
   end;
-
-procedure Register;
 
 implementation
 
@@ -118,30 +144,30 @@ uses
   WiRL.Core.Application.Worker,
   WiRL.Core.Utils;
 
-procedure Register;
-begin
-  RegisterComponents('WiRL Server', [TWiRLEngine]);
-end;
-
 function TWiRLEngine.AddApplication(const AName, ABasePath: string;
   const AResources: TArray<string>): TWiRLApplication;
 begin
   Result := Self
     .AddApplication(ABasePath)
-    .SetName(AName)
+    .SetDisplayName(AName)
     .SetResources(AResources);
 end;
 
 function TWiRLEngine.AddApplication(const ABasePath: string): TWiRLApplication;
 begin
-  Result := TWiRLApplication.Create;
-  Result.SetBasePath(ABasePath);
+  Result := TWiRLApplication.Create(Self);
   try
-    Applications.Add(TWiRLURL.CombinePath([BasePath, ABasePath]), Result);
+    Result.SetBasePath(ABasePath);
+    Result.Engine := Self;
   except
     Result.Free;
     raise
   end;
+end;
+
+procedure TWiRLEngine.AddApplication(AApplication: TWiRLApplication);
+begin
+  Applications.AddApplication(AApplication);
 end;
 
 function TWiRLEngine.AddSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
@@ -181,8 +207,9 @@ end;
 constructor TWiRLEngine.Create(AOwner: TComponent);
 begin
   inherited;
+  TWiRLDebug.LogMessage('TWiRLEngine.Create');
   FRttiContext := TRttiContext.Create;
-  FApplications := TWiRLApplicationDictionary.Create([doOwnsValues]);
+  FApplications := TWiRLApplicationList.Create(Self);
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IWiRLHandleListener>.Create;
   FDisplayName := DefaultDisplayName;
@@ -191,6 +218,7 @@ end;
 
 destructor TWiRLEngine.Destroy;
 begin
+  TWiRLDebug.LogMessage('TWiRLEngine.Destroy');
   FCriticalSection.Free;
   FApplications.Free;
   FSubscribers.Free;
@@ -257,14 +285,14 @@ end;
 procedure TWiRLEngine.EnumerateApplications(
   const ADoSomething: TProc<string, TWiRLApplication>);
 var
-  LPair: TPair<string, TWiRLApplication>;
+  LApplicationInfo: TWiRLApplicationInfo;
 begin
   if Assigned(ADoSomething) then
   begin
     FCriticalSection.Enter;
     try
-      for LPair in FApplications do
-        ADoSomething(LPair.Key, LPair.Value);
+      for LApplicationInfo in FApplications do
+        ADoSomething(LApplicationInfo.Application.BasePath, LApplicationInfo.Application);
     finally
       FCriticalSection.Leave;
     end;
@@ -341,6 +369,11 @@ begin
   AContext.Response.SendHeaders;
 end;
 
+procedure TWiRLEngine.RemoveApplication(AApplication: TWiRLApplication);
+begin
+  FApplications.RemoveApplication(AApplication);
+end;
+
 function TWiRLEngine.RemoveSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
 begin
   FSubscribers.Remove(ASubscriber);
@@ -361,12 +394,12 @@ end;
 
 procedure TWiRLEngine.Shutdown;
 var
-  LPair: TPair<string, TWiRLApplication>;
+  LAppInfo: TWiRLApplicationInfo;
 begin
   FCriticalSection.Enter;
   try
-    for LPair in FApplications do
-      LPair.Value.Shutdown;
+    for LAppInfo in FApplications do
+      LAppInfo.Application.Shutdown;
   finally
     FCriticalSection.Leave;
   end;
@@ -374,15 +407,29 @@ end;
 
 procedure TWiRLEngine.Startup;
 var
-  LPair: TPair<string, TWiRLApplication>;
+  LAppInfo: TWiRLApplicationInfo;
 begin
   FCriticalSection.Enter;
   try
-    for LPair in FApplications do
-      LPair.Value.Startup;
+    for LAppInfo in FApplications do
+      LAppInfo.Application.Startup;
   finally
     FCriticalSection.Leave;
   end;
+end;
+
+procedure TWiRLEngine.GetChildren(Proc: TGetChildProc; Root: TComponent);
+var
+  LAppInfo: TWiRLApplicationInfo;
+begin
+  inherited;
+  TWiRLDebug.LogMessage('GetChildren start ');
+  for LAppInfo in FApplications do
+  begin
+    TWiRLDebug.LogMessage('app: ' + LAppInfo.Application.BasePath);
+    Proc(LAppInfo.Application);
+  end;
+  TWiRLDebug.LogMessage('GetChildren end');
 end;
 
 class function TWiRLEngine.GetServerDirectory: string;
@@ -397,6 +444,83 @@ begin
   if FServerFileName = '' then
     FServerFileName := GetModuleName(MainInstance);
   Result := FServerFileName;
+end;
+
+{ TWiRLApplicationInfo }
+
+constructor TWiRLApplicationInfo.Create(AApplication: TWiRLApplication;
+  AEngine: TWiRLEngine);
+begin
+  inherited Create;
+  FApplication := AApplication;
+  FEngine := AEngine;
+end;
+
+function TWiRLApplicationInfo.GetBasePath: string;
+begin
+  if not Assigned(FEngine) then
+    raise EWiRLException.Create('Application BasePath: Engine not assigned');
+  if FBasePath = '' then
+    FBasePath := TWiRLURL.CombinePath([FEngine.BasePath, FApplication.BasePath]);
+  Result := FBasePath;
+end;
+
+{ TWiRLApplicationList }
+
+procedure TWiRLApplicationList.AddApplication(AApplication: TWiRLApplication);
+var
+  LAppInfo: TWiRLApplicationInfo;
+begin
+  LAppInfo := TWiRLApplicationInfo.Create(AApplication, FEngine);
+  Add(LAppInfo);
+end;
+
+constructor TWiRLApplicationList.Create(AEngine: TWiRLEngine);
+begin
+  inherited Create(True);
+  FEngine := AEngine;
+end;
+
+destructor TWiRLApplicationList.Destroy;
+var
+  LAppInfo: TWiRLApplicationInfo;
+begin
+  for LAppInfo in Self do
+    FreeAndNil(LAppInfo.FApplication);
+  inherited;
+end;
+
+procedure TWiRLApplicationList.RemoveApplication(
+  AApplication: TWiRLApplication);
+var
+  LAppInfo: TWiRLApplicationInfo;
+begin
+  for LAppInfo in Self do
+  begin
+    if LAppInfo.Application = AApplication then
+    begin
+//      if LAppInfo.OwnsObject then
+//        LAppInfo.Application.Free;
+      Remove(LAppInfo);
+      Exit;
+    end;
+  end;
+end;
+
+function TWiRLApplicationList.TryGetValue(const ABasePath: string;
+  out AApplication: TWiRLApplication): Boolean;
+var
+  LAppInfo: TWiRLApplicationInfo;
+begin
+  Result := False;
+  for LAppInfo in Self do
+  begin
+    if LAppInfo.BasePath = ABasePath then
+    begin
+      AApplication := LAppInfo.Application;
+      Exit(True);
+    end;
+  end;
 end;
 
 end.

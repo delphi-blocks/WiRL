@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Generics.Collections,
 
   WiRL.Rtti.Utils,
+  WiRL.Core.Classes,
   WiRL.Core.Exceptions,
   WiRL.Core.Singleton,
   WiRL.http.Request,
@@ -74,14 +75,17 @@ var
   LObject: TObject;
   AServerClass: TClass;
 begin
+  TWiRLDebug.LogMessage('TWiRLServerRegistry.CreateServer 1');
   if Self.Count < 1 then
     raise EWiRLException.CreateFmt('CreateServer: no server registered (add "WiRL.http.Server.*" unit to the project)', [AName]);
 
+  TWiRLDebug.LogMessage('TWiRLServerRegistry.CreateServer 2');
   if AName = '' then
     AServerClass := GetDefaultClass()
   else if not Self.TryGetValue(AName, AServerClass) then
     raise EWiRLException.CreateFmt('CreateServer: http server [%s] not registered (add "WiRL.http.Server.*" unit to the project)', [AName]);
 
+  TWiRLDebug.LogMessage('TWiRLServerRegistry.CreateServer 3');
   LObject := TRttiHelper.CreateInstance(AServerClass);
   if not Supports(LObject, IWiRLServer, Result) then
     raise EWiRLException.CreateFmt('CreateServer: can''t create a http server with class [%s]', [AServerClass.ClassName]);

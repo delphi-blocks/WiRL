@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.SyncObjs,
   IdContext, IdCookie, IdCustomHTTPServer, IdHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
   IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
+  WiRL.Core.Classes,
   WiRL.http.Core,
   WiRL.http.Cookie,
   WiRL.http.Server.Interfaces,
@@ -121,12 +122,14 @@ begin
   FHttpServer.OnCommandGet := DoCommandGet;
   FHttpServer.OnCommandOther := DoCommandOther;
   FHttpServer.OnParseAuthentication := ParseAuthorizationHeader;
+  TWiRLDebug.LogMessage('TWiRLhttpServerIndy.Create');
 end;
 
 destructor TWiRLhttpServerIndy.Destroy;
 begin
   FHttpServer.Active := False;
   FHttpServer.Free;
+  TWiRLDebug.LogMessage('TWiRLhttpServerIndy.Destroy');
   inherited;
 end;
 

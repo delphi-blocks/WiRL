@@ -33,18 +33,11 @@ type
     property ParentResource: TWiRLClientResource read FParentResource write FParentResource;
   end;
 
-procedure Register;
-
 implementation
 
 uses
   WiRL.Client.Utils,
   WiRL.http.URL;
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClientSubResource]);
-end;
 
 { TWiRLClientSubResource }
 

@@ -38,7 +38,7 @@ type
   TAttributeArray = TArray<TCustomAttribute>;
   TArgumentArray = array of TValue;
 
-  TWiRLApplication = class
+  TWiRLApplication = class(TComponent)
   private
     //256bit encoding key
     const SCRT_SGN = 'd2lybC5zdXBlcnNlY3JldC5zZWVkLmZvci5zaWduaW5n';
@@ -51,7 +51,7 @@ type
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
     FBasePath: string;
-    FName: string;
+    FDisplayName: string;
     FClaimClass: TWiRLSubjectClass;
     FSystemApp: Boolean;
     FAuthChallenge: TAuthChallenge;
@@ -59,6 +59,7 @@ type
     FTokenLocation: TAuthTokenLocation;
     FTokenCustomHeader: string;
     FSerializerConfig: INeonConfiguration;
+    FEngine: TComponent;
     function GetResources: TArray<string>;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
@@ -67,10 +68,14 @@ type
     function GetSecret: TBytes;
     function GetAuthChallengeHeader: string;
     function GetSerializerConfig: INeonConfiguration;
+    procedure SetEngine(const Value: TComponent);
+    function GetPath: string;
+  protected
+    procedure SetParentComponent(AParent: TComponent); override;
   public
     class procedure InitializeRtti;
 
-    constructor Create;
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
     procedure Startup;
@@ -91,15 +96,17 @@ type
     function SetAuthChallenge(AChallenge: TAuthChallenge; const ARealm: string): TWiRLApplication;
     function SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
     function SetTokenCustomHeader(const ACustomHeader: string): TWiRLApplication;
-    function SetName(const AName: string): TWiRLApplication;
+    function SetDisplayName(const ADisplayName: string): TWiRLApplication;
     function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
     function SetSystemApp(ASystem: Boolean): TWiRLApplication;
 
     function ConfigureSerializer: INeonConfiguration;
     function GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
 
-    property Name: string read FName;
-    property BasePath: string read FBasePath;
+    // Handles the parent/child relationship for the designer
+    function GetParentComponent: TComponent; override;
+    function HasParent: Boolean; override;
+
     property SystemApp: Boolean read FSystemApp;
     property ClaimClass: TWiRLSubjectClass read FClaimClass;
     property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
@@ -108,16 +115,17 @@ type
     property Resources: TArray<string> read GetResources;
     property Secret: TBytes read GetSecret;
     property AuthChallengeHeader: string read GetAuthChallengeHeader;
-    property TokenLocation: TAuthTokenLocation read FTokenLocation;
-    property TokenCustomHeader: string read FTokenCustomHeader;
     property SerializerConfig: INeonConfiguration read GetSerializerConfig;
+    property Engine: TComponent read FEngine write SetEngine;
 
     class property RttiContext: TRttiContext read FRttiContext;
+  published
+    property Path: string read GetPath;
+    property DisplayName: string read FDisplayName write FDisplayName;
+    property BasePath: string read FBasePath write FBasePath;
+    property TokenLocation: TAuthTokenLocation read FTokenLocation;
+    property TokenCustomHeader: string read FTokenCustomHeader;
   end;
-
-  TWiRLApplicationDictionary = class(TObjectDictionary<string, TWiRLApplication>)
-  end;
-
 
 implementation
 
@@ -290,10 +298,28 @@ begin
   Result := Self;
 end;
 
-function TWiRLApplication.SetName(const AName: string): TWiRLApplication;
+function TWiRLApplication.SetDisplayName(const ADisplayName: string): TWiRLApplication;
 begin
-  FName := AName;
+  FDisplayName := ADisplayName;
   Result := Self;
+end;
+
+procedure TWiRLApplication.SetEngine(const Value: TComponent);
+begin
+  if FEngine <> Value then
+  begin
+    TWiRLDebug.LogMessage('start SetEngine');
+    TWiRLDebug.LogMessage('app: basepath: ' + FBasePath);
+    TWiRLDebug.LogMessage('engine: ' + BoolToStr(Assigned(Value), True));
+
+
+    if Assigned(FEngine) then
+      (FEngine as TWiRLEngine).RemoveApplication(Self);
+    FEngine := Value;
+    if Assigned(FEngine) then
+      (FEngine as TWiRLEngine).AddApplication(Self);
+    TWiRLDebug.LogMessage('end SetEngine');
+  end;
 end;
 
 function TWiRLApplication.SetReaders(const AReaders: TArray<string>): TWiRLApplication;
@@ -324,6 +350,13 @@ end;
 function TWiRLApplication.SetFilters(const AFilters: string): TWiRLApplication;
 begin
   Result := SetFilters(AFilters.Split([',']));
+end;
+
+procedure TWiRLApplication.SetParentComponent(AParent: TComponent);
+begin
+  inherited;
+  if AParent is TWiRLEngine then
+    Engine := AParent as TWiRLEngine;
 end;
 
 function TWiRLApplication.SetWriters(const AWriters: TArray<string>): TWiRLApplication;
@@ -382,9 +415,10 @@ begin
   Result := FSerializerConfig;
 end;
 
-constructor TWiRLApplication.Create;
+constructor TWiRLApplication.Create(AOwner: TComponent);
 begin
-  inherited Create;
+  inherited Create(AOwner);
+  TWiRLDebug.LogMessage('TWiRLApplication.Create');
   FResourceRegistry := TObjectDictionary<string, TWiRLConstructorInfo>.Create([doOwnsValues]);
   FFilterRegistry := TWiRLFilterRegistry.Create;
   FFilterRegistry.OwnsObjects := False;
@@ -395,6 +429,8 @@ end;
 
 destructor TWiRLApplication.Destroy;
 begin
+  TWiRLDebug.LogMessage('TWiRLApplication.Destroy');
+  Engine := nil;
   FReaderRegistry.Free;
   FWriterRegistry.Free;
   FFilterRegistry.Free;
@@ -408,6 +444,19 @@ begin
     Result := FAuthChallenge.ToString
   else
     Result := Format('%s realm="%s"', [FAuthChallenge.ToString, FRealmChallenge])
+end;
+
+function TWiRLApplication.GetParentComponent: TComponent;
+begin
+  Result := FEngine;
+end;
+
+function TWiRLApplication.GetPath: string;
+begin
+  if not Assigned(FEngine) then
+    Result := ''
+  else
+    Result := TWiRLURL.CombinePath([(FEngine as TWiRLEngine).BasePath, BasePath]);
 end;
 
 function TWiRLApplication.GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
@@ -430,6 +479,11 @@ begin
   if not Assigned(FSerializerConfig) then
     FSerializerConfig := TNeonConfiguration.Default;
   Result := FSerializerConfig;
+end;
+
+function TWiRLApplication.HasParent: Boolean;
+begin
+  Result := Assigned(FEngine);
 end;
 
 class procedure TWiRLApplication.InitializeRtti;

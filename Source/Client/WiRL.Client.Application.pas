@@ -33,18 +33,11 @@ type
     property Path: string read GetPath;
   end;
 
-procedure Register;
-
 implementation
 
 uses
   WiRL.Client.Utils,
   WiRL.http.URL;
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClientApplication]);
-end;
 
 { TWiRLClientApplication }
 

@@ -70,8 +70,6 @@ type
     property ResourceDataSets: TWiRLFDResourceDatasets read FResourceDataSets write FResourceDataSets;
   end;
 
-procedure Register;
-
 implementation
 
 uses
@@ -82,11 +80,6 @@ uses
   WiRL.Data.FireDAC.Persistence,
   WiRL.Data.FireDAC.Updates,
   WiRL.Data.FireDAC.Utils;
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLFDResource]);
-end;
 
 { TWiRLFDResource }
 

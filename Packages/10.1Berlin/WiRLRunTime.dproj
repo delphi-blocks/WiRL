@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{EBEA6D21-3813-485E-8BCA-048D1CABD9C1}</ProjectGuid>
-        <MainSource>WiRL.dpk</MainSource>
+        <MainSource>WiRLRunTime.dpk</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <TargetedPlatforms>1</TargetedPlatforms>
@@ -45,9 +45,10 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
-        <SanitizedProjectName>WiRL</SanitizedProjectName>
+        <SanitizedProjectName>WiRLRunTime</SanitizedProjectName>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <DCC_Description>WiRL REST Library</DCC_Description>
         <GenDll>true</GenDll>
@@ -108,9 +109,7 @@
         <DCCReference Include="IndyCore.dcp"/>
         <DCCReference Include="bindengine.dcp"/>
         <DCCReference Include="bindcomp.dcp"/>
-        <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.FireDAC.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Messaging.Resource.pas"/>
@@ -124,7 +123,6 @@
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Worker.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
@@ -172,9 +170,7 @@
         <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Indy.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Interfaces.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.http.Client.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Interfaces.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Editor.pas"/>
         <RcItem Include="..\..\media\TWiRLClient.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLClient</ResourceId>
@@ -237,9 +233,10 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">WiRL.dpk</Source>
+                    <Source Name="MainSource">WiRLRunTime.dpk</Source>
                 </Source>
                 <Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRL240.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRL240.bpl not found</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k240.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp240.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
@@ -250,6 +247,12 @@
                 <Platform value="Win64">False</Platform>
             </Platforms>
             <Deployment Version="3">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLRunTime240.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>WiRLRunTime.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
                         <Overwrite>true</Overwrite>
@@ -270,13 +273,16 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRL240.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployClass Name="DependencyModule">
                     <Platform Name="Win32">
-                        <RemoteName>WiRL.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
                     </Platform>
-                </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -615,16 +621,7 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>

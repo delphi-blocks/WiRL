@@ -12,7 +12,7 @@ unit WiRL.Client.Resource.Stream;
 interface
 
 uses
-  System.SysUtils, System.Classes, 
+  System.SysUtils, System.Classes,
   WiRL.Client.Resource, 
   WiRL.http.Client;
 
@@ -35,17 +35,10 @@ type
     property ResponseSize: Int64 read GetResponseSize;
   end;
 
-procedure Register;
-
 implementation
 
 uses
   WiRL.Core.Utils;
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClientResourceStream]);
-end;
 
 { TWiRLClientResourceStream }
 

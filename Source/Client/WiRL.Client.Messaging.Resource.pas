@@ -54,14 +54,7 @@ type
     property OnMessage: TWiRLMessageEvent read FOnMessage write FOnMessage;
   end;
 
-procedure Register;
-
 implementation
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Client', [TWiRLClientMessagingResource]);
-end;
 
 { TWiRLClientMessagingResource }
 

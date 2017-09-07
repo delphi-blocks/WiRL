@@ -30,14 +30,7 @@ type
     property OnExecute: THttpEngineExecuteEvent read FOnExecute write FOnExecute;
   end;
 
-procedure Register;
-
 implementation
-
-procedure Register;
-begin
-  RegisterComponents('WiRL Server', [TWiRLhttpEngine]);
-end;
 
 { TWiRLhttpEngine }
 
