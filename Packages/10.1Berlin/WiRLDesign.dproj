@@ -109,6 +109,10 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Register.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Editor.pas">
+            <Form>WiRLAppEditor</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

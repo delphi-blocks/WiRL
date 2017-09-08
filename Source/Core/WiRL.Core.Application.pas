@@ -454,7 +454,7 @@ end;
 function TWiRLApplication.GetPath: string;
 begin
   if not Assigned(FEngine) then
-    Result := ''
+    Result := BasePath
   else
     Result := TWiRLURL.CombinePath([(FEngine as TWiRLEngine).BasePath, BasePath]);
 end;

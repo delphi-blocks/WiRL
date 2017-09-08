@@ -59,7 +59,6 @@ type
   TWiRLApplicationInfo = class
   private
     FEngine: TWiRLEngine;
-    FBasePath: string;
     FApplication: TWiRLApplication;
     function GetBasePath: string;
   public
@@ -458,11 +457,7 @@ end;
 
 function TWiRLApplicationInfo.GetBasePath: string;
 begin
-  if not Assigned(FEngine) then
-    raise EWiRLException.Create('Application BasePath: Engine not assigned');
-  if FBasePath = '' then
-    FBasePath := TWiRLURL.CombinePath([FEngine.BasePath, FApplication.BasePath]);
-  Result := FBasePath;
+  Result := FApplication.Path;
 end;
 
 { TWiRLApplicationList }

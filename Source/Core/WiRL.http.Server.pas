@@ -53,6 +53,11 @@ type
     property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects;
   end;
 
+  TWiRLEngineList = class(TObjectList<TWiRLEngineInfo>)
+  public
+    function TryGetValue(const ABasePath: string; out AEngine: TWiRLCustomEngine): Boolean;
+  end;
+
   TWiRLhttpServer = class(TComponent, IWiRLListener)
   private
   const
@@ -69,7 +74,7 @@ type
     procedure SetThreadPoolSizeProp(const Value: Integer);
     procedure SetServerVendor(const Value: string);
   protected
-    FEngines: TDictionary<string,TWiRLEngineInfo>;
+    FEngines: TWiRLEngineList;
     function GetActive: Boolean; virtual;
     procedure SetActive(const Value: Boolean); virtual;
     procedure Startup;
@@ -81,7 +86,6 @@ type
     function AddEngines(AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLhttpServer;
     procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
     procedure RemoveEngine(const ABasePath: string); overload;
-    procedure ChangeEngine(AEngine: TWiRLCustomEngine);
     function GetEngine(const Url: string): TWiRLCustomEngine;
     function SetPort(APort: Integer): TWiRLhttpServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLhttpServer;
@@ -108,7 +112,7 @@ var
   LEngineInfo: TWiRLEngineInfo;
 begin
   LEngineInfo := TWiRLEngineInfo.Create(AEngine, AOwnsObjects);
-  FEngines.Add(ABasePath, LEngineInfo);
+  FEngines.Add(LEngineInfo);
 end;
 
 function TWiRLhttpServer.AddEngine<T>(const ABasePath: string; AOwnsObjects: Boolean): T;
@@ -128,32 +132,10 @@ begin
   Result := Self;
 end;
 
-procedure TWiRLhttpServer.ChangeEngine(AEngine: TWiRLCustomEngine);
-var
-  LPair: TPair<string,TWiRLEngineInfo>;
-  LKey: string;
-  LOwnsObjects: Boolean;
-begin
-  for LPair in FEngines do
-  begin
-    if LPair.Value.Engine = AEngine then
-    begin
-      LKey := LPair.Key;
-      LOwnsObjects := LPair.Value.OwnsObjects;
-      //FEngines.Remove(LKey);
-      RemoveEngine(LKey);
-      AddEngine(AEngine.BasePath, AEngine, LOwnsObjects);
-    end;
-  end;
-end;
-
 constructor TWiRLhttpServer.Create(AOwner: TComponent);
 begin
   inherited;
-  if not Assigned(TWiRLServerRegistry.Instance) then
-    TWiRLDebug.LogMessage('Not assigned !!!');
-  Exit;
-  FEngines := TDictionary<string,TWiRLEngineInfo>.Create;
+  FEngines := TWiRLEngineList.Create(True);
   FHttpServer := TWiRLServerRegistry.Instance.CreateServer(FServerVendor);
   FHttpServer.Listener := Self;
   FActive := False;
@@ -172,13 +154,13 @@ end;
 
 procedure TWiRLhttpServer.FreeEngines;
 var
-  LPair: TPair<string,TWiRLEngineInfo>;
+  LEngineInfo: TWiRLEngineInfo;
 begin
-  for LPair in FEngines do
+  for LEngineInfo in FEngines do
   begin
-    if LPair.Value.OwnsObjects then
-      LPair.Value.Engine.Free;
-    LPair.Value.Free;
+    if LEngineInfo.OwnsObjects then
+      LEngineInfo.Engine.Free;
+//    LPair.Value.Free;
   end;
   FEngines.Free;
 end;
@@ -192,7 +174,6 @@ function TWiRLhttpServer.GetEngine(const Url: string): TWiRLCustomEngine;
 var
   LUrlTokens: TArray<string>;
   LBaseUrl: string;
-  LEngineInfo: TWiRLEngineInfo;
 begin
   Result := nil;
   LUrlTokens := Url.Split(['/']);
@@ -201,11 +182,11 @@ begin
   else
     LBaseUrl := '';
 
-  if FEngines.TryGetValue('/' + LBaseUrl, LEngineInfo) then
-    Exit(LEngineInfo.Engine);
+  if FEngines.TryGetValue('/' + LBaseUrl, Result) then
+    Exit;
 
-  if FEngines.TryGetValue('/', LEngineInfo) then
-    Exit(LEngineInfo.Engine);
+  if FEngines.TryGetValue('/', Result) then
+    Exit;
 
   if not Assigned(Result) then
     raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [Url]);
@@ -242,18 +223,33 @@ procedure TWiRLhttpServer.RemoveEngine(const ABasePath: string);
 var
   LEngineInfo: TWiRLEngineInfo;
 begin
-  if FEngines.TryGetValue(ABasePath, LEngineInfo) then
+  for LEngineInfo in FEngines do
   begin
-    if LEngineInfo.FOwnsObjects then
-      LEngineInfo.Engine.Free;
-    FEngines.Remove(ABasePath);
-    LEngineInfo.Free;
+    if LEngineInfo.Engine.BasePath = ABasePath then
+      RemoveEngine(LEngineInfo.Engine);
   end;
 end;
 
 procedure TWiRLhttpServer.RemoveEngine(AEngine: TWiRLCustomEngine);
+var
+  LEngineInfo: TWiRLEngineInfo;
 begin
-  FEngines.Remove(AEngine.BasePath);
+  TWiRLDebug.LogMessage('TWiRLhttpServer.RemoveEngine start');
+  for LEngineInfo in FEngines do
+  begin
+    TWiRLDebug.LogMessage('se è l''ultima è un problema!!!');
+    if LEngineInfo.Engine = AEngine then
+    begin
+      TWiRLDebug.LogMessage('LEngineInfo.OwnsObjects: ' + BoolToStr(LEngineInfo.OwnsObjects));
+      if LEngineInfo.OwnsObjects then
+        LEngineInfo.Engine.Free;
+      TWiRLDebug.LogMessage('before FEngines.Remove');
+      FEngines.Remove(LEngineInfo);
+      TWiRLDebug.LogMessage('after FEngines.Remove');
+      TWiRLDebug.LogMessage('LEngineInfo.OwnsObjects: ' + BoolToStr(LEngineInfo.OwnsObjects));
+    end;
+  end;
+  TWiRLDebug.LogMessage('TWiRLhttpServer.RemoveEngine end');
 end;
 
 procedure TWiRLhttpServer.SetActive(const Value: Boolean);
@@ -315,19 +311,19 @@ end;
 
 procedure TWiRLhttpServer.Shutdown;
 var
-  LPair: TPair<string,TWiRLEngineInfo>;
+  LEngineInfo: TWiRLEngineInfo;
 begin
-  for LPair in FEngines do
-    LPair.Value.Engine.Shutdown;
+  for LEngineInfo in FEngines do
+    LEngineInfo.Engine.Shutdown;
   FHttpServer.Shutdown;
 end;
 
 procedure TWiRLhttpServer.Startup;
 var
-  LPair: TPair<string,TWiRLEngineInfo>;
+  LEngineInfo: TWiRLEngineInfo;
 begin
-  for LPair in FEngines do
-    LPair.Value.Engine.Startup;
+  for LEngineInfo in FEngines do
+    LEngineInfo.Engine.Startup;
   FHttpServer.Startup;
 end;
 
@@ -372,7 +368,7 @@ procedure TWiRLCustomEngine.Notification(AComponent: TComponent;
 begin
   inherited;
   if (Operation = opRemove) and (AComponent = Server) then
-    Server := nil;
+    FServer := nil;
 end;
 
 procedure TWiRLCustomEngine.SetBasePath(const Value: string);
@@ -381,8 +377,6 @@ begin
     FBasePath := Value
   else
     FBasePath := '/' + Value;
-  if Assigned(FServer) then
-    FServer.ChangeEngine(Self);
 end;
 
 procedure TWiRLCustomEngine.SetServer(const Value: TWiRLhttpServer);
@@ -403,6 +397,26 @@ end;
 
 procedure TWiRLCustomEngine.Startup;
 begin
+  if not Assigned(FServer) then
+    raise EWiRLException.Create('Server not assigned');
+end;
+
+{ TWiRLEngineList }
+
+function TWiRLEngineList.TryGetValue(const ABasePath: string;
+  out AEngine: TWiRLCustomEngine): Boolean;
+var
+  LEngineInfo: TWiRLEngineInfo;
+begin
+  Result := False;
+  for LEngineInfo in Self do
+  begin
+    if LEngineInfo.Engine.BasePath = ABasePath then
+    begin
+      AEngine := LEngineInfo.Engine;
+      Exit(True);
+    end;
+  end;
 end;
 
 end.
