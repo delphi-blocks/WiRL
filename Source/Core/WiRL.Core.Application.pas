@@ -38,6 +38,9 @@ type
   TAttributeArray = TArray<TCustomAttribute>;
   TArgumentArray = array of TValue;
 
+  TWiRLAppResourceRegistry = class(TObjectDictionary<string, TWiRLConstructorInfo>)
+  end;
+
   TWiRLApplication = class(TComponent)
   private
     //256bit encoding key
@@ -46,7 +49,7 @@ type
     class var FRttiContext: TRttiContext;
   private
     FSecret: TBytes;
-    FResourceRegistry: TObjectDictionary<string, TWiRLConstructorInfo>;
+    FResourceRegistry: TWiRLAppResourceRegistry;
     FFilterRegistry: TWiRLFilterRegistry;
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
@@ -60,7 +63,6 @@ type
     FTokenCustomHeader: string;
     FSerializerConfig: INeonConfiguration;
     FEngine: TComponent;
-    function GetResources: TArray<string>;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
     function AddWriter(const AWriter: string): Boolean;
@@ -70,8 +72,17 @@ type
     function GetSerializerConfig: INeonConfiguration;
     procedure SetEngine(const Value: TComponent);
     function GetPath: string;
+    procedure ReadFilters(Reader: TReader);
+    procedure WriteFilters(Writer: TWriter);
+    procedure ReadResources(Reader: TReader);
+    procedure WriteResources(Writer: TWriter);
+    procedure ReadWriters(Reader: TReader);
+    procedure WriteWriters(Writer: TWriter);
+    procedure ReadReaders(Reader: TReader);
+    procedure WriteReaders(Writer: TWriter);
   protected
     procedure SetParentComponent(AParent: TComponent); override;
+    procedure DefineProperties(Filer: TFiler); override;
   public
     class procedure InitializeRtti;
 
@@ -112,7 +123,6 @@ type
     property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property WriterRegistry: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property ReaderRegistry: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
-    property Resources: TArray<string> read GetResources;
     property Secret: TBytes read GetSecret;
     property AuthChallengeHeader: string read GetAuthChallengeHeader;
     property SerializerConfig: INeonConfiguration read GetSerializerConfig;
@@ -123,8 +133,13 @@ type
     property Path: string read GetPath;
     property DisplayName: string read FDisplayName write FDisplayName;
     property BasePath: string read FBasePath write FBasePath;
-    property TokenLocation: TAuthTokenLocation read FTokenLocation;
-    property TokenCustomHeader: string read FTokenCustomHeader;
+    property TokenLocation: TAuthTokenLocation read FTokenLocation write FTokenLocation;
+    property TokenCustomHeader: string read FTokenCustomHeader write FTokenCustomHeader;
+
+    property Resources: TWiRLAppResourceRegistry read FResourceRegistry write FResourceRegistry;
+    property Filters: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
+    property Writers: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
+    property Readers: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
   end;
 
 implementation
@@ -390,6 +405,26 @@ begin
     FSerializerConfig := TNeonConfiguration.Default;
 end;
 
+procedure TWiRLApplication.WriteFilters(Writer: TWriter);
+begin
+
+end;
+
+procedure TWiRLApplication.WriteReaders(Writer: TWriter);
+begin
+
+end;
+
+procedure TWiRLApplication.WriteResources(Writer: TWriter);
+begin
+
+end;
+
+procedure TWiRLApplication.WriteWriters(Writer: TWriter);
+begin
+
+end;
+
 function TWiRLApplication.SetFilters(const AFilters: TArray<string>): TWiRLApplication;
 var
   LFilter: string;
@@ -419,12 +454,21 @@ constructor TWiRLApplication.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   TWiRLDebug.LogMessage('TWiRLApplication.Create');
-  FResourceRegistry := TObjectDictionary<string, TWiRLConstructorInfo>.Create([doOwnsValues]);
+  FResourceRegistry := TWiRLAppResourceRegistry.Create([doOwnsValues]);
   FFilterRegistry := TWiRLFilterRegistry.Create;
   FFilterRegistry.OwnsObjects := False;
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FSecret := TEncoding.ANSI.GetBytes(SCRT_SGN);
+end;
+
+procedure TWiRLApplication.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+  Filer.DefineProperty('Resources', ReadResources, WriteResources, FResourceRegistry.Count > 0);
+  Filer.DefineProperty('Filters', ReadFilters, WriteFilters, FFilterRegistry.Count > 0);
+  Filer.DefineProperty('Readers', ReadReaders, WriteReaders, FReaderRegistry.Count > 0);
+  Filer.DefineProperty('Writers', ReadWriters, WriteWriters, FWriterRegistry.Count > 0);
 end;
 
 destructor TWiRLApplication.Destroy;
@@ -464,11 +508,6 @@ begin
   FResourceRegistry.TryGetValue(AResourceName, Result);
 end;
 
-function TWiRLApplication.GetResources: TArray<string>;
-begin
-  Result := FResourceRegistry.Keys.ToArray;
-end;
-
 function TWiRLApplication.GetSecret: TBytes;
 begin
   Result := FSecret;
@@ -489,6 +528,26 @@ end;
 class procedure TWiRLApplication.InitializeRtti;
 begin
   FRttiContext := TRttiContext.Create;
+end;
+
+procedure TWiRLApplication.ReadFilters(Reader: TReader);
+begin
+
+end;
+
+procedure TWiRLApplication.ReadReaders(Reader: TReader);
+begin
+
+end;
+
+procedure TWiRLApplication.ReadResources(Reader: TReader);
+begin
+
+end;
+
+procedure TWiRLApplication.ReadWriters(Reader: TReader);
+begin
+
 end;
 
 function TWiRLApplication.SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication;

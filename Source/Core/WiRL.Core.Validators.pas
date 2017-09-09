@@ -96,11 +96,9 @@ type
     FValidatorClass: TClass;
     FAttributeInfo: PTypeInfo;
     FConstructorFunc: TFunc<TObject>;
-    FRawConstraint: Boolean;
   public
     constructor Create(AValidatorClass: TClass; AConstructorFunc: TFunc<TObject>; AAttributeInfo: PTypeInfo);
 
-    property RawConstraint: Boolean read FRawConstraint;
     property ValidatorClass: TClass read FValidatorClass;
     property AttributeInfo: PTypeInfo read FAttributeInfo;
     property ConstructorFunc: TFunc<TObject> read FConstructorFunc write FConstructorFunc;
@@ -299,9 +297,12 @@ var
   LInitParams: TArray<TRttiParameter>;
 begin
   LInitMethod := TRttiHelper.Context.GetType(AClass).GetMethod('Initialize');
+  if not Assigned(LInitMethod) then
+    raise EWiRLException.CreateFmt('Invalid validator class [%s] (Initialize method not found)', [AClass.ClassName]);
+
   LInitParams := LInitMethod.GetParameters;
-  if Length(LInitParams) < 0 then
-    raise Exception.CreateFmt('Invalid validator class [%s]', [AClass.ClassName]);
+  if Length(LInitParams) <> 1 then
+    raise EWiRLException.CreateFmt('Invalid validator class [%s] (Initialize wrong number of parameters)', [AClass.ClassName]);
   Result := LInitParams[0].ParamType.Handle;
 end;
 
@@ -332,8 +333,6 @@ begin
   FValidatorClass := AValidatorClass;
   FConstructorFunc := AConstructorFunc;
   FAttributeInfo := AAttributeInfo;
-
-  FRawConstraint := TRttiHelper.HasAttribute<RawConstraintAttribute>(TRttiHelper.Context.GetType(AAttributeInfo));
 end;
 
 { SizeAttribute }

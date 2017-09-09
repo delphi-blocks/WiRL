@@ -103,6 +103,7 @@ type
     function DoBeforeRequestStart(): Boolean; virtual;
     procedure DoAfterRequestEnd(const AStopWatch: TStopWatch); virtual;
     procedure DoHandleException(AContext: TWiRLContext; AApplication: TWiRLApplication; E: Exception); virtual;
+    procedure DefineProperties(Filer: TFiler); override;
 
     // Handles the parent/child relationship for the designer
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
@@ -128,12 +129,11 @@ type
     function SetDisplayName(const ADisplayName: string): TWiRLEngine;
     function SetBasePath(const ABasePath: string): TWiRLEngine;
 
-    property Applications: TWiRLApplicationList read FApplications;
-
     class property ServerFileName: string read GetServerFileName;
     class property ServerDirectory: string read GetServerDirectory;
   published
     property DisplayName: string read FDisplayName write FDisplayName;
+    property Applications: TWiRLApplicationList read FApplications write FApplications;
   end;
 
 implementation
@@ -213,6 +213,12 @@ begin
   FSubscribers := TList<IWiRLHandleListener>.Create;
   FDisplayName := DefaultDisplayName;
   BasePath := '/rest';
+end;
+
+procedure TWiRLEngine.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+  Filer.DefineProperty('Applications', nil, nil, FApplications.Count > 0);
 end;
 
 destructor TWiRLEngine.Destroy;
