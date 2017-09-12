@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
-  WiRL.http.Server.Indy, WiRL.Core.Engine;
+  WiRL.http.Server, WiRL.http.Server.Indy, WiRL.Core.Engine;
 
 type
   TMainForm = class(TForm)
@@ -35,7 +35,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServerIndy;
+    FServer: TWiRLhttpServer;
   public
   end;
 
@@ -62,7 +62,7 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServerIndy.Create;
+  FServer := TWiRLhttpServer.Create(nil);
 
   // Server configuration
   FServer
@@ -70,11 +70,11 @@ begin
     .SetThreadPoolSize(75)
     // Engine configuration
     .AddEngine<TWiRLEngine>('/rest')
-      .SetName('WiRL Auth Demo')
+      .SetDisplayName('WiRL Auth Demo')
 
       .AddApplication('/app')
         .SetSystemApp(True)
-        .SetName('Auth Application')
+        .SetDisplayName('Auth Application')
         .SetSecret(Tencoding.UTF8.GetBytes(edtSecret.Text))
         .SetClaimsClass(TServerClaims)
       {$IF CompilerVersion >=28} //XE7

@@ -49,7 +49,8 @@ type
       IsReadable: TFunc<TRttiType, TAttributeArray, TMediaType, Boolean>;
       GetAffinity: TGetAffinityFunction;
     public
-      constructor Create(AType: TRttiType);
+      constructor Create(AType: TRttiType); overload;
+      constructor Create(const AReaderName: string); overload;
       destructor Destroy; override;
 
       property Consumes: TMediaTypeList read FConsumes;
@@ -66,7 +67,10 @@ type
     destructor Destroy; override;
 
     function GetReaderByName(const AQualifiedClassName: string): TReaderInfo;
+    procedure Clear;
+    function GetEnumerator: TObjectList<TReaderInfo>.TEnumerator;
     function Add(AReader: TReaderInfo): Integer;
+    function AddReaderName(const AReaderName: string): TReaderInfo;
     procedure Assign(ARegistry: TWiRLReaderRegistry);
     procedure Enumerate(const AProc: TProc<TReaderInfo>);
     function FindReader(AParam: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
@@ -116,12 +120,23 @@ begin
   Result := FRegistry.Add(AReader);
 end;
 
+function TWiRLReaderRegistry.AddReaderName(const AReaderName: string): TReaderInfo;
+begin
+  Result := TReaderInfo.Create(AReaderName);
+  FRegistry.Add(Result);
+end;
+
 procedure TWiRLReaderRegistry.Assign(ARegistry: TWiRLReaderRegistry);
 var
   LReaderInfo: TReaderInfo;
 begin
   for LReaderInfo in ARegistry.FRegistry do
     FRegistry.Add(LReaderInfo);
+end;
+
+procedure TWiRLReaderRegistry.Clear;
+begin
+  FRegistry.Clear;
 end;
 
 constructor TWiRLReaderRegistry.Create(AOwnsObjects: Boolean);
@@ -203,6 +218,11 @@ begin
       else
         Result := 0;
     end
+end;
+
+function TWiRLReaderRegistry.GetEnumerator: TObjectList<TReaderInfo>.TEnumerator;
+begin
+  Result := FRegistry.GetEnumerator;
 end;
 
 function TWiRLReaderRegistry.GetReaderByName(const AQualifiedClassName: string): TReaderInfo;
@@ -287,6 +307,11 @@ begin
   FReaderType := AType;
   FReaderName := AType.QualifiedName;
   FConsumes := GetConsumesMediaTypes(AType);
+end;
+
+constructor TWiRLReaderRegistry.TReaderInfo.Create(const AReaderName: string);
+begin
+  FReaderName := AReaderName;
 end;
 
 destructor TWiRLReaderRegistry.TReaderInfo.Destroy;

@@ -1008,7 +1008,7 @@ end;
 
 class function TNeonMapperJSON.JSONToObject<T>(const AJSON: string): T;
 begin
-  { TODO -opaolo -c : WIP 18/05/2017 17:59:03 }
+  Result := JSONToObject(TRttiHelper.Context.GetType(TClass(T)), AJSON) as T;
 end;
 
 class function TNeonMapperJSON.ObjectToJSON(AObject: TObject; AConfig: INeonConfiguration): TJSONValue;

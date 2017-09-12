@@ -17,6 +17,7 @@ uses
 
   WiRL.Core.Engine,
   WiRL.Core.Application,
+  WiRL.http.Server,
   WiRL.http.Server.Indy;
 
 type
@@ -36,7 +37,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServerIndy;
+    FServer: TWiRLhttpServer;
   public
   end;
 
@@ -76,18 +77,18 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServerIndy.Create;
+  FServer := TWiRLhttpServer.Create(nil);
 
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
-    .ConfigureEngine('/rest')
-    .SetName('WiRL MessageBody* Demo')
+    .AddEngine<TWiRLEngine>('/rest')
+    .SetDisplayName('WiRL MessageBody* Demo')
 
     // Application configuration
     .AddApplication('/app')
-      .SetName('Content App')
+      .SetDisplayName('Content App')
       .SetResources('Server.Resources.TMessageBodyResource')
   ;
 

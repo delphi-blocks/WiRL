@@ -12,7 +12,7 @@ uses
   WiRL.Core.Application;
 
 type
-  TWiRLAppEditor = class(TForm, IDesignNotification)
+  TWiRLAppEditor = class(TForm, IDesignNotification, IDesignWindow)
     ImageList1: TImageList;
     PopupMenu1: TPopupActionBar;
     N3: TMenuItem;
@@ -70,6 +70,10 @@ type
     procedure DesignerOpened(const Designer: IDesigner; AResurrecting: Boolean); virtual;
     procedure DesignerClosed(const Designer: IDesigner; AGoingDormant: Boolean); virtual;
     procedure ItemsModified(const Designer: IDesigner); virtual;
+
+    // IDesignWindow
+    procedure WindowHide;
+    procedure WindowShow;
 
     property Designer: IDesigner read FDesigner write FDesigner;
     property Engine: TWiRLEngine read FEngine write FEngine;
@@ -140,7 +144,8 @@ end;
 procedure TWiRLAppEditor.DesignerClosed(const Designer: IDesigner;
   AGoingDormant: Boolean);
 begin
-
+  if Designer = FDesigner then
+    Close;
 end;
 
 procedure TWiRLAppEditor.DesignerOpened(const Designer: IDesigner;
@@ -310,6 +315,21 @@ begin
   WiRLAppEditor.Designer := ADesigner;
   WiRLAppEditor.Engine := AEngine;
   WiRLAppEditor.Show;
+end;
+
+procedure TWiRLAppEditor.WindowHide;
+begin
+  if Visible then
+    ShowWindow(Handle, SW_HIDE);
+end;
+
+procedure TWiRLAppEditor.WindowShow;
+const
+  ShowCommands: array[TWindowState] of Word =
+    (SW_SHOWNOACTIVATE, SW_SHOWMINNOACTIVE, SW_SHOWMAXIMIZED);
+begin
+  if Visible then
+    ShowWindow(Handle, ShowCommands[WindowState]);
 end;
 
 end.

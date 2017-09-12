@@ -67,7 +67,7 @@ var
   LResource: TClass;
 begin
   // Loop on every resource of the application
-  for LResourceName in AApplication.Resources do
+  for LResourceName in AApplication.Resources.Keys do
   begin
     LResource := AApplication.GetResourceInfo(LResourceName).TypeTClass;
     AddResource(APaths, AApplication, LResource);
@@ -132,7 +132,7 @@ var
   LInfo: TJSONObject;
   LPaths: TJSONObject;
   LEngine: TWiRLEngine;
-  LAppPair: TPair<string,TWiRLApplication>;
+  LAppInfo: TWiRLApplicationInfo;
 begin
   LEngine := AContext.Engine as TWiRLEngine;
 
@@ -143,9 +143,9 @@ begin
 
   // Paths object
   LPaths := TJSONObject.Create;
-  for LAppPair in LEngine.Applications do
+  for LAppInfo in LEngine.Applications do
   begin
-    AddApplicationResource(LPaths, LAppPair.Value);
+    AddApplicationResource(LPaths, LAppInfo.Application);
   end;
 
   // Swagger object (root)

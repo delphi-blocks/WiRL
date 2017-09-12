@@ -7,10 +7,9 @@ uses
 
   WiRL.http.Accept.MediaType,
   WiRL.Core.Attributes,
-  WiRL.Core.MessageBodyReaders,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.Core.MessageBody.Default,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.Core.Registry,
   WiRL.Tests.Mock.Filters;
 

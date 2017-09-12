@@ -5,17 +5,18 @@ interface
 uses
   System.SysUtils,
 
+  WiRL.http.Server,
   WiRL.http.Engines,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context;
 
 type
-  TWiRLDemoEngine = class(TWirlCustomEngine)
+  TWiRLDemoEngine = class(TWiRLCustomEngine)
   public
     procedure HandleRequest(AContext: TWiRLContext); override;
   end;
 
-  TWiRLDefaultEngine = class(TWirlCustomEngine)
+  TWiRLDefaultEngine = class(TWiRLCustomEngine)
   public
     procedure HandleRequest(AContext: TWiRLContext); override;
   end;

@@ -107,6 +107,7 @@ object Form1: TForm1
     ReadTimeout = -1
     ProxyParams.BasicAuthentication = False
     ProxyParams.ProxyPort = 0
+    NoProtocolErrorException = False
     Left = 688
     Top = 56
   end

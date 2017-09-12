@@ -122,14 +122,12 @@ begin
   FHttpServer.OnCommandGet := DoCommandGet;
   FHttpServer.OnCommandOther := DoCommandOther;
   FHttpServer.OnParseAuthentication := ParseAuthorizationHeader;
-  TWiRLDebug.LogMessage('TWiRLhttpServerIndy.Create');
 end;
 
 destructor TWiRLhttpServerIndy.Destroy;
 begin
   FHttpServer.Active := False;
   FHttpServer.Free;
-  TWiRLDebug.LogMessage('TWiRLhttpServerIndy.Destroy');
   inherited;
 end;
 

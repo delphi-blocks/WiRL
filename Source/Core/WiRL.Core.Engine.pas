@@ -206,7 +206,6 @@ end;
 constructor TWiRLEngine.Create(AOwner: TComponent);
 begin
   inherited;
-  TWiRLDebug.LogMessage('TWiRLEngine.Create');
   FRttiContext := TRttiContext.Create;
   FApplications := TWiRLApplicationList.Create(Self);
   FCriticalSection := TCriticalSection.Create;
@@ -223,7 +222,6 @@ end;
 
 destructor TWiRLEngine.Destroy;
 begin
-  TWiRLDebug.LogMessage('TWiRLEngine.Destroy');
   FCriticalSection.Free;
   FApplications.Free;
   FSubscribers.Free;
@@ -428,13 +426,10 @@ var
   LAppInfo: TWiRLApplicationInfo;
 begin
   inherited;
-  TWiRLDebug.LogMessage('GetChildren start ');
   for LAppInfo in FApplications do
   begin
-    TWiRLDebug.LogMessage('app: ' + LAppInfo.Application.BasePath);
     Proc(LAppInfo.Application);
   end;
-  TWiRLDebug.LogMessage('GetChildren end');
 end;
 
 class function TWiRLEngine.GetServerDirectory: string;

@@ -32,7 +32,8 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation);
       override;
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(AOwner: TComponent); overload; override;
+    constructor Create(ABasePath: string); reintroduce; overload;
 
     procedure HandleRequest(AContext: TWiRLContext); virtual; abstract;
     procedure Startup; virtual;
@@ -89,6 +90,8 @@ type
     function GetEngine(const Url: string): TWiRLCustomEngine;
     function SetPort(APort: Integer): TWiRLhttpServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLhttpServer;
+
+    { IWiRLListener }
     procedure HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
 
     property HttpServer: IWiRLServer read FHttpServer;
@@ -141,13 +144,10 @@ begin
   FActive := False;
   Port := DefaultPort;
   ThreadPoolSize := DefaultThreadPoolSize;
-
-  TWiRLDebug.LogMessage('TWiRLhttpServer.Create');
 end;
 
 destructor TWiRLhttpServer.Destroy;
 begin
-  TWiRLDebug.LogMessage('TWiRLhttpServer.Destroy');
   FreeEngines;
   inherited;
 end;
@@ -187,6 +187,9 @@ begin
 
   if FEngines.TryGetValue('/', Result) then
     Exit;
+
+  if Url.Equals('/favicon.ico') then
+    Abort;
 
   if not Assigned(Result) then
     raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [Url]);
@@ -234,22 +237,15 @@ procedure TWiRLhttpServer.RemoveEngine(AEngine: TWiRLCustomEngine);
 var
   LEngineInfo: TWiRLEngineInfo;
 begin
-  TWiRLDebug.LogMessage('TWiRLhttpServer.RemoveEngine start');
   for LEngineInfo in FEngines do
   begin
-    TWiRLDebug.LogMessage('se è l''ultima è un problema!!!');
     if LEngineInfo.Engine = AEngine then
     begin
-      TWiRLDebug.LogMessage('LEngineInfo.OwnsObjects: ' + BoolToStr(LEngineInfo.OwnsObjects));
       if LEngineInfo.OwnsObjects then
         LEngineInfo.Engine.Free;
-      TWiRLDebug.LogMessage('before FEngines.Remove');
       FEngines.Remove(LEngineInfo);
-      TWiRLDebug.LogMessage('after FEngines.Remove');
-      TWiRLDebug.LogMessage('LEngineInfo.OwnsObjects: ' + BoolToStr(LEngineInfo.OwnsObjects));
     end;
   end;
-  TWiRLDebug.LogMessage('TWiRLhttpServer.RemoveEngine end');
 end;
 
 procedure TWiRLhttpServer.SetActive(const Value: Boolean);
@@ -344,6 +340,12 @@ begin
   inherited;
   FindDefaultServer;
   BasePath := '/';
+end;
+
+constructor TWiRLCustomEngine.Create(ABasePath: string);
+begin
+  Create(nil);
+  BasePath := ABasePath;
 end;
 
 procedure TWiRLCustomEngine.FindDefaultServer;

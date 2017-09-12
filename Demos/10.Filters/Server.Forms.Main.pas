@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
   WiRL.Core.Engine,
+  WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Application,
   WiRL.http.Filters;
@@ -37,7 +38,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServerIndy;
+    FServer: TWiRLhttpServer;
   public
     procedure Log(const AMsg :string);
   end;
@@ -79,18 +80,18 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServerIndy.Create;
+  FServer := TWiRLhttpServer.Create(nil);
 
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
-    .ConfigureEngine('/rest')
-    .SetName('WiRL Filters')
+    .AddEngine<TWiRLEngine>('/rest')
+    .SetDisplayName('WiRL Filters')
 
     // Application configuration
     .AddApplication('/app')
-      .SetName('Filter Demo')
+      .SetDisplayName('Filter Demo')
       .SetResources('Server.Resources.TFilterDemoResource')
       .SetFilters('*')
   ;

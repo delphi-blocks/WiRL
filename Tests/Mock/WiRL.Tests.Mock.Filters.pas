@@ -15,8 +15,8 @@ uses
   System.SysUtils, System.Classes,
   WiRL.Core.Application,
   WiRL.Core.Attributes,
-  WiRL.Core.Request,
-  WiRL.Core.Response,
+  WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.http.Filters;
 
 type

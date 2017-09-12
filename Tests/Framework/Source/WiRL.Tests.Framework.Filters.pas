@@ -17,6 +17,8 @@ uses
 
   DUnitX.TestFramework,
 
+  WiRL.http.Server,
+  WiRL.Core.Engine,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
 
@@ -24,7 +26,7 @@ type
   [TestFixture]
   TTestFilter = class(TObject)
   private
-    FServer: TWiRLTestServer;
+    FServer: TWiRLhttpServer;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
   public
@@ -56,16 +58,15 @@ implementation
 
 procedure TTestFilter.Setup;
 begin
-  FServer := TWiRLTestServer.Create;
+  FServer := TWiRLhttpServer.Create(nil);
 
   // Engine configuration
-  FServer.ConfigureEngine('/rest')
-    .SetName('WiRL Test Demo')
-    .SetThreadPoolSize(75)
+  FServer.AddEngine<TWiRLEngine>('/rest')
+    .SetDisplayName('WiRL Test Demo')
 
     .AddApplication('/app')
       .SetSystemApp(True)
-      .SetName('Test Application')
+      .SetDisplayName('Test Application')
       .SetResources(['*'])
       .SetFilters(['*']);
 
@@ -88,7 +89,7 @@ procedure TTestFilter.TestMatchingBindingRequestFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/bindingfilter';
-  FServer.DoCommand(FRequest, FResponse);
+  FServer.HandleRequest(FRequest, FResponse);
   Assert.AreEqual('true', FRequest.HeaderFields['x-request-binded-filter']);
 end;
 
@@ -96,7 +97,7 @@ procedure TTestFilter.TestMatchingBindingResponseFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/bindingfilter';
-  FServer.DoCommand(FRequest, FResponse);
+  FServer.HandleRequest(FRequest, FResponse);
   Assert.AreEqual('true', FResponse.HeaderFields['x-response-binded-filter']);
 end;
 
@@ -104,7 +105,7 @@ procedure TTestFilter.TestNonMatchingBindingRequestFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.DoCommand(FRequest, FResponse);
+  FServer.HandleRequest(FRequest, FResponse);
   Assert.AreNotEqual('true', FRequest.HeaderFields['x-request-binded-filter']);
 end;
 
@@ -112,7 +113,7 @@ procedure TTestFilter.TestNonMatchingBindingResponseFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.DoCommand(FRequest, FResponse);
+  FServer.HandleRequest(FRequest, FResponse);
   Assert.AreNotEqual('true', FResponse.HeaderFields['x-response-binded-filter']);
 end;
 
@@ -120,7 +121,7 @@ procedure TTestFilter.TestPerMatchingFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.DoCommand(FRequest, FResponse);
+  FServer.HandleRequest(FRequest, FResponse);
   Assert.AreEqual('true', FRequest.HeaderFields['x-prematching-filter']);
 end;
 
@@ -128,7 +129,7 @@ procedure TTestFilter.TestPerMatchingFilterWithInvalidResource;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/xxx/yyyy/';
-  FServer.DoCommand(FRequest, FResponse);
+  FServer.HandleRequest(FRequest, FResponse);
   Assert.AreEqual('true', FRequest.HeaderFields['x-prematching-filter']);
   Assert.AreEqual(404, FResponse.StatusCode);
 end;
@@ -137,7 +138,7 @@ procedure TTestFilter.TestRequestFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.DoCommand(FRequest, FResponse);
+  FServer.HandleRequest(FRequest, FResponse);
   Assert.AreEqual('true', FRequest.HeaderFields['x-request-filter']);
 end;
 
@@ -145,7 +146,7 @@ procedure TTestFilter.TestResponseFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.DoCommand(FRequest, FResponse);
+  FServer.HandleRequest(FRequest, FResponse);
   Assert.AreEqual('true', FResponse.HeaderFields['x-response-filter']);
 end;
 

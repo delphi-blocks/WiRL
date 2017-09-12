@@ -38,9 +38,6 @@ type
   TAttributeArray = TArray<TCustomAttribute>;
   TArgumentArray = array of TValue;
 
-  TWiRLAppResourceRegistry = class(TObjectDictionary<string, TWiRLConstructorInfo>)
-  end;
-
   TWiRLApplication = class(TComponent)
   private
     //256bit encoding key
@@ -49,7 +46,7 @@ type
     class var FRttiContext: TRttiContext;
   private
     FSecret: TBytes;
-    FResourceRegistry: TWiRLAppResourceRegistry;
+    FResourceRegistry: TWiRLResourceRegistry;
     FFilterRegistry: TWiRLFilterRegistry;
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
@@ -136,7 +133,8 @@ type
     property TokenLocation: TAuthTokenLocation read FTokenLocation write FTokenLocation;
     property TokenCustomHeader: string read FTokenCustomHeader write FTokenCustomHeader;
 
-    property Resources: TWiRLAppResourceRegistry read FResourceRegistry write FResourceRegistry;
+    // Fake property to display the right property editors
+    property Resources: TWiRLResourceRegistry read FResourceRegistry write FResourceRegistry;
     property Filters: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property Writers: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property Readers: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
@@ -152,6 +150,10 @@ uses
   WiRL.http.URL,
   WiRL.Core.Attributes,
   WiRL.Core.Engine;
+
+const
+  //SRegLineSeparator = #$0A;
+  SRegLineSeparator = ',';
 
 function ExtractToken(const AString: string; const ATokenIndex: Integer; const ADelimiter: Char = '/'): string;
 var
@@ -174,6 +176,12 @@ var
   LRegistry: TWiRLFilterRegistry;
   LInfo: TWiRLFilterConstructorInfo;
 begin
+  if csDesigning in ComponentState then
+  begin
+    FFilterRegistry.AddFilterName(AFilter);
+    Exit(True);
+  end;
+
   Result := False;
   LRegistry := TWiRLFilterRegistry.Instance;
 
@@ -203,6 +211,12 @@ var
   LGlobalRegistry: TWiRLReaderRegistry;
   LReader: TWiRLReaderRegistry.TReaderInfo;
 begin
+  if csDesigning in ComponentState then
+  begin
+    FReaderRegistry.AddReaderName(AReader);
+    Exit(True);
+  end;
+
   Result := False;
   LGlobalRegistry := TMessageBodyReaderRegistry.Instance;
 
@@ -256,6 +270,12 @@ var
   LInfo: TWiRLConstructorInfo;
   LKey: string;
 begin
+  if csDesigning in ComponentState then
+  begin
+    FResourceRegistry.AddResourceName(AResource);
+    Exit(True);
+  end;
+
   Result := False;
   LRegistry := TWiRLResourceRegistry.Instance;
 
@@ -280,6 +300,12 @@ var
   LGlobalRegistry: TWiRLWriterRegistry;
   LWriter: TWiRLWriterRegistry.TWriterInfo;
 begin
+  if csDesigning in ComponentState then
+  begin
+    FWriterRegistry.AddWriterName(AWriter);
+    Exit(True);
+  end;
+
   Result := False;
   LGlobalRegistry := TMessageBodyWriterRegistry.Instance;
 
@@ -323,17 +349,11 @@ procedure TWiRLApplication.SetEngine(const Value: TComponent);
 begin
   if FEngine <> Value then
   begin
-    TWiRLDebug.LogMessage('start SetEngine');
-    TWiRLDebug.LogMessage('app: basepath: ' + FBasePath);
-    TWiRLDebug.LogMessage('engine: ' + BoolToStr(Assigned(Value), True));
-
-
     if Assigned(FEngine) then
       (FEngine as TWiRLEngine).RemoveApplication(Self);
     FEngine := Value;
     if Assigned(FEngine) then
       (FEngine as TWiRLEngine).AddApplication(Self);
-    TWiRLDebug.LogMessage('end SetEngine');
   end;
 end;
 
@@ -406,23 +426,43 @@ begin
 end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
+var
+  LFilter: TWiRLFilterConstructorInfo;
 begin
-
+  Writer.WriteListBegin;
+  for LFilter in FFilterRegistry do
+    Writer.WriteString(LFilter.FilterQualifiedClassName);
+  Writer.WriteListEnd;
 end;
 
 procedure TWiRLApplication.WriteReaders(Writer: TWriter);
+var
+  LReaderInfo: TWiRLReaderRegistry.TReaderInfo;
 begin
-
+  Writer.WriteListBegin;
+  for LReaderInfo in FReaderRegistry do
+    Writer.WriteString(LReaderInfo.ReaderName);
+  Writer.WriteListEnd;
 end;
 
 procedure TWiRLApplication.WriteResources(Writer: TWriter);
+var
+  LResourceName: string;
 begin
-
+  Writer.WriteListBegin;
+  for LResourceName in FResourceRegistry.Keys do
+    Writer.WriteString(LResourceName);
+  Writer.WriteListEnd;
 end;
 
 procedure TWiRLApplication.WriteWriters(Writer: TWriter);
+var
+  LWriterInfo: TWiRLWriterRegistry.TWriterInfo;
 begin
-
+  Writer.WriteListBegin;
+  for LWriterInfo in FWriterRegistry do
+    Writer.WriteString(LWriterInfo.WriterName);
+  Writer.WriteListEnd;
 end;
 
 function TWiRLApplication.SetFilters(const AFilters: TArray<string>): TWiRLApplication;
@@ -453,8 +493,7 @@ end;
 constructor TWiRLApplication.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  TWiRLDebug.LogMessage('TWiRLApplication.Create');
-  FResourceRegistry := TWiRLAppResourceRegistry.Create([doOwnsValues]);
+  FResourceRegistry := TWiRLResourceRegistry.Create;
   FFilterRegistry := TWiRLFilterRegistry.Create;
   FFilterRegistry.OwnsObjects := False;
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
@@ -465,15 +504,14 @@ end;
 procedure TWiRLApplication.DefineProperties(Filer: TFiler);
 begin
   inherited;
-  Filer.DefineProperty('Resources', ReadResources, WriteResources, FResourceRegistry.Count > 0);
-  Filer.DefineProperty('Filters', ReadFilters, WriteFilters, FFilterRegistry.Count > 0);
-  Filer.DefineProperty('Readers', ReadReaders, WriteReaders, FReaderRegistry.Count > 0);
-  Filer.DefineProperty('Writers', ReadWriters, WriteWriters, FWriterRegistry.Count > 0);
+  Filer.DefineProperty('Resource.List', ReadResources, WriteResources, FResourceRegistry.Count > 0);
+  Filer.DefineProperty('Filter.List', ReadFilters, WriteFilters, FFilterRegistry.Count > 0);
+  Filer.DefineProperty('Reader.List', ReadReaders, WriteReaders, FReaderRegistry.Count > 0);
+  Filer.DefineProperty('Writer.List', ReadWriters, WriteWriters, FWriterRegistry.Count > 0);
 end;
 
 destructor TWiRLApplication.Destroy;
 begin
-  TWiRLDebug.LogMessage('TWiRLApplication.Destroy');
   Engine := nil;
   FReaderRegistry.Free;
   FWriterRegistry.Free;
@@ -532,22 +570,40 @@ end;
 
 procedure TWiRLApplication.ReadFilters(Reader: TReader);
 begin
-
+  Reader.ReadListBegin;
+  FFilterRegistry.Clear;
+  while not Reader.EndOfList do
+    AddFilter(Reader.ReadString);
+  Reader.ReadListEnd;
 end;
 
 procedure TWiRLApplication.ReadReaders(Reader: TReader);
 begin
-
+  Reader.ReadListBegin;
+  FReaderRegistry.Clear;
+  while not Reader.EndOfList do
+    AddReader(Reader.ReadString);
+  Reader.ReadListEnd;
 end;
 
 procedure TWiRLApplication.ReadResources(Reader: TReader);
 begin
-
+  Reader.ReadListBegin;
+  FResourceRegistry.Clear;
+  while not Reader.EndOfList do
+    AddResource(Reader.ReadString);
+  Reader.ReadListEnd;
 end;
 
 procedure TWiRLApplication.ReadWriters(Reader: TReader);
 begin
-
+  Reader.ReadListBegin;
+  FWriterRegistry.Clear;
+  while not Reader.EndOfList do
+  begin
+    AddWriter(Reader.ReadString);
+  end;
+  Reader.ReadListEnd;
 end;
 
 function TWiRLApplication.SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication;

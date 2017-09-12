@@ -22,6 +22,7 @@ uses
 
   WiRL.Core.Engine,
   WiRL.Core.Application,
+  WiRL.http.Server,
   WiRL.http.Server.Indy,
 
   WiRL.Persistence.Core,
@@ -109,7 +110,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServerIndy;
+    FServer: TWiRLhttpServer;
 
     FCustomCaseAlgo: TCaseFunc;
     procedure Log(const ALog: string); overload;
@@ -654,18 +655,18 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServerIndy.Create;
+  FServer := TWiRLhttpServer.Create(nil);
 
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
-    .ConfigureEngine('/rest')
-    .SetName('WiRL ContentType Demo')
+    .AddEngine<TWiRLEngine>('/rest')
+    .SetDisplayName('WiRL ContentType Demo')
 
     // Application configuration
     .AddApplication('/app')
-      .SetName('Content App')
+      .SetDisplayName('Content App')
       .SetResources('Server.Resources.TEntityResource')
       .ConfigureSerializer
         .SetMembersType(TNeonMembersType.Standard)

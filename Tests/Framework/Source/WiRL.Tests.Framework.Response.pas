@@ -9,7 +9,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Response,
+  WiRL.http.Response,
   WiRL.Tests.Mock.Server;
 
 type

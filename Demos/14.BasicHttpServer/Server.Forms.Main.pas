@@ -63,13 +63,13 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServerIndy.Create;
+  FServer := TWiRLhttpServer.Create(nil);
 
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(10)
     .AddEngine<TWiRLEngine>('/rest')
-      .SetName('WiRL HelloWorld')
+      .SetDisplayName('WiRL HelloWorld')
       .AddApplication('/app')
         .SetResources('*');
 

@@ -36,6 +36,7 @@ type
     class function GetInstance: TWiRLResourceRegistry; static; inline;
   public
     constructor Create; virtual;
+    function AddResourceName(const AResourceName: string): TWiRLConstructorInfo;
     function RegisterResource<T: class>: TWiRLConstructorInfo; overload;
     function RegisterResource<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLConstructorInfo; overload;
 
@@ -72,9 +73,16 @@ begin
   Self.Add(T.QualifiedClassName, Result);
 end;
 
+function TWiRLResourceRegistry.AddResourceName(
+  const AResourceName: string): TWiRLConstructorInfo;
+begin
+  Self.Add(AResourceName, nil);
+  Result := nil;
+end;
+
 constructor TWiRLResourceRegistry.Create;
 begin
-  TWiRLResourceRegistrySingleton.CheckInstance(Self);
+  // TWiRLResourceRegistrySingleton.CheckInstance(Self);
 
   inherited Create([doOwnsValues]);
 end;

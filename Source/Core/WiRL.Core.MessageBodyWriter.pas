@@ -54,7 +54,8 @@ type
       IsWritable: TIsWritableFunction;
       GetAffinity: TGetAffinityFunction;
 
-      constructor Create(AType: TRttiType);
+      constructor Create(AType: TRttiType); overload;
+      constructor Create(const AWriterName: string); overload;
       destructor Destroy; override;
 
       property Produces: TMediaTypeList read FProduces;
@@ -74,8 +75,10 @@ type
     constructor Create(AOwnsObjects: Boolean); overload;
     destructor Destroy; override;
 
+    procedure Clear;
     function GetEnumerator: TObjectList<TWriterInfo>.TEnumerator;
     function GetWriterByName(const AQualifiedClassName: string): TWriterInfo;
+    function AddWriterName(const AWriterName: string): TWriterInfo;
     function Add(AWriter: TWriterInfo): Integer;
     procedure Assign(ARegistry: TWiRLWriterRegistry);
     procedure Enumerate(const AProc: TProc<TWriterInfo>);
@@ -125,6 +128,13 @@ begin
   Result := FRegistry.Add(AWriter);
 end;
 
+function TWiRLWriterRegistry.AddWriterName(
+  const AWriterName: string): TWriterInfo;
+begin
+  Result := TWriterInfo.Create(AWriterName);
+  FRegistry.Add(Result);
+end;
+
 procedure TWiRLWriterRegistry.Assign(ARegistry: TWiRLWriterRegistry);
 var
   LWriterInfo: TWriterInfo;
@@ -136,6 +146,11 @@ end;
 constructor TWiRLWriterRegistry.Create;
 begin
   Create(True);
+end;
+
+procedure TWiRLWriterRegistry.Clear;
+begin
+  FRegistry.Clear;
 end;
 
 constructor TWiRLWriterRegistry.Create(AOwnsObjects: Boolean);
@@ -269,6 +284,11 @@ begin
   FWriterType := AType;
   FWriterName := AType.QualifiedName;
   FProduces := GetProducesMediaTypes(AType);
+end;
+
+constructor TWiRLWriterRegistry.TWriterInfo.Create(const AWriterName: string);
+begin
+  FWriterName := AWriterName;
 end;
 
 destructor TWiRLWriterRegistry.TWriterInfo.Destroy;

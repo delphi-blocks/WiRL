@@ -15,12 +15,14 @@ uses
   System.Classes, System.SysUtils, System.RegularExpressions,
   System.Json, System.NetEncoding,
 
+  WiRL.http.Server,
+  WiRL.http.Server.Interfaces,
   WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Engine,
   WiRL.http.Cookie,
-  WiRL.Core.Response,
-  WiRL.Core.Request,
+  WiRL.http.Response,
+  WiRL.http.Request,
   WiRL.Core.Context;
 
 type
@@ -35,6 +37,23 @@ type
     property Exception: string read FException write FException;
   end;
 
+  TWiRLTestServer = class(TInterfacedObject, IWiRLServer)
+  public
+    { IWiRLServer }
+    procedure Startup;
+    procedure Shutdown;
+    function GetPort: Word;
+    procedure SetPort(AValue: Word);
+    function GetThreadPoolSize: Integer;
+    procedure SetThreadPoolSize(AValue: Integer);
+    function GetListener: IWiRLListener;
+    procedure SetListener(AValue: IWiRLListener);
+
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  {
   TWiRLTestServer = class(TObject)
   private
     FEngine: TWiRLEngine;
@@ -48,6 +67,7 @@ type
     property Engine: TWiRLEngine read FEngine;
     property Active: Boolean read FActive write FActive;
   end;
+  }
 
   TWiRLTestResponse = class(TWiRLResponse)
   private
@@ -56,6 +76,7 @@ type
     FContent: string;
     FReasonString: string;
     FResponseError: TWiRLResponseError;
+    function GetResponseError: TWiRLResponseError;
   protected
     function GetContent: string; override;
     function GetContentStream: TStream; override;
@@ -67,7 +88,7 @@ type
     procedure SetReasonString(const Value: string); override;
   public
     procedure SendHeaders; override;
-    property Error: TWiRLResponseError read FResponseError;
+    property Error: TWiRLResponseError read GetResponseError;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -110,6 +131,7 @@ implementation
 
 { TWiRLTestServer }
 
+{
 function TWiRLTestServer.ConfigureEngine(const ABasePath: string): TWiRLEngine;
 begin
   FEngine.SetBasePath(ABasePath);
@@ -118,7 +140,7 @@ end;
 
 constructor TWiRLTestServer.Create;
 begin
-  FEngine := TWiRLEngine.Create;
+  FEngine := TWiRLEngine.Create(nil);
 end;
 
 destructor TWiRLTestServer.Destroy;
@@ -166,6 +188,60 @@ begin
   finally
     LContext.Free;
   end;
+end;
+}
+
+{ TWiRLTestServer }
+
+constructor TWiRLTestServer.Create;
+begin
+
+end;
+
+destructor TWiRLTestServer.Destroy;
+begin
+
+  inherited;
+end;
+
+function TWiRLTestServer.GetListener: IWiRLListener;
+begin
+
+end;
+
+function TWiRLTestServer.GetPort: Word;
+begin
+  Result := 80;
+end;
+
+function TWiRLTestServer.GetThreadPoolSize: Integer;
+begin
+  Result := 15;
+end;
+
+procedure TWiRLTestServer.SetListener(AValue: IWiRLListener);
+begin
+
+end;
+
+procedure TWiRLTestServer.SetPort(AValue: Word);
+begin
+
+end;
+
+procedure TWiRLTestServer.SetThreadPoolSize(AValue: Integer);
+begin
+
+end;
+
+procedure TWiRLTestServer.Shutdown;
+begin
+
+end;
+
+procedure TWiRLTestServer.Startup;
+begin
+
 end;
 
 { TWiRLTestRequest }
@@ -353,6 +429,24 @@ begin
   Result := FReasonString;
 end;
 
+function TWiRLTestResponse.GetResponseError: TWiRLResponseError;
+var
+  LJsonError: TJSONValue;
+begin
+  LJsonError := TJSONObject.ParseJSONValue(Content);
+  try
+    if not Assigned(LJsonError) then
+      raise Exception.Create('Error is not a valid Json');
+
+    FResponseError.Message := LJsonError.GetValue<string>('message');
+    FResponseError.Status := LJsonError.GetValue<string>('status');
+    FResponseError.Exception := LJsonError.GetValue<string>('exception');
+  finally
+    LJsonError.Free;
+  end;
+  Result := FResponseError;
+end;
+
 function TWiRLTestResponse.GetStatusCode: Integer;
 begin
   Result := FStatusCode;
@@ -386,5 +480,9 @@ begin
   inherited;
   FStatusCode := Value;
 end;
+
+initialization
+
+  TWiRLServerRegistry.Instance.RegisterServer<TWiRLTestServer>('TWiRLTestServer (Test)');
 
 end.

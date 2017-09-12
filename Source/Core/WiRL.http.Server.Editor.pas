@@ -16,11 +16,13 @@ uses
   System.Generics.Collections, System.UITypes, Vcl.Dialogs, Vcl.Forms,
   System.TypInfo,
 
+  WiRL.Core.Classes,
   WiRL.http.Engines,
   WiRL.http.Server,
   WiRL.http.Server.Interfaces,
   WiRL.Core.Application,
   WiRL.Core.Engine,
+  WiRL.Core.Registry,
   WiRL.http.Filters,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyReader,
@@ -122,7 +124,7 @@ begin
   RegisterPropertyEditor(TypeInfo(string), TWiRLhttpServer, 'ServerVendor', TServerVendorProperty);
   RegisterPropertyEditor(TypeInfo(TWiRLApplicationList), TWiRLEngine, 'Applications', TApplicationsProperty);
 
-  RegisterPropertyEditor(TypeInfo(TWiRLAppResourceRegistry), TWiRLApplication, 'Resources', TAppResourcesRegistryProperty);
+  RegisterPropertyEditor(TypeInfo(TWiRLResourceRegistry), TWiRLApplication, 'Resources', TAppResourcesRegistryProperty);
   RegisterPropertyEditor(TypeInfo(TWiRLFilterRegistry), TWiRLApplication, 'Filters', TAppFiltersRegistryProperty);
   RegisterPropertyEditor(TypeInfo(TWiRLWriterRegistry), TWiRLApplication, 'Writers', TAppWritersRegistryProperty);
   RegisterPropertyEditor(TypeInfo(TWiRLReaderRegistry), TWiRLApplication, 'Readers', TAppReadersRegistryProperty);
@@ -269,6 +271,7 @@ begin
       if LStringsEditDlg.ShowModal = mrOk then
       begin
         WriteToRegistry(LStringsEditDlg.Lines);
+        Designer.Modified;
       end;
     finally
       LLines.Free;
@@ -320,7 +323,9 @@ var
 begin
   LApplication := GetComponent(0) as TWiRLApplication;
   for LKey in LApplication.FilterRegistry do
-    AKeyList.Add(LKey.TypeTClass.QualifiedClassName);
+  begin
+    AKeyList.Add(LKey.FilterQualifiedClassName);
+  end;
 end;
 
 procedure TAppFiltersRegistryProperty.WriteToRegistry(AKeyList: TStrings);
@@ -329,44 +334,46 @@ var
   LKey: string;
 begin
   LApplication := GetComponent(0) as TWiRLApplication;
-  LApplication.Filters.Clear;
+  LApplication.FilterRegistry.Clear;
   for LKey in AKeyList do
+  begin
     LApplication.SetFilters(LKey);
+  end;
 end;
 
 { TAppWritersRegistryProperty }
 
 procedure TAppWritersRegistryProperty.ReadFromRegistry(AKeyList: TStrings);
-//var
-//  LApplication: TWiRLApplication;
-//  LKey: string;
+var
+  LApplication: TWiRLApplication;
+  LWriterInfo: TWiRLWriterRegistry.TWriterInfo;
 begin
-//  LApplication := GetComponent(0) as TWiRLApplication;
-//  for LKey in LApplication.WriterRegistry.Keys do
-//    AKeyList.Add(LKey);
+  LApplication := GetComponent(0) as TWiRLApplication;
+  for LWriterInfo in LApplication.WriterRegistry do
+    AKeyList.Add(LWriterInfo.WriterName);
 end;
 
 procedure TAppWritersRegistryProperty.WriteToRegistry(AKeyList: TStrings);
-//var
-//  LApplication: TWiRLApplication;
-//  LKey: string;
+var
+  LApplication: TWiRLApplication;
+  LKey: string;
 begin
-//  LApplication := GetComponent(0) as TWiRLApplication;
-//  LApplication.Resources.Clear;
-//  for LKey in AKeyList do
-//    LApplication.SetResources(LKey);
+  LApplication := GetComponent(0) as TWiRLApplication;
+  LApplication.WriterRegistry.Clear;
+  for LKey in AKeyList do
+    LApplication.SetWriters(LKey);
 end;
 
 { TAppReadersRegistryProperty }
 
 procedure TAppReadersRegistryProperty.ReadFromRegistry(AKeyList: TStrings);
-//var
-//  LApplication: TWiRLApplication;
-//  LKey: string;
+var
+  LApplication: TWiRLApplication;
+  LReaderInfo: TWiRLReaderRegistry.TReaderInfo;
 begin
-//  LApplication := GetComponent(0) as TWiRLApplication;
-//  for LKey in LApplication.Resources.Keys do
-//    AKeyList.Add(LKey);
+  LApplication := GetComponent(0) as TWiRLApplication;
+  for LReaderInfo in LApplication.ReaderRegistry do
+    AKeyList.Add(LReaderInfo.ReaderName);
 end;
 
 procedure TAppReadersRegistryProperty.WriteToRegistry(AKeyList: TStrings);
@@ -375,9 +382,9 @@ var
   LKey: string;
 begin
   LApplication := GetComponent(0) as TWiRLApplication;
-  LApplication.Resources.Clear;
+  LApplication.ReaderRegistry.Clear;
   for LKey in AKeyList do
-    LApplication.SetResources(LKey);
+    LApplication.SetReaders(LKey);
 end;
 
 end.

@@ -17,6 +17,7 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, IdContext,
 
   WiRL.Core.Engine,
+  WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Application;
 
@@ -37,7 +38,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServerIndy;
+    FServer: TWiRLhttpServer;
   public
   end;
 
@@ -67,17 +68,17 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServerIndy.Create;
+  FServer := TWiRLhttpServer.Create(nil);
 
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
-    .ConfigureEngine('/rest')
-    .SetName('WiRL FireDAC Demo')
+    .AddEngine<TWiRLEngine>('/rest')
+    .SetDisplayName('WiRL FireDAC Demo')
 
     // Add and configure an application
     .AddApplication('/app')
-      .SetName('Default App')
+      .SetDisplayName('Default App')
       .SetResources('Server.MainData.TMainDataResource')
   ;
 

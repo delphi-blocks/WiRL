@@ -83,11 +83,13 @@ type
   TWiRLFilterConstructorInfo = class
   private
     FConstructorFunc: TFunc<TObject>;
+    FFilterQualifiedClassName: string;
     FTypeTClass: TClass;
     FPriority: Integer;
     FAttribute: TCustomAttribute;
   public
-    constructor Create(AClass: TClass; const AConstructorFunc: TFunc<TObject>; APriority: Integer);
+    constructor Create(AClass: TClass; const AConstructorFunc: TFunc<TObject>; APriority: Integer); overload;
+    constructor Create(const AFilterQualifiedClassName: string); overload;
 
     function GetRequestFilter: IWiRLContainerRequestFilter;
     function GetResponseFilter: IWiRLContainerResponseFilter;
@@ -95,6 +97,7 @@ type
     property TypeTClass: TClass read FTypeTClass;
     property Priority: Integer read FPriority;
     property ConstructorFunc: TFunc<TObject> read FConstructorFunc write FConstructorFunc;
+    property FilterQualifiedClassName: string read FFilterQualifiedClassName;
     function Clone: TWiRLFilterConstructorInfo;
   end;
 
@@ -113,6 +116,7 @@ type
     constructor Create; virtual;
 
     procedure Sort;
+    function AddFilterName(const AFilterName: string): TWiRLFilterConstructorInfo;
 
     function FilterByClassName(const AClassName: string; out AConstructorInfo: TWiRLFilterConstructorInfo) :Boolean;
     function RegisterFilter<T: class>: TWiRLFilterConstructorInfo; overload;
@@ -143,6 +147,7 @@ begin
 
   FConstructorFunc := AConstructorFunc;
   FTypeTClass := AClass;
+  FFilterQualifiedClassName := AClass.QualifiedClassName;
   FPriority := APriority;
 
   LFilterType := TRttiHelper.Context.GetType(FTypeTClass);
@@ -180,6 +185,13 @@ begin
     ;
 end;
 
+constructor TWiRLFilterConstructorInfo.Create(
+  const AFilterQualifiedClassName: string);
+begin
+  inherited Create;
+  FFilterQualifiedClassName := AFilterQualifiedClassName;
+end;
+
 function TWiRLFilterConstructorInfo.GetRequestFilter: IWiRLContainerRequestFilter;
 var
   LTempObj: TObject;
@@ -211,6 +223,14 @@ begin
 end;
 
 { TWiRLFilterRegistry }
+
+function TWiRLFilterRegistry.AddFilterName(
+  const AFilterName: string): TWiRLFilterConstructorInfo;
+begin
+  Result := TWiRLFilterConstructorInfo.Create(AFilterName);
+  Add(Result);
+  FSorted := False;
+end;
 
 constructor TWiRLFilterRegistry.Create;
 var

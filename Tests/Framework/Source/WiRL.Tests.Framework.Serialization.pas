@@ -7,7 +7,8 @@ uses
   DUnitX.TestFramework,
 
   WiRL.Core.JSON,
-  WiRL.Core.Serialization;
+  WiRL.Persistence.JSON,
+  WiRL.Persistence.Core;
 
 type
   TBasicObject = class
@@ -61,7 +62,7 @@ procedure TTestSerialization.TestBasicObjectDeserialization;
 var
   LBasicObject: TBasicObject;
 begin
-  LBasicObject := TWiRLJSONMapper.JsonToObject<TBasicObject>('{"Name": "Luca", "Age": 42}');
+  LBasicObject := TNeonMapperJSON.JsonToObject<TBasicObject>('{"Name": "Luca", "Age": 42}');
   try
     Assert.AreEqual('Luca', LBasicObject.Name);
     Assert.AreEqual(42, LBasicObject.Age);
@@ -73,13 +74,13 @@ end;
 procedure TTestSerialization.TestBasicObjectSerialization;
 var
   LBasicObject: TBasicObject;
-  LJson: TJSONObject;
+  LJson: TJSONValue;
 begin
   LBasicObject := TBasicObject.Create;
   try
     LBasicObject.Name := 'Luca';
     LBasicObject.Age := 42;
-    LJson := TWiRLJSONMapper.ObjectToJSON(LBasicObject);
+    LJson := TNeonMapperJSON.ObjectToJSON(LBasicObject);
     try
       Assert.AreEqual('Luca', LJson.GetValue<string>('Name'));
       Assert.AreEqual(42, LJson.GetValue<Integer>('Age'));
@@ -94,8 +95,7 @@ end;
 procedure TTestSerialization.TestCompositeObjectSerialization;
 var
   LCompositeObject: TCompositeObject;
-  LJson: TJSONObject;
-  LJsonBasic: TJSONValue;
+  LJson, LJsonBasic: TJSONValue;
 begin
   LCompositeObject := TCompositeObject.Create;
   try
@@ -103,7 +103,7 @@ begin
     try
       LCompositeObject.Basic.Name := 'Luca';
       LCompositeObject.Basic.Age := 42;
-      LJson := TWiRLJSONMapper.ObjectToJSON(LCompositeObject);
+      LJson := TNeonMapperJSON.ObjectToJSON(LCompositeObject);
       try
         LJsonBasic := LJson.GetValue<TJSONValue>('Basic');
         Assert.AreEqual('Luca', LJsonBasic.GetValue<string>('Name'));

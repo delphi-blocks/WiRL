@@ -16,6 +16,8 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   System.Diagnostics, System.Actions, Winapi.ShellAPI,
 
+  WiRL.Core.Engine,
+  WiRL.http.Server,
   WiRL.http.Server.Indy;
 
 type
@@ -38,7 +40,7 @@ type
     procedure TestActionExecute(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
-    FServer: TWiRLhttpServerIndy;
+    FServer: TWiRLhttpServer;
   public
   end;
 
@@ -66,18 +68,18 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServerIndy.Create;
+  FServer := TWiRLhttpServer.Create(nil);
 
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
-    .ConfigureEngine('/rest')
-    .SetName('WiRL Template')
+    .AddEngine<TWiRLEngine>('/rest')
+    .SetDisplayName('WiRL Template')
 
     // Application configuration
     .AddApplication('/default')
-      .SetName('Default')
+      .SetDisplayName('Default')
 	  {$IF CompilerVersion >=28} //XE7
       .SetResources([
         'Server.Resources.StaticFiles.TStaticFileResources',
