@@ -91,7 +91,7 @@ var
 begin
   LApplication := TWiRLApplication.Create(FEngine.Owner);
   LApplication.Name := Designer.UniqueName(TWiRLApplication.ClassName);
-  LApplication.DisplayName := LApplication.Name;
+  LApplication.AppName := LApplication.Name;
   LApplication.BasePath := '/app' + IntToStr(FEngine.Applications.Count + 1);
   LApplication.Engine := FEngine;
   FDesigner.Modified;
@@ -103,7 +103,7 @@ var
   LCol: TListColumn;
 begin
   LCol := ListView1.Columns.Add;
-  LCol.Caption := 'DisplayName';
+  LCol.Caption := 'AppName';
   //LCol.AutoSize := True;
 
   LCol := ListView1.Columns.Add;
@@ -173,9 +173,8 @@ begin
   ListView1.Clear;
   for LAppInfo in FEngine.Applications do
   begin
-    //ListView1.AddItem(LAppInfo.Application.DisplayName, LAppInfo);
     LListItem := ListView1.Items.Add;
-    LListItem.Caption := LAppInfo.Application.DisplayName;
+    LListItem.Caption := LAppInfo.Application.AppName;
     LListItem.SubItems.Add(LAppInfo.Application.BasePath);
     LListItem.Data := LAppInfo.Application;
   end;

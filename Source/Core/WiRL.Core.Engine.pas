@@ -82,7 +82,7 @@ type
   TWiRLEngine = class(TWiRLCustomEngine)
   private
   const
-    DefaultDisplayName = 'WiRL Engine';
+    DefaultEngineName = 'WiRL Engine';
   private
     class var FServerFileName: string;
     class var FServerDirectory: string;
@@ -93,7 +93,7 @@ type
     FApplications: TWiRLApplicationList;
     FSubscribers: TList<IWiRLHandleListener>;
     FCriticalSection: TCriticalSection;
-    FDisplayName: string;
+    FEngineName: string;
   protected
     procedure DoBeforeHandleRequest(const AApplication: TWiRLApplication); virtual;
     procedure DoAfterHandleRequest(const AApplication: TWiRLApplication; const AStopWatch: TStopWatch); virtual;
@@ -123,13 +123,13 @@ type
 
     procedure EnumerateApplications(const ADoSomething: TProc<string, TWiRLApplication>);
 
-    function SetDisplayName(const ADisplayName: string): TWiRLEngine;
+    function SetEngineName(const AEngineName: string): TWiRLEngine;
     function SetBasePath(const ABasePath: string): TWiRLEngine;
 
     class property ServerFileName: string read GetServerFileName;
     class property ServerDirectory: string read GetServerDirectory;
   published
-    property DisplayName: string read FDisplayName write FDisplayName;
+    property EngineName: string read FEngineName write FEngineName;
     property Applications: TWiRLApplicationList read FApplications write FApplications;
   end;
 
@@ -145,7 +145,7 @@ function TWiRLEngine.AddApplication(const AName, ABasePath: string;
 begin
   Result := Self
     .AddApplication(ABasePath)
-    .SetDisplayName(AName)
+    .SetAppName(AName)
     .SetResources(AResources);
 end;
 
@@ -179,7 +179,7 @@ begin
   FApplications := TWiRLApplicationList.Create(Self);
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IWiRLHandleListener>.Create;
-  FDisplayName := DefaultDisplayName;
+  FEngineName := DefaultEngineName;
   BasePath := '/rest';
 end;
 
@@ -355,9 +355,9 @@ begin
   Result := Self;
 end;
 
-function TWiRLEngine.SetDisplayName(const ADisplayName: string): TWiRLEngine;
+function TWiRLEngine.SetEngineName(const AEngineName: string): TWiRLEngine;
 begin
-  FDisplayName := ADisplayName;
+  FEngineName := AEngineName;
   Result := Self;
 end;
 

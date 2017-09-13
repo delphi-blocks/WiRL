@@ -36,7 +36,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServer;
+    FServer: TWiRLServer;
   public
   end;
 
@@ -63,13 +63,13 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServer.Create(nil);
+  FServer := TWiRLServer.Create(nil);
 
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(10)
     .AddEngine<TWiRLEngine>('/rest')
-      .SetDisplayName('WiRL HelloWorld')
+      .SetEngineName('WiRL HelloWorld')
       .AddApplication('/app')
         .SetResources('*');
 

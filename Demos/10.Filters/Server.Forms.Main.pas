@@ -32,7 +32,7 @@ type
     PortNumberEdit: TEdit;
     Label1: TLabel;
     lstLog: TListBox;
-    WiRLhttpServer1: TWiRLhttpServer;
+    WiRLhttpServer1: TWiRLServer;
     WiRLEngine1: TWiRLEngine;
     WiRLApplication1: TWiRLApplication;
     procedure StartServerActionExecute(Sender: TObject);
@@ -42,7 +42,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    // FServer: TWiRLhttpServer;
+    // FServer: TWiRLServer;
   public
     procedure Log(const AMsg :string);
   end;

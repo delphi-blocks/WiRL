@@ -17,7 +17,7 @@ procedure Register;
 begin
   RegisterComponents('WiRL Server', [TWiRLEngine]);
   RegisterComponents('WiRL Server', [TWiRLhttpEngine]);
-  RegisterComponents('WiRL Server', [TWiRLhttpServer]);
+  RegisterComponents('WiRL Server', [TWiRLServer]);
 end;
 
 end.

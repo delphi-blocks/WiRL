@@ -88,7 +88,7 @@ uses
 procedure TRequestCheckerFilter.Filter(ARequestContext: TWiRLContainerRequestContext);
 begin
   if Pos('error', ARequestContext.Request.Query) > 0 then
-    raise EWiRLWebApplicationException.Create(Format('Filter error test [%s]', [FApplication.DisplayName]), 400);
+    raise EWiRLWebApplicationException.Create(Format('Filter error test [%s]', [FApplication.AppName]), 400);
 end;
 
 { TRequestLoggerFilter }

@@ -15,7 +15,9 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
-  WiRL.Core.Engine, WiRL.http.Server, WiRL.http.Server.Indy;
+  WiRL.Core.Engine, WiRL.http.Server, WiRL.http.Server.Indy,
+  WiRL.Core.MessageBodyReader, WiRL.Core.MessageBodyWriter, WiRL.http.Filters,
+  WiRL.Core.Registry, WiRL.Core.Application;
 
 type
   TMainForm = class(TForm)
@@ -27,8 +29,9 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    WiRLhttpServer1: TWiRLhttpServer;
+    WiRLhttpServer1: TWiRLServer;
     WiRLEngine1: TWiRLEngine;
+    WiRLApplication1: TWiRLApplication;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -36,8 +39,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    procedure SetupWiRLServer;
+    { Private declarations }
   public
+    { Public declarations }
   end;
 
 var
@@ -54,27 +58,7 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  SetupWiRLServer;
   StartServerAction.Execute;
-end;
-
-procedure TMainForm.SetupWiRLServer;
-begin
-  WiRLEngine1
-    // Adds and configures an application
-    .AddApplication('/app')
-    {$IF CompilerVersion >=28} //XE7
-      .SetResources([
-        'Server.Resources.THelloWorldResource',
-        'Server.Resources.TEntityResource'
-      ]);
-    {$ELSE}
-      .SetResources(
-        'Server.Resources.THelloWorldResource,'+
-        'Server.Resources.TEntityResource'
-      );
-    {$IFEND}
-  ;
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);

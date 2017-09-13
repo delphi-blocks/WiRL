@@ -121,7 +121,7 @@ begin
   RegisterNoIcon([TWiRLApplication]);
   RegisterComponentEditor (TWiRLEngine, TWiRLEngineEditor);
 
-  RegisterPropertyEditor(TypeInfo(string), TWiRLhttpServer, 'ServerVendor', TServerVendorProperty);
+  RegisterPropertyEditor(TypeInfo(string), TWiRLServer, 'ServerVendor', TServerVendorProperty);
   RegisterPropertyEditor(TypeInfo(TWiRLApplicationList), TWiRLEngine, 'Applications', TApplicationsProperty);
 
   RegisterPropertyEditor(TypeInfo(TWiRLResourceRegistry), TWiRLApplication, 'Resources', TAppResourcesRegistryProperty);
@@ -176,7 +176,7 @@ begin
       begin
         LApplication := TWiRLApplication.Create(Component.Owner);
         LApplication.Name := Designer.UniqueName(TWiRLApplication.ClassName);
-        LApplication.DisplayName := LApplication.Name;
+        LApplication.AppName := LApplication.Name;
         LApplication.BasePath := LBasePath;
         LApplication.Engine := Component;
         Designer.Modified;
@@ -206,7 +206,7 @@ begin
     FApplication := TWiRLApplication.Create(TComponent(TOwnedCollection(Collection).Owner).Owner);
     FApplication.Name := TWiRLApplicationCollection(Collection).Designer.UniqueName(TWiRLApplication.ClassName);
     FApplication.Engine := TWiRLCustomEngine(TComponent(TOwnedCollection(Collection).Owner));
-    FApplication.DisplayName := FApplication.Name;
+    FApplication.AppName := FApplication.Name;
     FApplication.BasePath := 'app' + IntToStr(Collection.Count + 1);
   end;
 end;
@@ -219,7 +219,7 @@ end;
 
 function TWiRLApplicationItem.GetDisplayName: string;
 begin
-  Result := FApplication.DisplayName;
+  Result := FApplication.AppName;
 end;
 
 function TWiRLApplicationItem.GetName: string;

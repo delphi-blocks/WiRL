@@ -110,7 +110,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServer;
+    FServer: TWiRLServer;
 
     FCustomCaseAlgo: TCaseFunc;
     procedure Log(const ALog: string); overload;
@@ -655,18 +655,18 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServer.Create(nil);
+  FServer := TWiRLServer.Create(nil);
 
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
     .AddEngine<TWiRLEngine>('/rest')
-    .SetDisplayName('WiRL ContentType Demo')
+    .SetEngineName('WiRL ContentType Demo')
 
     // Application configuration
     .AddApplication('/app')
-      .SetDisplayName('Content App')
+      .SetAppName('Content App')
       .SetResources('Server.Resources.TEntityResource')
       .ConfigureSerializer
         .SetMembersType(TNeonMembersType.Standard)

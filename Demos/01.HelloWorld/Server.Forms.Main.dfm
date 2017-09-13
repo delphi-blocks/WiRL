@@ -69,7 +69,7 @@ object MainForm: TMainForm
       OnUpdate = StopServerActionUpdate
     end
   end
-  object WiRLhttpServer1: TWiRLhttpServer
+  object WiRLhttpServer1: TWiRLServer
     Active = False
     Left = 240
     Top = 120
@@ -77,8 +77,15 @@ object MainForm: TMainForm
   object WiRLEngine1: TWiRLEngine
     BasePath = '/rest'
     Server = WiRLhttpServer1
-    DisplayName = 'WiRL Engine'
+    EngineName = 'WiRL Engine'
     Left = 352
     Top = 160
+    object WiRLApplication1: TWiRLApplication
+      AppName = 'WiRLApplication1'
+      BasePath = '/app'
+      TokenLocation = Bearer
+      Resource.List = (
+        '*')
+    end
   end
 end

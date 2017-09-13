@@ -40,7 +40,7 @@ type
     procedure TestActionExecute(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
-    FServer: TWiRLhttpServer;
+    FServer: TWiRLServer;
   public
   end;
 
@@ -68,18 +68,18 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServer.Create(nil);
+  FServer := TWiRLServer.Create(nil);
 
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
     .AddEngine<TWiRLEngine>('/rest')
-    .SetDisplayName('WiRL Template')
+    .SetEngineName('WiRL Template')
 
     // Application configuration
     .AddApplication('/default')
-      .SetDisplayName('Default')
+      .SetAppName('Default')
 	  {$IF CompilerVersion >=28} //XE7
       .SetResources([
         'Server.Resources.StaticFiles.TStaticFileResources',

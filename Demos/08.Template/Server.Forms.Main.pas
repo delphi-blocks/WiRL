@@ -37,7 +37,7 @@ type
     procedure StopServerActionUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
-    FServer: TWiRLhttpServer;
+    FServer: TWiRLServer;
   public
   end;
 
@@ -61,15 +61,15 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServer.Create(nil);
+  FServer := TWiRLServer.Create(nil);
 
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .AddEngine<TWiRLEngine>('/rest')
-    .SetDisplayName('WiRL Template')
+    .SetEngineName('WiRL Template')
     .AddApplication('/default')
-      .SetDisplayName('Default')
+      .SetAppName('Default')
       .SetResources('Server.Resources.THelloWorldResource');
 
   if not FServer.Active then

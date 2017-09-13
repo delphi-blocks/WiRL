@@ -19,14 +19,14 @@ uses
   WiRL.Core.Utils, WiRL.Rtti.Utils, WiRL.Core.Context;
 
 type
-  TWiRLhttpServer = class;
+  TWiRLServer = class;
 
   TWiRLCustomEngine = class(TComponent) //abstract
   private
     FBasePath: string;
-    FServer: TWiRLhttpServer;
+    FServer: TWiRLServer;
     procedure SetBasePath(const Value: string);
-    procedure SetServer(const Value: TWiRLhttpServer);
+    procedure SetServer(const Value: TWiRLServer);
     procedure FindDefaultServer;
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation);
@@ -40,7 +40,7 @@ type
     procedure Shutdown; virtual;
   published
     property BasePath: string read FBasePath write SetBasePath;
-    property Server: TWiRLhttpServer read FServer write SetServer;
+    property Server: TWiRLServer read FServer write SetServer;
   end;
 
   TWiRLEngineInfo = class
@@ -59,7 +59,7 @@ type
     function TryGetValue(const ABasePath: string; out AEngine: TWiRLCustomEngine): Boolean;
   end;
 
-  TWiRLhttpServer = class(TComponent, IWiRLListener)
+  TWiRLServer = class(TComponent, IWiRLListener)
   private
   const
     DefaultPort = 8080;
@@ -84,12 +84,12 @@ type
   public
     function AddEngine<T: constructor, TWiRLCustomEngine>(const ABasePath: string; AOwnsObjects: Boolean = True) :T; overload;
     procedure AddEngine(const ABasePath: string; AEngine: TWiRLCustomEngine; AOwnsObjects: Boolean = True); overload;
-    function AddEngines(AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLhttpServer;
+    function AddEngines(AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLServer;
     procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
     procedure RemoveEngine(const ABasePath: string); overload;
     function GetEngine(const Url: string): TWiRLCustomEngine;
-    function SetPort(APort: Integer): TWiRLhttpServer;
-    function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLhttpServer;
+    function SetPort(APort: Integer): TWiRLServer;
+    function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLServer;
 
     { IWiRLListener }
     procedure HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
@@ -110,9 +110,9 @@ implementation
 uses
   WiRL.http.Filters;
 
-{ TWiRLhttpServer }
+{ TWiRLServer }
 
-procedure TWiRLhttpServer.AddEngine(const ABasePath: string;
+procedure TWiRLServer.AddEngine(const ABasePath: string;
   AEngine: TWiRLCustomEngine; AOwnsObjects: Boolean);
 var
   LEngineInfo: TWiRLEngineInfo;
@@ -121,15 +121,15 @@ begin
   FEngines.Add(LEngineInfo);
 end;
 
-function TWiRLhttpServer.AddEngine<T>(const ABasePath: string; AOwnsObjects: Boolean): T;
+function TWiRLServer.AddEngine<T>(const ABasePath: string; AOwnsObjects: Boolean): T;
 begin
   Result := TRttiHelper.CreateInstance(TClass(T), [nil]) as T;
   TWiRLCustomEngine(Result).BasePath := ABasePath;
   AddEngine(ABasePath, Result, AOwnsObjects);
 end;
 
-function TWiRLhttpServer.AddEngines(
-  AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean): TWiRLhttpServer;
+function TWiRLServer.AddEngines(
+  AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean): TWiRLServer;
 var
   LEngine: TWirlCustomEngine;
 begin
@@ -138,7 +138,7 @@ begin
   Result := Self;
 end;
 
-constructor TWiRLhttpServer.Create(AOwner: TComponent);
+constructor TWiRLServer.Create(AOwner: TComponent);
 begin
   inherited;
   FEngines := TWiRLEngineList.Create(True);
@@ -149,13 +149,13 @@ begin
   ThreadPoolSize := DefaultThreadPoolSize;
 end;
 
-destructor TWiRLhttpServer.Destroy;
+destructor TWiRLServer.Destroy;
 begin
   FreeEngines;
   inherited;
 end;
 
-procedure TWiRLhttpServer.FreeEngines;
+procedure TWiRLServer.FreeEngines;
 var
   LEngineInfo: TWiRLEngineInfo;
 begin
@@ -168,12 +168,12 @@ begin
   FEngines.Free;
 end;
 
-function TWiRLhttpServer.GetActive: Boolean;
+function TWiRLServer.GetActive: Boolean;
 begin
   Result := FActive;
 end;
 
-function TWiRLhttpServer.GetEngine(const Url: string): TWiRLCustomEngine;
+function TWiRLServer.GetEngine(const Url: string): TWiRLCustomEngine;
 var
   LUrlTokens: TArray<string>;
   LBaseUrl: string;
@@ -198,7 +198,7 @@ begin
     raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [Url]);
 end;
 
-procedure TWiRLhttpServer.HandleRequest(ARequest: TWiRLRequest;
+procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest;
   AResponse: TWiRLResponse);
 var
   LContext: TWiRLContext;
@@ -221,14 +221,14 @@ begin
   end;
 end;
 
-procedure TWiRLhttpServer.Loaded;
+procedure TWiRLServer.Loaded;
 begin
   inherited;
   if Active then
     Startup;
 end;
 
-procedure TWiRLhttpServer.RemoveEngine(const ABasePath: string);
+procedure TWiRLServer.RemoveEngine(const ABasePath: string);
 var
   LEngineInfo: TWiRLEngineInfo;
 begin
@@ -239,7 +239,7 @@ begin
   end;
 end;
 
-procedure TWiRLhttpServer.RemoveEngine(AEngine: TWiRLCustomEngine);
+procedure TWiRLServer.RemoveEngine(AEngine: TWiRLCustomEngine);
 var
   LEngineInfo: TWiRLEngineInfo;
 begin
@@ -254,7 +254,7 @@ begin
   end;
 end;
 
-procedure TWiRLhttpServer.SetActive(const Value: Boolean);
+procedure TWiRLServer.SetActive(const Value: Boolean);
 begin
   if Value <> Active then
   begin
@@ -271,22 +271,22 @@ begin
   end;
 end;
 
-function TWiRLhttpServer.GetPortProp: Integer;
+function TWiRLServer.GetPortProp: Integer;
 begin
   Result := FHttpServer.Port;
 end;
 
-function TWiRLhttpServer.GetThreadPoolSizeProp: Integer;
+function TWiRLServer.GetThreadPoolSizeProp: Integer;
 begin
   Result := FHttpServer.ThreadPoolSize;
 end;
 
-procedure TWiRLhttpServer.SetPortProp(APort: Integer);
+procedure TWiRLServer.SetPortProp(APort: Integer);
 begin
   FHttpServer.Port := APort;
 end;
 
-procedure TWiRLhttpServer.SetServerVendor(const Value: string);
+procedure TWiRLServer.SetServerVendor(const Value: string);
 begin
   if TWiRLServerRegistry.Instance.ContainsKey(Value) then
     FServerVendor := Value
@@ -294,24 +294,24 @@ begin
     FServerVendor := '';
 end;
 
-function TWiRLhttpServer.SetPort(APort: Integer): TWiRLhttpServer;
+function TWiRLServer.SetPort(APort: Integer): TWiRLServer;
 begin
   Port := APort;
   Result := Self;
 end;
 
-function TWiRLhttpServer.SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLhttpServer;
+function TWiRLServer.SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLServer;
 begin
   ThreadPoolSize := AThreadPoolSize;
   Result := Self;
 end;
 
-procedure TWiRLhttpServer.SetThreadPoolSizeProp(const Value: Integer);
+procedure TWiRLServer.SetThreadPoolSizeProp(const Value: Integer);
 begin
   FHttpServer.ThreadPoolSize := Value;
 end;
 
-procedure TWiRLhttpServer.Shutdown;
+procedure TWiRLServer.Shutdown;
 var
   LEngineInfo: TWiRLEngineInfo;
 begin
@@ -320,7 +320,7 @@ begin
   FHttpServer.Shutdown;
 end;
 
-procedure TWiRLhttpServer.Startup;
+procedure TWiRLServer.Startup;
 var
   LEngineInfo: TWiRLEngineInfo;
 begin
@@ -362,9 +362,9 @@ begin
   begin
     for LComponent in Owner do
     begin
-      if LComponent is TWiRLhttpServer then
+      if LComponent is TWiRLServer then
       begin
-        Server := TWiRLhttpServer(LComponent);
+        Server := TWiRLServer(LComponent);
         Exit;
       end;
     end;
@@ -387,7 +387,7 @@ begin
     FBasePath := '/' + Value;
 end;
 
-procedure TWiRLCustomEngine.SetServer(const Value: TWiRLhttpServer);
+procedure TWiRLCustomEngine.SetServer(const Value: TWiRLServer);
 begin
   if FServer <> Value then
   begin

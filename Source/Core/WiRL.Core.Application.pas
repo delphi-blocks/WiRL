@@ -51,7 +51,7 @@ type
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
     FBasePath: string;
-    FDisplayName: string;
+    FAppName: string;
     FClaimClass: TWiRLSubjectClass;
     FSystemApp: Boolean;
     FAuthChallenge: TAuthChallenge;
@@ -104,7 +104,7 @@ type
     function SetAuthChallenge(AChallenge: TAuthChallenge; const ARealm: string): TWiRLApplication;
     function SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
     function SetTokenCustomHeader(const ACustomHeader: string): TWiRLApplication;
-    function SetDisplayName(const ADisplayName: string): TWiRLApplication;
+    function SetAppName(const AAppName: string): TWiRLApplication;
     function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
     function SetSystemApp(ASystem: Boolean): TWiRLApplication;
 
@@ -128,7 +128,7 @@ type
     class property RttiContext: TRttiContext read FRttiContext;
   published
     property Path: string read GetPath;
-    property DisplayName: string read FDisplayName write FDisplayName;
+    property AppName: string read FAppName write FAppName;
     property BasePath: string read FBasePath write FBasePath;
     property TokenLocation: TAuthTokenLocation read FTokenLocation write FTokenLocation;
     property TokenCustomHeader: string read FTokenCustomHeader write FTokenCustomHeader;
@@ -339,9 +339,9 @@ begin
   Result := Self;
 end;
 
-function TWiRLApplication.SetDisplayName(const ADisplayName: string): TWiRLApplication;
+function TWiRLApplication.SetAppName(const AAppName: string): TWiRLApplication;
 begin
-  FDisplayName := ADisplayName;
+  FAppName := AAppName;
   Result := Self;
 end;
 

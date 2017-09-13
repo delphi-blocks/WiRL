@@ -35,7 +35,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServer;
+    FServer: TWiRLServer;
   public
   end;
 
@@ -62,7 +62,7 @@ end;
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
   // Create http server
-  FServer := TWiRLhttpServer.Create(nil);
+  FServer := TWiRLServer.Create(nil);
 
   // Server configuration
   FServer
@@ -70,12 +70,12 @@ begin
     .SetThreadPoolSize(75)
     // Engine configuration
     .AddEngine<TWiRLEngine>('/rest')
-      .SetDisplayName('WiRL Auth Demo')
+      .SetEngineName('WiRL Auth Demo')
 
       .AddApplication('/app')
         .SetSystemApp(True)
-        .SetDisplayName('Auth Application')
-        .SetSecret(Tencoding.UTF8.GetBytes(edtSecret.Text))
+        .SetAppName('Auth Application')
+        .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
         .SetClaimsClass(TServerClaims)
       {$IF CompilerVersion >=28} //XE7
         .SetResources([

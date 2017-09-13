@@ -80,7 +80,7 @@ object MainForm: TMainForm
       OnUpdate = StopServerActionUpdate
     end
   end
-  object WiRLhttpServer1: TWiRLhttpServer
+  object WiRLhttpServer1: TWiRLServer
     Active = False
     ThreadPoolSize = 5
     Left = 208
@@ -89,11 +89,11 @@ object MainForm: TMainForm
   object WiRLEngine1: TWiRLEngine
     BasePath = '/rest'
     Server = WiRLhttpServer1
-    DisplayName = 'WiRL Filters'
+    EngineName = 'WiRL Filters'
     Left = 288
     Top = 120
     object WiRLApplication1: TWiRLApplication
-      DisplayName = 'Filter Demo'
+      AppName = 'Filter Demo'
       BasePath = '/app'
       TokenLocation = Bearer
       Resource.List = (

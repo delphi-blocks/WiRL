@@ -26,7 +26,7 @@ type
   [TestFixture]
   TTestFilter = class(TObject)
   private
-    FServer: TWiRLhttpServer;
+    FServer: TWiRLServer;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
   public
@@ -58,15 +58,15 @@ implementation
 
 procedure TTestFilter.Setup;
 begin
-  FServer := TWiRLhttpServer.Create(nil);
+  FServer := TWiRLServer.Create(nil);
 
   // Engine configuration
   FServer.AddEngine<TWiRLEngine>('/rest')
-    .SetDisplayName('WiRL Test Demo')
+    .SetEngineName('WiRL Test Demo')
 
     .AddApplication('/app')
       .SetSystemApp(True)
-      .SetDisplayName('Test Application')
+      .SetAppName('Test Application')
       .SetResources(['*'])
       .SetFilters(['*']);
 
