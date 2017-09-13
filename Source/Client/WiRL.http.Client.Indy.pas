@@ -391,8 +391,7 @@ end;
 
 function TWiRLClientRequestIndy.GetContentStream: TStream;
 begin
-  // Content stream should be send to the POST, PUT... methods
-  raise Exception.Create('"ContentStream" not available');
+  raise Exception.Create('"ContentStream" not available, use the POST, PUT... methods');
 end;
 
 function TWiRLClientRequestIndy.GetCookieFields: TWiRLCookies;
@@ -412,7 +411,7 @@ end;
 
 function TWiRLClientRequestIndy.GetHttpQuery: string;
 begin
-
+  Result := '';
 end;
 
 function TWiRLClientRequestIndy.GetQueryFields: TWiRLParam;
@@ -445,7 +444,7 @@ end;
 procedure TWiRLClientRequestIndy.SetContentStream(const Value: TStream);
 begin
   inherited;
-
+  raise Exception.Create('"ContentStream" not available, use the POST, PUT... methods');
 end;
 
 initialization

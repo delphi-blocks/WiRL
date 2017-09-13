@@ -18,7 +18,8 @@ uses
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Application,
-  WiRL.http.Filters;
+  WiRL.http.Filters, WiRL.Core.MessageBodyReader, WiRL.Core.MessageBodyWriter,
+  WiRL.Core.Registry;
 
 type
   TMainForm = class(TForm)
@@ -31,6 +32,9 @@ type
     PortNumberEdit: TEdit;
     Label1: TLabel;
     lstLog: TListBox;
+    WiRLhttpServer1: TWiRLhttpServer;
+    WiRLEngine1: TWiRLEngine;
+    WiRLApplication1: TWiRLApplication;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -38,7 +42,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FServer: TWiRLhttpServer;
+    // FServer: TWiRLhttpServer;
   public
     procedure Log(const AMsg :string);
   end;
@@ -79,41 +83,26 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  // Create http server
-  FServer := TWiRLhttpServer.Create(nil);
-
-  // Engine configuration
-  FServer
-    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetThreadPoolSize(5)
-    .AddEngine<TWiRLEngine>('/rest')
-    .SetDisplayName('WiRL Filters')
-
-    // Application configuration
-    .AddApplication('/app')
-      .SetDisplayName('Filter Demo')
-      .SetResources('Server.Resources.TFilterDemoResource')
-      .SetFilters('*')
-  ;
-
-  if not FServer.Active then
-    FServer.Active := True;
+  if not WiRLhttpServer1.Active then
+  begin
+    WiRLhttpServer1.Port := StrToIntDef(PortNumberEdit.Text, 8080);
+    WiRLhttpServer1.Active := True;
+  end;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := (FServer = nil) or (FServer.Active = False);
+  StartServerAction.Enabled := (WiRLhttpServer1 = nil) or (WiRLhttpServer1.Active = False);
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  FServer.Active := False;
-  FServer.Free;
+  WiRLhttpServer1.Active := False;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(FServer) and (FServer.Active = True);
+  StopServerAction.Enabled := Assigned(WiRLhttpServer1) and (WiRLhttpServer1.Active = True);
 end;
 
 initialization

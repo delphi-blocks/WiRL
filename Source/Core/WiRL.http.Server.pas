@@ -107,6 +107,9 @@ type
 
 implementation
 
+uses
+  WiRL.http.Filters;
+
 { TWiRLhttpServer }
 
 procedure TWiRLhttpServer.AddEngine(const ABasePath: string;
@@ -202,14 +205,17 @@ var
   LEngine: TWirlCustomEngine;
 begin
   inherited;
-  LEngine := GetEngine(ARequest.PathInfo);
-
   LContext := TWiRLContext.Create;
   try
-    LContext.Engine := LEngine;
     LContext.Request := ARequest;
     LContext.Response := AResponse;
-    LEngine.HandleRequest(LContext);
+    if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
+    begin
+      LEngine := GetEngine(ARequest.PathInfo);
+      LContext.Engine := LEngine;
+      LEngine.HandleRequest(LContext);
+    end;
+    TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
   finally
     LContext.Free;
   end;

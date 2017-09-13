@@ -338,7 +338,11 @@ var
   LStream: TStream;
 begin
   LStream := TStringStream.Create(Value, EncodingFromCharSet((ContentMediaType.Charset)));
-  ContentStream := LStream;
+  try
+    ContentStream := LStream;
+  except
+    LStream.Free;
+  end;
 end;
 
 procedure TWiRLRequest.SetContentLength(const Value: Integer);

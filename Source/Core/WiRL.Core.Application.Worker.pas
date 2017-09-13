@@ -162,7 +162,7 @@ begin
     Exit;
 
   // Run filters
-  FAppConfig.FilterRegistry.FetchResponseFilter(
+  FAppConfig.FilterRegistry.FetchResponseFilter(False,
     procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     var
       LResponseContext: TWiRLContainerResponseContext;

@@ -55,7 +55,7 @@ type
     property Request: TWiRLRequest read FRequest;
     property Response: TWiRLResponse read FResponse;
     property Resource: TWiRLResource read GetResource;
-    constructor Create(AContext: TWiRLContext; AResource: TWiRLResource);
+    constructor Create(AContext: TWiRLContext; AResource: TWiRLResource = nil);
   end;
 
   IWiRLContainerRequestFilter = interface
@@ -122,8 +122,11 @@ type
     function RegisterFilter<T: class>: TWiRLFilterConstructorInfo; overload;
     function RegisterFilter<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLFilterConstructorInfo; overload;
 
+    function ApplyPreMatchingRequestFilters(AContext: TWiRLContext): Boolean;
+    procedure ApplyPreMatchingResponseFilters(AContext: TWiRLContext);
+
     procedure FetchRequestFilter(const PreMatching: Boolean; ARequestProc: TProc<TWiRLFilterConstructorInfo>);
-    procedure FetchResponseFilter(AResponseProc: TProc<TWiRLFilterConstructorInfo>);
+    procedure FetchResponseFilter(const PreMatching: Boolean; AResponseProc: TProc<TWiRLFilterConstructorInfo>);
 
     class property Instance: TWiRLFilterRegistry read GetInstance;
   end;
@@ -272,18 +275,79 @@ begin
   end;
 end;
 
-procedure TWiRLFilterRegistry.FetchResponseFilter(AResponseProc: TProc<TWiRLFilterConstructorInfo>);
+procedure TWiRLFilterRegistry.FetchResponseFilter(const PreMatching: Boolean; AResponseProc: TProc<TWiRLFilterConstructorInfo>);
 var
   LConstructorInfo: TWiRLFilterConstructorInfo;
+  LFilterType: TRttiType;
+  LIsPreMatching: Boolean;
 begin
   Sort;
   for LConstructorInfo in Self do
   begin
     if Supports(LConstructorInfo.TypeTClass, IWiRLContainerResponseFilter) then
     begin
-      AResponseProc(LConstructorInfo);
+      LFilterType := FRttiContext.GetType(LConstructorInfo.TypeTClass);
+      LIsPreMatching := TRttiHelper.HasAttribute<PreMatchingAttribute>(LFilterType);
+
+      if PreMatching and LIsPreMatching then
+        AResponseProc(LConstructorInfo)
+      else if not PreMatching and not LIsPreMatching then
+        AResponseProc(LConstructorInfo);
     end;
   end;
+end;
+
+function TWiRLFilterRegistry.ApplyPreMatchingRequestFilters(AContext: TWiRLContext): Boolean;
+var
+  LRequestFilter: IWiRLContainerRequestFilter;
+  LRequestContext: TWiRLContainerRequestContext;
+  LAborted: Boolean;
+begin
+  LAborted := False;
+  TWiRLFilterRegistry.Instance.FetchRequestFilter(True,
+    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    begin
+      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+      if not Supports(ConstructorInfo.ConstructorFunc(), IWiRLContainerRequestFilter, LRequestFilter) then
+        raise EWiRLNotImplementedException.Create(
+          Format('Request Filter [%s] does not implement requested interface [IWiRLContainerRequestFilter]', [ConstructorInfo.TypeTClass.ClassName]),
+          Self.ClassName, 'ApplyPreMatchingRequestFilters'
+        );
+      LRequestContext := TWiRLContainerRequestContext.Create(AContext);
+      try
+        LRequestFilter.Filter(LRequestContext);
+        LAborted := LAborted or LRequestContext.Aborted;
+      finally
+        LRequestContext.Free;
+      end;
+    end
+  );
+  Result := LAborted;
+end;
+
+procedure TWiRLFilterRegistry.ApplyPreMatchingResponseFilters(
+  AContext: TWiRLContext);
+var
+  LResponseFilter: IWiRLContainerResponseFilter;
+  LResponseContext: TWiRLContainerResponseContext;
+begin
+  TWiRLFilterRegistry.Instance.FetchResponseFilter(True,
+    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    begin
+      // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
+      if not Supports(ConstructorInfo.ConstructorFunc(), IWiRLContainerResponseFilter, LResponseFilter) then
+        raise EWiRLNotImplementedException.Create(
+          Format('Response Filter [%s] does not implement requested interface [IWiRLContainerResponseFilter]', [ConstructorInfo.TypeTClass.ClassName]),
+          Self.ClassName, 'ApplyPreMatchingResponseFilters'
+        );
+      LResponseContext := TWiRLContainerResponseContext.Create(AContext);
+      try
+        LResponseFilter.Filter(LResponseContext);
+      finally
+        LResponseContext.Free;
+      end;
+    end
+  );
 end;
 
 function TWiRLFilterRegistry.FilterByClassName(const AClassName: string;

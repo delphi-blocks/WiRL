@@ -38,6 +38,15 @@ type
   end;
 
   [PreMatching]
+  TResponseLoggerFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
+  private
+    FMainForm: TMainForm;
+  public
+    procedure Filter(ARequestContext: TWiRLContainerResponseContext);
+    constructor Create(MainForm: TMainForm);
+  end;
+
+  [PreMatching]
   TAbortTest = class(TInterfacedObject, IWiRLContainerRequestFilter)
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
@@ -79,7 +88,7 @@ uses
 procedure TRequestCheckerFilter.Filter(ARequestContext: TWiRLContainerRequestContext);
 begin
   if Pos('error', ARequestContext.Request.Query) > 0 then
-    raise EWiRLWebApplicationException.Create(Format('Filter error test [%s]', [FApplication.Name]), 400);
+    raise EWiRLWebApplicationException.Create(Format('Filter error test [%s]', [FApplication.DisplayName]), 400);
 end;
 
 { TRequestLoggerFilter }
@@ -96,7 +105,7 @@ begin
   LMessage := DateTimeToStr(Now) + ' - ' + ARequestContext.Request.Method + ' ' + ARequestContext.Request.PathInfo;
   if ARequestContext.Request.Query <> '' then
     LMessage := LMessage + '?' + ARequestContext.Request.Query;
-  FMainForm.Log(LMessage);
+  FMainForm.Log('REQ - ' + LMessage);
 end;
 
 { TResponsePoweredByFilter }
@@ -183,11 +192,35 @@ begin
 
 end;
 
+{ TResponseLoggerFilter }
+
+constructor TResponseLoggerFilter.Create(MainForm: TMainForm);
+begin
+  FMainForm := MainForm;
+end;
+
+procedure TResponseLoggerFilter.Filter(
+  ARequestContext: TWiRLContainerResponseContext);
+var
+  LMessage: string;
+begin
+  LMessage := DateTimeToStr(Now) + ' - ' + ARequestContext.Request.Method + ' ' + ARequestContext.Request.PathInfo;
+  if ARequestContext.Request.Query <> '' then
+    LMessage := LMessage + '?' + ARequestContext.Request.Query;
+  FMainForm.Log('RES - ' + LMessage);
+end;
+
 initialization
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestLoggerFilter>(
     function (): TObject
     begin
       Result := TRequestLoggerFilter.Create(MainForm);
+    end
+  );
+  TWiRLFilterRegistry.Instance.RegisterFilter<TResponseLoggerFilter>(
+    function (): TObject
+    begin
+      Result := TResponseLoggerFilter.Create(MainForm);
     end
   );
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestCheckerFilter>;
