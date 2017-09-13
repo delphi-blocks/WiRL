@@ -3,10 +3,9 @@ unit WiRL.Data.FireDAC.Updates;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
-  Data.DB, FireDAC.Comp.Client, FireDAC.Stan.StorageBin, FireDAC.Stan.Error,
-  FireDAC.Dats, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Comp.DataSet,
-  FireDAC.DApt.Intf,
+  System.Classes, System.SysUtils, System.Generics.Collections, Data.DB,
+  FireDAC.Comp.Client, FireDAC.Stan.StorageBin, FireDAC.Stan.Error, FireDAC.Dats,
+  FireDAC.Stan.Option, FireDAC.Comp.DataSet, FireDAC.Stan.Intf, FireDAC.DApt.Intf,
 
   WiRL.Core.JSON,
   WiRL.Data.FireDAC.Persistence;

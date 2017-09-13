@@ -40,7 +40,7 @@ type
     function GetItem(Index: Integer): TWiRLFDResourceDatasetsItem;
   public
     function Add: TWiRLFDResourceDatasetsItem;
-    function FindItemByDataSetName(AName: string): TWiRLFDResourceDatasetsItem;
+    function FindItemByDataSetName(const AName: string): TWiRLFDResourceDatasetsItem;
     procedure ForEach(const ADoSomething: TProc<TWiRLFDResourceDatasetsItem>);
     property Item[Index: Integer]: TWiRLFDResourceDatasetsItem read GetItem;
   end;
@@ -60,8 +60,7 @@ type
     procedure AfterPOST(); override;
     procedure BeforePUT(AContent: TMemoryStream); override;
     procedure AfterPUT(); override;
-    procedure Notification(AComponent: TComponent; Operation: TOperation);
-      override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -254,8 +253,8 @@ begin
   Result := inherited Add as TWiRLFDResourceDatasetsItem;
 end;
 
-function TWiRLFDResourceDatasets.FindItemByDataSetName(
-  AName: string): TWiRLFDResourceDatasetsItem;
+function TWiRLFDResourceDatasets.FindItemByDataSetName(const AName: string):
+    TWiRLFDResourceDatasetsItem;
 var
   LIndex: Integer;
   LItem: TWiRLFDResourceDatasetsItem;
