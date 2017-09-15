@@ -13,13 +13,14 @@ interface
 
 uses
   System.SysUtils,
+  WiRL.http.Server,
   WiRL.http.Server.Indy;
 
 type
   EConsoleException = class(Exception);
 
 type
-  TWiRLConfigProc = reference to procedure (AServer: TWiRLhttpServerIndy);
+  TWiRLConfigProc = reference to procedure (AServer: TWiRLServer);
 
 type
   /// <summary>
@@ -80,7 +81,7 @@ type
   TWiRLConsoleBase = class
   protected
     FPort: Integer;
-    FServer: TWiRLhttpServerIndy;
+    FServer: TWiRLServer;
     FConfigProc: TWiRLConfigProc;
     function OSVersion: string;
     procedure WriteStatus; virtual;
@@ -126,7 +127,7 @@ end;
 
 constructor TWiRLConsoleBase.Create(AConfigProc: TWiRLConfigProc);
 begin
-  FServer := TWiRLhttpServerIndy.Create;
+  FServer := TWiRLServer.Create(nil);
   FConfigProc := AConfigProc;
   FPort := 8080;
 end;
@@ -146,7 +147,7 @@ procedure TWiRLConsoleBase.ServerStart;
 begin
   if not FServer.Active then
   begin
-    LogInfo(Format(TWiRLConsoleDef.ServerStarting, [FServer.DefaultPort]));
+    LogInfo(Format(TWiRLConsoleDef.ServerStarting, [FServer.Port]));
     FServer.Active := True;
     LogInfo(TWiRLConsoleDef.ServerStarted);
   end

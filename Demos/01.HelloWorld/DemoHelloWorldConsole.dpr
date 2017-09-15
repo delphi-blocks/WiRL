@@ -9,6 +9,8 @@ uses
   System.Types,
   WiRL.Console.Base,
   WiRL.Console.Factory,
+  WiRL.Core.Engine,
+  WiRL.http.Server,
   WiRL.http.Server.Indy,
   Server.Resources in 'Server.Resources.pas';
 
@@ -18,12 +20,13 @@ var
 begin
   try
     WiRLConsole := TWiRLConsoleFactory.NewConsole(
-      procedure (AServer: TWiRLhttpServerIndy)
+      procedure (AServer: TWiRLServer)
       begin
-        AServer.ConfigureEngine('/rest')
-          .SetName('WiRL HelloWorld')
+        AServer
           .SetPort(8080)
           .SetThreadPoolSize(10)
+          .AddEngine<TWiRLEngine>('/rest')
+          .SetEngineName('WiRL HelloWorld')
 
           // Adds and configures an application
           .AddApplication('/app')
