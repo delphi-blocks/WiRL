@@ -17,6 +17,7 @@ uses
   System.Diagnostics, System.Actions, Winapi.ShellAPI,
 
   WiRL.Core.Engine,
+  WiRL.http.FileSystemEngine,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
 
@@ -73,24 +74,20 @@ begin
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetThreadPoolSize(5)
-    .AddEngine<TWiRLEngine>('/rest')
-    .SetEngineName('WiRL Template')
+    .SetThreadPoolSize(5);
 
-    // Application configuration
-    .AddApplication('/default')
-      .SetAppName('Default')
-	  {$IF CompilerVersion >=28} //XE7
-      .SetResources([
-        'Server.Resources.StaticFiles.TStaticFileResources',
-        'Server.Resources.Data.TMainModule'
-      ]);
-	  {$ELSE}
-      .SetResources(
-        'Server.Resources.StaticFiles.TStaticFileResources,'+
-        'Server.Resources.Data.TMainModule'
-	    );
-    {$IFEND}
+  FServer
+    .AddEngine<TWiRLEngine>('/rest')
+      .SetEngineName('WiRL Template')
+
+      // Application configuration
+      .AddApplication('/default')
+        .SetAppName('Default')
+        .SetResources('*');
+
+  FServer
+    .AddEngine<TWiRLFileSystemEngine>('/')
+      .SetEngineName('ExtApp');
 
   if not FServer.Active then
     FServer.Active := True;
@@ -114,7 +111,7 @@ end;
 
 procedure TMainForm.TestActionExecute(Sender: TObject);
 const
-  LTemplateUrl = 'http://localhost:%d/rest/default/static/';
+  LTemplateUrl = 'http://localhost:%d/';
 begin
   ShellExecute(Handle, 'open', PChar(Format(LTemplateUrl, [Fserver.Port])), '', '', SW_NORMAL);
 end;

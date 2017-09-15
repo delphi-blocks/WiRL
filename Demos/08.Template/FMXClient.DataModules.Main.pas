@@ -14,7 +14,8 @@ interface
 uses
   System.SysUtils, System.Classes,
   WiRL.Client.Application,
-  WiRL.http.Client;
+  WiRL.http.Client,
+  WiRL.http.Client.Indy;
 
 type
   TMainDataModule = class(TDataModule)

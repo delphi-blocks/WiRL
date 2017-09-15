@@ -499,6 +499,12 @@ begin
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FSecret := TEncoding.ANSI.GetBytes(SCRT_SGN);
+
+  if csDesigning in ComponentState then
+  begin
+    AddResource('*');
+    AddFilter('*');
+  end;
 end;
 
 procedure TWiRLApplication.DefineProperties(Filer: TFiler);
@@ -653,3 +659,5 @@ initialization
   TWiRLApplication.InitializeRtti;
 
 end.
+
+

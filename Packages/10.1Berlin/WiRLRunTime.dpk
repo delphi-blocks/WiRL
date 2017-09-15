@@ -115,7 +115,8 @@ contains
   WiRL.http.Client.Indy in '..\..\Source\Client\WiRL.http.Client.Indy.pas',
   WiRL.http.Client.Interfaces in '..\..\Source\Client\WiRL.http.Client.Interfaces.pas',
   WiRL.http.Client in '..\..\Source\Client\WiRL.http.Client.pas',
-  WiRL.http.Server.Interfaces in '..\..\Source\Core\WiRL.http.Server.Interfaces.pas';
+  WiRL.http.Server.Interfaces in '..\..\Source\Core\WiRL.http.Server.Interfaces.pas',
+  WiRL.http.FileSystemEngine in '..\..\Source\Core\WiRL.http.FileSystemEngine.pas';
 
 end.
 

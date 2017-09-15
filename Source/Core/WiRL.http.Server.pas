@@ -29,6 +29,7 @@ type
     procedure SetServer(const Value: TWiRLServer);
     procedure FindDefaultServer;
   protected
+    FEngineName: string;
     procedure Notification(AComponent: TComponent; Operation: TOperation);
       override;
   public
@@ -40,6 +41,7 @@ type
     procedure Shutdown; virtual;
   published
     property BasePath: string read FBasePath write SetBasePath;
+    property EngineName: string read FEngineName write FEngineName;
     property Server: TWiRLServer read FServer write SetServer;
   end;
 
@@ -119,6 +121,8 @@ var
 begin
   LEngineInfo := TWiRLEngineInfo.Create(AEngine, AOwnsObjects);
   FEngines.Add(LEngineInfo);
+  if AEngine.Server <> Self then
+    AEngine.Server := Self;
 end;
 
 function TWiRLServer.AddEngine<T>(const ABasePath: string; AOwnsObjects: Boolean): T;
@@ -216,6 +220,7 @@ begin
       LEngine.HandleRequest(LContext);
     end;
     TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
+    AResponse.SendHeaders;
   finally
     LContext.Free;
   end;
@@ -381,10 +386,15 @@ end;
 
 procedure TWiRLCustomEngine.SetBasePath(const Value: string);
 begin
-  if StartsText('/', Value) then
-    FBasePath := Value
-  else
-    FBasePath := '/' + Value;
+  if Value <> FBasePath then
+  begin
+    if StartsText('/', Value) then
+      FBasePath := Value
+    else
+      FBasePath := '/' + Value;
+    if FBasePath.IndexOf('/', 1) > 0 then
+      raise EWiRLException.CreateFmt('BasePath [%s] should not contains any slash', [FBasePath]);
+  end;
 end;
 
 procedure TWiRLCustomEngine.SetServer(const Value: TWiRLServer);

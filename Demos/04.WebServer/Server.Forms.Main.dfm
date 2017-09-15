@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'WiRL WebServer'
-  ClientHeight = 201
+  ClientHeight = 234
   ClientWidth = 464
   Color = clBtnFace
   Constraints.MinHeight = 240
@@ -82,5 +82,18 @@ object MainForm: TMainForm
       Caption = 'Test'
       OnExecute = TestActionExecute
     end
+  end
+  object WiRLServer1: TWiRLServer
+    Active = False
+    Left = 336
+    Top = 96
+  end
+  object WiRLFileSystemEngine1: TWiRLFileSystemEngine
+    BasePath = '/'
+    EngineName = 'WiRL FileSystemEngine'
+    Server = WiRLServer1
+    RootFolder = '{AppPath}\www'
+    Left = 352
+    Top = 160
   end
 end

@@ -29,7 +29,7 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    WiRLhttpServer1: TWiRLServer;
+    WiRLServer1: TWiRLServer;
     WiRLEngine1: TWiRLEngine;
     WiRLApplication1: TWiRLApplication;
     procedure StartServerActionExecute(Sender: TObject);
@@ -63,24 +63,24 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  WiRLhttpServer1.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  if not WiRLhttpServer1.Active then
-    WiRLhttpServer1.Active := True;
+  WiRLServer1.Port := StrToIntDef(PortNumberEdit.Text, 8080);
+  if not WiRLServer1.Active then
+    WiRLServer1.Active := True;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := (WiRLhttpServer1 = nil) or (WiRLhttpServer1.Active = False);
+  StartServerAction.Enabled := (WiRLServer1 = nil) or (WiRLServer1.Active = False);
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  WiRLhttpServer1.Active := False;
+  WiRLServer1.Active := False;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(WiRLhttpServer1) and (WiRLhttpServer1.Active = True);
+  StopServerAction.Enabled := Assigned(WiRLServer1) and (WiRLServer1.Active = True);
 end;
 
 end.

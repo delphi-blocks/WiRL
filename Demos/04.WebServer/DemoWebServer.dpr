@@ -11,8 +11,7 @@ program DemoWebServer;
 
 uses
   Forms,
-  Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
-  Server.Resources in 'Server.Resources.pas';
+  Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm};
 
 {$R *.res}
 

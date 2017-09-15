@@ -93,7 +93,6 @@ type
     FApplications: TWiRLApplicationList;
     FSubscribers: TList<IWiRLHandleListener>;
     FCriticalSection: TCriticalSection;
-    FEngineName: string;
   protected
     procedure DoBeforeHandleRequest(const AApplication: TWiRLApplication); virtual;
     procedure DoAfterHandleRequest(const AApplication: TWiRLApplication; const AStopWatch: TStopWatch); virtual;
@@ -129,7 +128,6 @@ type
     class property ServerFileName: string read GetServerFileName;
     class property ServerDirectory: string read GetServerDirectory;
   published
-    property EngineName: string read FEngineName write FEngineName;
     property Applications: TWiRLApplicationList read FApplications write FApplications;
   end;
 
@@ -335,7 +333,6 @@ begin
   LStopWatchEx.Stop;
 
   DoAfterRequestEnd(LStopWatchEx);
-  AContext.Response.SendHeaders;
 end;
 
 procedure TWiRLEngine.RemoveApplication(AApplication: TWiRLApplication);
@@ -365,6 +362,7 @@ procedure TWiRLEngine.Shutdown;
 var
   LAppInfo: TWiRLApplicationInfo;
 begin
+  inherited;
   FCriticalSection.Enter;
   try
     for LAppInfo in FApplications do
@@ -378,6 +376,7 @@ procedure TWiRLEngine.Startup;
 var
   LAppInfo: TWiRLApplicationInfo;
 begin
+  inherited;
   FCriticalSection.Enter;
   try
     for LAppInfo in FApplications do

@@ -143,6 +143,8 @@ begin
     LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
     try
       AResponseInfo.FreeContentStream := True;
+      if LResponse.Server = '' then
+        LResponse.Server := 'WiRL Server (Indy)';
       FListener.HandleRequest(LRequest, LResponse);
     finally
       LResponse.Free;
