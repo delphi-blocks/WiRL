@@ -15,6 +15,10 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.IOUtils,
 
+{$IFDEF MSWINDOWS}
+  Winapi.Windows,
+{$ENDIF}
+
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
   WiRL.Core.Exceptions,
@@ -25,6 +29,8 @@ uses
 type
   TWiRLFileSystemErrorEvent = procedure (ASender: TObject; AStatusCode: Integer; AContext: TWiRLContext) of object;
 
+  TStringFunc = TFunc<string>;
+
   TWiRLFileSystemEngine = class(TWiRLCustomEngine)
   private
   const
@@ -32,19 +38,23 @@ type
     DefaultEngineName = 'WiRL FileSystemEngine';
   private
     FRootFolder: string;
+    FMacros: TDictionary<string,TStringFunc>;
     FExpandedRootFolder: string;
     FContentTypesForExt: TDictionary<string, string>;
     FIndexFileNames: TStringList;
     FOnError: TWiRLFileSystemErrorEvent;
     function GetContentType(const AFileName: string): string;
-    procedure InitExtDictionary;
-    procedure InitIndexFileNames;
     procedure ServeFileContent(const AFileNamme: string; AResponse: TWiRLResponse);
     procedure CheckRelativePath(const ARelativeURL: string);
     function DirectoryHasIndexFile(const ADirectory: string;
       out AIndexFullPath: string): Boolean;
     function ExpandMacros(const ATemplate: string): string;
     procedure HandleError(AStatusCode: Integer; AContext: TWiRLContext);
+    procedure SetRootFolderProp(const Value: string);
+  protected
+    procedure InitExtDictionary; virtual;
+    procedure InitIndexFileNames; virtual;
+    procedure InitMacros; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -55,8 +65,9 @@ type
     procedure Startup; override;
     property IndexFileNames: TStringList read FIndexFileNames;
     property ContentTypesForExt: TDictionary<string, string> read FContentTypesForExt;
+    property Macros: TDictionary<string,TStringFunc> read FMacros;
   published
-    property RootFolder: string read FRootFolder write FRootFolder;
+    property RootFolder: string read FRootFolder write SetRootFolderProp;
     property OnError: TWiRLFileSystemErrorEvent read FOnError write FOnError;
   end;
 
@@ -74,6 +85,14 @@ const
     '  <p>{Detail}' + sLineBreak +
     '</html>';
 
+function RemoveTrailingDelim(const APath: string): string;
+begin
+  if APath.EndsWith(PathDelim) then
+    Result := APath.Substring(0, APath.Length - 1)
+  else
+    Result := APath;
+end;
+
 { TWiRLFileSystemEngine }
 
 procedure TWiRLFileSystemEngine.CheckRelativePath(const ARelativeURL: string);
@@ -86,18 +105,21 @@ constructor TWiRLFileSystemEngine.Create(AOwner: TComponent);
 begin
   inherited;
   FContentTypesForExt := TDictionary<string, string>.Create;
+  FMacros := TDictionary<string,TStringFunc>.Create;
   FIndexFileNames := TStringList.Create;
   FRootFolder := DefaultRootFolder;
   FEngineName := DefaultEngineName;
 
   InitExtDictionary;
   InitIndexFileNames;
+  InitMacros;
 end;
 
 destructor TWiRLFileSystemEngine.Destroy;
 begin
   FContentTypesForExt.Free;
   FIndexFileNames.Free;
+  FMacros.Free;
   inherited;
 end;
 
@@ -129,9 +151,13 @@ begin
 end;
 
 function TWiRLFileSystemEngine.ExpandMacros(const ATemplate: string): string;
+var
+  LMacroPair: TPair<string,TFunc<string>>;
 begin
-  Result := ATemplate.Replace('{AppPath}', ExtractFilePath(ParamStr(0)), [rfIgnoreCase]);
-  Result := Result.Replace(PathDelim + PathDelim, PathDelim, [rfReplaceAll]);
+  Result := ATemplate;
+  for LMacroPair in FMacros do
+    Result := Result.Replace('{' + LMacroPair.Key + '}', RemoveTrailingDelim(LMacroPair.Value()), [rfIgnoreCase]);
+//  Result := Result.Replace(PathDelim + PathDelim, PathDelim, [rfReplaceAll]);
 end;
 
 procedure TWiRLFileSystemEngine.HandleError(AStatusCode: Integer;
@@ -169,9 +195,12 @@ var
   LIndexFileFullPath: string;
 begin
   inherited;
-  LRelativeURL := StringReplace(AContext.Request.PathInfo, '/', PathDelim, [rfReplaceAll]);
+  LRelativeURL := StringReplace(AContext.Request.PathInfo, '/', PathDelim, [rfReplaceAll]).Substring(BasePath.Length);
   CheckRelativePath(LRelativeURL);
-  LFullPath := FExpandedRootFolder + LRelativeURL;
+  if LRelativeURL.StartsWith(PathDelim) then
+    LFullPath := FExpandedRootFolder + LRelativeURL
+  else
+    LFullPath := FExpandedRootFolder + PathDelim + LRelativeURL;
 
   if DirectoryExists(LFullPath) then
   begin
@@ -212,6 +241,39 @@ begin
   IndexFileNames.Add('default.htm');
 end;
 
+procedure TWiRLFileSystemEngine.InitMacros;
+begin
+  Macros.Add('AppPath', function ():string
+  begin
+    Result := ExtractFilePath(ParamStr(0));
+  end);
+
+  Macros.Add('CurrPath', function ():string
+  begin
+    Result := TDirectory.GetCurrentDirectory;
+  end);
+
+  Macros.Add('TempPath', function ():string
+  begin
+    Result := TPath.GetTempPath;
+  end);
+
+  Macros.Add('HomePath', function ():string
+  begin
+    Result := TPath.GetHomePath;
+  end);
+
+  Macros.Add('DocumentsPath', function ():string
+  begin
+    Result := TPath.GetDocumentsPath;
+  end);
+
+  Macros.Add('PublicPath', function ():string
+  begin
+    Result := TPath.GetPublicPath;
+  end);
+end;
+
 procedure TWiRLFileSystemEngine.ServeFileContent(const AFileNamme: string;
   AResponse: TWiRLResponse);
 begin
@@ -232,6 +294,17 @@ function TWiRLFileSystemEngine.SetRootFolder(
 begin
   RootFolder := ARootFolder;
   Result := Self;
+end;
+
+procedure TWiRLFileSystemEngine.SetRootFolderProp(const Value: string);
+begin
+  if FRootFolder <> Value then
+  begin
+    if (Value.Length > 1) and (Value.EndsWith(PathDelim)) then
+      FRootFolder := Value.Substring(0, Value.Length - 1)
+    else
+      FRootFolder := Value;
+  end;
 end;
 
 procedure TWiRLFileSystemEngine.Startup;
