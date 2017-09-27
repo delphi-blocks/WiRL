@@ -279,7 +279,7 @@ begin
       if Assigned(AOnException) then
         AOnException(E)
       else
-        raise Exception.Create(E.Message);
+        raise;
     end;
   end;
 end;
@@ -313,7 +313,7 @@ begin
       if Assigned(AOnException) then
         AOnException(E)
       else
-        raise Exception.Create(E.Message);
+        raise;
     end;
   end;
 end;
@@ -346,7 +346,7 @@ begin
       if Assigned(AOnException) then
         AOnException(E)
       else
-        raise Exception.Create(E.Message);
+        raise;
     end;
   end;
 end;
@@ -382,12 +382,12 @@ begin
       LResponseStream.Free;
     end;
   except
-    on E:Exception do
+    on E: Exception do
     begin
       if Assigned(AOnException) then
         AOnException(E)
       else
-        raise Exception.Create(E.Message);
+        raise;
     end;
   end;
 end;
@@ -489,7 +489,7 @@ begin
       if Assigned(AOnException) then
         AOnException(E)
       else
-        raise Exception.Create(E.Message);
+        raise;
     end;
   end;
 end;
@@ -525,12 +525,12 @@ begin
       LContent.Free;
     end;
   except
-    on E:Exception do
+    on E: Exception do
     begin
       if Assigned(AOnException) then
         AOnException(E)
       else
-        raise Exception.Create(E.Message);
+        raise;
     end;
   end;
 end;
@@ -585,12 +585,12 @@ begin
       LContent.Free;
     end;
   except
-    on E:Exception do
+    on E: Exception do
     begin
       if Assigned(AOnException) then
         AOnException(E)
       else
-        raise Exception.Create(E.Message);
+        raise;
     end;
   end;
 end;

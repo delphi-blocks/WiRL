@@ -203,6 +203,7 @@ var
   i: Integer;
 begin
   // Copy custom headers
+  FHttpClient.Request.CustomHeaders.Clear;
   for i := 0 to FRequest.FHeaderFields.Count - 1 do
   begin
     FHttpClient.Request.CustomHeaders.AddValue(

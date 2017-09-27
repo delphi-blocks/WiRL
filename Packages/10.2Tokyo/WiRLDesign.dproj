@@ -53,6 +53,7 @@
         <DCC_K>false</DCC_K>
         <DCC_Description>WiRL REST components</DCC_Description>
         <DllSuffix>250</DllSuffix>
+        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>rtl;WiRLRunTime;$(DCC_UsePackage)</DCC_UsePackage>
