@@ -80,6 +80,7 @@ type
     procedure SetProxyParams(Value: TWiRLProxyConnectionInfo);
     function GetMaxRedirects: Integer;
     procedure SetMaxRedirects(const Value: Integer);
+    function GetClientImplementation: TObject;
 
     procedure BuildRequestObject;
     procedure BuildResponseObject;
@@ -154,6 +155,11 @@ begin
       Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
   end;
   BuildResponseObject;
+end;
+
+function TWiRLClientIndy.GetClientImplementation: TObject;
+begin
+  Result := FHttpClient;
 end;
 
 function TWiRLClientIndy.GetConnectTimeout: Integer;

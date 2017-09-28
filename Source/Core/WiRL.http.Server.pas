@@ -96,6 +96,7 @@ type
     function GetThreadPoolSizeProp: Integer;
     procedure SetThreadPoolSizeProp(const Value: Integer);
     procedure SetServerVendor(const Value: string);
+    function GetServerImplementation: TObject;
   protected
     FEngines: TWiRLEngineRegistry;
     function GetActive: Boolean; virtual;
@@ -126,6 +127,7 @@ type
     property Port: Integer read GetPortProp write SetPortProp default DefaultPort;
     property ThreadPoolSize: Integer read GetThreadPoolSizeProp write SetThreadPoolSizeProp default DefaultThreadPoolSize;
     property ServerVendor: string read FServerVendor write SetServerVendor;
+    property ServerImplementation: TObject read GetServerImplementation;
   end;
 
 implementation
@@ -308,6 +310,11 @@ end;
 function TWiRLServer.GetPortProp: Integer;
 begin
   Result := FHttpServer.Port;
+end;
+
+function TWiRLServer.GetServerImplementation: TObject;
+begin
+  Result := FHttpServer.ServerImplementation;
 end;
 
 function TWiRLServer.GetThreadPoolSizeProp: Integer;

@@ -39,10 +39,12 @@ type
     procedure SetThreadPoolSize(AValue: Integer);
     function GetListener: IWiRLListener;
     procedure SetListener(AValue: IWiRLListener);
+    function GetServerImplementation: TObject;
 
     // property
     property Port: Word read GetPort write SetPort;
     property ThreadPoolSize: Integer read GetThreadPoolSize write SetThreadPoolSize;
+    property ServerImplementation: TObject read GetServerImplementation;
     property Listener: IWiRLListener read GetListener write SetListener;
   end;
 

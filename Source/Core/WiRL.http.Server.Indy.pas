@@ -46,6 +46,7 @@ type
     procedure SetThreadPoolSize(AValue: Integer);
     function GetListener: IWiRLListener;
     procedure SetListener(AValue: IWiRLListener);
+    function GetServerImplementation: TObject;
 
     procedure DoCommandGet(AContext: TIdContext;
       ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
@@ -169,6 +170,11 @@ end;
 function TWiRLhttpServerIndy.GetPort: Word;
 begin
   Result := FHttpServer.DefaultPort;
+end;
+
+function TWiRLhttpServerIndy.GetServerImplementation: TObject;
+begin
+  Result := FHttpServer;
 end;
 
 function TWiRLhttpServerIndy.GetThreadPoolSize: Integer;

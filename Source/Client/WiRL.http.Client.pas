@@ -58,6 +58,7 @@ type
     function GetMaxRedirects: Integer;
     procedure SetMaxRedirects(const Value: Integer);
     procedure SetClientVendor(const Value: string);
+    function GetClientImplementation: TObject;
   protected
     procedure DoBeforeCommand;
     procedure DoAfterCommand;
@@ -111,6 +112,8 @@ type
     property NoProtocolErrorException: Boolean read FNoProtocolErrorException write FNoProtocolErrorException;
     /// <summary> Vendor of the http client implementation </summary>
     property ClientVendor: string read FClientVendor write SetClientVendor;
+    /// <summary> Underlying implementation of the client object </summary>
+    property ClientImplementation: TObject read GetClientImplementation;
   end;
 
 implementation
@@ -164,6 +167,11 @@ begin
 {$ELSE}
   raise EWiRLClientException.Create('Async execution not yet supported');
 {$ENDIF}
+end;
+
+function TWiRLClient.GetClientImplementation: TObject;
+begin
+  Result := FHttpClient.ClientImplementation;
 end;
 
 function TWiRLClient.GetConnectTimeout: Integer;

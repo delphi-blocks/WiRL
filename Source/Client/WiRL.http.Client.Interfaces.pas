@@ -63,6 +63,7 @@ type
     procedure SetProxyParams(Value: TWiRLProxyConnectionInfo);
     function GetMaxRedirects: Integer;
     procedure SetMaxRedirects(const Value: Integer);
+    function GetClientImplementation: TObject;
 
     // Http methods
     procedure Delete(const AURL: string; AResponseContent: TStream);
@@ -80,6 +81,8 @@ type
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
     property ProxyParams: TWiRLProxyConnectionInfo read GetProxyParams write SetProxyParams;
     property MaxRedirects: Integer read GetMaxRedirects write SetMaxRedirects;
+
+    property ClientImplementation: TObject read GetClientImplementation;
   end;
 
   TWiRLClientRegistry = class(TDictionary<string, TClass>)
