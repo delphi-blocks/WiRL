@@ -237,14 +237,19 @@ begin
     LContext.Server := Self;
     LContext.Request := ARequest;
     LContext.Response := AResponse;
-    if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
-    begin
-      LEngine := GetEngine(ARequest.PathInfo);
-      LContext.Engine := LEngine;
-      LEngine.HandleRequest(LContext);
+    try
+      if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
+      begin
+        LEngine := GetEngine(ARequest.PathInfo);
+        LContext.Engine := LEngine;
+        LEngine.HandleRequest(LContext);
+      end;
+      TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
+      AResponse.SendHeaders;
+    except
+      on E: Exception do
+        EWiRLWebApplicationException.HandleException(LContext, E);
     end;
-    TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
-    AResponse.SendHeaders;
   finally
     LContext.Free;
   end;
