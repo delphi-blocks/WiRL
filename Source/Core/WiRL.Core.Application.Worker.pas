@@ -564,9 +564,32 @@ end;
 
 procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject;
   const AWriter: IMessageBodyWriter; AMediaType: TMediaType);
+
+  procedure CollectResultGarbage(AMethodResult: TValue);
+  begin
+    if (not FResource.Method.MethodResult.IsSingleton) then
+      CollectGarbage(AMethodResult);
+  end;
+
+  procedure CollectArgumentsGarbage(AArgumentArray: TArgumentArray);
+  var
+    LArgument: TValue;
+    LParameters: TArray<TRttiParameter>;
+    LArgIndex: Integer;
+  begin
+    LParameters := FResource.Method.RttiObject.GetParameters;
+    LArgIndex := 0;
+    for LArgument in AArgumentArray do
+    begin
+      // Context arguments will be released by TWiRLContext if needed
+      if not TRttiHelper.HasAttribute<ContextAttribute>(LParameters[LArgIndex]) then
+        CollectGarbage(LArgument);
+      Inc(LArgIndex);
+    end;
+  end;
+
 var
   LMethodResult: TValue;
-  LArgument: TValue;
   LArgumentArray: TArgumentArray;
   LStream: TMemoryStream;
   LContentType: string;
@@ -618,10 +641,8 @@ begin
         Self.ClassName, 'InvokeResourceMethod'
       );
   finally
-    if (not FResource.Method.MethodResult.IsSingleton) then
-      CollectGarbage(LMethodResult);
-    for LArgument in LArgumentArray do
-      CollectGarbage(LArgument);
+    CollectResultGarbage(LMethodResult);
+    CollectArgumentsGarbage(LArgumentArray);
   end;
 end;
 

@@ -54,6 +54,7 @@ uses
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.http.URL,
+  WiRL.http.Server,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.Core.Auth.Context;
@@ -84,9 +85,7 @@ begin
       AValue := LContextFactory.CreateContext(AObject, AContext);
       if AValue.IsObject then  // Only object should be released
       begin
-        LContextOwned :=
-          not IsSigleton(AObject) and // Singleton should'n be released
-          not (AObject is TRttiParameter); // Parameters are released by the WiRL garbage collector
+        LContextOwned := not IsSigleton(AObject); // Singleton should'n be released
         AContext.CustomContext.Add(AValue.AsObject, LContextOwned);
       end;
       Exit(True);
@@ -141,6 +140,9 @@ begin
   // Claims (Subject)
   else if (LType.InheritsFrom(TWiRLSubject)) then
     AValue := AContext.AuthContext.Subject
+  // HTTP Server
+  else if (LType.InheritsFrom(TWiRLServer)) then
+    AValue := AContext.Server as TWiRLServer
   // HTTP request
   else if (LType.InheritsFrom(TWiRLRequest)) then
     AValue := AContext.Request
