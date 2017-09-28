@@ -48,6 +48,7 @@ type
 
   TWiRLContext = class
   private
+    FServer: TObject;
     FEngine: TObject;
     FRequest: TWiRLRequest;
     FResponse: TWiRLResponse;
@@ -60,6 +61,7 @@ type
   public
     destructor Destroy; override;
 
+    property Server: TObject read FServer write FServer;
     property Engine: TObject read FEngine write FEngine;
     property Application: TObject read FApplication write FApplication;
     property Request: TWiRLRequest read FRequest write FRequest;
@@ -70,6 +72,9 @@ type
   end;
 
 implementation
+
+uses
+  WiRL.http.Server;
 
 destructor TWiRLContext.Destroy;
 begin

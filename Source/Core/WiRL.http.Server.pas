@@ -56,9 +56,28 @@ type
     property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects;
   end;
 
-  TWiRLEngineList = class(TObjectList<TWiRLEngineInfo>)
+  TWiRLEngineRegistry = class(TObjectList<TWiRLEngineInfo>)
   public
     function TryGetValue(const ABasePath: string; out AEngine: TWiRLCustomEngine): Boolean;
+  end;
+
+  TEngineListEnumerator = class
+  private
+    FIndex: Integer;
+    FServer: TWiRLServer;
+  public
+    constructor Create(AServer: TWiRLServer);
+    function GetCurrent: TWiRLCustomEngine; inline;
+    function MoveNext: Boolean;
+    property Current: TWiRLCustomEngine read GetCurrent;
+  end;
+
+  TWiRLEngineList = class(TObject)
+  private
+    FServer: TWiRLServer;
+  public
+    function GetEnumerator: TEngineListEnumerator;
+    constructor Create(AServer: TWiRLServer);
   end;
 
   TWiRLServer = class(TComponent, IWiRLListener)
@@ -70,6 +89,7 @@ type
     FHttpServer: IWiRLServer;
     FActive: Boolean;
     FServerVendor: string;
+    FEngineList: TWiRLEngineList;
     procedure FreeEngines;
     function GetPortProp: Integer;
     procedure SetPortProp(APort: Integer);
@@ -77,7 +97,7 @@ type
     procedure SetThreadPoolSizeProp(const Value: Integer);
     procedure SetServerVendor(const Value: string);
   protected
-    FEngines: TWiRLEngineList;
+    FEngines: TWiRLEngineRegistry;
     function GetActive: Boolean; virtual;
     procedure SetActive(const Value: Boolean); virtual;
     procedure Startup;
@@ -97,6 +117,7 @@ type
     procedure HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
 
     property HttpServer: IWiRLServer read FHttpServer;
+    property Engines: TWiRLEngineList read FEngineList;
 
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -145,7 +166,8 @@ end;
 constructor TWiRLServer.Create(AOwner: TComponent);
 begin
   inherited;
-  FEngines := TWiRLEngineList.Create(True);
+  FEngineList := TWiRLEngineList.Create(Self);
+  FEngines := TWiRLEngineRegistry.Create(True);
   FHttpServer := TWiRLServerRegistry.Instance.CreateServer(FServerVendor);
   FHttpServer.Listener := Self;
   FActive := False;
@@ -155,6 +177,7 @@ end;
 
 destructor TWiRLServer.Destroy;
 begin
+  FEngineList.Free;
   FreeEngines;
   inherited;
 end;
@@ -211,6 +234,7 @@ begin
   inherited;
   LContext := TWiRLContext.Create;
   try
+    LContext.Server := Self;
     LContext.Request := ARequest;
     LContext.Response := AResponse;
     if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
@@ -419,9 +443,9 @@ begin
     raise EWiRLException.Create('Server not assigned');
 end;
 
-{ TWiRLEngineList }
+{ TWiRLEngineRegistry }
 
-function TWiRLEngineList.TryGetValue(const ABasePath: string;
+function TWiRLEngineRegistry.TryGetValue(const ABasePath: string;
   out AEngine: TWiRLCustomEngine): Boolean;
 var
   LEngineInfo: TWiRLEngineInfo;
@@ -435,6 +459,40 @@ begin
       Exit(True);
     end;
   end;
+end;
+
+{ TWiRLEngineList }
+
+constructor TWiRLEngineList.Create(AServer: TWiRLServer);
+begin
+  inherited Create;
+  FServer := AServer;
+end;
+
+function TWiRLEngineList.GetEnumerator: TEngineListEnumerator;
+begin
+  Result := TEngineListEnumerator.Create(FServer);
+end;
+
+{ TEngineListEnumerator }
+
+constructor TEngineListEnumerator.Create(AServer: TWiRLServer);
+begin
+  inherited Create;
+  FServer := AServer;
+  FIndex := -1;
+end;
+
+function TEngineListEnumerator.GetCurrent: TWiRLCustomEngine;
+begin
+  Result := FServer.FEngines[FIndex].FEngine;
+end;
+
+function TEngineListEnumerator.MoveNext: Boolean;
+begin
+  Result := FIndex < FServer.FEngines.Count - 1;
+  if Result then
+    Inc(FIndex);
 end;
 
 end.

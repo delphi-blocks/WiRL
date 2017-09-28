@@ -46,6 +46,9 @@ type
 
 implementation
 
+uses
+  WiRL.http.Server;
+
 function ExistsInArray(AArray: TJSONArray; AValue: string): Boolean;
   var
     LValue: TJSONValue;
@@ -113,7 +116,7 @@ begin
       if LMethodName <> '' then
       begin
         LResourceMethodPath := GetPath(LResourceMethod);
-        LMethodPath := AApplication.BasePath + LResourcePath;
+        LMethodPath := (AApplication.Engine as TWiRLEngine).BasePath + AApplication.BasePath + LResourcePath;
         if (not LMethodPath.EndsWith('/')) and (not LResourceMethodPath.StartsWith('/')) then
           LMethodPath := LMethodPath + '/';
         LMethodPath := LMethodPath + LResourceMethodPath;
@@ -131,27 +134,34 @@ procedure TSwaggerFilter.BuildSwagger(AContext: TWiRLContext; ASwagger: TJSONObj
 var
   LInfo: TJSONObject;
   LPaths: TJSONObject;
-  LEngine: TWiRLEngine;
+  LServer: TWiRLServer;
+  LEngine: TWiRLCustomEngine;
   LAppInfo: TWiRLApplicationInfo;
 begin
-  LEngine := AContext.Engine as TWiRLEngine;
+  LServer := AContext.Server as TWiRLServer;
 
   // Info object
   LInfo := TJSONObject.Create;
-  LInfo.AddPair('title', LEngine.Name);
+  LInfo.AddPair('title', ChangeFileExt(ExtractFileName(ParamStr(0)), ''));
   LInfo.AddPair('version', '1.0');
 
   // Paths object
   LPaths := TJSONObject.Create;
-  for LAppInfo in LEngine.Applications do
-  begin
-    AddApplicationResource(LPaths, LAppInfo.Application);
-  end;
 
+  for LEngine in LServer.Engines do
+  begin
+    if LEngine is TWiRLEngine then
+    begin
+      for LAppInfo in TWiRLEngine(LEngine).Applications do
+      begin
+        AddApplicationResource(LPaths, LAppInfo.Application);
+      end;
+    end;
+  end;
   // Swagger object (root)
   ASwagger.AddPair('swagger', SwaggerVersion);
   ASwagger.AddPair('host', AContext.Request.Host);
-  ASwagger.AddPair('basePath', LEngine.BasePath);
+//  ASwagger.AddPair('basePath', LEngine.BasePath);
   ASwagger.AddPair('info', LInfo);
   ASwagger.AddPair('paths', LPaths);
 end;
