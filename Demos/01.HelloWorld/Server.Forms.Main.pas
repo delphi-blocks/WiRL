@@ -15,9 +15,9 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
-  WiRL.Core.Engine, WiRL.http.Server, WiRL.http.Server.Indy,
-  WiRL.Core.MessageBodyReader, WiRL.Core.MessageBodyWriter, WiRL.http.Filters,
-  WiRL.Core.Registry, WiRL.Core.Application;
+  WiRL.Core.Engine,
+  WiRL.http.Server,
+  WiRL.http.Server.Indy;
 
 type
   TMainForm = class(TForm)
@@ -29,9 +29,6 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    WiRLServer1: TWiRLServer;
-    WiRLEngine1: TWiRLEngine;
-    WiRLApplication1: TWiRLApplication;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -39,7 +36,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    { Private declarations }
+    RESTServer: TWiRLServer;
   public
     { Public declarations }
   end;
@@ -58,29 +55,37 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  RESTServer := TWiRLServer.Create(Self);
+
+  RESTServer.AddEngine<TWiRLEngine>('/rest')
+    .SetEngineName('RESTEngine')
+    .AddApplication('/app')
+      .SetResources('*')
+      .SetFilters('*');
+
   StartServerAction.Execute;
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  WiRLServer1.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  if not WiRLServer1.Active then
-    WiRLServer1.Active := True;
+  RESTServer.Port := StrToIntDef(PortNumberEdit.Text, 8080);
+  if not RESTServer.Active then
+    RESTServer.Active := True;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := (WiRLServer1 = nil) or (WiRLServer1.Active = False);
+  StartServerAction.Enabled := not Assigned(RESTServer) or not RESTServer.Active;
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  WiRLServer1.Active := False;
+  RESTServer.Active := False;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(WiRLServer1) and (WiRLServer1.Active = True);
+  StopServerAction.Enabled := Assigned(RESTServer) and RESTServer.Active;
 end;
 
 end.
