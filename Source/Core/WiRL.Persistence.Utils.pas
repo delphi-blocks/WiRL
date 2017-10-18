@@ -13,24 +13,24 @@ interface
 
 uses
   System.Classes, System.SysUtils, Data.DB, System.Rtti,
-  WiRL.Core.JSON;
+  WiRL.Core.JSON, WiRL.Persistence.Core;
 
 type
   TDataSetUtils = class
   private
-    class function RecordToXML(const ADataSet: TDataSet; const ARootPath: string = ''): string; static;
-    class function RecordToCSV(const ADataSet: TDataSet): string; static;
+    class function RecordToXML(const ADataSet: TDataSet; const ARootPath: string; AConfig: TNeonConfiguration): string; static;
+    class function RecordToCSV(const ADataSet: TDataSet; AConfig: TNeonConfiguration): string; static;
   public
-    class function RecordToJSONObject(const ADataSet: TDataSet): TJSONObject; static;
-    class function DataSetToJSONArray(const ADataSet: TDataSet): TJSONArray; overload; static;
-    class function DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): TJSONArray; overload; static;
+    class function RecordToJSONObject(const ADataSet: TDataSet; AConfig: TNeonConfiguration): TJSONObject; static;
+    class function DataSetToJSONArray(const ADataSet: TDataSet; AConfig: TNeonConfiguration): TJSONArray; overload; static;
+    class function DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>; AConfig: TNeonConfiguration): TJSONArray; overload; static;
 
-    class function DataSetToXML(const ADataSet: TDataSet): string; overload; static;
-    class function DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): string; overload; static;
+    class function DataSetToXML(const ADataSet: TDataSet; AConfig: TNeonConfiguration): string; overload; static;
+    class function DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>; AConfig: TNeonConfiguration): string; overload; static;
 
-    class function DataSetToCSV(const ADataSet: TDataSet): string; static;
+    class function DataSetToCSV(const ADataSet: TDataSet; AConfig: TNeonConfiguration): string; static;
 
-    class function DatasetMetadataToJSONObject(const ADataSet: TDataSet): TJSONObject; static;
+    class function DatasetMetadataToJSONObject(const ADataSet: TDataSet; AConfig: TNeonConfiguration): TJSONObject; static;
   end;
 
 
@@ -45,7 +45,7 @@ uses
 type
   TJSONFieldType = (NestedObject, NestedArray, SimpleValue);
 
-class function TDataSetUtils.RecordToCSV(const ADataSet: TDataSet): string;
+class function TDataSetUtils.RecordToCSV(const ADataSet: TDataSet; AConfig: TNeonConfiguration): string;
 var
   LField: TField;
 begin
@@ -64,7 +64,7 @@ begin
   Result := Result.TrimRight([',']);
 end;
 
-class function TDataSetUtils.RecordToJSONObject(const ADataSet: TDataSet): TJSONObject;
+class function TDataSetUtils.RecordToJSONObject(const ADataSet: TDataSet; AConfig: TNeonConfiguration): TJSONObject;
 var
   LField: TField;
   LPairName: string;
@@ -87,9 +87,9 @@ begin
       ftFloat:         Result.AddPair(LPairName, TJSONNumber.Create(LField.AsFloat));
       ftCurrency:      Result.AddPair(LPairName, TJSONNumber.Create(LField.AsCurrency));
       ftBCD:           Result.AddPair(LPairName, TJSONNumber.Create(LField.AsFloat));
-      ftDate:          Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime));
-      ftTime:          Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime));
-      ftDateTime:      Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime));
+      ftDate:          Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime, AConfig.UseUTCDate));
+      ftTime:          Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime, AConfig.UseUTCDate));
+      ftDateTime:      Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime, AConfig.UseUTCDate));
 //        ftBytes: ;
 //        ftVarBytes: ;
       ftAutoInc:       Result.AddPair(LPairName, TJSONNumber.Create(LField.AsInteger));
@@ -134,7 +134,7 @@ begin
   end;
 end;
 
-class function TDataSetUtils.RecordToXML(const ADataSet: TDataSet; const ARootPath: string = ''): string;
+class function TDataSetUtils.RecordToXML(const ADataSet: TDataSet; const ARootPath: string; AConfig: TNeonConfiguration): string;
 var
   LField: TField;
 begin
@@ -146,12 +146,12 @@ begin
   end;
 end;
 
-class function TDataSetUtils.DataSetToJSONArray(const ADataSet: TDataSet): TJSONArray;
+class function TDataSetUtils.DataSetToJSONArray(const ADataSet: TDataSet; AConfig: TNeonConfiguration): TJSONArray;
 begin
-  Result := DataSetToJSONArray(ADataSet, nil);
+  Result := DataSetToJSONArray(ADataSet, nil, AConfig);
 end;
 
-class function TDataSetUtils.DataSetToCSV(const ADataSet: TDataSet): string;
+class function TDataSetUtils.DataSetToCSV(const ADataSet: TDataSet; AConfig: TNeonConfiguration): string;
 var
   LBookmark: TBookmark;
 begin
@@ -169,7 +169,7 @@ begin
       ADataSet.First;
       while not ADataSet.Eof do
       try
-        Result := Result + TDataSetUtils.RecordToCSV(ADataSet) + sLineBreak;
+        Result := Result + TDataSetUtils.RecordToCSV(ADataSet, AConfig) + sLineBreak;
       finally
         ADataSet.Next;
       end;
@@ -181,7 +181,7 @@ begin
   end;
 end;
 
-class function TDataSetUtils.DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): TJSONArray;
+class function TDataSetUtils.DataSetToJSONArray(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>; AConfig: TNeonConfiguration): TJSONArray;
 var
   LBookmark: TBookmark;
 begin
@@ -200,7 +200,7 @@ begin
       while not ADataSet.Eof do
       try
         if (not Assigned(AAcceptFunc)) or (AAcceptFunc()) then
-          Result.AddElement(RecordToJSONObject(ADataSet));
+          Result.AddElement(RecordToJSONObject(ADataSet, AConfig));
       finally
         ADataSet.Next;
       end;
@@ -212,12 +212,12 @@ begin
   end;
 end;
 
-class function TDataSetUtils.DataSetToXML(const ADataSet: TDataSet): string;
+class function TDataSetUtils.DataSetToXML(const ADataSet: TDataSet; AConfig: TNeonConfiguration): string;
 begin
-  Result := DataSetToXML(ADataSet, nil);
+  Result := DataSetToXML(ADataSet, nil, AConfig);
 end;
 
-class function TDataSetUtils.DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>): string;
+class function TDataSetUtils.DataSetToXML(const ADataSet: TDataSet; const AAcceptFunc: TFunc<Boolean>; AConfig: TNeonConfiguration): string;
 var
   LBookmark: TBookmark;
 begin
@@ -236,7 +236,7 @@ begin
       while not ADataSet.Eof do
       try
         if (not Assigned(AAcceptFunc)) or (AAcceptFunc()) then
-          Result := Result + '<row>' + RecordToXML(ADataSet) + '</row>';
+          Result := Result + '<row>' + RecordToXML(ADataSet, '', AConfig) + '</row>';
       finally
         ADataSet.Next;
       end;
@@ -248,7 +248,7 @@ begin
   end;
 end;
 
-class function TDataSetUtils.DatasetMetadataToJSONObject(const ADataSet: TDataSet): TJSONObject;
+class function TDataSetUtils.DatasetMetadataToJSONObject(const ADataSet: TDataSet; AConfig: TNeonConfiguration): TJSONObject;
   procedure AddPropertyValue(APropertyName: string);
   begin
     TValueToJSONObject(Result, APropertyName, ReadPropertyValue(ADataSet, APropertyName));

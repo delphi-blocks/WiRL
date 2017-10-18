@@ -300,7 +300,7 @@ begin
   if not Assigned(LDataSet) then
     Exit(TJSONNull.Create);
 
-  Result := TDataSetUtils.DataSetToJSONArray(LDataSet);
+  Result := TDataSetUtils.DataSetToJSONArray(LDataSet, FConfig);
 end;
 
 function TNeonSerializerJSON.WriteEnum(const AValue: TValue): TJSONValue;
@@ -321,7 +321,7 @@ begin
   if (AValue.TypeInfo = System.TypeInfo(TDateTime)) or
      (AValue.TypeInfo = System.TypeInfo(TDate)) or
      (AValue.TypeInfo = System.TypeInfo(TTime)) then
-    Result := TJSONString.Create(TJSONHelper.DateToJSON(AValue.AsType<TDateTime>))
+    Result := TJSONString.Create(TJSONHelper.DateToJSON(AValue.AsType<TDateTime>, FConfig.UseUTCDate))
   else
     Result := TJSONNumber.Create(AValue.AsExtended);
 end;
