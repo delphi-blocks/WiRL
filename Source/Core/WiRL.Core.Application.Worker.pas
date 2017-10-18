@@ -597,49 +597,49 @@ begin
   // The returned object MUST be initially nil (needs to be consistent with the Free method)
   LMethodResult := nil;
   LContentType := FContext.Response.ContentType;
-  FillResourceMethodParameters(AInstance, LArgumentArray);
   try
-    LMethodResult := FResource.Method.RttiObject.Invoke(AInstance, LArgumentArray);
-  except
-    on E: Exception do
-    begin
-      raise EWiRLServerException.Create(E.Message,
-        'TWiRLApplicationWorker', 'InvokeResourceMethod: RttiObject.Invoke');
-    end;
-  end;
-
-  try
-    if not FResource.Method.IsFunction then
-      Exit;
-
-    if LMethodResult.IsInstanceOf(TWiRLResponse) then
-    begin
-      // Request is already done
-    end
-    else if Assigned(AWriter) then // MessageBodyWriters mechanism
-    begin
-      if FContext.Response.ContentType = LContentType then
-        FContext.Response.ContentType := AMediaType.ToString;
-
-      LStream := TMemoryStream.Create;
-      try
-        LStream.Position := 0;
-        FContext.Response.ContentStream := LStream;
-        AWriter.WriteTo(LMethodResult, FResource.Method.AllAttributes, AMediaType, FContext.Response);
-        LStream.Position := 0;
-      except
-        on E: Exception do
-        begin
-          raise EWiRLServerException.Create(E.Message, 'TWiRLApplicationWorker', 'InvokeResourceMethod');
-        end;
+    FillResourceMethodParameters(AInstance, LArgumentArray);
+    try
+      LMethodResult := FResource.Method.RttiObject.Invoke(AInstance, LArgumentArray);
+    except
+      on E: Exception do
+      begin
+        raise EWiRLServerException.Create(E.Message,
+          'TWiRLApplicationWorker', 'InvokeResourceMethod: RttiObject.Invoke');
       end;
-    end
-    else if LMethodResult.Kind <> tkUnknown then
-      // fallback (no MBW, no TWiRLResponse)
-      raise EWiRLNotImplementedException.Create(
-        'Resource''s returned type not supported',
-        Self.ClassName, 'InvokeResourceMethod'
-      );
+    end;
+
+    if FResource.Method.IsFunction then
+    begin
+      if LMethodResult.IsInstanceOf(TWiRLResponse) then
+      begin
+        // Request is already done
+      end
+      else if Assigned(AWriter) then // MessageBodyWriters mechanism
+      begin
+        if FContext.Response.ContentType = LContentType then
+          FContext.Response.ContentType := AMediaType.ToString;
+
+        LStream := TMemoryStream.Create;
+        try
+          LStream.Position := 0;
+          FContext.Response.ContentStream := LStream;
+          AWriter.WriteTo(LMethodResult, FResource.Method.AllAttributes, AMediaType, FContext.Response);
+          LStream.Position := 0;
+        except
+          on E: Exception do
+          begin
+            raise EWiRLServerException.Create(E.Message, 'TWiRLApplicationWorker', 'InvokeResourceMethod');
+          end;
+        end;
+      end
+      else if LMethodResult.Kind <> tkUnknown then
+        // fallback (no MBW, no TWiRLResponse)
+        raise EWiRLNotImplementedException.Create(
+          'Resource''s returned type not supported',
+          Self.ClassName, 'InvokeResourceMethod'
+        );
+    end;
   finally
     CollectResultGarbage(LMethodResult);
     CollectArgumentsGarbage(LArgumentArray);
