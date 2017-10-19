@@ -290,31 +290,31 @@ procedure TWiRLClientCustomResource.OPTIONS(const ABeforeExecute: TWiRLClientPro
 var
   LResponseStream: TMemoryStream;
 begin
+  LResponseStream := TMemoryStream.Create;
   try
-    BeforeOPTIONS();
-
-    if Assigned(ABeforeExecute) then
-      ABeforeExecute();
-
-    LResponseStream := TMemoryStream.Create;
     try
+      BeforeOPTIONS();
+
+      if Assigned(ABeforeExecute) then
+        ABeforeExecute();
+
       Client.Options(URL, Accept, ContentType, LResponseStream);
 
       AfterOPTIONS();
 
       if Assigned(AAfterExecute) then
         AAfterExecute(LResponseStream);
-    finally
-      LResponseStream.Free;
+    except
+      on E: Exception do
+      begin
+        if Assigned(AOnException) then
+          AOnException(E)
+        else
+          raise;
+      end;
     end;
-  except
-    on E: Exception do
-    begin
-      if Assigned(AOnException) then
-        AOnException(E)
-      else
-        raise;
-    end;
+  finally
+    LResponseStream.Free;
   end;
 end;
 
@@ -323,31 +323,31 @@ procedure TWiRLClientCustomResource.DELETE(const ABeforeExecute,
 var
   LResponseStream: TMemoryStream;
 begin
+  LResponseStream := TMemoryStream.Create;
   try
-    BeforeDELETE();
-
-    if Assigned(ABeforeExecute) then
-      ABeforeExecute();
-
-    LResponseStream := TMemoryStream.Create;
     try
+      BeforeDELETE();
+
+      if Assigned(ABeforeExecute) then
+        ABeforeExecute();
+
       Client.Delete(URL, Accept, ContentType, LResponseStream);
 
       AfterDELETE();
 
       if Assigned(AAfterExecute) then
         AAfterExecute();
-    finally
-      LResponseStream.Free;
+    except
+      on E: Exception do
+      begin
+        if Assigned(AOnException) then
+          AOnException(E)
+        else
+          raise;
+      end;
     end;
-  except
-    on E: Exception do
-    begin
-      if Assigned(AOnException) then
-        AOnException(E)
-      else
-        raise;
-    end;
+  finally
+    LResponseStream.Free;
   end;
 end;
 
@@ -364,31 +364,31 @@ procedure TWiRLClientCustomResource.GET(const ABeforeExecute: TWiRLCLientProc;
 var
   LResponseStream: TMemoryStream;
 begin
+  LResponseStream := TMemoryStream.Create;
   try
-    BeforeGET();
-
-    if Assigned(ABeforeExecute) then
-      ABeforeExecute();
-
-    LResponseStream := TMemoryStream.Create;
     try
-      Client.Get(URL, Accept, ContentType, LResponseStream);
+      BeforeGET();
 
-      AfterGET();
+      if Assigned(ABeforeExecute) then
+        ABeforeExecute();
 
-      if Assigned(AAfterExecute) then
-        AAfterExecute(LResponseStream);
-    finally
-      LResponseStream.Free;
+        Client.Get(URL, Accept, ContentType, LResponseStream);
+
+        AfterGET();
+
+        if Assigned(AAfterExecute) then
+          AAfterExecute(LResponseStream);
+    except
+      on E: Exception do
+      begin
+        if Assigned(AOnException) then
+          AOnException(E)
+        else
+          raise;
+      end;
     end;
-  except
-    on E: Exception do
-    begin
-      if Assigned(AOnException) then
-        AOnException(E)
-      else
-        raise;
-    end;
+  finally
+    LResponseStream.Free;
   end;
 end;
 
@@ -461,36 +461,36 @@ var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;
 begin
+  LContent := TMemoryStream.Create;
   try
-    LContent := TMemoryStream.Create;
+    LResponseStream := TMemoryStream.Create;
     try
-      BeforePATCH(LContent);
-
-      if Assigned(ABeforeExecute) then
-        ABeforeExecute(LContent);
-
-      LResponseStream := TMemoryStream.Create;
       try
+        BeforePATCH(LContent);
+
+        if Assigned(ABeforeExecute) then
+          ABeforeExecute(LContent);
+
         Client.Patch(URL, Accept, ContentType, LContent, LResponseStream);
 
         AfterPATCH();
 
         if Assigned(AAfterExecute) then
           AAfterExecute(LResponseStream);
-      finally
-        LResponseStream.Free;
+      except
+        on E: Exception do
+        begin
+          if Assigned(AOnException) then
+            AOnException(E)
+          else
+            raise;
+        end;
       end;
     finally
-      LContent.Free;
+      LResponseStream.Free;
     end;
-  except
-    on E: Exception do
-    begin
-      if Assigned(AOnException) then
-        AOnException(E)
-      else
-        raise;
-    end;
+  finally
+    LContent.Free;
   end;
 end;
 
@@ -502,36 +502,36 @@ var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;
 begin
+  LContent := TMemoryStream.Create;
   try
-    LContent := TMemoryStream.Create;
+    LResponseStream := TMemoryStream.Create;
     try
-      BeforePOST(LContent);
-
-      if Assigned(ABeforeExecute) then
-        ABeforeExecute(LContent);
-
-      LResponseStream := TMemoryStream.Create;
       try
+        BeforePOST(LContent);
+
+        if Assigned(ABeforeExecute) then
+          ABeforeExecute(LContent);
+
         Client.Post(URL, Accept, ContentType, LContent, LResponseStream);
 
         AfterPOST();
 
         if Assigned(AAfterExecute) then
           AAfterExecute(LResponseStream);
-      finally
-        LResponseStream.Free;
+      except
+        on E: Exception do
+        begin
+          if Assigned(AOnException) then
+            AOnException(E)
+          else
+            raise;
+        end;
       end;
     finally
-      LContent.Free;
+      LResponseStream.Free;
     end;
-  except
-    on E: Exception do
-    begin
-      if Assigned(AOnException) then
-        AOnException(E)
-      else
-        raise;
-    end;
+  finally
+    LContent.Free;
   end;
 end;
 
@@ -562,36 +562,36 @@ var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;
 begin
+  LContent := TMemoryStream.Create;
   try
-    LContent := TMemoryStream.Create;
+    LResponseStream := TMemoryStream.Create;
     try
-      BeforePUT(LContent);
-
-      if Assigned(ABeforeExecute) then
-        ABeforeExecute(LContent);
-
-      LResponseStream := TMemoryStream.Create;
       try
+        BeforePUT(LContent);
+
+        if Assigned(ABeforeExecute) then
+          ABeforeExecute(LContent);
+
         Client.Put(URL, Accept, ContentType, LContent, LResponseStream);
 
         AfterPUT();
 
         if Assigned(AAfterExecute) then
           AAfterExecute(LResponseStream);
-      finally
-        LResponseStream.Free;
+      except
+        on E: Exception do
+        begin
+          if Assigned(AOnException) then
+            AOnException(E)
+          else
+            raise;
+        end;
       end;
     finally
-      LContent.Free;
+      LResponseStream.Free;
     end;
-  except
-    on E: Exception do
-    begin
-      if Assigned(AOnException) then
-        AOnException(E)
-      else
-        raise;
-    end;
+  finally
+    LContent.Free;
   end;
 end;
 

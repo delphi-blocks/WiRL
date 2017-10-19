@@ -29,6 +29,7 @@ type
     FIdHTTPRequest: TIdHTTPRequest;
     FCookieFields: TWiRLCookies;
     FHeaderFields: TWiRLHeaderList;
+    FContent: TStream;
   protected
     function GetHttpPathInfo: string; override;
     function GetHttpQuery: string; override;
@@ -90,12 +91,12 @@ type
 
     // Http methods
     procedure Get(const AURL: string; AResponseContent: TStream);
-    procedure Post(const AURL: string; AContent, AResponse: TStream);
-    procedure Put(const AURL: string; AContent, AResponse: TStream);
+    procedure Post(const AURL: string; ARequestContent, AResponseContent: TStream);
+    procedure Put(const AURL: string; ARequestContent, AResponseContent: TStream);
     procedure Delete(const AURL: string; AResponseContent: TStream);
     procedure Options(const AURL: string; AResponseContent: TStream);
     procedure Head(const AURL: string);
-    procedure Patch(const AURL: string; AContent, AResponse: TStream);
+    procedure Patch(const AURL: string; ARequestContent, AResponseContent: TStream);
   end;
 
 implementation
@@ -129,6 +130,7 @@ procedure TWiRLClientIndy.Delete(const AURL: string; AResponseContent: TStream);
 begin
   BuildRequestObject;
   try
+    FResponse.ContentStream := AResponseContent;
     FHttpClient.Delete(AURL, AResponseContent);
   except
     on E: EIdSocketError do
@@ -149,6 +151,7 @@ procedure TWiRLClientIndy.Get(const AURL: string; AResponseContent: TStream);
 begin
   BuildRequestObject;
   try
+    FResponse.ContentStream := AResponseContent;
     FHttpClient.Get(AURL, AResponseContent);
   except
     on E: EIdSocketError do
@@ -248,6 +251,7 @@ procedure TWiRLClientIndy.Options(const AURL: string;
 begin
   BuildRequestObject;
   try
+    FResponse.ContentStream := AResponseContent;
     FHttpClient.Options(AURL, AResponseContent);
   except
     on E: EIdSocketError do
@@ -256,12 +260,14 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.Patch(const AURL: string; AContent,
-  AResponse: TStream);
+procedure TWiRLClientIndy.Patch(const AURL: string; ARequestContent,
+  AResponseContent: TStream);
 begin
   BuildRequestObject;
   try
-    FHttpClient.Patch(AURL, AContent, AResponse);
+    FRequest.ContentStream := ARequestContent;
+    FResponse.ContentStream := AResponseContent;
+    FHttpClient.Patch(AURL, ARequestContent, AResponseContent);
   except
     on E: EIdSocketError do
       Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
@@ -269,12 +275,14 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.Post(const AURL: string; AContent,
-  AResponse: TStream);
+procedure TWiRLClientIndy.Post(const AURL: string; ARequestContent,
+  AResponseContent: TStream);
 begin
   BuildRequestObject;
   try
-    FHttpClient.Post(AURL, AContent, AResponse);
+    FRequest.ContentStream := ARequestContent;
+    FResponse.ContentStream := AResponseContent;
+    FHttpClient.Post(AURL, ARequestContent, AResponseContent);
   except
     on E: EIdSocketError do
       Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
@@ -282,11 +290,13 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.Put(const AURL: string; AContent, AResponse: TStream);
+procedure TWiRLClientIndy.Put(const AURL: string; ARequestContent, AResponseContent: TStream);
 begin
   BuildRequestObject;
   try
-    FHttpClient.Put(AURL, AContent, AResponse);
+    FRequest.ContentStream := ARequestContent;
+    FResponse.ContentStream := AResponseContent;
+    FHttpClient.Put(AURL, ARequestContent, AResponseContent);
   except
     on E: EIdSocketError do
       Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
@@ -398,7 +408,7 @@ end;
 
 function TWiRLClientRequestIndy.GetContentStream: TStream;
 begin
-  raise Exception.Create('"ContentStream" not available, use the POST, PUT... methods');
+  Result := FContent;
 end;
 
 function TWiRLClientRequestIndy.GetCookieFields: TWiRLCookies;
@@ -451,7 +461,7 @@ end;
 procedure TWiRLClientRequestIndy.SetContentStream(const Value: TStream);
 begin
   inherited;
-  raise Exception.Create('"ContentStream" not available, use the POST, PUT... methods');
+  FContent := Value;
 end;
 
 initialization
