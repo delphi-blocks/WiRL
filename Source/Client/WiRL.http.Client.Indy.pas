@@ -120,6 +120,7 @@ end;
 constructor TWiRLClientIndy.Create;
 begin
   FHttpClient := TIdHTTP.Create(nil);
+  FHttpClient.MaxAuthRetries := -1;
   FHttpClient.HTTPOptions := FHttpClient.HTTPOptions + [hoNoProtocolErrorException, hoWantProtocolErrorContent];
 
   FRequest := TWiRLClientRequestIndy.Create(FHttpClient.Request);
