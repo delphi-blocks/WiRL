@@ -196,18 +196,12 @@ begin
 end;
 
 function TWiRLResponse.GetRawContent: TBytes;
-var
-  LPos :Int64;
 begin
   if (GetContentStream <> nil) and (GetContentStream.Size > 0) then
   begin
-    LPos := GetContentStream.Position;
-    try
-      SetLength(Result, GetContentStream.Size);
-      GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
-    finally
-      GetContentStream.Position := LPos;
-    end;
+    GetContentStream.Position := 0;
+    SetLength(Result, GetContentStream.Size);
+    GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
   end;
 end;
 
