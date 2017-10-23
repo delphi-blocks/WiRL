@@ -73,6 +73,7 @@ type
   INeonConfiguration = interface
   ['{F82AB790-1C65-4501-915C-0289EFD9D8CC}']
     function SetMemberCase(AValue: TNeonCase): INeonConfiguration;
+    function SetUseUTCDate(AValue: Boolean): INeonConfiguration;
     function SetMemberCustomCase(AValue: TCaseFunc): INeonConfiguration;
     function SetMembersType(AValue: TNeonMembersType): INeonConfiguration;
     function SetIgnoreFieldPrefix(AValue: Boolean): INeonConfiguration;
@@ -86,6 +87,7 @@ type
     FMemberCase: TNeonCase;
     FMemberCustomCase: TCaseFunc;
     FIgnoreFieldPrefix: Boolean;
+    FUseUTCDate: Boolean;
   public
      constructor Create;
 
@@ -98,12 +100,14 @@ type
     function SetMembersType(AValue: TNeonMembersType): INeonConfiguration;
     function SetIgnoreFieldPrefix(AValue: Boolean): INeonConfiguration;
     function SetVisibility(AValue: TNeonVisibility): INeonConfiguration;
+    function SetUseUTCDate(AValue: Boolean): INeonConfiguration;
 
     property MemberCase: TNeonCase read FMemberCase write FMemberCase;
     property MemberCustomCase: TCaseFunc read FMemberCustomCase write FMemberCustomCase;
     property MembersType: TNeonMembersType read FMembersType write FMembersType;
     property IgnoreFieldPrefix: Boolean read FIgnoreFieldPrefix write FIgnoreFieldPrefix;
     property Visibility: TNeonVisibility read FVisibility write FVisibility;
+    property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
   end;
 
   TNeonBase = class
@@ -221,6 +225,7 @@ begin
   SetMembersType(TNeonMembersType.Standard);
   SetIgnoreFieldPrefix(False);
   SetVisibility([mvPublic, mvPublished]);
+  SetUseUTCDate(True);
 end;
 
 class function TNeonConfiguration.Default: INeonConfiguration;
@@ -246,6 +251,12 @@ end;
 function TNeonConfiguration.SetMembersType(AValue: TNeonMembersType): INeonConfiguration;
 begin
   FMembersType := AValue;
+  Result := Self;
+end;
+
+function TNeonConfiguration.SetUseUTCDate(AValue: Boolean): INeonConfiguration;
+begin
+  FUseUTCDate := AValue;
   Result := Self;
 end;
 
