@@ -599,15 +599,7 @@ begin
   LContentType := FContext.Response.ContentType;
   try
     FillResourceMethodParameters(AInstance, LArgumentArray);
-    try
-      LMethodResult := FResource.Method.RttiObject.Invoke(AInstance, LArgumentArray);
-    except
-      on E: Exception do
-      begin
-        raise EWiRLServerException.Create(E.Message,
-          'TWiRLApplicationWorker', 'InvokeResourceMethod: RttiObject.Invoke');
-      end;
-    end;
+    LMethodResult := FResource.Method.RttiObject.Invoke(AInstance, LArgumentArray);
 
     if FResource.Method.IsFunction then
     begin
