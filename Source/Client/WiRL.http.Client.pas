@@ -60,8 +60,8 @@ type
     procedure SetClientVendor(const Value: string);
     function GetClientImplementation: TObject;
   protected
-    procedure DoBeforeCommand;
-    procedure DoAfterCommand;
+    procedure DoBeforeCommand; virtual;
+    procedure DoAfterCommand; virtual;
     procedure CheckResponse;
 {$IFDEF HAS_SYSTEM_THREADING}
     property WorkerTask: ITask read FWorkerTask;
