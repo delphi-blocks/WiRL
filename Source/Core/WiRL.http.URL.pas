@@ -479,6 +479,7 @@ class function TWiRLURL.URLEncode(const AString: string): string;
 begin
 //  Result := TNetEncoding.URL.Encode(AString);
   Result := TIdURI.PathEncode(AString);
+  Result := StringReplace(Result, '&', '%26', [rfReplaceAll]);
 end;
 
 class function TWiRLURL.URLEncode(const AStrings: TArray<string>): TArray<string>;
