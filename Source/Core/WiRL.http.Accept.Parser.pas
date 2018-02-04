@@ -308,6 +308,7 @@ function TAcceptItemList<T>.ToString: string;
 var
   LItem: T;
 begin
+  Result := '';
   for LItem in Self do
     Result := Result + LItem.ToString + ',';
   if Result.Length > 0 then
