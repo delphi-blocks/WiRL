@@ -89,7 +89,7 @@ type
     FIgnoreFieldPrefix: Boolean;
     FUseUTCDate: Boolean;
   public
-     constructor Create;
+    constructor Create;
 
     class function Default: INeonConfiguration; static;
     class function Snake: INeonConfiguration; static;

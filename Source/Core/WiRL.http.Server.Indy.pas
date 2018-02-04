@@ -483,6 +483,8 @@ end;
 procedure TWiRLHttpResponseIndy.SetContentStream(const Value: TStream);
 begin
   inherited;
+  if Assigned(FResponseInfo.ContentStream) then
+    FResponseInfo.ContentStream.Free;
   FResponseInfo.ContentStream := Value;
 end;
 
