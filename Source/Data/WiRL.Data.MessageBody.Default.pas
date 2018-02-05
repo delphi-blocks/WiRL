@@ -119,11 +119,11 @@ begin
   // TArrayDataSetWriter
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TArrayDataSetWriter,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TDataSet>(AType); // and AMediaType = application/json
     end,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       Result := TMessageBodyWriterRegistry.AFFINITY_LOW
     end
@@ -132,11 +132,11 @@ begin
   // TDataSetWriterXML
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TDataSetWriterXML,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/xml
     end,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       Result := TMessageBodyWriterRegistry.AFFINITY_LOW;
     end
@@ -145,11 +145,11 @@ begin
   // TDataSetWriterCSV
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TDataSetWriterCSV,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSet>(AType); // and AMediaType = application/xml
     end,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       Result := TMessageBodyWriterRegistry.AFFINITY_LOW;
     end

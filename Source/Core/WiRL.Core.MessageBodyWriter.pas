@@ -30,10 +30,10 @@ type
   end;
 
   TIsWritableFunction = reference to function(AType: TRttiType;
-    const AAttributes: TAttributeArray; AMediaType: string): Boolean;
+    const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean;
 
   TGetAffinityFunction = reference to function(AType: TRttiType;
-    const AAttributes: TAttributeArray; AMediaType: string): Integer;
+    const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer;
 
   TWiRLWriterRegistry = class
   public
@@ -201,13 +201,13 @@ begin
     begin
       for LWriterEntry in FRegistry do
       begin
-        if LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly) then
+        if LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType) then
         if (LMediaType.IsWildcard or LWriterEntry.Produces.Contains(TMediaType.WILDCARD) or LWriterEntry.Produces.Contains(LMediaType)) then
         begin
-          if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)) then
+          if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType)) then
           begin
             LCandidate := LWriterEntry;
-            LCandidateAffinity := LCandidate.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly);
+            LCandidateAffinity := LCandidate.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType);
             LFound := True;
           end;
         end;
@@ -233,7 +233,7 @@ end;
 class function TWiRLWriterRegistry.GetDefaultClassAffinityFunc<T>: TGetAffinityFunction;
 begin
   Result :=
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType, False) then
         Result := 100
@@ -363,7 +363,7 @@ procedure TMessageBodyWriterRegistry.RegisterWriter(const AWriterClass,
 begin
   RegisterWriter(
     AWriterClass,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType(AType, ASubjectClass);
     end,
@@ -379,14 +379,14 @@ begin
     LAffinity := Self.GetDefaultClassAffinityFunc<T>()
   else
     LAffinity :=
-      function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+      function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
       begin
         Result := AAffinity;
       end;
 
   RegisterWriter(
     AWriterClass,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType);
     end,

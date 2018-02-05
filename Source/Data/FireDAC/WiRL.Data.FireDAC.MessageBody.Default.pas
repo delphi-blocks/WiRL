@@ -45,7 +45,7 @@ type
   end;
 
   [Consumes(TMediaType.APPLICATION_JSON)]
-  TTFireDACDataSetsReader = class(TMessageBodyReader)
+  TFireDACDataSetsReader = class(TMessageBodyReader)
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       ARequest: TWiRLRequest): TValue; override;
   end;
@@ -145,14 +145,20 @@ var
   LDataset: TFDMemTable;
 begin
   LDataSet := TFDMemTable.Create(nil);
-  LDataset.LoadFromStream(ARequest.ContentStream);
+
+  if AMediaType.Matches(TMediaType.APPLICATION_JSON) then
+    LDataset.LoadFromStream(ARequest.ContentStream, sfJSON)
+  else if AMediaType.Matches(TMediaType.APPLICATION_XML) then
+    LDataset.LoadFromStream(ARequest.ContentStream, sfXML)
+  else if AMediaType.Matches(TMediaType.APPLICATION_OCTET_STREAM) then
+    LDataset.LoadFromStream(ARequest.ContentStream, sfBinary);
 
   Result := TValue.From<TFDMemTable>(LDataSet);
 end;
 
-{ TTFireDACDataSetsReader }
+{ TFireDACDataSetsReader }
 
-function TTFireDACDataSetsReader.ReadFrom(AParam: TRttiParameter;
+function TFireDACDataSetsReader.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 var
   LJSON: TJSONObject;
@@ -224,24 +230,35 @@ begin
   // TFDAdaptedDataSetReader
   TMessageBodyReaderRegistry.Instance.RegisterReader<TFDAdaptedDataSet>(TFDAdaptedDataSetReader);
 
-  // TTFireDACDataSetsReader
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TFireDACDataSets>(TTFireDACDataSetsReader);
+  // TFireDACDataSetsReader
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TFireDACDataSets>(TFireDACDataSetsReader);
 
   // TArrayFDCustomQueryWriter
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TArrayFDCustomQueryWriter,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TFDCustomQuery>(AType); // and AMediaType = application/json;dialect=FireDAC
     end,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       Result := TMessageBodyWriterRegistry.AFFINITY_HIGH
     end
   );
 
   // TArrayFDMemTableReader
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TFDMemTable>(TArrayFDMemTableReader);
+  TMessageBodyReaderRegistry.Instance.RegisterReader(TArrayFDMemTableReader,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TFDMemTable>(AType);
+      // and AMediaType = application/json;dialect=FireDAC
+    end,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH
+    end
+  );
+
 end;
 
 initialization
