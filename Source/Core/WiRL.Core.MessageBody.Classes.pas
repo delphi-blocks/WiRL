@@ -40,6 +40,17 @@ type
       ARequest: TWiRLRequest): TValue; virtual; abstract;
   end;
 
+  TMessageBodyProvider = class(TInterfacedObject, IMessageBodyReader, IMessageBodyWriter)
+  protected
+    [Context] WiRLApplication: TWiRLApplication;
+  public
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; virtual; abstract;
+
+    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AResponse: TWiRLResponse); virtual; abstract;
+  end;
+
 implementation
 
 end.

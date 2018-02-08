@@ -58,68 +58,48 @@ type
   end;
 
   /// <summary>
-  ///   This is the standard TObject MessageBodyWriter and is using the WiRL Persistence library
-  ///   (Neon Library), it's matched by the <see cref="WiRL.Core.MessageBody.Default|TObjectMBReader" />
-  /// </summary>
-  [Produces(TMediaType.APPLICATION_JSON)]
-  TObjectMBWriter = class(TMessageBodyWriter)
-  public
-    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
-  end;
-
-  /// <summary>
-  ///   This is the standard TObject MessageBodyReader and is using the WiRL Persistence library
-  ///   (Neon Library), it's matched by the <see cref="WiRL.Core.MessageBody.Default|TObjectMBWriter" />
+  ///   This is the standard TObject MessageBodyReader/Writer and is using the WiRL Persistence library
+  ///   (Neon Library).
   /// </summary>
   [Consumes(TMediaType.APPLICATION_JSON)]
-  TObjectMBReader = class(TMessageBodyReader)
+  [Produces(TMediaType.APPLICATION_JSON)]
+  TWiRLObjectProvider = class(TMessageBodyProvider)
+  public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       ARequest: TWiRLRequest): TValue; override;
+
+    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   /// <summary>
-  ///   This is the standard JSONValue MessageBodyWriter using the Delphi JSON library.
-  ///   It's matched by the <see cref="WiRL.Core.MessageBody.Default|TJSONValueMBReader" />
+  ///   This is the standard JSONValue MessageBodyReader/Writer using the Delphi JSON library.
   /// </summary>
+  [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
-  TJSONValueMBWriter = class(TMessageBodyWriter)
+  TWiRLJSONValueProvider = class(TMessageBodyProvider)
   public
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; override;
+
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse); override;
+
     function AsObject: TObject;
   end;
 
   /// <summary>
-  ///   This is the standard JSONValue MessageBodyReader using the Delphi JSON library. It's
-  ///   matched by the <see cref="WiRL.Core.MessageBody.Default|TJSONValueMBWriter" />
-  /// </summary>
-  [Consumes(TMediaType.APPLICATION_JSON)]
-  TJSONValueMBReader = class(TMessageBodyReader)
-    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
-      ARequest: TWiRLRequest): TValue; override;
-  end;
-
-  /// <summary>
-  ///   This is the standard TStream MessageBodyWriter using the Delphi TStream methods. It's
-  ///   matched by the <see cref="WiRL.Core.MessageBody.Default|TStreamMBReader" />
-  /// </summary>
-  [Produces(TMediaType.APPLICATION_OCTET_STREAM)]
-  [Produces(TMediaType.WILDCARD)]
-  TStreamMBWriter = class(TMessageBodyWriter)
-  public
-    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
-  end;
-
-  /// <summary>
-  ///   This is the standard TStream MessageBodyWriter using the Delphi TStream methods.
-  ///   It's matched by the <see cref="WiRL.Core.MessageBody.Default|TStreamMBWriter" />
+  ///   This is the standard TStream MessageBodyReader/Writer using the Delphi TStream methods
   /// </summary>
   [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
-  TStreamMBReader = class(TMessageBodyReader)
+  [Produces(TMediaType.APPLICATION_OCTET_STREAM), Produces(TMediaType.WILDCARD)]
+  TWiRLStreamProvider = class(TMessageBodyProvider)
+  public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       ARequest: TWiRLRequest): TValue; override;
+
+    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
 implementation
@@ -159,35 +139,20 @@ begin
   end;
 end;
 
-{ TObjectMBWriter }
+{ TWiRLJSONValueProvider }
 
-procedure TObjectMBWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-  AMediaType: TMediaType; AResponse: TWiRLResponse);
-var
-  LStreamWriter: TStreamWriter;
-  LJSON: TJSONValue;
-begin
-  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
-  try
-    LJSON := TNeonMapperJSON.ObjectToJSON(AValue.AsObject, WiRLApplication.SerializerConfig);
-    try
-      LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
-    finally
-      LJSON.Free;
-    end;
-  finally
-    LStreamWriter.Free;
-  end;
-end;
-
-{ TJSONValueMBWriter }
-
-function TJSONValueMBWriter.AsObject: TObject;
+function TWiRLJSONValueProvider.AsObject: TObject;
 begin
   Result := Self;
 end;
 
-procedure TJSONValueMBWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+function TWiRLJSONValueProvider.ReadFrom(AParam: TRttiParameter; AMediaType:
+    TMediaType; ARequest: TWiRLRequest): TValue;
+begin
+  Result := TJSONObject.ParseJSONValue(ARequest.Content);
+end;
+
+procedure TWiRLJSONValueProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
   AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
@@ -277,9 +242,42 @@ begin
   end;
 end;
 
-{ TStreamMBWriter }
+{ TWiRLObjectProvider }
 
-procedure TStreamMBWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+function TWiRLObjectProvider.ReadFrom(AParam: TRttiParameter; AMediaType:
+    TMediaType; ARequest: TWiRLRequest): TValue;
+begin
+  Result := TNeonMapperJSON.JSONToObject(AParam.ParamType, ARequest.Content);
+end;
+
+procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes:
+    TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
+var
+  LStreamWriter: TStreamWriter;
+  LJSON: TJSONValue;
+begin
+  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
+  try
+    LJSON := TNeonMapperJSON.ObjectToJSON(AValue.AsObject, WiRLApplication.SerializerConfig);
+    try
+      LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LStreamWriter.Free;
+  end;
+end;
+
+{ TWiRLStreamProvider }
+
+function TWiRLStreamProvider.ReadFrom(AParam: TRttiParameter; AMediaType:
+    TMediaType; ARequest: TWiRLRequest): TValue;
+begin
+  Result := ARequest.ContentStream;
+end;
+
+procedure TWiRLStreamProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
   AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStream: TStream;
@@ -290,30 +288,6 @@ begin
     if Assigned(LStream) then
       AResponse.ContentStream.CopyFrom(LStream, LStream.Size);
   end;
-end;
-
-{ TObjectMBReader }
-
-function TObjectMBReader.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
-begin
-  Result := TNeonMapperJSON.JSONToObject(AParam.ParamType, ARequest.Content);
-end;
-
-{ TJSONValueMBReader }
-
-function TJSONValueMBReader.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
-begin
-  Result := TJSONObject.ParseJSONValue(ARequest.Content);
-end;
-
-{ TStreamMBReader }
-
-function TStreamMBReader.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
-begin
-  Result := ARequest.ContentStream;
 end;
 
 { RegisterMessageBodyClasses }
@@ -370,9 +344,10 @@ begin
     end
   );
 
-  // TObjectMBWriter
+  // TWiRLObjectProvider
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TObject>(TWiRLObjectProvider);
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TObjectMBWriter,
+    TWiRLObjectProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and AType.IsInstance;
@@ -383,20 +358,13 @@ begin
     end
   );
 
-  // TJSONValueMBWriter
-  TMessageBodyWriterRegistry.Instance.RegisterWriter<TJSONValue>(TJSONValueMBWriter);
+  // TWiRLJSONValueProvider
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONValue>(TWiRLJSONValueProvider);
+  TMessageBodyWriterRegistry.Instance.RegisterWriter<TJSONValue>(TWiRLJSONValueProvider);
 
-  // TStreamMBWriter
-  TMessageBodyWriterRegistry.Instance.RegisterWriter<TStream>(TStreamMBWriter, TMessageBodyWriterRegistry.AFFINITY_HIGH);
-
-  // TObjectMBReader
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TObject>(TObjectMBReader);
-
-  // TJSONValueMBReader
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONValue>(TJSONValueMBReader);
-
-  // TStreamMBReader
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TStream>(TStreamMBReader);
+  // TWiRLStreamProvider
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TStream>(TWiRLStreamProvider);
+  TMessageBodyWriterRegistry.Instance.RegisterWriter<TStream>(TWiRLStreamProvider, TMessageBodyWriterRegistry.AFFINITY_HIGH);
 
 end;
 

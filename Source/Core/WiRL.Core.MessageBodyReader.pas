@@ -21,8 +21,20 @@ uses
   WiRL.Core.Classes;
 
 type
+  /// <summary>
+  ///   Interface for a provider that supports the conversion of a stream to a
+  ///   Delphi type. A IMessageBodyReader implementation may be annotated with [Consumes] to
+  ///   restrict the media types for which it will be considered suitable
+  /// </summary>
+  /// <remarks>
+  ///   Providers implementing IMessageBodyReader interface must be registered in the
+  ///   WiRL IMessageBodyReader Registry at runtime.
+  /// </remarks>
   IMessageBodyReader = interface
   ['{472A6C22-F4AF-4E77-B6BB-B1085A63504D}']
+    /// <summary>
+    ///   Read a type from the HTTP Request stream
+    /// </summary>
     function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
@@ -33,6 +45,9 @@ type
   TGetAffinityFunction = reference to function(AType: TRttiType;
     const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer;
 
+  /// <summary>
+  ///   Global registry for classes that implements the IMessageBodyReader interface
+  /// </summary>
   TWiRLReaderRegistry = class
   public
     const AFFINITY_VERY_HIGH = 50;

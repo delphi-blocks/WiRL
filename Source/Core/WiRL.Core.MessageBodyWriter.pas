@@ -23,8 +23,20 @@ uses
   WiRL.Core.Attributes;
 
 type
+  /// <summary>
+  ///   Interface for a provider that supports the conversion of a Delphi type to a
+  ///   stream. A IMessageBodyWriter implementation may be annotated with [Produces] to
+  ///   restrict the media types for which it will be considered suitable
+  /// </summary>
+  /// <remarks>
+  ///   Providers implementing IMessageBodyWriter interface must be registered in the
+  ///   WiRL MessageBodyWriter Registry at runtime.
+  /// </remarks>
   IMessageBodyWriter = interface
   ['{C22068E1-3085-482D-9EAB-4829C7AE87C0}']
+    /// <summary>
+    ///   Write a type to an HTTP message (body)
+    /// </summary>
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
@@ -35,6 +47,9 @@ type
   TGetAffinityFunction = reference to function(AType: TRttiType;
     const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer;
 
+  /// <summary>
+  ///   Global registry for classes that implements the IMessageBodyWriter interface
+  /// </summary>
   TWiRLWriterRegistry = class
   public
     const AFFINITY_VERY_HIGH = 50;

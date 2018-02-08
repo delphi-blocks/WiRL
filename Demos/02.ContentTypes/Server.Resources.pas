@@ -58,7 +58,6 @@ type
     function DataSet1: TDataSet;
 
     [GET, Path('/dataset2')]
-    //[Produces(XML_AND_JSON)]
     function DataSet2: TFDMemTable;
 
     [GET, Path('/datasets'), Produces(TMediaType.APPLICATION_JSON)]
