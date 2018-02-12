@@ -213,6 +213,7 @@ end;
 
 procedure TWiRLFDResource.WriteDeltas(AContent: TMemoryStream);
 var
+  LDelta: TFDMemTable;
   LDeltas: TFireDACDataSets;
   LJSONObj: TJSONObject;
   LWriter: TStreamWriter;
@@ -223,11 +224,21 @@ begin
       procedure(AItem: TWiRLFDResourceDatasetsItem)
       begin
         if AItem.SendDelta and Assigned(AItem.DataSet) and (AItem.DataSet.Active) then
-          LDeltas.Add(AItem.DataSetName, AItem.DataSet);
+        begin
+          LDelta := TFDMemTable.Create(nil);
+          try
+            LDelta.Name := AItem.DataSetName;
+            LDelta.Data := AItem.DataSet.Delta;
+            LDeltas.Add(LDelta.Name, LDelta);
+          except
+            FreeAndNil(LDelta);
+            raise;
+          end;
+        end;
       end
     );
 
-    // serialize deltas to JSON (TJSONObject)
+    // Serialize deltas to JSON (TJSONObject)
     LJSONObj := TJSONObject.Create;
     try
       TFireDACJSONPersistor.DataSetsToJSON(LDeltas, LJSONObj);
@@ -242,6 +253,7 @@ begin
       LJSONObj.Free;
     end;
   finally
+    LDeltas.FreeChilds;
     LDeltas.Free;
   end;
 end;

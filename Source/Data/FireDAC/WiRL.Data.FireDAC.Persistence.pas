@@ -38,6 +38,7 @@ type
     function GetDataSet(const AName: string): TFDAdaptedDataSet;
     function Add(const AName: string; ADataSet: TFDAdaptedDataSet): Integer;
     procedure Clear;
+    procedure FreeChilds;
 
     property Items[AIndex: Integer]: TFireDACDataSetPair read GetItems;
     property DataSet[const AName: string]: TFDAdaptedDataSet read GetDataSet;
@@ -113,6 +114,15 @@ destructor TFireDACDataSets.Destroy;
 begin
   FDataSetList.Free;
   inherited;
+end;
+
+procedure TFireDACDataSets.FreeChilds;
+var
+  LPair: TFireDACDataSetPair;
+begin
+  for LPair in Self do
+    LPair.Value.Free;
+  Clear;
 end;
 
 function TFireDACDataSets.GetDataSet(const AName: string): TFDAdaptedDataSet;

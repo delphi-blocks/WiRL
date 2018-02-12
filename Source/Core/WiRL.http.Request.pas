@@ -22,7 +22,6 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.http.Accept.Language;
 
-
 type
   TWiRLMethod = class
   const

@@ -100,7 +100,7 @@ uses
 { TWiRLFireDACDataSetArrayProvider }
 
 function TWiRLFireDACDataSetArrayProvider.ReadFrom(AParam: TRttiParameter;
-    AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 var
   LJSON: TJSONObject;
   LStreamReader: TStreamReader;
@@ -134,16 +134,17 @@ begin
   end;
 end;
 
-procedure TWiRLFireDACDataSetArrayProvider.WriteTo(const AValue: TValue; const
-    AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse:
-    TWiRLResponse);
+procedure TWiRLFireDACDataSetArrayProvider.WriteTo(const AValue: TValue;
+  const AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
+  LIndex: Integer;
   LStreamWriter: TStreamWriter;
   LDataSetList: TFireDACDataSets;
   LCurrent: TFDAdaptedDataSet;
   LResult: TJSONObject;
-  LData: TArray<TFDAdaptedDataSet>;
 begin
+  Assert(AValue.IsArray);
+
   LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
     LResult := TJSONObject.Create;
@@ -151,14 +152,12 @@ begin
       LDataSetList := TFireDACDataSets.Create;
       LDataSetList.Compression := TFDStreamCompression.Over10K;
       try
-        LData := AValue.AsType<TArray<TFDAdaptedDataSet>>;
-        if Length(LData) > 0 then
+        for LIndex := 0 to AValue.GetArrayLength - 1 do
         begin
-          for LCurrent in LData do
-            LDataSetList.Add(LCurrent.Name, LCurrent);
-
-          TFireDACJSONPersistor.DataSetsToJSON(LDataSetList, LResult);
+          LCurrent := AValue.GetArrayElement(LIndex).AsObject as TFDADaptedDataSet;
+          LDataSetList.Add(LCurrent.Name, LCurrent);
         end;
+        TFireDACJSONPersistor.DataSetsToJSON(LDataSetList, LResult);
 
         LStreamWriter.Write(TJSONHelper.ToJSON(LResult));
       finally
