@@ -152,9 +152,13 @@ type
     class function ObjectToJSONString(AObject: TObject; AConfig: INeonConfiguration): string; overload;
   public
     class procedure JSONToObject(AObject: TObject; AJSON: TJSONValue; AConfig: INeonConfiguration); overload;
+    class procedure JSONToObject(AObject: TObject; const AJSON: string; AConfig: INeonConfiguration); overload;
+
     class function JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject; overload;
-    class function JSONToObject<T: class, constructor>(const AJSON: string): T; overload;
     class function JSONToObject(AType: TRttiType; const AJSON: string): TObject; overload;
+
+    class function JSONToObject<T: class, constructor>(AJSON: TJSONValue): T; overload;
+    class function JSONToObject<T: class, constructor>(const AJSON: string): T; overload;
   end;
 
 implementation
@@ -1001,6 +1005,23 @@ begin
   try
     Result := TRttiHelper.CreateInstance(AType);
     JSONToObject(Result, LJSON, TNeonConfiguration.Default);
+  finally
+    LJSON.Free;
+  end;
+end;
+
+class function TNeonMapperJSON.JSONToObject<T>(AJSON: TJSONValue): T;
+begin
+  Result := JSONToObject(TRttiHelper.Context.GetType(TClass(T)), AJSON) as T;
+end;
+
+class procedure TNeonMapperJSON.JSONToObject(AObject: TObject; const AJSON: string; AConfig: INeonConfiguration);
+var
+  LJSON: TJSONValue;
+begin
+  LJSON := TJSONObject.ParseJSONValue(AJSON);
+  try
+    JSONToObject(AObject, LJSON, AConfig);
   finally
     LJSON.Free;
   end;
