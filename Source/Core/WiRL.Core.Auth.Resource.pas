@@ -20,6 +20,8 @@ uses
   WiRL.Core.Application,
   WiRL.Core.Declarations,
   WiRL.Core.Attributes,
+  WiRL.Persistence.Core,
+  WiRL.Persistence.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Auth.Context,
@@ -27,9 +29,14 @@ uses
 
 type
   TWiRLAuthPrincipal = class
+  private
+    FPassword: string;
+    FUserName: string;
   public
-    UserName: string;
-    Password: string;
+    [NeonProperty('username')]
+    property UserName: string read FUserName write FUserName;
+    [NeonProperty('password')]
+    property Password: string read FPassword write FPassword;
   end;
 
   TWiRLAuthResult = record
@@ -43,6 +50,8 @@ type
   /// Base class for the authentication resource
   /// </summary>
   TWiRLAuthResource = class
+  protected
+    const ERR_AUTH_INVALID = 'Invalid credentials';
   protected
     [Context] FAuthContext: TWiRLAuthContext;
     [Context] FApplication: TWiRLApplication;
@@ -62,7 +71,7 @@ type
   public
     [POST, Produces(TMediaType.APPLICATION_JSON)]
     function DoLogin(
-      [FormParam('username')] const AUsername: string;
+      [FormParam('username')] const AUserName: string;
       [FormParam('password')] const APassword: string
     ): TJSONObject;
   end;
@@ -72,10 +81,25 @@ type
   /// </summary>
   TWiRLAuthBasicResource = class(TWiRLAuthResource)
   private
+    const ERR_BASIC_MALFORMED = 'Malformed (basic) credentials';
+    const ERR_BASIC_HEADER = 'Auhtorization header incorrect';
     const AUTH_BASIC = 'Basic ';
   public
     [POST, Produces(TMediaType.APPLICATION_JSON)]
     function DoLogin([HeaderParam('Authorization')] const AAuth: string): TJSONObject;
+  end;
+
+  /// <summary>
+  ///   HTTP Body (JSON) authentication resource
+  /// </summary>
+  /// <remarks>
+  ///   The JSON properties mus be named "username" and "password". If you want custom
+  ///   names you must inherit the base class
+  /// </remarks>
+  TWiRLAuthBodyResource = class(TWiRLAuthResource)
+  public
+    [POST, Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
+    function DoLogin([BodyParam] APrincipal: TWiRLAuthPrincipal): TJSONObject;
   end;
 
 implementation
@@ -85,15 +109,18 @@ uses
   JOSE.Encoding.Base64,
   WiRL.Core.Exceptions;
 
+{ TWiRLAuthResource }
+
 function TWiRLAuthResource.GetGeneratedToken: TJSONObject;
 begin
   Result := TJSONObject.Create;
+  Result.AddPair('success', TJSONTrue.Create);
   Result.AddPair('access_token', TJSONString.Create(FAuthContext.CompactToken));
 end;
 
 { TWiRLAuthFormResource }
 
-function TWiRLAuthFormResource.DoLogin(const AUsername, APassword: string): TJSONObject;
+function TWiRLAuthFormResource.DoLogin(const AUserName, APassword: string): TJSONObject;
 var
   LAuthOperation: TWiRLAuthResult;
 begin
@@ -103,7 +130,7 @@ begin
   FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
 
   if not LAuthOperation.Success then
-    raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthFormResource', 'DoLogin');
+    raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
 
   FAuthContext.Generate(FApplication.Secret);
   Result := GetGeneratedToken;
@@ -118,14 +145,14 @@ var
   LAuthData: TArray<string>;
 begin
   if not AAuth.StartsWith(AUTH_BASIC) then
-    raise EWiRLNotAuthorizedException.Create('Auhtorization header incorrect');
+    raise EWiRLNotAuthorizedException.Create(ERR_BASIC_HEADER, Self.ClassName, 'DoLogin');
 
   LAuthField := AAuth.Substring(AUTH_BASIC.Length);
   LAuthField := TBase64.Decode(LAuthField);
   LAuthData := LAuthField.Split([':']);
 
   if Length(LAuthData) < 2 then
-    raise EWiRLNotAuthorizedException.Create('Malformed (basic) credentials');
+    raise EWiRLNotAuthorizedException.Create(ERR_BASIC_MALFORMED, Self.ClassName, 'DoLogin');
 
   FAuthContext.Clear;
   LAuthOperation := Authenticate(LAuthData[0], LAuthData[1]);
@@ -133,7 +160,25 @@ begin
   FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
 
   if not LAuthOperation.Success then
-    raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthBasicResource', 'DoLogin');
+    raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
+
+  FAuthContext.Generate(FApplication.Secret);
+  Result := GetGeneratedToken;
+end;
+
+{ TWiRLAuthBodyResource }
+
+function TWiRLAuthBodyResource.DoLogin(APrincipal: TWiRLAuthPrincipal): TJSONObject;
+var
+  LAuthOperation: TWiRLAuthResult;
+begin
+  FAuthContext.Clear;
+  LAuthOperation := Authenticate(APrincipal.UserName, APrincipal.Password);
+
+  FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
+
+  if not LAuthOperation.Success then
+    raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
 
   FAuthContext.Generate(FApplication.Secret);
   Result := GetGeneratedToken;
@@ -142,8 +187,12 @@ end;
 { TWiRLAuthResult }
 
 function TWiRLAuthResult.RolesAsString: string;
+var
+  LRole: string;
 begin
-
+  Result := '';
+  for LRole in Roles do
+    Result := Result + ',' + LRole;
 end;
 
 end.

@@ -79,14 +79,16 @@ begin
         .SetClaimsClass(TServerClaims)
       {$IF CompilerVersion >=28} //XE7
         .SetResources([
-         'Server.Resources.TFormAuthResource',
-         'Server.Resources.TBasicAuthResource',
-         'Server.Resources.TUserResource'
+          'Server.Resources.TFormAuthResource',
+          'Server.Resources.TBasicAuthResource',
+          'Server.Resources.TBodyAuthResource',
+          'Server.Resources.TUserResource'
         ]);
       {$ELSE}
         .SetResources(
           'Server.Resources.TFormAuthResource,' +
           'Server.Resources.TBasicAuthResource,' +
+          'Server.Resources.TBodyAuthResource',
           'Server.Resources.TUserResource'
         );
       {$IFEND}
