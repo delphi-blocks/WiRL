@@ -331,7 +331,7 @@ begin
   else if E is Exception then
   begin
     AContext.Response.StatusCode := 500;
-    AContext.Response.ReasonString := LWebException.Message;
+    AContext.Response.ReasonString := E.Message;
     AContext.Response.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
     AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
   end;
