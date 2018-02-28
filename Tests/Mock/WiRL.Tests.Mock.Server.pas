@@ -48,11 +48,10 @@ type
     procedure SetThreadPoolSize(AValue: Integer);
     function GetListener: IWiRLListener;
     procedure SetListener(AValue: IWiRLListener);
-
+    function GetServerImplementation: TObject;
 
     constructor Create;
     destructor Destroy; override;
-    function GetServerImplementation: TObject;
   end;
 
   {
