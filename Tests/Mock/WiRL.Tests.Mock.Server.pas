@@ -49,8 +49,10 @@ type
     function GetListener: IWiRLListener;
     procedure SetListener(AValue: IWiRLListener);
 
+
     constructor Create;
     destructor Destroy; override;
+    function GetServerImplementation: TObject;
   end;
 
   {
@@ -212,6 +214,11 @@ end;
 function TWiRLTestServer.GetPort: Word;
 begin
   Result := 80;
+end;
+
+function TWiRLTestServer.GetServerImplementation: TObject;
+begin
+  Result := nil;
 end;
 
 function TWiRLTestServer.GetThreadPoolSize: Integer;
