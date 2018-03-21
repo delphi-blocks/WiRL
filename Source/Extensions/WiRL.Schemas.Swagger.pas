@@ -47,7 +47,7 @@ type
 implementation
 
 uses
-  WiRL.http.Server;
+  WiRL.http.Server, System.TypInfo, WiRL.Core.JSON;
 
 function ExistsInArray(AArray: TJSONArray; AValue: string): Boolean;
   var
@@ -353,7 +353,7 @@ begin
     try
       BuildSwagger(ARequestContext.Context, LSwagger);
       ARequestContext.Response.ContentType := TMediaType.APPLICATION_JSON;
-      ARequestContext.Response.Content := LSwagger.ToJSON;
+      ARequestContext.Response.Content :=  TJSONHelper.ToJSON(LSwagger);
       ARequestContext.Abort;
     finally
       LSwagger.Free;

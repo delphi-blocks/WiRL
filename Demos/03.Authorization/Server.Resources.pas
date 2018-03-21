@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit Server.Resources;
 
+{$I WiRL.inc}
+
 interface
 
 uses
@@ -222,12 +224,12 @@ begin
   Result.City := ACity;
   Result.ZipCode := AZip;
 
-  {$IF CompilerVersion >= 28} //XE7
+  {$IF HAS_NEW_ARRAY}
   FAddresses := FAddresses + [Result];
   {$ELSE}
   SetLength(FAddresses, Length(FAddresses) + 1);
-  FAddresses[Length(FAddresses)] := Result;
-  {$IFEND}
+  FAddresses[Length(FAddresses) - 1] := Result;
+  {$ENDIF}
 end;
 
 constructor TUserInfo.Create;

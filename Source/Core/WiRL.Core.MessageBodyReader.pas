@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit WiRL.Core.MessageBodyReader;
 
+{$I WiRL.inc}
+
 interface
 
 uses
@@ -188,11 +190,11 @@ begin
     if LEntry.Consumes.Contains(AMediaType) and
        LEntry.IsReadable(AParam, AParam.GetAttributes, AMediaType) then
     begin
-      {$IFNDEF DelphiXE7_UP}
+      {$IF HAS_NEW_ARRAY}
+      LCompatibleEntries := LCompatibleEntries + [LEntry];
+      {$ELSE}
       SetLength(LCompatibleEntries, Length(LCompatibleEntries) + 1);
       LCompatibleEntries[High(LCompatibleEntries)] := LEntry;
-      {$ELSE}
-      LCompatibleEntries := LCompatibleEntries + [LEntry];
       {$ENDIF}
     end;
   end;

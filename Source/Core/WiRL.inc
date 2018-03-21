@@ -3,6 +3,7 @@
 {$ENDIF}
 
 {$IF CompilerVersion >= 28} // Delphi XE7
+  {$DEFINE HAS_NEW_ARRAY}
   {$DEFINE HAS_NET_ENCODING}
   {$DEFINE HAS_SYSTEM_THREADING}
 {$ENDIF}
