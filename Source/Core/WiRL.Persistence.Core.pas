@@ -13,7 +13,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs, System.TypInfo,
-  WiRL.Persistence.Attributes, WiRL.Persistence.DynamicTypes;
+
+  WiRL.Persistence.Attributes,
+  WiRL.Persistence.DynamicTypes;
 
 {$SCOPEDENUMS ON}
 
