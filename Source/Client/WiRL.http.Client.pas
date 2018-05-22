@@ -59,6 +59,8 @@ type
     procedure SetMaxRedirects(const Value: Integer);
     procedure SetClientVendor(const Value: string);
     function GetClientImplementation: TObject;
+
+    procedure InitHttpClient;
   protected
     procedure DoBeforeCommand; virtual;
     procedure DoAfterCommand; virtual;
@@ -129,15 +131,15 @@ end;
 constructor TWiRLClient.Create(AOwner: TComponent);
 begin
   inherited;
-  FHttpClient := TWiRLClientRegistry.Instance.CreateClient(FClientVendor);
   FWiRLEngineURL := 'http://localhost:8080/rest';
   FProxyParams := TWiRLProxyConnectionInfo.Create;
-  FHttpClient.ProxyParams := ProxyParams;
+  InitHttpClient;
 
   // Set defaults
   ConnectTimeout := DefaultConnectionTimeout;
   ReadTimeout := DefaultReadTimeout;
   MaxRedirects := DefaultMaxRedirects;
+
 end;
 
 destructor TWiRLClient.Destroy;
@@ -197,6 +199,12 @@ end;
 function TWiRLClient.GetResponse: TWiRLResponse;
 begin
   Result := FHttpClient.Response;
+end;
+
+procedure TWiRLClient.InitHttpClient;
+begin
+  FHttpClient := TWiRLClientRegistry.Instance.CreateClient(FClientVendor);
+  FHttpClient.ProxyParams := ProxyParams;
 end;
 
 function TWiRLClient.IsRunningAsync: Boolean;
@@ -297,10 +305,14 @@ end;
 
 procedure TWiRLClient.SetClientVendor(const Value: string);
 begin
-  if TWiRLClientRegistry.Instance.ContainsKey(Value) then
-    FClientVendor := Value
-  else
-    FClientVendor := '';
+  if FClientVendor <> Value then
+  begin
+    if TWiRLClientRegistry.Instance.ContainsKey(Value) then
+      FClientVendor := Value
+    else
+      FClientVendor := '';
+    InitHttpClient;
+  end;
 end;
 
 procedure TWiRLClient.SetConnectTimeout(const Value: Integer);

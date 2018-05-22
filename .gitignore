@@ -64,3 +64,4 @@ __history/
 
 # TestInsight config
 /Tests/Framework/Win32/TestInsight
+*.o

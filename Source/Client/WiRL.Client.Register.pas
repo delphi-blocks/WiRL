@@ -16,7 +16,8 @@ uses
   WiRL.Client.SubResource.Stream,
   WiRL.Client.Token,
   WiRL.http.Client,
-  WiRL.http.Client.Indy;
+  WiRL.http.Client.Indy,
+  WiRL.http.Client.NetHttp;
 
 procedure Register;
 

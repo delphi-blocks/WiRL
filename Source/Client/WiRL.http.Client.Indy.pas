@@ -101,6 +101,9 @@ type
 
 implementation
 
+const
+  DefaultUserAgent = 'Mozilla/3.0 (compatible; WiRL with Indy Library)';
+
 { TWiRLClientIndy }
 
 procedure TWiRLClientIndy.BuildResponseObject;
@@ -232,7 +235,7 @@ begin
   FHttpClient.Request.Referer := FRequest.Referer;
   FHttpClient.Request.Range := FRequest.Range;
   if FRequest.UserAgent = '' then
-    FHttpClient.Request.UserAgent := 'Mozilla/3.0 (compatible; WiRL with Indy Library)'
+    FHttpClient.Request.UserAgent := DefaultUserAgent
   else
     FHttpClient.Request.UserAgent := FRequest.UserAgent;
 

@@ -7,7 +7,7 @@
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Package</AppType>
         <FrameworkType>None</FrameworkType>
-        <ProjectVersion>18.2</ProjectVersion>
+        <ProjectVersion>18.4</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -156,6 +156,7 @@
         <DCCReference Include="..\..\Source\Client\WiRL.http.Client.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Interfaces.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.FileSystemEngine.pas"/>
+        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.NetHttp.pas"/>
         <RcItem Include="..\..\media\TWiRLClient.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLClient</ResourceId>
@@ -230,7 +231,7 @@
                 <Platform value="Win32">True</Platform>
             </Platforms>
             <Deployment Version="3">
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLRunTime240.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\WiRLRunTime250.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>WiRLRunTime.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
