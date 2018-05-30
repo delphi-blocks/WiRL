@@ -27,7 +27,7 @@ uses
   WiRL.Persistence.Core;
 
 type
-  TAuthChallenge = (Basic, Digest, Bearer, Forms);
+  TAuthChallenge = (Basic, Digest, Bearer, Form);
 
   TAuthChallengeHelper = record helper for TAuthChallenge
     function ToString: string;
@@ -651,7 +651,7 @@ begin
     TAuthChallenge.Basic:  Result := 'Basic';
     TAuthChallenge.Digest: Result := 'Digest';
     TAuthChallenge.Bearer: Result := 'Bearer';
-    TAuthChallenge.Forms:  Result := 'Forms';
+    TAuthChallenge.Form:   Result := 'Form';
   end;
 end;
 

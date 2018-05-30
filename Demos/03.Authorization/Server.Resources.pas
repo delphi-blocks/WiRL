@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit Server.Resources;
 
+{$I WiRL.inc}
+
 interface
 
 uses
@@ -68,6 +70,7 @@ type
   private
     // Injects the auth context into the "Auth" object
     [Context] Auth: TWiRLAuthContext;
+
     // Injects the custom claims into "Subject" object
     [Context] Subject: TServerClaims;
   public
@@ -84,7 +87,9 @@ type
     function DetailsInfo: TJSONObject;
   end;
 
-  // Inherit the Auth resource from the base class you want to use:
+  // *********************************************************************
+  // Inherit (only one) Auth resource from the base class you want to use:
+  // *********************************************************************
 
   [Path('basic_auth')]
   TBasicAuthResource = class(TWiRLAuthBasicResource)
@@ -97,6 +102,15 @@ type
 
   [Path('form_auth')]
   TFormAuthResource = class(TWiRLAuthFormResource)
+  private
+    // Injects the custom claims into "Subject" field
+    [Context] Subject: TServerClaims;
+  protected
+    function Authenticate(const AUserName, APassword: string): TWiRLAuthResult; override;
+  end;
+
+  [Path('body_auth')]
+  TBodyAuthResource = class(TWiRLAuthBodyResource)
   private
     // Injects the custom claims into "Subject" field
     [Context] Subject: TServerClaims;
@@ -124,7 +138,7 @@ begin
   Result := TJson.JsonToObject<TUserInfo>(JSON);
 
   Result.FullName := 'Luca Minuti';
-  Result.Age := Result.Age - 10;
+  Result.Age := 40;
   Result.Language := Subject.Language;
   Result.Group := 2;
 end;
@@ -181,6 +195,26 @@ begin
   Subject.Expiration := Now + 1;
 end;
 
+{ TBodyAuthResource }
+
+function TBodyAuthResource.Authenticate(const AUserName, APassword: string): TWiRLAuthResult;
+begin
+  // The line below is only an example, you have to replace with
+  // your (server) authentication code (database, another service, etc...)
+  Result.Success := SameText(APassword, 'mypassword');
+
+  // The line below is only an example, you have to replace with roles
+  // retrieved from the server
+  if SameText(AUserName, 'admin') or SameText(AUserName, 'paolo') then
+    Result.Roles := 'user,manager,admin'.Split([','])
+  else
+    Result.Roles := 'user,manager'.Split([',']);
+
+  // Here you can set all field of your custom claims object
+  Subject.Language := 'it-IT';
+  Subject.Expiration := Now + 1;
+end;
+
 { TUserInfo }
 
 function TUserInfo.AddAddress(const AStreet, ACity, AZip: string): TAddress;
@@ -190,12 +224,12 @@ begin
   Result.City := ACity;
   Result.ZipCode := AZip;
 
-  {$IF CompilerVersion >= 28} //XE7
+  {$IF HAS_NEW_ARRAY}
   FAddresses := FAddresses + [Result];
   {$ELSE}
   SetLength(FAddresses, Length(FAddresses) + 1);
-  FAddresses[Length(FAddresses)] := Result;
-  {$IFEND}
+  FAddresses[Length(FAddresses) - 1] := Result;
+  {$ENDIF}
 end;
 
 constructor TUserInfo.Create;
@@ -220,5 +254,6 @@ initialization
   // Auth resources
   TWiRLResourceRegistry.Instance.RegisterResource<TFormAuthResource>;
   TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TBodyAuthResource>;
 
 end.

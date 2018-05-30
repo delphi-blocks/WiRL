@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit Server.Forms.Main;
 
+{$I WiRL.inc}
+
 interface
 
 uses
@@ -77,16 +79,18 @@ begin
         .SetAppName('Auth Application')
         .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
         .SetClaimsClass(TServerClaims)
-      {$IF CompilerVersion >=28} //XE7
+      {$IF HAS_NEW_ARRAY}
         .SetResources([
-         'Server.Resources.TFormAuthResource',
-         'Server.Resources.TBasicAuthResource',
-         'Server.Resources.TUserResource'
+          'Server.Resources.TFormAuthResource',
+          'Server.Resources.TBasicAuthResource',
+          'Server.Resources.TBodyAuthResource',
+          'Server.Resources.TUserResource'
         ]);
       {$ELSE}
         .SetResources(
           'Server.Resources.TFormAuthResource,' +
           'Server.Resources.TBasicAuthResource,' +
+          'Server.Resources.TBodyAuthResource,' +
           'Server.Resources.TUserResource'
         );
       {$IFEND}

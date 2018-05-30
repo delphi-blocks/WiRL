@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit WiRL.Core.MessageBodyReader;
 
+{$I WiRL.inc}
+
 interface
 
 uses
@@ -21,15 +23,33 @@ uses
   WiRL.Core.Classes;
 
 type
+  /// <summary>
+  ///   Interface for a provider that supports the conversion of a stream to a
+  ///   Delphi type. A IMessageBodyReader implementation may be annotated with [Consumes] to
+  ///   restrict the media types for which it will be considered suitable
+  /// </summary>
+  /// <remarks>
+  ///   Providers implementing IMessageBodyReader interface must be registered in the
+  ///   WiRL IMessageBodyReader Registry at runtime.
+  /// </remarks>
   IMessageBodyReader = interface
   ['{472A6C22-F4AF-4E77-B6BB-B1085A63504D}']
+    /// <summary>
+    ///   Read a type from the HTTP Request stream
+    /// </summary>
     function ReadFrom(AParam: TRttiParameter;
       AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
-  TGetAffinityFunction = reference to function(AType: TRttiType;
-    const AAttributes: TAttributeArray; AMediaType: string): Integer;
+  TIsReadableFunction = reference to function(AType: TRttiType;
+    const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean;
 
+  TGetAffinityFunction = reference to function(AType: TRttiType;
+    const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer;
+
+  /// <summary>
+  ///   Global registry for classes that implements the IMessageBodyReader interface
+  /// </summary>
   TWiRLReaderRegistry = class
   public
     const AFFINITY_VERY_HIGH = 50;
@@ -46,7 +66,7 @@ type
       function GetConsumesMediaTypes(AType: TRttiType): TMediaTypeList;
     public
       CreateInstance: TFunc<IMessageBodyReader>;
-      IsReadable: TFunc<TRttiType, TAttributeArray, TMediaType, Boolean>;
+      IsReadable: TIsReadableFunction;
       GetAffinity: TGetAffinityFunction;
     public
       constructor Create(AType: TRttiType); overload;
@@ -87,11 +107,12 @@ type
     class function GetInstance: TMessageBodyReaderRegistry; static; inline;
   public
     procedure RegisterReader(const ACreateInstance: TFunc<IMessageBodyReader>;
-      const AIsReadable: TFunc<TRttiType, TAttributeArray, TMediaType, Boolean>;
+      const AIsReadable: TIsReadableFunction;
       const AGetAffinity: TGetAffinityFunction; AReaderRttiType: TRttiType); overload;
 
-    procedure RegisterReader(const AReaderClass: TClass; const AIsWritable: TFunc<TRttiType,
-      TAttributeArray, TMediaType, Boolean>; const AGetAffinity: TGetAffinityFunction); overload;
+    procedure RegisterReader(const AReaderClass: TClass;
+      const AIsReadable: TIsReadableFunction;
+      const AGetAffinity: TGetAffinityFunction); overload;
 
     procedure RegisterReader(const AReaderClass, ASubjectClass: TClass;
       const AGetAffinity: TGetAffinityFunction); overload;
@@ -169,11 +190,11 @@ begin
     if LEntry.Consumes.Contains(AMediaType) and
        LEntry.IsReadable(AParam, AParam.GetAttributes, AMediaType) then
     begin
-      {$IFNDEF DelphiXE7_UP}
+      {$IF HAS_NEW_ARRAY}
+      LCompatibleEntries := LCompatibleEntries + [LEntry];
+      {$ELSE}
       SetLength(LCompatibleEntries, Length(LCompatibleEntries) + 1);
       LCompatibleEntries[High(LCompatibleEntries)] := LEntry;
-      {$ELSE}
-      LCompatibleEntries := LCompatibleEntries + [LEntry];
       {$ENDIF}
     end;
   end;
@@ -184,11 +205,11 @@ begin
   else
     begin
       LCandidate := LCompatibleEntries[0];
-      LCandidateAffinity := LCandidate.GetAffinity(AParam, AParam.GetAttributes, AMediaType.ToString);
+      LCandidateAffinity := LCandidate.GetAffinity(AParam, AParam.GetAttributes, AMediaType);
 
       for LEntry in LCompatibleEntries do
       begin
-        LCurrentAffinity := LCandidate.GetAffinity(AParam, AParam.GetAttributes, AMediaType.ToString);
+        LCurrentAffinity := LCandidate.GetAffinity(AParam, AParam.GetAttributes, AMediaType);
 
         if LCurrentAffinity >= LCandidateAffinity then
         begin
@@ -209,7 +230,7 @@ end;
 class function TWiRLReaderRegistry.GetDefaultClassAffinityFunc<T>: TGetAffinityFunction;
 begin
   Result :=
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType, False) then
         Result := 100
@@ -240,10 +261,10 @@ begin
   Result := TWiRLRegistrySingleton.Instance;
 end;
 
-procedure TMessageBodyReaderRegistry.RegisterReader(const ACreateInstance:
-    TFunc<IMessageBodyReader>; const AIsReadable: TFunc<TRttiType,
-    TAttributeArray, TMediaType, Boolean>; const AGetAffinity:
-    TGetAffinityFunction; AReaderRttiType: TRttiType);
+procedure TMessageBodyReaderRegistry.RegisterReader(
+    const ACreateInstance: TFunc<IMessageBodyReader>;
+    const AIsReadable: TIsReadableFunction;
+    const AGetAffinity: TGetAffinityFunction; AReaderRttiType: TRttiType);
 var
   LEntryInfo: TReaderInfo;
 begin
@@ -256,9 +277,10 @@ begin
   FRegistry.Add(LEntryInfo)
 end;
 
-procedure TMessageBodyReaderRegistry.RegisterReader(const AReaderClass: TClass;
-    const AIsWritable: TFunc<TRttiType, TAttributeArray, TMediaType, Boolean>;
-    const AGetAffinity: TGetAffinityFunction);
+procedure TMessageBodyReaderRegistry.RegisterReader(
+  const AReaderClass: TClass;
+  const AIsReadable: TIsReadableFunction;
+  const AGetAffinity: TGetAffinityFunction);
 begin
   RegisterReader(
     function : IMessageBodyReader
@@ -269,7 +291,7 @@ begin
       if not Supports(LInstance, IMessageBodyReader, Result) then
         raise Exception.Create('Interface IMessageBodyReader not implemented');
     end,
-    AIsWritable,
+    AIsReadable,
     AGetAffinity,
     TRttiContext.Create.GetType(AReaderClass)
   );
@@ -280,7 +302,7 @@ procedure TMessageBodyReaderRegistry.RegisterReader(const AReaderClass,
 begin
   RegisterReader(
     AReaderClass,
-    function (AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType(AType, ASubjectClass);
     end,
@@ -292,7 +314,7 @@ procedure TMessageBodyReaderRegistry.RegisterReader<T>(const AReaderClass: TClas
 begin
   RegisterReader(
     AReaderClass,
-    function (AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType);
     end,

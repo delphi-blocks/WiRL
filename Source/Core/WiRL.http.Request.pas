@@ -22,7 +22,6 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.http.Accept.Language;
 
-
 type
   TWiRLMethod = class
   const
@@ -71,6 +70,8 @@ type
     procedure SetContentLength(const Value: Integer);
     function GetContentVersion: string;
     procedure SetContentVersion(const Value: string);
+    function GetContentEncoding: string;
+    procedure SetContentEncoding(const Value: string);
     function GetHost: string;
     procedure SetHost(const Value: string);
     function GetPathInfo: string;
@@ -120,6 +121,7 @@ type
     property ContentType: string read GetContentType write SetContentType;
     property ContentLength: Integer read GetContentLength write SetContentLength;
     property ContentVersion: string read GetContentVersion write SetContentVersion;
+    property ContentEncoding: string read GetContentEncoding write SetContentEncoding;
     property Authorization: string read GetAuthorization write SetAuthorization;
     property Accept: string read GetAccept write SetAccept;
     property AcceptableMediaTypes: TMediaTypeList read GetAcceptableMediaTypes;
@@ -226,6 +228,11 @@ begin
 //    Encoding := TEncoding.UTF8;
 //  Result := Encoding.GetString(RawContent);
   Result := EncodingFromCharSet(ContentMediaType.Charset).GetString(RawContent);
+end;
+
+function TWiRLRequest.GetContentEncoding: string;
+begin
+  Result := HeaderFields.Values['Content-Encoding'];
 end;
 
 function TWiRLRequest.GetContentLength: Integer;
@@ -343,6 +350,11 @@ begin
   except
     LStream.Free;
   end;
+end;
+
+procedure TWiRLRequest.SetContentEncoding(const Value: string);
+begin
+  HeaderFields.Values['Content-Encoding'] := Value;
 end;
 
 procedure TWiRLRequest.SetContentLength(const Value: Integer);

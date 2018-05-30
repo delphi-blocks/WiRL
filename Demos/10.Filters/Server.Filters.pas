@@ -24,6 +24,7 @@ uses
   WiRL.http.URL,
   WiRL.Core.Application,
   WiRL.http.Accept.MediaType,
+  WiRL.http.Filters.Compression,
 
   Server.Filters.Attributes, Server.Forms.Main;
 
@@ -67,21 +68,8 @@ type
     procedure Filter(AResponseContext: TWiRLContainerResponseContext);
   end;
 
-  [ContentEncoding]
-  TResponseEncodingFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
-  private
-    const ENC_GZIP = 'gzip';
-    const ENC_DEFLATE = 'deflate';
-    const ENC_IDENTITY = 'identity';
-  public
-    procedure Filter(AResponseContext: TWiRLContainerResponseContext);
-  end;
-
 
 implementation
-
-uses
-  System.ZLib;
 
 { TRequestLoggerFilter }
 
@@ -116,65 +104,6 @@ begin
     AResponseContext.Response.HeaderFields['X-Powered-By'] := 'DataSnap' // ;-)
   else
     AResponseContext.Response.HeaderFields['X-Powered-By'] := 'WiRL';
-end;
-
-{ TResponseEncodingFilter }
-
-procedure TResponseEncodingFilter.Filter(AResponseContext: TWiRLContainerResponseContext);
-var
-  LStrStream: TStringStream;
-  LMemStream: TMemoryStream;
-
-  procedure DoCompress(ASource, ADestination: TStream);
-  var
-    LCompressor: TZCompressionStream;
-  begin
-    ASource.Seek(0, TSeekOrigin.soBeginning);
-
-    LCompressor := TZCompressionStream.Create(clDefault, ADestination);
-    try
-      LCompressor.CopyFrom(ASource, ASource.Size);
-    finally
-      LCompressor.Free;
-    end;
-  end;
-
-begin
-  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE) then
-  begin
-    if Assigned(AResponseContext.Response.ContentStream) then
-    begin
-      LMemStream := TStringStream.Create;
-      try
-        DoCompress(AResponseContext.Response.ContentStream, LMemStream);
-        LMemStream.Position := soFromBeginning;
-        AResponseContext.Response.ContentStream.Free;
-        AResponseContext.Response.ContentStream := LMemStream;
-      except
-        LMemStream.Free;
-      end;
-      AResponseContext.Response.ContentEncoding := ENC_DEFLATE;
-    end
-    else if AResponseContext.Response.Content <> '' then
-    begin
-      LStrStream := TStringStream.Create(AResponseContext.Response.Content);
-      LStrStream.Position := soFromBeginning;
-      try
-        LMemStream := TMemoryStream.Create;
-        try
-          DoCompress(LStrStream, LMemStream);
-          LMemStream.Position := soFromBeginning;
-          AResponseContext.Response.Content := '';
-          AResponseContext.Response.ContentStream := LMemStream;
-        except
-          FreeAndNil(LMemStream);
-        end;
-      finally
-        LStrStream.Free;
-      end;
-      AResponseContext.Response.ContentEncoding := ENC_DEFLATE;
-    end;
-  end;
 end;
 
 { TAbortTest }
@@ -225,7 +154,6 @@ initialization
   );
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestCheckerFilter>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TResponsePoweredByFilter>;
-  TWiRLFilterRegistry.Instance.RegisterFilter<TResponseEncodingFilter>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TAbortTest>;
 
 end.

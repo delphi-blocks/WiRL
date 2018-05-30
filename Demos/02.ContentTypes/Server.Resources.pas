@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit Server.Resources;
 
+{$I WiRL.inc}
+
 interface
 
 uses
@@ -58,7 +60,6 @@ type
     function DataSet1: TDataSet;
 
     [GET, Path('/dataset2')]
-    //[Produces(XML_AND_JSON)]
     function DataSet2: TFDMemTable;
 
     [GET, Path('/datasets'), Produces(TMediaType.APPLICATION_JSON)]
@@ -69,8 +70,6 @@ type
 
     [GET, Path('/int')]
     function GetInteger: Integer;
-
-
   end;
 
 implementation
@@ -124,7 +123,13 @@ end;
 
 function TSampleResource.DataSets: TArray<TDataset>;
 begin
+  {$IF HAS_NEW_ARRAY}
   Result := [DataSet1, DataSet2];
+  {$ELSE}
+  SetLength(Result, 2);
+  Result[0] := DataSet1;
+  Result[1] := DataSet2;
+  {$ENDIF}
 end;
 
 function TSampleResource.GetInteger: Integer;
@@ -165,7 +170,14 @@ end;
 
 function TSampleResource.SimpleArray: TArray<Integer>;
 begin
+  {$IF HAS_NEW_ARRAY}
   Result := [23, 44, 567];
+  {$ELSE}
+  SetLength(Result, 3);
+  Result[0] := 23;
+  Result[1] := 44;
+  Result[2] := 567;
+  {$ENDIF}
 end;
 
 function TSampleResource.HelloWorld_TEXT: string;

@@ -112,26 +112,26 @@ end;
 
 initialization
   TMessageBodyReaderRegistry.Instance.RegisterReader(TObjectReaderOXML,
-    function (AType: TRttiType; AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and
         AType.IsInstance and
         not TRttiHelper.IsObjectOfType<TDataSet>(AType, True);
     end,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       Result := TMessageBodyReaderRegistry.AFFINITY_HIGH;
     end
   );
 
   TMessageBodyWriterRegistry.Instance.RegisterWriter(TObjectWriterOXML,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and
         AType.IsInstance and
         not TRttiHelper.IsObjectOfType<TDataSet>(AType, True);
     end,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
     end

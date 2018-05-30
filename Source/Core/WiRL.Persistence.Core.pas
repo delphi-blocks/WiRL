@@ -13,7 +13,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs, System.TypInfo,
-  WiRL.Persistence.Attributes, WiRL.Persistence.DynamicTypes;
+
+  WiRL.Persistence.Attributes,
+  WiRL.Persistence.DynamicTypes;
 
 {$SCOPEDENUMS ON}
 
@@ -89,7 +91,7 @@ type
     FIgnoreFieldPrefix: Boolean;
     FUseUTCDate: Boolean;
   public
-     constructor Create;
+    constructor Create;
 
     class function Default: INeonConfiguration; static;
     class function Snake: INeonConfiguration; static;

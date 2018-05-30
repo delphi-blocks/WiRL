@@ -173,11 +173,15 @@ end;
 { TPosixDaemon }
 
 class procedure TPosixDaemon.CloseDescriptors;
-var
-  LIndex: Integer;
 begin
-  for LIndex := sysconf(_SC_OPEN_MAX) downto 0 do
-    __close(LIndex);
+  // Closing descriptor stdin (standard input)
+  __close(0);
+
+  // Closing descriptor stdout (standard output)
+  __close(1);
+
+  // Closing descriptor stderr (standard error)
+  __close(2);
 end;
 
 class procedure TPosixDaemon.DetachTerminal;
@@ -245,8 +249,10 @@ var
 begin
   // Open STDIN
   LFileID := __open('/dev/null', O_RDWR);
+
   // Dup STDOUT
   dup(LFileID);
+
   // Dup STDERR
   dup(LFileID);
 end;

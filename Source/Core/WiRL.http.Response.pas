@@ -23,7 +23,7 @@ type
   private
     FCookie: TWiRLCookies;
     FMediaType: TMediaType;
-    FHeaderFields :TWiRLHeaderList;
+    FHeaderFields: TWiRLHeaderList;
     FHasContentLength: Boolean;
     function GetContentType: string;
     procedure SetContentType(const Value: string);

@@ -23,18 +23,33 @@ uses
   WiRL.Core.Attributes;
 
 type
+  /// <summary>
+  ///   Interface for a provider that supports the conversion of a Delphi type to a
+  ///   stream. A IMessageBodyWriter implementation may be annotated with [Produces] to
+  ///   restrict the media types for which it will be considered suitable
+  /// </summary>
+  /// <remarks>
+  ///   Providers implementing IMessageBodyWriter interface must be registered in the
+  ///   WiRL MessageBodyWriter Registry at runtime.
+  /// </remarks>
   IMessageBodyWriter = interface
   ['{C22068E1-3085-482D-9EAB-4829C7AE87C0}']
+    /// <summary>
+    ///   Write a type to an HTTP message (body)
+    /// </summary>
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse);
   end;
 
   TIsWritableFunction = reference to function(AType: TRttiType;
-    const AAttributes: TAttributeArray; AMediaType: string): Boolean;
+    const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean;
 
   TGetAffinityFunction = reference to function(AType: TRttiType;
-    const AAttributes: TAttributeArray; AMediaType: string): Integer;
+    const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer;
 
+  /// <summary>
+  ///   Global registry for classes that implements the IMessageBodyWriter interface
+  /// </summary>
   TWiRLWriterRegistry = class
   public
     const AFFINITY_VERY_HIGH = 50;
@@ -201,13 +216,13 @@ begin
     begin
       for LWriterEntry in FRegistry do
       begin
-        if LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly) then
+        if LWriterEntry.IsWritable(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType) then
         if (LMediaType.IsWildcard or LWriterEntry.Produces.Contains(TMediaType.WILDCARD) or LWriterEntry.Produces.Contains(LMediaType)) then
         begin
-          if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly)) then
+          if not LFound or (LCandidateAffinity < LWriterEntry.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType)) then
           begin
             LCandidate := LWriterEntry;
-            LCandidateAffinity := LCandidate.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType.AcceptItemOnly);
+            LCandidateAffinity := LCandidate.GetAffinity(AMethod.RttiObject.ReturnType, AMethod.AllAttributes, LMediaType);
             LFound := True;
           end;
         end;
@@ -233,7 +248,7 @@ end;
 class function TWiRLWriterRegistry.GetDefaultClassAffinityFunc<T>: TGetAffinityFunction;
 begin
   Result :=
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType, False) then
         Result := 100
@@ -363,7 +378,7 @@ procedure TMessageBodyWriterRegistry.RegisterWriter(const AWriterClass,
 begin
   RegisterWriter(
     AWriterClass,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType(AType, ASubjectClass);
     end,
@@ -379,14 +394,14 @@ begin
     LAffinity := Self.GetDefaultClassAffinityFunc<T>()
   else
     LAffinity :=
-      function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Integer
+      function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
       begin
         Result := AAffinity;
       end;
 
   RegisterWriter(
     AWriterClass,
-    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: string): Boolean
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType);
     end,

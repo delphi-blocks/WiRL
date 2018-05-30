@@ -86,9 +86,6 @@ type
 implementation
 
 uses
-  {$IFDEF HAS_NET_ENCODING}
-  System.NetEncoding,
-  {$ENDIF}
   System.DateUtils;
 
 { TWiRLAuthContext }

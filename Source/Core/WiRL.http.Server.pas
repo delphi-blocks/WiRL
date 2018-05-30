@@ -227,8 +227,7 @@ begin
     raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [Url]);
 end;
 
-procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest;
-  AResponse: TWiRLResponse);
+procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
 var
   LContext: TWiRLContext;
   LEngine: TWirlCustomEngine;
