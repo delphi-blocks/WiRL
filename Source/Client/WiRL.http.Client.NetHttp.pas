@@ -1,5 +1,3 @@
-unit WiRL.http.Client.NetHttp;
-
 {******************************************************************************}
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
@@ -9,6 +7,10 @@ unit WiRL.http.Client.NetHttp;
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
+unit WiRL.http.Client.NetHttp;
+
+{$I ..\Core\WiRL.inc}
+
 interface
 
 uses
@@ -457,6 +459,7 @@ end;
 
 initialization
 
-  TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientNetHttp>('TNetHttpClient (Native)');
+  TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientNetHttp>(
+    'TNetHttpClient (Native)'{$IFDEF HAS_NETHTTP_CLIENT}, True{$ENDIF});
 
 end.

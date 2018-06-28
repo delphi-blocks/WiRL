@@ -8,6 +8,10 @@
   {$DEFINE HAS_SYSTEM_THREADING}
 {$ENDIF}
 
+{$IF CompilerVersion >= 29} // Delphi XE8
+  {$DEFINE HAS_NETHTTP_CLIENT}
+{$ENDIF}
+
 {$IF CompilerVersion >= 30} // Delphi 10 Seattle
   {$DEFINE HAS_HMAC_HASH}
 {$ENDIF}

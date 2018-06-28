@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit WiRL.http.Client.Indy;
 
+{$I ..\Core\WiRL.inc}
+
 interface
 
 uses
@@ -470,6 +472,7 @@ end;
 
 initialization
 
-  TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientIndy>('TIdHttp (Indy)');
+  TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientIndy>(
+    'TIdHttp (Indy)'{$IFNDEF HAS_NETHTTP_CLIENT}, True{$ENDIF});
 
 end.
