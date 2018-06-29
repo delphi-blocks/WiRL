@@ -17,7 +17,7 @@ uses
   WiRL.http.Client, WiRL.Client.SubResource,
   WiRL.Client.SubResource.JSON, WiRL.Client.Messaging.Resource,
   WiRL.http.Request, WiRL.http.Response,
-  System.JSON;
+  System.JSON, System.Net.HttpClient.Win;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -48,8 +48,7 @@ implementation
 uses
   FMXClient.Forms.Main,
 
-  // NetHttpClient component can be used only with Delphi XE8 or newer
-  {$IF CompilerVersion >= 29}
+  {$IFDEF HAS_NETHTTP_CLIENT}
   WiRL.http.Client.NetHttp,
   {$ELSE}
   WiRL.http.Client.Indy,

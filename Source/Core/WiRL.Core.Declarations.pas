@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit WiRL.Core.Declarations;
+
+{$I WiRL.inc}
 
 interface
 
@@ -15,7 +17,7 @@ uses
   System.SysUtils, System.Rtti;
 
 type
-  {$IF CompilerVersion < 31}
+  {$IFNDEF HAS_UTF8CHAR}
   UTF8Char = AnsiChar;
   {$ENDIF}
 
@@ -23,7 +25,7 @@ type
   TArgumentArray = array of TValue;
 
   TStringArray = TArray<string>;
-  {$IF CompilerVersion >= 31} //10.1 Berlin
+  {$IFDEF NO_ARRAY_HELPER_BUG}
   TStringArrayHelper = record helper for TStringArray
   public
     function Size: Integer;
@@ -34,7 +36,7 @@ type
 
 implementation
 
-{$IF CompilerVersion >= 31} //10.1 Berlin
+{$IFDEF NO_ARRAY_HELPER_BUG}
 
 { TStringArrayHelper }
 

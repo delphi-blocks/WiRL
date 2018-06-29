@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -250,7 +250,7 @@ begin
       if not LHttpMethodMatches then
         Continue;
 
-      LPrototypeURL := TWiRLURL.CreateDummy(FEnginePath, FAppPath, FPath, LMethod.Path);
+      LPrototypeURL := TWiRLURL.MockURL(FEnginePath, FAppPath, FPath, LMethod.Path);
       try
         LPathMatches := LPrototypeURL.MatchPath(FContext.URL);
       finally

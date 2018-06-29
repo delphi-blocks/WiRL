@@ -1,17 +1,25 @@
 {$IF CompilerVersion >= 27} // Delphi XE6
   {$DEFINE HAS_SYSTEM_JSON}
-{$ENDIF}
+{$IFEND}
 
 {$IF CompilerVersion >= 28} // Delphi XE7
   {$DEFINE HAS_NEW_ARRAY}
   {$DEFINE HAS_NET_ENCODING}
   {$DEFINE HAS_SYSTEM_THREADING}
-{$ENDIF}
+{$IFEND}
 
 {$IF CompilerVersion >= 29} // Delphi XE8
   {$DEFINE HAS_NETHTTP_CLIENT}
-{$ENDIF}
+{$IFEND}
 
 {$IF CompilerVersion >= 30} // Delphi 10 Seattle
   {$DEFINE HAS_HMAC_HASH}
-{$ENDIF}
+  {$DEFINE HAS_GENERIC_CREATE}
+{$IFEND}
+
+{$IF CompilerVersion >= 31} // Delphi 10 Berlin
+  {$DEFINE HAS_UTF8CHAR}
+  {$DEFINE NO_ARRAY_HELPER_BUG}
+{$IFEND}
+
+

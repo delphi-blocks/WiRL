@@ -643,7 +643,7 @@ var
   LResURL: TWiRLURL;
   LPair: TPair<Integer, string>;
 begin
-  LResURL := TWiRLURL.CreateDummy(TWiRLEngine(FContext.Engine).BasePath,
+  LResURL := TWiRLURL.MockURL(TWiRLEngine(FContext.Engine).BasePath,
     FAppConfig.BasePath, FResource.Path, FResource.Method.Path);
   try
     Result := -1;

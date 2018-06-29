@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit WiRL.http.Accept.Parser;
+
+{$I WiRL.inc}
 
 interface
 
@@ -340,11 +342,11 @@ end;
 
 class function TAcceptItemFactory<T>.CreateItem(const AAcceptItem: string): T;
 begin
-{$IF CompilerVersion >=30} //10Seattle
+{$IFDEF HAS_GENERIC_CREATE}
   Result := T.Create(AAcceptItem);
 {$ELSE}
   Result := T(TAcceptItemClass(T).Create(AAcceptItem));
-{$IFEND}
+{$ENDIF}
 end;
 
 end.

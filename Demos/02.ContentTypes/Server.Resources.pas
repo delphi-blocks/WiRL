@@ -123,7 +123,7 @@ end;
 
 function TSampleResource.DataSets: TArray<TDataset>;
 begin
-  {$IF HAS_NEW_ARRAY}
+  {$IFDEF HAS_NEW_ARRAY}
   Result := [DataSet1, DataSet2];
   {$ELSE}
   SetLength(Result, 2);
@@ -170,7 +170,7 @@ end;
 
 function TSampleResource.SimpleArray: TArray<Integer>;
 begin
-  {$IF HAS_NEW_ARRAY}
+  {$IFDEF HAS_NEW_ARRAY}
   Result := [23, 44, 567];
   {$ELSE}
   SetLength(Result, 3);

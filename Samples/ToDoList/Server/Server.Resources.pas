@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -130,11 +130,11 @@ begin
   try
     LAccessor.Select(
         'OWNER = :OWNER'
-      , procedure(AQuery: {$if CompilerVersion > 24}TFDQuery{$else}TSQLQuery{$ifend})
+      , procedure(AQuery: TFDQuery)
         begin
           AQuery.ParamByName('OWNER').AsString := Token.Subject.UserID;
         end
-      , procedure(AQuery: {$if CompilerVersion > 24}TFDQuery{$else}TSQLQuery{$ifend})
+      , procedure(AQuery: TFDQuery)
         begin
           SetLength(LResult, Length(LResult) + 1);
           LResult[Length(LResult) -1] := TToDoItem.CreateFromRecord(AQuery);
