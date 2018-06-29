@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -42,7 +42,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    // FServer: TWiRLServer;
+    FServer: TWiRLServer;
   public
     procedure Log(const AMsg :string);
   end;
@@ -60,7 +60,6 @@ uses
   WiRL.Core.MessageBody.Default,
   WiRL.Data.MessageBody.Default;
 
-
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   StopServerAction.Execute;
@@ -68,6 +67,26 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  // Create http server
+  FServer := TWiRLServer.Create(nil);
+
+  // Server configuration
+  FServer
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    // Engine configuration
+    .AddEngine<TWiRLEngine>('/rest')
+      .SetEngineName('WiRL Filters Demo')
+
+      // Application configuration
+      .AddApplication('/app')
+        .SetAppName('Filter App')
+        .SetWriters('*')
+        .SetReaders('*')
+        .SetFilters('*')
+        .SetResources(
+          'Server.Resources.TFilterDemoResource')
+  ;
+
   StartServerAction.Execute;
 end;
 

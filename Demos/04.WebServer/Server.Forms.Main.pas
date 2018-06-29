@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -18,10 +18,8 @@ uses
 
   WiRL.http.FileSystemEngine,
   WiRL.Core.Engine,
-  WiRL.Core.Context,
   WiRL.http.Server,
-  WiRL.http.Server.Indy,
-  WiRL.Core.Application;
+  WiRL.http.Server.Indy;
 
 type
   TMainForm = class(TForm)
@@ -35,8 +33,6 @@ type
     Label1: TLabel;
     Button1: TButton;
     TestAction: TAction;
-    WiRLServer1: TWiRLServer;
-    WiRLFileSystemEngine1: TWiRLFileSystemEngine;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -45,6 +41,7 @@ type
     procedure TestActionExecute(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
+    FServer: TWiRLServer;
   public
   end;
 
@@ -61,43 +58,57 @@ uses
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  // Create http server
+  FServer := TWiRLServer.Create(nil);
+
+  // Server configuration
+  FServer
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    // Engine configuration
+    .AddEngine<TWiRLFileSystemEngine>('/')
+      .SetEngineName('WiRL FileSystemEngine')
+      .SetRootFolder('{AppPath}\www')
+  ;
+
   StartServerAction.Execute;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   StopServerAction.Execute;
+  FServer.Free;
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  if not WiRLServer1.Active then
+  if not FServer.Active then
   begin
-    WiRLServer1.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-    WiRLServer1.Active := True;
+    FServer.Port := StrToIntDef(PortNumberEdit.Text, 8080);
+    FServer.Active := True;
   end;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := (WiRLServer1 = nil) or (WiRLServer1.Active = False);
+  StartServerAction.Enabled := (FServer = nil) or (FServer.Active = False);
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  WiRLServer1.Active := False;
+  if FServer.Active then
+    FServer.Active := False;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(WiRLServer1) and (WiRLServer1.Active = True);
+  StopServerAction.Enabled := Assigned(FServer) and (FServer.Active = True);
 end;
 
 procedure TMainForm.TestActionExecute(Sender: TObject);
 const
   LTemplateURL = 'http://localhost:%d/';
 begin
-  ShellExecute(Handle, 'open', PChar(Format(LTemplateURL, [WiRLServer1.Port])), '', '', SW_NORMAL);
+  ShellExecute(Handle, 'open', PChar(Format(LTemplateURL, [FServer.Port])), '', '', SW_NORMAL);
 end;
 
 initialization

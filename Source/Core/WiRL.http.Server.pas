@@ -296,7 +296,7 @@ begin
     FActive := Value;
     // don't listen at design time or during loading
     // (if intersection is an empty set)
-    if (componentState * [csDesigning, csLoading]) = [] then
+    if (ComponentState * [csDesigning, csLoading]) = [] then
     begin
       if Value then
         Startup
@@ -357,6 +357,7 @@ var
 begin
   for LEngineInfo in FEngines do
     LEngineInfo.Engine.Shutdown;
+
   FHttpServer.Shutdown;
 end;
 

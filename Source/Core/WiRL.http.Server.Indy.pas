@@ -20,14 +20,11 @@ uses
   WiRL.http.Cookie,
   WiRL.http.Server.Interfaces,
   WiRL.http.Engines,
-//  WiRL.Core.Engine,
   WiRL.http.Response,
   WiRL.http.Request,
   WiRL.Core.Auth.Context;
 
 type
-//  TWiRLEngines = TArray<TWiRLEngine>;
-
   TWiRLhttpServerIndy = class(TInterfacedObject, IWiRLServer)
   private
     FHttpServer: TIdHTTPServer;
@@ -223,7 +220,8 @@ end;
 procedure TWiRLhttpServerIndy.Shutdown;
 begin
   inherited;
-  FHttpServer.Active := False;
+  if FHttpServer.Active then
+    FHttpServer.Active := False;
   FHttpServer.Bindings.Clear;
 end;
 
