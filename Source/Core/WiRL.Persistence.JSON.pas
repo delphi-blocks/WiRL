@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -13,11 +13,12 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
-  System.TypInfo, System.JSON, Data.DB,
+  System.TypInfo, System.Generics.Collections, System.JSON, Data.DB,
 
   WiRL.Core.JSON,
   WiRL.Core.Declarations,
 
+  WiRL.Persistence.Types,
   WiRL.Persistence.Attributes,
   WiRL.Persistence.Core,
   WiRL.Persistence.DynamicTypes,
@@ -349,48 +350,28 @@ procedure TNeonSerializerJSON.WriteMembers(AType: TRttiType;
   AInstance: Pointer; AResult: TJSONValue);
 var
   LJSONValue: TJSONValue;
-  LMember: TRttiMember;
-  LMembers: TArray<TRttiMember>;
+  LMembers: TNeonRttiMembers;
   LNeonMember: TNeonRttiMember;
 begin
-  LMembers := GetTypeMembers(AType);
-
-  for LMember in LMembers do
-  begin
-    LNeonMember := TNeonRttiMember.Create(AInstance, LMember);
-    try
-
-      if SameText(LMember.Name, 'Parent') then
-        Continue;
-
-      if SameText(LMember.Name, 'Owner') then
-        Continue;
-
-      if not LNeonMember.IsWritable and
-         not (LNeonMember.TypeKind in [tkClass, tkInterface]) then
-        Continue;
-
-      if LNeonMember.IsReadable and (LNeonMember.Visibility in FConfig.Visibility) then
+  LMembers := GetNeonMembers(AInstance, AType);
+  LMembers.FilterSerialize;
+  try
+    for LNeonMember in LMembers do
+    begin
+      if LNeonMember.Serializable then
       begin
         try
-          // NeonIgnore Attribute: Skip the member
-          if LNeonMember.Ignore then
-            Continue;
-
           LJSONValue := WriteDataMember(LNeonMember.GetValue);
           if Assigned(LJSONValue) then
-          begin
-
             (AResult as TJSONObject).AddPair(GetNameFromMember(LNeonMember), LJSONValue);
-          end;
         except
           LogError(Format('Error converting property [%s] [%s type] of object [%s]',
-            [LNeonMember.Name, LNeonMember.MemberType.Name, AType.Name]));
+            [LNeonMember.Name, LNeonMember.RttiType.Name, AType.Name]));
         end;
       end;
-    finally
-      LNeonMember.Free;
     end;
+  finally
+    LMembers.Free;
   end;
 end;
 
@@ -812,28 +793,18 @@ end;
 procedure TNeonDeserializerJSON.ReadMembers(AType: TRttiType;
   AInstance: Pointer; AJSONObject: TJSONObject);
 var
-  LMember: TRttiMember;
-  LMembers: TArray<TRttiMember>;
-
+  LMembers: TNeonRttiMembers;
   LNeonMember: TNeonRttiMember;
   LJSONValue: TJSONValue;
   LMemberValue: TValue;
 begin
-  LMembers := GetTypeMembers(AType);
-
-  for LMember in LMembers do
-  begin
-    LNeonMember := TNeonRttiMember.Create(AInstance, LMember);
-    try
-      if not LNeonMember.IsWritable then
-        Continue;
-
-      if LNeonMember.Visibility in FConfig.Visibility then
+  LMembers := GetNeonMembers(AInstance, AType);
+  LMembers.FilterDeserialize;
+  try
+    for LNeonMember in LMembers do
+    begin
+      if LNeonMember.Serializable then
       begin
-        // NeonIgnore Attribute: Skip the member
-        if LNeonMember.Ignore then
-          Continue;
-
         //Look for a JSON with the calculated Member Name
         LJSONValue := AJSONObject.GetValue(GetNameFromMember(LNeonMember));
 
@@ -841,12 +812,12 @@ begin
         if not Assigned(LJSONValue) then
           Continue;
 
-        LMemberValue := ReadDataMember(LJSONValue, LNeonMember.MemberType, LNeonMember.GetValue);
+        LMemberValue := ReadDataMember(LJSONValue, LNeonMember.RttiType, LNeonMember.GetValue);
         LNeonMember.SetValue(LMemberValue);
       end;
-    finally
-      LNeonMember.Free;
     end;
+  finally
+    LMembers.Free;
   end;
 end;
 

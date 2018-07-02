@@ -13,6 +13,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections,
+
+  WiRL.Persistence.Types,
   WiRL.Persistence.Attributes;
 
 {$M+}
@@ -43,14 +45,14 @@ type
   TIntArray = TArray<Integer>;
 
   {$SCOPEDENUMS ON}
-  TMyEnum = (Primo, Secondo, Terzo, Quarto);
+  TMyEnum = (First, Second, Third, Fourth);
 
   TMySet = set of TMyEnum;
 
   TMyRecord = record
   public
-    Uno: string;
-    Due: Integer;
+    One: string;
+    Two: Integer;
 
     function ToString: string;
   end;
@@ -107,9 +109,9 @@ type
     destructor Destroy; override;
     procedure AddAddress(const ACity, ACountry: string);
   published
-    //[NeonIgnore]
+    [NeonIgnore]
     property Name: string read FName write FName;
-    [NeonProperty('Cognome')]
+    [NeonProperty('LastName')]
     property Surname: string read FSurname write FSurname;
 
     property Addresses: TAddresses read FAddresses write FAddresses;
@@ -122,11 +124,16 @@ type
 
   TCaseClass = class
   private
+    [NeonInclude]
+    FPrivateField: Double;
     FFirstProp: Integer;
     FSecondXProp: string;
     FThirdProp: TDateTime;
   public
     class function DefaultValues: TCaseClass;
+  public
+    [NeonInclude, NeonMembers(TNeonMembers.Fields)]
+    FirstRecord: TMyRecord;
     property FirstProp: Integer read FFirstProp write FFirstProp;
     property SecondXProp: string read FSecondXProp write FSecondXProp;
     property ThirdProp: TDateTime read FThirdProp write FThirdProp;
@@ -143,8 +150,8 @@ begin
   LAddress := TAddress.Create;
   LAddress.City := ACity;
   LAddress.Country:= ACountry;
-  LAddress.Rec.Uno := 'Pippo';
-  LAddress.Rec.Due := 12;
+  LAddress.Rec.One := 'Qwerty';
+  LAddress.Rec.Two := 12;
 
   SetLength(FAddresses, Length(FAddresses) + 1);
   FAddresses[Length(FAddresses) - 1] := LAddress;
@@ -153,10 +160,10 @@ end;
 constructor TPerson.Create;
 begin
   FNote := TNote.Create;
-  FEnum := TMyEnum.Secondo;
+  FEnum := TMyEnum.Second;
   FDoubleProp := 56.7870988623;
   FDateProp := Now;
-  FOptions := [TMyEnum.Primo, TMyEnum.Secondo, TMyEnum.Quarto];
+  FOptions := [TMyEnum.First, TMyEnum.Second, TMyEnum.Fourth];
 end;
 
 destructor TPerson.Destroy;
@@ -203,7 +210,7 @@ end;
 
 function TMyRecord.ToString: string;
 begin
-  Result := Uno + '|' + Due.ToString;
+  Result := One + '|' + Two.ToString;
 end;
 
 { TStreamableSample }
@@ -249,9 +256,12 @@ end;
 class function TCaseClass.DefaultValues: TCaseClass;
 begin
   Result := TCaseClass.Create;
+  Result.FPrivateField := 3.1415926535;
+  Result.FirstRecord.One := 'Record text field';
+  Result.FirstRecord.Two := Random(1000);
   Result.FirstProp := Random(1000);
   Result.SecondXProp := 'ABCDEFG';
-  Result.ThirdProp := EncodeDate(Random(2017), Random(12), Random(28));
+  Result.ThirdProp := EncodeDate(2018, Random(11)+1, Random(27)+1);
 end;
 
 end.

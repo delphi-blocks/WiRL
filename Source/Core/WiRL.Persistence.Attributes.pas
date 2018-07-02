@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -12,7 +12,8 @@ unit WiRL.Persistence.Attributes;
 interface
 
 uses
-  System.Classes, System.SysUtils;
+  System.Classes, System.SysUtils,
+  WiRL.Persistence.Types;
 
 type
   NeonAttribute = class(TCustomAttribute)
@@ -64,33 +65,52 @@ type
   NeonIgnoreTypeAttribute = class(NeonAttribute);
 
   /// <summary>
-  ///   The Neon annotation NeonAutoDetect is used to tell Neon to include properties which are not
-  ///   public, both when reading and writing objects.
+  ///   The Neon attribute NeonMembers is used to tell Neon to change the Members
+  ///   when reading/writing a specific record/object
   /// </summary>
   /// <remarks>
   ///   Read + Write Attribute
   /// </remarks>
-  NeonAutoDetectAttribute = class(NeonAttribute);
+  NeonMembersAttribute = class(NeonAttribute)
+  private
+    FValue: TNeonMembers;
+  public
+    constructor Create(const AValue: TNeonMembers);
+    property Value: TNeonMembers read FValue write FValue;
+  end;
 
   /// <summary>
-  ///   The Neon annotation NeonInclude tells Neon only to include properties under certain
-  ///   circumstances. For instance, that properties should only be included if they are non-null,
-  ///   non-empty, or have non-default values.
+  ///   The Neon attribute NeonMembersType is used to tell Neon to change the Visibility
+  ///   when reading/writing a specific record/object
+  /// </summary>
+  /// <remarks>
+  ///   Read + Write Attribute
+  /// </remarks>
+  NeonVisibilityAttribute = class(NeonAttribute)
+  private
+    FValue: TNeonVisibility;
+  public
+    constructor Create(const AValue: TNeonVisibility);
+    property Value: TNeonVisibility read FValue write FValue;
+  end;
+
+  /// <summary>
+  ///   The Neon annotation NeonInclude tells Neon to include the property (or field)
   /// </summary>
   /// <remarks>
   ///   Write Attribute
   /// </remarks>
-  NeonIncludeAttribute = class(NeonNamedAttribute);
+  NeonIncludeAttribute = class(NeonAttribute);
 
   /// <summary>
-  ///   The NeonSerialize Neon annotation is used to specify a custom serializer for a field in a Delphi object. Here is an example Delphi class that uses the NeonSerialize annotation
+  ///   The NeonSerialize Neon annotation is used to specify a custom serializer for a
+  ///   field in a Delphi object.
   /// </summary>
   NeonSerializeAttribute = class(NeonAttribute);
 
   /// <summary>
   ///   The Neon annotation NeonDeserialize is used to specify a custom de-serializer class for a
-  ///   given field in a Delphi object. For instance, imagine you wanted to optimize the
-  ///   on-the-wire formatting of the boolean values false and true to 0 and 1
+  ///   given field in a Delphi object.
   /// </summary>
   NeonDeserializeAttribute = class(NeonAttribute);
 
@@ -103,7 +123,7 @@ type
   /// <summary>
   ///   The Neon annotation NeonValue tells Neon that Neon should not attempt to serialize the
   ///   object itself, but rather call a method on the object which serializes the object to a JSON
-  ///   string. Note that Neon will escape any quotation marks inside the String returned by the
+  ///   string. Neon will escape any quotation marks inside the String returned by the
   ///   custom serialization, so you cannot return e.g. a full JSON object. For that you should use
   ///   NeonRawValue instead
   /// </summary>
@@ -139,6 +159,20 @@ uses
 { NeonNamedAttribute }
 
 constructor NeonNamedAttribute.Create(const AValue: string);
+begin
+  FValue := AValue;
+end;
+
+{ NeonMembersTypeAttribute }
+
+constructor NeonMembersAttribute.Create(const AValue: TNeonMembers);
+begin
+  FValue := AValue;
+end;
+
+{ NeonVisibilityAttribute }
+
+constructor NeonVisibilityAttribute.Create(const AValue: TNeonVisibility);
 begin
   FValue := AValue;
 end;

@@ -25,6 +25,7 @@ uses
   WiRL.http.Server,
   WiRL.http.Server.Indy,
 
+  WiRL.Persistence.Types,
   WiRL.Persistence.Core,
   WiRL.Persistence.JSON,
 
@@ -171,7 +172,6 @@ begin
     finally
       LJSON.Free;
     end;
-
   finally
     LPerson.Free;
   end;
@@ -201,8 +201,8 @@ var
 begin
   Log('Integer', GetStringFromValue(TValue.From<Integer>(42)));
 
-  LRec.Uno := 'Test Test Test';
-  LRec.Due := 42;
+  LRec.One := 'Test Test Test';
+  LRec.Two := 42;
   Log('Record', GetStringFromValue(TValue.From<TMyRecord>(LRec)));
 
   SetLength(LArr, 4);
@@ -322,8 +322,8 @@ begin
   memoDeserialize.Lines.Add('Integer: ' + LInt.ToString);
 
   // Record
-  LRec.Uno := 'Test Test Test';
-  LRec.Due := 42;
+  LRec.One := 'Test Test Test';
+  LRec.Two := 42;
   LJString := GetStringFromValue(TValue.From<TMyRecord>(LRec));
   Log('Record', LJString);
 
@@ -607,9 +607,9 @@ begin
 
   // Member type settings
   if rbMemberFields.Checked then
-    Result.SetMembersType(TNeonMembersType.Fields);
+    Result.SetMembers(TNeonMembers.Fields);
   if rbMemberProperties.Checked then
-    Result.SetMembersType(TNeonMembersType.Properties);
+    Result.SetMembers(TNeonMembers.Properties);
 
   // F Prefix setting
   if chkIgnorePrefix.Checked then
@@ -669,7 +669,7 @@ begin
       .SetAppName('Content App')
       .SetResources('Server.Resources.TEntityResource')
       .ConfigureSerializer
-        .SetMembersType(TNeonMembersType.Standard)
+        .SetMembers(TNeonMembers.Standard)
         .SetVisibility([mvPublic, mvPublished])
         .SetMemberCase(TNeonCase.SnakeCase)
   ;
@@ -701,8 +701,8 @@ var
   LP2: Pointer;
   LR: TMyRecord;
 begin
-  LR.Uno := 'Paolo';
-  LR.Due := 20;
+  LR.One := 'Paolo';
+  LR.Two := 20;
 
   LValue := TValue.From<TMyRecord>(LR);
 
@@ -719,8 +719,8 @@ var
   LJSON: TJSONValue;
   LRec: TMyRecord;
 begin
-  LRec.Uno := 'Paolo';
-  LRec.Due := 47;
+  LRec.One := 'Paolo';
+  LRec.Two := 47;
 
   LJSON := TNeonMapperJSON.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
   try

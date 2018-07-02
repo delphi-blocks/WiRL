@@ -100,8 +100,8 @@ end;
 
 function TEntityResource.GetRecord: TMyRecord;
 begin
-  Result.Uno := 'First Field';
-  Result.Due := 4242;
+  Result.One := 'First Field';
+  Result.Two := 4242;
 end;
 
 function TEntityResource.ComplexClass: TPerson;

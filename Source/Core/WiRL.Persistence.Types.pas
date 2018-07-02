@@ -7,21 +7,27 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-program DemoSerialization;
+unit WiRL.Persistence.Types;
+
+interface
 
 uses
-  Forms,
-  Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
-  Server.Resources in 'Server.Resources.pas',
-  Server.Entities in 'Server.Entities.pas';
+  System.Classes, System.SysUtils, System.TypInfo;
 
-{$R *.res}
+{$SCOPEDENUMS ON}
 
-begin
-  ReportMemoryLeaksOnShutdown := True;
+type
+  ENeonException = class(Exception);
 
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TMainForm, MainForm);
-  Application.Run;
+type
+  TNeonCase = (LowerCase, UpperCase, PascalCase, CamelCase, SnakeCase, CustomCase);
+  TNeonMemberType = (Unknown, Prop, Field, Indexed);
+  TNeonMembers = (Unknown, Standard, Fields, Properties);
+  TNeonVisibility = set of TMemberVisibility;
+
+type
+  TCaseFunc = reference to function (const AString: string): string;
+
+implementation
+
 end.
