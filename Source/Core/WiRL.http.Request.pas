@@ -23,19 +23,6 @@ uses
   WiRL.http.Accept.Language;
 
 type
-  TWiRLMethod = class
-  const
-    GET = 'GET';
-    PUT = 'PUT';
-    POST = 'POST';
-    HEAD = 'HEAD';
-    DELETE = 'DELETE';
-    PATCH = 'PATCH';
-    OPTIONS = 'OPTIONS';
-    TRACE = 'TRACE';
-    CONNECT = 'CONNECT';
-  end;
-
   TWiRLRequest = class
   private
     FPathInfo: string;

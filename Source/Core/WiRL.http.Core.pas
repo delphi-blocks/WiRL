@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -11,10 +11,22 @@ unit WiRL.http.Core;
 
 interface
 
+{$SCOPEDENUMS ON}
+
 uses
   System.SysUtils, System.Classes;
 
 type
+  TWiRLHttpMethod = (GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE, CONNECT);
+
+  TWiRLHttpMethodHelper = record helper for TWiRLHttpMethod
+  public
+    class function ConvertFromString(const AMethod: string): TWiRLHttpMethod; static;
+  public
+    function ToString: string;
+    procedure FromString(const AMethod: string);
+  end;
+
   TWiRLHeaderList = class(TStringList)
   private
     function GetName(AIndex: Integer): string;
@@ -42,6 +54,9 @@ var
 function EncodingFromCharSet(const ACharset: string): TEncoding;
 
 implementation
+
+uses
+  System.TypInfo;
 
 function DefaultCharSetEncoding: TEncoding;
 begin
@@ -119,14 +134,14 @@ end;
 
 function TWiRLHeaderList.IndexOfName(const AName: string): Integer;
 var
-  i: Integer;
+  LIndex: Integer;
 begin
   Result := -1;
-  for i := 0 to Count - 1 do
+  for LIndex := 0 to Count - 1 do
   begin
-    if CompareText(GetName(i), AName) = 0 then
+    if CompareText(GetName(LIndex), AName) = 0 then
     begin
-      Exit(i);
+      Exit(LIndex);
     end;
   end;
 end;
@@ -156,6 +171,39 @@ end;
 procedure TWiRLParam.SetValue(const Name, Value: string);
 begin
   inherited Values[Name] := Value;
+end;
+
+{ TWiRLHttpMethodHelper }
+
+procedure TWiRLHttpMethodHelper.FromString(const AMethod: string);
+begin
+  Self := ConvertFromString(AMethod);
+end;
+
+class function TWiRLHttpMethodHelper.ConvertFromString(const AMethod: string): TWiRLHttpMethod;
+var
+  LRes: Integer;
+begin
+  LRes := GetEnumValue(TypeInfo(TWiRLHttpMethod), AMethod);
+  if LRes >= 0 then
+    Result := TWiRLHttpMethod(LRes)
+  else
+    raise Exception.Create('Error converting string type');
+end;
+
+function TWiRLHttpMethodHelper.ToString: string;
+begin
+  case Self of
+    TWiRLHttpMethod.GET:     Result := 'GET';
+    TWiRLHttpMethod.HEAD:    Result := 'HEAD';
+    TWiRLHttpMethod.POST:    Result := 'POST';
+    TWiRLHttpMethod.PUT:     Result := 'PUT';
+    TWiRLHttpMethod.PATCH:   Result := 'PATCH';
+    TWiRLHttpMethod.DELETE:  Result := 'DELETE';
+    TWiRLHttpMethod.OPTIONS: Result := 'OPTIONS';
+    TWiRLHttpMethod.TRACE:   Result := 'TRACE';
+    TWiRLHttpMethod.CONNECT: Result := 'CONNECT';
+  end;
 end;
 
 end.

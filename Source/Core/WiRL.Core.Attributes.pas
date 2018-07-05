@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,14 +14,20 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
   
-  WiRL.Core.Declarations, 
-  WiRL.http.Request,
+  WiRL.Core.Declarations,
+  WiRL.http.Core,
   WiRL.Core.Utils;
 
 type
 
 {$REGION 'JAX-Like Attributes'}
 
+  /// <summary>
+  ///   The Path attribute's value is a relative URL path indicating where the Delphi
+  ///   class will be hosted: for example, /helloworld. You can also embed variables in
+  ///   the URLs. For example, you could ask for the name of a user and pass it to the
+  ///   application as a variable in the URL: /helloworld/{username}.
+  /// </summary>
   PathAttribute = class(TCustomAttribute)
   private
     FValue: string;
@@ -30,51 +36,89 @@ type
     property Value: string read FValue write FValue;
   end;
 
+  /// <summary>
+  ///   Base class for all HTTP method's attributes
+  /// </summary>
   HttpMethodAttribute = class(TCustomAttribute)
   public
-    function Matches(const ARequest: TWiRLRequest): Boolean; virtual;
+    function Matches(const AMethod: string): Boolean; virtual;
     function ToString: string; override;
   end;
 
+  /// <summary>
+  ///   The GET attribute is a request method designator and corresponds to the similarly
+  ///   named HTTP method. The Delphi method annotated with this request method
+  ///   designator will process HTTP GET requests.
+  /// </summary>
   GETAttribute = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function Matches(const AMethod: string): Boolean; override;
     function ToString: string; override;
   end;
 
+  /// <summary>
+  ///   The POST attribute is a request method designator and corresponds to the
+  ///   similarly named HTTP method. The Delphi method annotated with this request method
+  ///   designator will process HTTP POST requests.
+  /// </summary>
   POSTAttribute = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function Matches(const AMethod: string): Boolean; override;
     function ToString: string; override;
   end;
 
+  /// <summary>
+  ///   The PUT attribute is a request method designator and corresponds to the similarly
+  ///   named HTTP method. The Delphi method annotated with this request method
+  ///   designator will process HTTP PUT requests.
+  /// </summary>
   PUTAttribute = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function Matches(const AMethod: string): Boolean; override;
     function ToString: string; override;
   end;
 
+  /// <summary>
+  ///   The DELETE attribute is a request method designator and corresponds to the
+  ///   similarly named HTTP method. The Delphi method annotated with this request method
+  ///   designator will process HTTP DELETE requests.
+  /// </summary>
   DELETEAttribute = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function Matches(const AMethod: string): Boolean; override;
     function ToString: string; override;
   end;
 
+  /// <summary>
+  ///   The PATCH attribute is a request method designator and corresponds to the
+  ///   similarly named HTTP method. The Delphi method annotated with this request method
+  ///   designator will process HTTP PATCH requests.
+  /// </summary>
   PATCHAttribute = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function Matches(const AMethod: string): Boolean; override;
     function ToString: string; override;
   end;
 
+  /// <summary>
+  ///   The HEAD attribute is a request method designator and corresponds to the
+  ///   similarly named HTTP method. The Delphi method annotated with this request method
+  ///   designator will process HTTP HEAD requests.
+  /// </summary>
   HEADAttribute = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function Matches(const AMethod: string): Boolean; override;
     function ToString: string; override;
   end;
 
+  /// <summary>
+  ///   The OPTIONS attribute is a request method designator and corresponds to the
+  ///   similarly named HTTP method. The Delphi method annotated with this request method
+  ///   designator will process HTTP OPTIONS requests.
+  /// </summary>
   OPTIONSAttribute = class(HttpMethodAttribute)
   public
-    function Matches(const ARequest: TWiRLRequest): Boolean; override;
+    function Matches(const AMethod: string): Boolean; override;
     function ToString: string; override;
   end;
 
@@ -110,36 +154,87 @@ type
     property Value: string read FValue write FValue;
   end;
 
+  /// <summary>
+  ///   Base class for the *Param attributes
+  /// </summary>
   MethodParamAttribute = class(TCustomAttribute)
   private
     FValue: string;
   public
     constructor Create(const AValue: string = '');
-
     property Value: string read FValue write FValue;
   end;
 
+  /// <summary>
+  ///   Binds the value of a URL template parameter or a path segment containing the
+  ///   template parameter to a resource method parameter, resource class field, or
+  ///   resource class
+  /// </summary>
   PathParamAttribute = class(MethodParamAttribute)
   private
     FParamIndex: Integer;
   public
     property ParamIndex: Integer read FParamIndex write FParamIndex;
   end;
+
+  /// <summary>
+  ///   Binds the value(s) of a HTTP query parameter to a resource method parameter,
+  ///   resource class field, or resource class entity property
+  /// </summary>
   QueryParamAttribute = class(MethodParamAttribute);
+
+  /// <summary>
+  ///   Binds the value(s) of a form parameter contained within a request entity body to
+  ///   a resource method parameter
+  /// </summary>
   FormParamAttribute = class(MethodParamAttribute);
+
+  /// <summary>
+  ///   Binds the value(s) of a HTTP header to a resource method parameter, resource
+  ///   class field, or resource class entity property
+  /// </summary>
   HeaderParamAttribute = class(MethodParamAttribute);
+
+  /// <summary>
+  ///   Binds the value of a HTTP cookie to a resource method parameter, resource class
+  ///   field, or resource class entity property.
+  /// </summary>
   CookieParamAttribute = class(MethodParamAttribute);
+
+  /// <summary>
+  ///   Binds the value of the HTTP request body to a resource method parameter,
+  ///   resource class field, or resource class entity property.
+  /// </summary>
   BodyParamAttribute = class(MethodParamAttribute)
   public
     constructor Create;
   end;
 
+  /// <summary>
+  ///   WiRL provides the Context attribute to inject a variety of resources in your
+  ///   RESTful services. Some of the most commonly injected components are HTTP headers,
+  ///   HTTP URL related information.
+  /// </summary>
   ContextAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   Base class for all auth related attributes.
+  /// </summary>
   AuthorizationAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   Specifies that all security roles are permitted to access your WiRL resources
+  /// </summary>
   PermitAllAttribute = class(AuthorizationAttribute);
+
+  /// <summary>
+  ///   Specifies that no security roles are permitted to access your WiRL resources
+  /// </summary>
   DenyAllAttribute = class(AuthorizationAttribute);
+
+  /// <summary>
+  ///   Specifies the security roles that are permitted to access your WiRL resources
+  /// </summary>
   RolesAllowedAttribute = class(AuthorizationAttribute)
   private
     FRoles: TStringList;
@@ -151,6 +246,10 @@ type
     property Roles: TStringList read FRoles;
   end;
 
+  /// <summary>
+  ///   This attribute tells WiRL not to destroy the resulting object because it's a
+  ///   "global" object.
+  /// </summary>
   SingletonAttribute = class(TCustomAttribute);
 
   AsyncResponseAttribute = class(TCustomAttribute);
@@ -322,7 +421,7 @@ end;
 
 { HttpMethodAttribute }
 
-function HttpMethodAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
+function HttpMethodAttribute.Matches(const AMethod: string): Boolean;
 begin
   Result := False;
 end;
@@ -334,86 +433,86 @@ end;
 
 { GETAttribute }
 
-function GETAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
+function GETAttribute.Matches(const AMethod: string): Boolean;
 begin
-  Result := ARequest.Method = TWiRLMethod.GET;
+  Result := AMethod = TWiRLHttpMethod.GET.ToString;
 end;
 
 function GETAttribute.ToString: string;
 begin
-  Result := TWiRLMethod.GET;
+  Result := TWiRLHttpMethod.GET.ToString;
 end;
 
 { POSTAttribute }
 
-function POSTAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
+function POSTAttribute.Matches(const AMethod: string): Boolean;
 begin
-  Result := ARequest.Method = TWiRLMethod.POST;
+  Result := AMethod = TWiRLHttpMethod.POST.ToString;
 end;
 
 function POSTAttribute.ToString: string;
 begin
-  Result := TWiRLMethod.POST;
+  Result := TWiRLHttpMethod.POST.ToString;
 end;
 
 { PUTAttribute }
 
-function PUTAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
+function PUTAttribute.Matches(const AMethod: string): Boolean;
 begin
-  Result := ARequest.Method = TWiRLMethod.PUT;
+  Result := AMethod = TWiRLHttpMethod.PUT.ToString;
 end;
 
 function PUTAttribute.ToString: string;
 begin
-  Result := TWiRLMethod.PUT;
+  Result := TWiRLHttpMethod.PUT.ToString;
 end;
 
 { DELETEAttribute }
 
-function DELETEAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
+function DELETEAttribute.Matches(const AMethod: string): Boolean;
 begin
-  Result := ARequest.Method = TWiRLMethod.DELETE;
+  Result := AMethod = TWiRLHttpMethod.DELETE.ToString;
 end;
 
 function DELETEAttribute.ToString: string;
 begin
-  Result := TWiRLMethod.DELETE;
+  Result := TWiRLHttpMethod.DELETE.ToString;
 end;
 
 { PATCHAttribute }
 
-function PATCHAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
+function PATCHAttribute.Matches(const AMethod: string): Boolean;
 begin
-  Result := ARequest.Method = TWiRLMethod.PATCH;
+  Result := AMethod = TWiRLHttpMethod.PATCH.ToString;
 end;
 
 function PATCHAttribute.ToString: string;
 begin
-  Result := TWiRLMethod.PATCH;
+  Result := TWiRLHttpMethod.PATCH.ToString;
 end;
 
 { HEADAttribute }
 
-function HEADAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
+function HEADAttribute.Matches(const AMethod: string): Boolean;
 begin
-  Result := ARequest.Method = TWiRLMethod.HEAD;
+  Result := AMethod = TWiRLHttpMethod.HEAD.ToString;
 end;
 
 function HEADAttribute.ToString: string;
 begin
-  Result := TWiRLMethod.HEAD;
+  Result := TWiRLHttpMethod.HEAD.ToString;
 end;
 
 { OPTIONSAttribute }
 
-function OPTIONSAttribute.Matches(const ARequest: TWiRLRequest): Boolean;
+function OPTIONSAttribute.Matches(const AMethod: string): Boolean;
 begin
-  Result := ARequest.Method = 'OPTIONS';
+  Result := AMethod = TWiRLHttpMethod.OPTIONS.ToString;
 end;
 
 function OPTIONSAttribute.ToString: string;
 begin
-  Result := TWiRLMethod.OPTIONS;
+  Result := TWiRLHttpMethod.OPTIONS.ToString;
 end;
 
 { PriorityAttribute }
