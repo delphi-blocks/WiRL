@@ -62,7 +62,6 @@ type
     procedure DoBeforeCommand; virtual;
     procedure DoAfterCommand; virtual;
     procedure CheckResponse;
-    procedure Loaded; override;
 {$IFDEF HAS_SYSTEM_THREADING}
     property WorkerTask: ITask read FWorkerTask;
 {$ENDIF}
@@ -168,16 +167,19 @@ end;
 
 function TWiRLClient.GetClientImplementation: TObject;
 begin
+  CreateHttpClient;
   Result := FHttpClient.ClientImplementation;
 end;
 
 function TWiRLClient.GetRequest: TWiRLRequest;
 begin
+  CreateHttpClient;
   Result := FHttpClient.Request;
 end;
 
 function TWiRLClient.GetResponse: TWiRLResponse;
 begin
+  CreateHttpClient;
   Result := FHttpClient.Response;
 end;
 
@@ -189,6 +191,7 @@ end;
 
 procedure TWiRLClient.InitHttpClient;
 begin
+  CreateHttpClient;
   FHttpClient.ProxyParams := FProxyParams;
   FHttpClient.ConnectTimeout := ConnectTimeout;
   FHttpClient.ReadTimeout := ReadTimeout;
@@ -206,13 +209,8 @@ end;
 
 function TWiRLClient.LastCmdSuccess: Boolean;
 begin
-  Result := FHttpClient.Response.StatusCode = 200;
-end;
-
-procedure TWiRLClient.Loaded;
-begin
-  inherited;
   CreateHttpClient;
+  Result := FHttpClient.Response.StatusCode = 200;
 end;
 
 procedure TWiRLClient.Delete(const AURL: string; AResponseContent: TStream);
@@ -280,6 +278,7 @@ end;
 
 function TWiRLClient.ResponseText: string;
 begin
+  CreateHttpClient;
   Result := FHttpClient.Response.ReasonString;
 end;
 
