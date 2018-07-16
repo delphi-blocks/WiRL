@@ -13,7 +13,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
-  
+
   WiRL.Core.Declarations,
   WiRL.http.Core,
   WiRL.Core.Utils;
@@ -279,6 +279,40 @@ type
 
 {$REGION 'WiRL-specific Attributes'}
 
+  /// <summary>
+  ///   The <b>ResponseStatus</b> attribute marks a method with the status <b>Code</b>
+  ///   and <b>Reason</b> that should be returned. <br />The status code is applied to
+  ///   the HTTP response when the handler method is invoked and overrides status
+  ///   information set by other means
+  /// </summary>
+  /// <remarks>
+  ///   Borrowed from the spring's ResponseStatus annotation
+  /// </remarks>
+  ResponseStatusAttribute = class(TCustomAttribute)
+  private
+    FCode: Integer;
+    FReason: string;
+  public
+    constructor Create(ACode: Integer; const AReason: string = '');
+
+    property Code: Integer read FCode write FCode;
+    property Reason: string read FReason write FReason;
+  end;
+
+  /// <summary>
+  ///   The <b>ResponseRedirection</b> attribute marks a method with the status <b>Code</b>
+  ///    (30x) and <b>Reason</b> that should be returned. In addition sets the <b>
+  ///   Location</b> for the redirect
+  /// </summary>
+  ResponseRedirectionAttribute = class(ResponseStatusAttribute)
+  private
+    FLocation: string;
+  public
+    constructor Create(ACode: Integer; const ALocation: string; const AReason: string = '');
+
+    property Location: string read FLocation write FLocation;
+  end;
+
   LoginRequiredAttribute = class(TCustomAttribute);
 
   URLParamAttribute = class(TCustomAttribute)
@@ -351,7 +385,6 @@ end;
 
 constructor ContentTypeAttribute.Create(const AContentType: string);
 begin
-  inherited Create;
   FContentType := AContentType;
 end;
 
@@ -527,6 +560,22 @@ end;
 constructor DefaultValueAttribute.Create(const AValue: string);
 begin
   FValue := AValue;
+end;
+
+{ ResponseStatusAttribute }
+
+constructor ResponseStatusAttribute.Create(ACode: Integer; const AReason: string);
+begin
+  FCode := ACode;
+  FReason := AReason;
+end;
+
+{ ResponseRedirectionAttribute }
+
+constructor ResponseRedirectionAttribute.Create(ACode: Integer; const ALocation: string; const AReason: string = '');
+begin
+  inherited Create(ACode, AReason);
+  FLocation := ALocation;
 end;
 
 end.

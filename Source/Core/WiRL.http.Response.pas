@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -67,6 +67,9 @@ type
     procedure SendHeaders; virtual; abstract;
     destructor Destroy; override;
 
+    procedure FromWiRLStatus(AStatus: TWiRLHttpStatus);
+    procedure Redirect(ACode: Integer; const ALocation: string);
+
     property HasContentLength: Boolean read FHasContentLength;
     property Date: TDateTime read GetDate write SetDate;
     property Expires: TDateTime read GetExpires write SetExpires;
@@ -104,6 +107,17 @@ begin
   FMediaType.Free;
   FCookie.Free;
   inherited;
+end;
+
+procedure TWiRLResponse.FromWiRLStatus(AStatus: TWiRLHttpStatus);
+begin
+  StatusCode := AStatus.Code;
+
+  if not AStatus.Reason.IsEmpty then
+    ReasonString := AStatus.Reason;
+
+  if not AStatus.Location.IsEmpty then
+    Location := AStatus.Location;
 end;
 
 function TWiRLResponse.GetAllow: string;
@@ -213,6 +227,13 @@ end;
 function TWiRLResponse.GetWWWAuthenticate: string;
 begin
   Result := HeaderFields.Values['WWW-Authenticate'];
+end;
+
+procedure TWiRLResponse.Redirect(ACode: Integer; const ALocation: string);
+begin
+  Assert((ACode >= 300) and (ACode < 400), 'Redirect code must be of 300 class');
+  StatusCode := ACode;
+  Location := ALocation;
 end;
 
 procedure TWiRLResponse.SetAllow(const Value: string);

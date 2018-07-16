@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -447,17 +447,17 @@ procedure TWiRLHttpResponseIndy.SendHeaders;
   end;
 
 var
-  i :Integer;
+  LIndex :Integer;
 begin
   inherited;
   FResponseInfo.Date := GMTToLocalDateTime(HeaderFields['Date']);
   FResponseInfo.CustomHeaders.Clear;
 
-  for i := 0 to HeaderFields.Count - 1 do
+  for LIndex := 0 to HeaderFields.Count - 1 do
   begin
-    if IsIndyHeader(HeaderFields.Names[i]) then
+    if IsIndyHeader(HeaderFields.Names[LIndex]) then
       Continue;
-    FResponseInfo.CustomHeaders.Add(HeaderFields.Strings[i]);
+    FResponseInfo.CustomHeaders.Add(HeaderFields.Strings[LIndex]);
   end;
   if ContentType <> '' then
     ContentMediaType.Parse(ContentType);

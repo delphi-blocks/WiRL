@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Generics.Collections, System.Rtti,
   System.TypInfo,
 
+  WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Context,
@@ -86,6 +87,7 @@ type
     FAuth: TWiRLMethodAuthorization;
     FFilters: TWiRLFilterList;
     FAllAttributes: TArray<TCustomAttribute>;
+    FStatus: TWiRLHttpStatus;
 
     procedure ProcessAttributes;
   public
@@ -104,6 +106,8 @@ type
     property Consumes: TMediaTypeList read FConsumes;
     property Produces: TMediaTypeList read FProduces;
     property Filters: TWiRLFilterList read FFilters;
+    property Status: TWiRLHttpStatus read FStatus write FStatus;
+
     property AllAttributes: TArray<TCustomAttribute> read FAllAttributes;
 
     property RttiObject: TRttiMethod read FRttiMethod;
@@ -346,7 +350,7 @@ begin
     else if IsFilter(LAttribute) then
     begin
       FFilters.Add(TWiRLFilter.Create(LAttribute));
-    end;
+    end
   end;
 end;
 
@@ -395,6 +399,7 @@ begin
   FProduces := TMediaTypeList.Create;
   FFilters := TWiRLFilterList.Create(True);
   FAuth := TWiRLMethodAuthorization.Create;
+  FStatus := TWiRLHttpStatus.Create;
   FMethodResult := TWiRLMethodResult.Create(FRttiMethod.ReturnType);
 
   FIsFunction := Assigned(FRttiMethod.ReturnType);
@@ -404,6 +409,7 @@ end;
 
 destructor TWiRLResourceMethod.Destroy;
 begin
+  FStatus.Free;
   FAuth.Free;
   FFilters.Free;
   FMethodResult.Free;
@@ -444,6 +450,7 @@ end;
 procedure TWiRLResourceMethod.ProcessAttributes;
 var
   LAttribute: TCustomAttribute;
+  LStatus: ResponseStatusAttribute;
   LMediaList: TArray<string>;
   LMedia: string;
 begin
@@ -505,7 +512,25 @@ begin
     else if IsFilter(LAttribute) then
     begin
       FFilters.Add(TWiRLFilter.Create(LAttribute));
-    end;
+    end
+
+    // ResponseRedirection
+    else if LAttribute is ResponseRedirectionAttribute then
+    begin
+      LStatus := (LAttribute as ResponseStatusAttribute);
+      FStatus.Code := LStatus.Code;
+      FStatus.Reason := LStatus.Reason;
+      FStatus.Location := (LStatus as ResponseRedirectionAttribute).Location;
+    end
+
+    // ResponseStatus
+    else if LAttribute is ResponseStatusAttribute then
+    begin
+      LStatus := (LAttribute as ResponseStatusAttribute);
+      FStatus.Code := LStatus.Code;
+      FStatus.Reason := LStatus.Reason;
+    end
+
   end;
 end;
 
