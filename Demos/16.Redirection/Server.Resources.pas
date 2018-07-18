@@ -19,11 +19,15 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.MessageBody.Default,
   WiRL.http.Core,
+  WiRL.http.Response,
   WiRL.http.Accept.MediaType;
 
 type
   [Path('demo_resource')]
   TDemoResource = class
+  private
+    // Inject the Response only if you need RunTime redirection
+    [Context] Response: TWiRLResponse;
   public
     [GET, Produces(TMediaType.TEXT_PLAIN)]
     [ResponseRedirection(TWiRLHttpStatus.MOVED_PERMANENTLY, '/rest/app/demo_resource/destination')]
@@ -35,6 +39,9 @@ type
 
     [GET, Path('destination'), Produces(TMediaType.TEXT_PLAIN)]
     function DemoDestinationMethod: string;
+
+    [GET, Path('runtime'), Produces(TMediaType.TEXT_PLAIN)]
+    function RunTimeRedirect: string;
   end;
 
 implementation
@@ -46,6 +53,15 @@ uses
 function TDemoResource.InsertEntity: string;
 begin
   Result := 'Entity created (Status 201)';
+end;
+
+function TDemoResource.RunTimeRedirect: string;
+begin
+  Result := 'RunTime Redirection';
+
+  // Write a real condition here!!
+  if True then
+    Response.Redirect(301, '/rest/app/demo_resource/destination');
 end;
 
 function TDemoResource.DemoDestinationMethod: string;
