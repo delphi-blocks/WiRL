@@ -50,8 +50,8 @@ type
     // 3xx Redirection
     MULTIPLE_CHOICES                = 300;
     MOVED_PERMANENTLY               = 301;
+    MOVED_TEMPORARILY               = 302;  // Deprecated
     FOUND                           = 302;
-    MOVED_TEMPORARILY               = 302;
     SEE_OTHER                       = 303;
     NOT_MODIFIED                    = 304;
     USE_PROXY                       = 305;

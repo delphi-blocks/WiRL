@@ -17,6 +17,7 @@ uses
   System.SysUtils, System.Classes,
 
   WiRL.Core.Attributes,
+  WiRL.Core.Validators,
   WiRL.Core.MessageBody.Default,
   WiRL.http.Core,
   WiRL.http.Response,
@@ -42,6 +43,13 @@ type
 
     [GET, Path('runtime'), Produces(TMediaType.TEXT_PLAIN)]
     function RunTimeRedirect: string;
+
+   [GET, Path('/browse')]
+   [Produces(TMediaType.TEXT_PLAIN)]
+   function MaxwellBrowse([QueryParam('id'), NotNull('ID parameter required.')] id,
+       [QueryParam('root'), NotNull('root parameter required.')] root,
+       [QueryParam('item'), NotNull('item parameter required.')] item: string): string;
+
   end;
 
 implementation
@@ -53,6 +61,11 @@ uses
 function TDemoResource.InsertEntity: string;
 begin
   Result := 'Entity created (Status 201)';
+end;
+
+function TDemoResource.MaxwellBrowse(id, root, item: string): string;
+begin
+  Result := Format('%s, %s, %s', [id, root, item]);
 end;
 
 function TDemoResource.RunTimeRedirect: string;

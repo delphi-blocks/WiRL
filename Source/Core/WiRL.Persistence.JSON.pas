@@ -275,6 +275,8 @@ begin
     tkRecord:
     begin
       Result := WriteRecord(AValue);
+      if not Assigned(Result) then
+        Result := TJSONObject.Create;
     end;
 
     tkInterface:
@@ -365,8 +367,8 @@ begin
           if Assigned(LJSONValue) then
             (AResult as TJSONObject).AddPair(GetNameFromMember(LNeonMember), LJSONValue);
         except
-          LogError(Format('Error converting property [%s] [%s type] of object [%s]',
-            [LNeonMember.Name, LNeonMember.RttiType.Name, AType.Name]));
+          LogError(Format('Error converting property [%s] of object [%s]',
+            [LNeonMember.Name, AType.Name]));
         end;
       end;
     end;
@@ -388,7 +390,7 @@ begin
 
   LType := TRttiHelper.Context.GetType(LObject.ClassType);
 
-  WriteMembers(LType,  LObject, Result);
+  WriteMembers(LType, LObject, Result);
 end;
 
 function TNeonSerializerJSON.WriteEnumerable(const AValue: TValue): TJSONValue;
@@ -464,8 +466,11 @@ var
 begin
   Result := TJSONObject.Create;
   LType := TRttiHelper.Context.GetType(AValue.TypeInfo);
-
-  WriteMembers(LType, AValue.GetReferenceToRawData, Result);
+  try
+    WriteMembers(LType, AValue.GetReferenceToRawData, Result);
+  except
+    FreeAndNil(Result);
+  end;
 end;
 
 function TNeonSerializerJSON.WriteSet(const AValue: TValue): TJSONValue;

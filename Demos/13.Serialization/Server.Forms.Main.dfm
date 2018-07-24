@@ -2211,6 +2211,24 @@ object MainForm: TMainForm
       end
     end
   end
+  object btnSerFilterObject: TButton
+    Left = 8
+    Top = 444
+    Width = 131
+    Height = 25
+    Caption = 'FilterObject'
+    TabOrder = 22
+    OnClick = btnSerFilterObjectClick
+  end
+  object btnDesFilterObject: TButton
+    Left = 487
+    Top = 444
+    Width = 131
+    Height = 25
+    Caption = 'FilterObject'
+    TabOrder = 23
+    OnClick = btnDesFilterObjectClick
+  end
   object MainActionList: TActionList
     Left = 408
     Top = 24
@@ -2237,7 +2255,7 @@ object MainForm: TMainForm
     Left = 648
     Top = 40
     Content = {
-      414442530F004133AC010000FF00010001FF02FF030400120000006400730050
+      414442530F004933AC010000FF00010001FF02FF030400120000006400730050
       006500720073006F006E007300050000000000060000070032000000080000FF
       09FF0A0400080000004E0061006D0065000B00010000000D000C000E00320000
       000F00011000011100011200011300011400011500080000004E0061006D0065

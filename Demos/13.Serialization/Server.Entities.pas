@@ -13,6 +13,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections,
+  System.Math, System.Math.Vectors, System.Types,
 
   WiRL.Persistence.Types,
   WiRL.Persistence.Attributes;
@@ -128,16 +129,50 @@ type
     FPrivateField: Double;
     FFirstProp: Integer;
     FSecondXProp: string;
-    FThirdProp: TDateTime;
+    FThirdPascalCaseProp: TDateTime;
+    FDefProp: Integer;
+
+    [NeonInclude, NeonMembers(TNeonMembers.Fields)]
+    FirstRecord: TMyRecord;
   public
     class function DefaultValues: TCaseClass;
   public
-    [NeonInclude, NeonMembers(TNeonMembers.Fields)]
-    FirstRecord: TMyRecord;
+    property DefProp: Integer read FDefProp write FDefProp;
+
     property FirstProp: Integer read FFirstProp write FFirstProp;
+
     property SecondXProp: string read FSecondXProp write FSecondXProp;
-    property ThirdProp: TDateTime read FThirdProp write FThirdProp;
+    property ThirdPascalCaseProp: TDateTime read FThirdPascalCaseProp write FThirdPascalCaseProp;
   end;
+
+  TFilterClass = class
+  private
+    FProp1: Integer;
+    FProp2: string;
+    FProp3: TDateTime;
+    FProp4: TPoint3D;
+
+    FProp5: TVector3D;
+
+    [NeonInclude]
+    Field1: TArray<TDateTime>;
+
+    [NeonIncludeIf('ShouldInclude')]
+    Field2: TRect;
+  public
+    function ShouldInclude(const AName: string): Boolean;
+  public
+    class function DefaultValues: TFilterClass;
+
+    property Prop1: Integer read FProp1 write FProp1;
+    property Prop2: string read FProp2 write FProp2;
+    property Prop3: TDateTime read FProp3 write FProp3;
+    [NeonIgnore]
+    property Prop4: TPoint3D read FProp4 write FProp4;
+    [NeonIncludeIf('ShouldInclude')]
+    property Prop5: TVector3D read FProp5 write FProp5;
+  end;
+
 
 implementation
 
@@ -256,12 +291,47 @@ end;
 class function TCaseClass.DefaultValues: TCaseClass;
 begin
   Result := TCaseClass.Create;
+  Result.DefProp := 12399;
   Result.FPrivateField := 3.1415926535;
   Result.FirstRecord.One := 'Record text field';
   Result.FirstRecord.Two := Random(1000);
   Result.FirstProp := Random(1000);
   Result.SecondXProp := 'ABCDEFG';
-  Result.ThirdProp := EncodeDate(2018, Random(11)+1, Random(27)+1);
+  Result.ThirdPascalCaseProp := EncodeDate(2018, Random(11)+1, Random(27)+1);
+end;
+
+{ TFilterClass }
+
+class function TFilterClass.DefaultValues: TFilterClass;
+begin
+  Result := Create;
+
+  Result.Field1 := [Now, Now+1, Now+2, Now+3];
+  Result.Field2 := TRect.Create(11, 22, 33, 44);
+  Result.Prop1 := 42;
+  Result.Prop2 := 'Paolo';
+  Result.Prop3 := Now;
+  Result.Prop4 := TPoint3D.Create(10, 20, 30);
+  Result.Prop5 := TVector3D.Create(40, 50, 60);
+end;
+
+function TFilterClass.ShouldInclude(const AName: string): Boolean;
+begin
+  Result := False;
+
+  // You can filter by the member name
+  if SameText(AName, 'Prop5') then
+  begin
+    // And you can filter on additional conditions
+    if Prop5.X > Prop5.Y then
+      Result := True;
+  end
+  // You can reuse (only if you want) the same function for several members
+  else if SameText(AName, 'Field1') then
+  begin
+    Result := True;
+  end;
+
 end;
 
 end.
