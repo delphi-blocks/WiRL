@@ -639,6 +639,9 @@ begin
       Continue;
     end;
 
+    if LMember.NeonIgnore then
+      Continue;
+
     case LMember.NeonIncludeIf of
       TNeonIncludeOption.Include:
       begin
