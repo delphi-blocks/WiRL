@@ -145,6 +145,7 @@ type
     property ThirdPascalCaseProp: TDateTime read FThirdPascalCaseProp write FThirdPascalCaseProp;
   end;
 
+  {$RTTI EXPLICIT METHODS([vcPrivate])}
   TFilterClass = class
   private
     FProp1: Integer;
@@ -159,8 +160,8 @@ type
 
     [NeonIncludeIf('ShouldInclude')]
     Field2: TRect;
-  public
-    function ShouldInclude(const AName: string): Boolean;
+  private
+    function ShouldInclude(const AContext: TNeonIgnoreIfContext): Boolean;
   public
     class function DefaultValues: TFilterClass;
 
@@ -315,19 +316,19 @@ begin
   Result.Prop5 := TVector3D.Create(40, 50, 60);
 end;
 
-function TFilterClass.ShouldInclude(const AName: string): Boolean;
+function TFilterClass.ShouldInclude(const AContext: TNeonIgnoreIfContext): Boolean;
 begin
   Result := False;
 
   // You can filter by the member name
-  if SameText(AName, 'Prop5') then
+  if SameText(AContext.MemberName, 'Prop5') then
   begin
     // And you can filter on additional conditions
     if Prop5.X > Prop5.Y then
       Result := True;
   end
   // You can reuse (only if you want) the same function for several members
-  else if SameText(AName, 'Field1') then
+  else if SameText(AContext.MemberName, 'Field1') then
   begin
     Result := True;
   end;

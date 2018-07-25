@@ -99,6 +99,8 @@ type
     /// </summary>
     function WriteDataMember(const AValue: TValue): TJSONValue;
   public
+    constructor Create(const AConfig: INeonConfiguration);
+
     /// <summary>
     ///   Serialize any Delphi type into a JSONValue, the Delphi type must be passed as a TValue
     /// </summary>
@@ -135,6 +137,8 @@ type
 
     function ReadDataMember(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
   public
+    constructor Create(const AConfig: INeonConfiguration);
+
     procedure JSONToObject(AObject: TObject; AJSON: TJSONValue);
     function JSONToTValue(AJSON: TJSONValue; AType: TRttiType): TValue; overload;
     function JSONToTValue(AJSON: TJSONValue; AType: TRttiType; const AData: TValue): TValue; overload;
@@ -169,6 +173,12 @@ uses
   WiRL.Core.Utils;
 
 { TNeonSerializerJSON }
+
+constructor TNeonSerializerJSON.Create(const AConfig: INeonConfiguration);
+begin
+  inherited Create(AConfig);
+  FOperation := TNeonOperation.Serialize;
+end;
 
 function TNeonSerializerJSON.ObjectToJSON(AObject: TObject): TJSONValue;
 begin
@@ -532,6 +542,14 @@ end;
 function TNeonSerializerJSON.WriteVariant(const AValue: TValue): TJSONValue;
 begin
   Result := TJSONString.Create(AValue.AsString);
+end;
+
+{ TNeonDeserializerJSON }
+
+constructor TNeonDeserializerJSON.Create(const AConfig: INeonConfiguration);
+begin
+  inherited Create(AConfig);
+  FOperation := TNeonOperation.Deserialize;
 end;
 
 { TNeonDeserializerJSON }

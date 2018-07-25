@@ -24,8 +24,17 @@ type
   TNeonMemberType = (Unknown, Prop, Field, Indexed);
   TNeonMembers = (Unknown, Standard, Fields, Properties);
   TNeonVisibility = set of TMemberVisibility;
+  TNeonIncludeOption = (Default, Include, Exclude);
+  TNeonOperation = (Serialize, Deserialize);
+
+  TNeonIgnoreIfContext = record
+  public
+    MemberName: string;
+    Operation: TNeonOperation;
+  end;
 
 type
+  TNeonIgnoreCallback = function(const AContext: TNeonIgnoreIfContext): Boolean of object;
   TCaseFunc = reference to function (const AString: string): string;
 
 implementation
