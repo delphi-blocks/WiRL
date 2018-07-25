@@ -466,7 +466,7 @@ end;
 
 procedure TNeonRttiMember.ProcessAttribute(AAttribute: TCustomAttribute);
 var
-  LArgs: array of TValue;
+  LContext: TNeonIgnoreIfContext;
   LMethodName: string;
   LMethod: TRttiMethod;
   LRes: TValue;
@@ -478,8 +478,8 @@ begin
     LMethod := FParent.FType.GetMethod(LMethodName);
     if Assigned(LMethod) then
     begin
-      LArgs := [Self.Name, TValue.From<TNeonOperation>(FOperation)];
-      LRes := LMethod.Invoke(TObject(FParent.Instance), LArgs);
+      LContext := TNeonIgnoreIfContext.Create(Self.Name, FOperation);
+      LRes := LMethod.Invoke(TObject(FParent.Instance), [TValue.From<TNeonIgnoreIfContext>(LContext)]);
       case LRes.AsType<Boolean> of
         True: FNeonIncludeIf := TNeonIncludeOption.Include;
         False: FNeonIncludeIf := TNeonIncludeOption.Exclude;

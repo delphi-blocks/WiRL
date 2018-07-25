@@ -31,6 +31,7 @@ type
   public
     MemberName: string;
     Operation: TNeonOperation;
+    constructor Create(const AMemberName: string; AOperation: TNeonOperation);
   end;
 
 type
@@ -38,5 +39,13 @@ type
   TCaseFunc = reference to function (const AString: string): string;
 
 implementation
+
+{ TNeonIgnoreIfContext }
+
+constructor TNeonIgnoreIfContext.Create(const AMemberName: string; AOperation: TNeonOperation);
+begin
+  MemberName := AMemberName;
+  Operation := AOperation;
+end;
 
 end.

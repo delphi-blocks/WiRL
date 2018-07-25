@@ -541,7 +541,7 @@ end;
 
 function TNeonSerializerJSON.WriteVariant(const AValue: TValue): TJSONValue;
 begin
-  Result := TJSONString.Create(AValue.AsString);
+  Result := TJSONString.Create(AValue.AsVariant);
 end;
 
 { TNeonDeserializerJSON }
@@ -952,7 +952,6 @@ function TNeonDeserializerJSON.ReadVariant(AJSONValue: TJSONValue; AType: TRttiT
 begin
 
 end;
-
 
 function TNeonDeserializerJSON.JSONToArray(AJSON: TJSONValue; AType: TRttiType): TValue;
 begin
