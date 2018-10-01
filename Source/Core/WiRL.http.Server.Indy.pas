@@ -14,7 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.SyncObjs,
   IdContext, IdCookie, IdCustomHTTPServer, IdHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
-  IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
+  IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI, IdResourceStringsProtocols,
   WiRL.Core.Classes,
   WiRL.http.Core,
   WiRL.http.Cookie,
@@ -61,7 +61,7 @@ type
   private
     FContext: TIdContext;
     FResponseInfo: TIdHTTPResponseInfo;
-    FCustomHeaders :TStrings;
+    FCustomHeaders: TStrings;
     procedure SendCookies;
   protected
     function GetContent: string; override;
@@ -72,6 +72,7 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
+    function GetUnknownResponseCode: string; override;
   public
     procedure SendHeaders; override;
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
@@ -102,7 +103,6 @@ type
     constructor Create(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
     destructor Destroy; override;
   end;
-
 
 implementation
 
@@ -407,6 +407,11 @@ end;
 function TWiRLHttpResponseIndy.GetStatusCode: Integer;
 begin
   Result := FResponseInfo.ResponseNo;
+end;
+
+function TWiRLHttpResponseIndy.GetUnknownResponseCode: string;
+begin
+  Result := RSHTTPUnknownResponseCode;
 end;
 
 procedure TWiRLHttpResponseIndy.SendCookies;

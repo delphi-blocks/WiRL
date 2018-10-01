@@ -54,6 +54,7 @@ type
     procedure SetContentLanguage(const Value: string);
     function GetCookies: TWiRLCookies;
   protected
+    function GetUnknownResponseCode: string; virtual; abstract;
     function GetHeaderFields: TWiRLHeaderList;
     function GetContent: string; virtual; abstract;
     function GetContentStream: TStream; virtual; abstract;
@@ -69,6 +70,7 @@ type
 
     procedure FromWiRLStatus(AStatus: TWiRLHttpStatus);
     procedure Redirect(ACode: Integer; const ALocation: string);
+    procedure SetNonStandardReasonString(const AValue: string);
 
     property HasContentLength: Boolean read FHasContentLength;
     property Date: TDateTime read GetDate write SetDate;
@@ -291,6 +293,12 @@ end;
 procedure TWiRLResponse.SetLocation(const Value: string);
 begin
   HeaderFields.Values['Location'] := Value;
+end;
+
+procedure TWiRLResponse.SetNonStandardReasonString(const AValue: string);
+begin
+  if (ReasonString = '') or (ReasonString = GetUnknownResponseCode) then
+    ReasonString := Avalue;
 end;
 
 procedure TWiRLResponse.SetRawContent(const Value: TBytes);
