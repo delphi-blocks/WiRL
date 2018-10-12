@@ -62,8 +62,7 @@ type
 implementation
 
 uses
-  System.TypInfo, System.StrUtils, System.DateUtils, System.Masks,
-  WiRL.Core.Exceptions;
+  System.TypInfo, System.StrUtils, System.DateUtils, System.Masks;
 
 function StreamToString(AStream: TStream): string;
 var
