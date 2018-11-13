@@ -50,6 +50,7 @@ type
     procedure SetListener(AValue: IWiRLListener);
     function GetServerImplementation: TObject;
 
+
     constructor Create;
     destructor Destroy; override;
   end;

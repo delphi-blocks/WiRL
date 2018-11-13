@@ -28,6 +28,12 @@ uses
   WiRL.http.URL;
 
 type
+  TWiRLAuthResponse = record
+    HttpStatus: Integer;
+    HttpReason: string;
+    HttpFollowLink: string;
+  end;
+
   TWiRLAuthPrincipal = class
   private
     FPassword: string;
@@ -43,7 +49,9 @@ type
   public
     Success: Boolean;
     Roles: TArray<string>;
+    CustomResponse: TWiRLAuthResponse;
     function RolesAsString: string;
+    class function DefaultResult: TWiRLAuthResult; static;
   end;
 
   /// <summary>
@@ -84,6 +92,8 @@ type
     const ERR_BASIC_MALFORMED = 'Malformed (basic) credentials';
     const ERR_BASIC_HEADER = 'Auhtorization header incorrect';
     const AUTH_BASIC = 'Basic ';
+  protected
+    function ExtractData(const AAuth: string): TArray<string>;
   public
     [POST, Produces(TMediaType.APPLICATION_JSON)]
     function DoLogin([HeaderParam('Authorization')] const AAuth: string): TJSONObject;
@@ -140,30 +150,47 @@ end;
 
 function TWiRLAuthBasicResource.DoLogin(const AAuth: string): TJSONObject;
 var
-  LAuthField: string;
   LAuthOperation: TWiRLAuthResult;
   LAuthData: TArray<string>;
+begin
+  FAuthContext.Clear;
+
+  LAuthData := ExtractData(AAuth);
+  LAuthOperation := Authenticate(LAuthData[0], LAuthData[1]);
+
+  FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
+
+  if not LAuthOperation.Success then
+  begin
+    if LAuthOperation.CustomResponse.HttpReason.IsEmpty then
+    begin
+      raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
+    end
+    else
+      raise EWiRLWebApplicationException.Create(
+        LAuthOperation.CustomResponse.HttpReason,
+        LAuthOperation.CustomResponse.HttpStatus,
+        [Pair.S('follow-link', LAuthOperation.CustomResponse.HttpFollowLink)]
+      );
+  end;
+
+  FAuthContext.Generate(FApplication.Secret);
+  Result := GetGeneratedToken;
+end;
+
+function TWiRLAuthBasicResource.ExtractData(const AAuth: string): TArray<string>;
+var
+  LAuthField: string;
 begin
   if not AAuth.StartsWith(AUTH_BASIC) then
     raise EWiRLNotAuthorizedException.Create(ERR_BASIC_HEADER, Self.ClassName, 'DoLogin');
 
   LAuthField := AAuth.Substring(AUTH_BASIC.Length);
   LAuthField := TBase64.Decode(LAuthField);
-  LAuthData := LAuthField.Split([':']);
+  Result := LAuthField.Split([':']);
 
-  if Length(LAuthData) < 2 then
+  if Length(Result) < 2 then
     raise EWiRLNotAuthorizedException.Create(ERR_BASIC_MALFORMED, Self.ClassName, 'DoLogin');
-
-  FAuthContext.Clear;
-  LAuthOperation := Authenticate(LAuthData[0], LAuthData[1]);
-
-  FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
-
-  if not LAuthOperation.Success then
-    raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
-
-  FAuthContext.Generate(FApplication.Secret);
-  Result := GetGeneratedToken;
 end;
 
 { TWiRLAuthBodyResource }
@@ -185,6 +212,15 @@ begin
 end;
 
 { TWiRLAuthResult }
+
+class function TWiRLAuthResult.DefaultResult: TWiRLAuthResult;
+begin
+  Result.Success := False;
+  Result.Roles := [];
+  Result.CustomResponse.HttpStatus := 0;
+  Result.CustomResponse.HttpReason := '';
+  Result.CustomResponse.HttpFollowLink := '';
+end;
 
 function TWiRLAuthResult.RolesAsString: string;
 var

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -100,8 +100,8 @@ end;
 
 function TEntityResource.GetRecord: TMyRecord;
 begin
-  Result.Uno := 'First Field';
-  Result.Due := 4242;
+  Result.One := 'First Field';
+  Result.Two := 4242;
 end;
 
 function TEntityResource.ComplexClass: TPerson;

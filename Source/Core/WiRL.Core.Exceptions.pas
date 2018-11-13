@@ -320,7 +320,7 @@ begin
     LWebException := E as EWiRLWebApplicationException;
 
     AContext.Response.StatusCode := LWebException.Status;
-    AContext.Response.ReasonString := LWebException.Message;
+    AContext.Response.SetNonStandardReasonString(LWebException.Message);
     AContext.Response.Content := LWebException.ToJSON;
     AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
 
@@ -331,7 +331,7 @@ begin
   else if E is Exception then
   begin
     AContext.Response.StatusCode := 500;
-    AContext.Response.ReasonString := E.Message;
+    AContext.Response.SetNonStandardReasonString(E.Message);
     AContext.Response.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
     AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
   end;

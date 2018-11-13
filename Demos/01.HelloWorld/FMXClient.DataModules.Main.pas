@@ -14,10 +14,10 @@ interface
 uses
   System.SysUtils, System.Classes, WiRL.Client.CustomResource,
   WiRL.Client.Resource, WiRL.Client.Resource.JSON, WiRL.Client.Application,
-  WiRL.http.Client, WiRL.http.Client.Indy, WiRL.Client.SubResource,
+  WiRL.http.Client, WiRL.Client.SubResource,
   WiRL.Client.SubResource.JSON, WiRL.Client.Messaging.Resource,
   WiRL.http.Request, WiRL.http.Response,
-  System.JSON, IdHTTP;
+  System.JSON, System.Net.HttpClient.Win;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -47,6 +47,12 @@ implementation
 
 uses
   FMXClient.Forms.Main,
+
+  {$IFDEF HAS_NETHTTP_CLIENT}
+  WiRL.http.Client.NetHttp,
+  {$ELSE}
+  WiRL.http.Client.Indy,
+  {$ENDIF}
 
   WiRL.Rtti.Utils,
   WiRL.Core.JSON;

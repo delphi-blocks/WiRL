@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit WiRL.Core.MessageBodyReader;
+
+{$I WiRL.inc}
 
 interface
 
@@ -188,11 +190,11 @@ begin
     if LEntry.Consumes.Contains(AMediaType) and
        LEntry.IsReadable(AParam, AParam.GetAttributes, AMediaType) then
     begin
-      {$IFNDEF DelphiXE7_UP}
+      {$IFDEF HAS_NEW_ARRAY}
+      LCompatibleEntries := LCompatibleEntries + [LEntry];
+      {$ELSE}
       SetLength(LCompatibleEntries, Length(LCompatibleEntries) + 1);
       LCompatibleEntries[High(LCompatibleEntries)] := LEntry;
-      {$ELSE}
-      LCompatibleEntries := LCompatibleEntries + [LEntry];
       {$ENDIF}
     end;
   end;

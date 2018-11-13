@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -250,7 +250,7 @@ function TWiRLApplication.AddResource(const AResource: string): Boolean;
       var
         LURL: TWiRLURL;
       begin
-        LURL := TWiRLURL.CreateDummy(AAttribute.Value);
+        LURL := TWiRLURL.MockURL(AAttribute.Value);
         try
           if not FResourceRegistry.ContainsKey(LURL.PathTokens[0]) then
           begin

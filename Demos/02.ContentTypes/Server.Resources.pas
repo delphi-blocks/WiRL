@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit Server.Resources;
+
+{$I WiRL.inc}
 
 interface
 
@@ -68,8 +70,6 @@ type
 
     [GET, Path('/int')]
     function GetInteger: Integer;
-
-
   end;
 
 implementation
@@ -123,7 +123,13 @@ end;
 
 function TSampleResource.DataSets: TArray<TDataset>;
 begin
+  {$IFDEF HAS_NEW_ARRAY}
   Result := [DataSet1, DataSet2];
+  {$ELSE}
+  SetLength(Result, 2);
+  Result[0] := DataSet1;
+  Result[1] := DataSet2;
+  {$ENDIF}
 end;
 
 function TSampleResource.GetInteger: Integer;
@@ -164,7 +170,14 @@ end;
 
 function TSampleResource.SimpleArray: TArray<Integer>;
 begin
+  {$IFDEF HAS_NEW_ARRAY}
   Result := [23, 44, 567];
+  {$ELSE}
+  SetLength(Result, 3);
+  Result[0] := 23;
+  Result[1] := 44;
+  Result[2] := 567;
+  {$ENDIF}
 end;
 
 function TSampleResource.HelloWorld_TEXT: string;

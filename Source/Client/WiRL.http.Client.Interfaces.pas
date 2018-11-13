@@ -91,13 +91,15 @@ type
   protected
     class function GetInstance: TWiRLClientRegistry; static; inline;
   protected
+    FDefaultClass: TClass;
     function GetDefaultClass: TClass;
+    procedure SetDefaultClass(AClass: TClass);
   public
     constructor Create; virtual;
-    function CreateClient(const AName: string): IWiRLClient;
     class property Instance: TWiRLClientRegistry read GetInstance;
 
-    procedure RegisterClient<T: class>(const AName: string);
+    function CreateClient(const AName: string): IWiRLClient;
+    procedure RegisterClient<T: class>(const AName: string; ADefault: Boolean =  False);
   end;
 
 implementation
@@ -131,6 +133,8 @@ function TWiRLClientRegistry.GetDefaultClass: TClass;
 var
   LClassList: TArray<TPair<string,TClass>>;
 begin
+  if Assigned(FDefaultClass) then
+    Exit(FDefaultClass);
   LClassList := Self.ToArray;
   Result := LClassList[0].Value;
 end;
@@ -140,7 +144,7 @@ begin
   Result := TWiRLClientRegistrySingleton.Instance;
 end;
 
-procedure TWiRLClientRegistry.RegisterClient<T>(const AName: string);
+procedure TWiRLClientRegistry.RegisterClient<T>(const AName: string; ADefault: Boolean = False);
 begin
   if not Supports(TClass(T), IWiRLClient) then
     raise EWiRLException.Create(
@@ -148,6 +152,13 @@ begin
     );
 
   Self.Add(AName, TClass(T));
+  if ADefault then
+    SetDefaultClass(TClass(T));
+end;
+
+procedure TWiRLClientRegistry.SetDefaultClass(AClass: TClass);
+begin
+  FDefaultClass := AClass;
 end;
 
 { TWiRLProxyConnectionInfo }

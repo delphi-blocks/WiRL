@@ -4,11 +4,11 @@
 <a href="http://wirl.delphiblocks.com/">
 <img src="http://wirl.delphiblocks.com/assets/images/wirl-300.png" alt="Delphi RESTful Library" width="200" align="center" /></a>
 
-**WiRL** was created to simplify RESTful service implementation in Delphi, but more importantly, to enable maximum interoperability with REST client written in other languages and tools.
+**WiRL** was created to simplify RESTful service implementation in Delphi but, more importantly, to enable maximum interoperability with REST clients written in other languages and tools.
 
-WiRL is designed after Java JAX-RS specifications, and tries to be compliant with the 6 REST constraints
+WiRL takes after Java JAX-RS specifications and tries to be compliant with the 6 REST constraints
 
-WiRL is a high-level REST framework that exposes plain Delphi objects (PODO) as RESTful web resources by applying [attributes](http://docwiki.embarcadero.com/RADStudio/Seattle/en/Overview_of_Attributes) to these classes.
+WiRL is a high-level REST framework exposing plain Delphi objects (PODO) as RESTful web resources by applying [attributes](http://docwiki.embarcadero.com/RADStudio/Seattle/en/Overview_of_Attributes) to these classes.
 
 ```Delphi
 [Path('customers')]

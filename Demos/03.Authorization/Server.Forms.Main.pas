@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit Server.Forms.Main;
+
+{$I WiRL.inc}
 
 interface
 
@@ -77,7 +79,7 @@ begin
         .SetAppName('Auth Application')
         .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
         .SetClaimsClass(TServerClaims)
-      {$IF CompilerVersion >=28} //XE7
+      {$IFDEF HAS_NEW_ARRAY}
         .SetResources([
           'Server.Resources.TFormAuthResource',
           'Server.Resources.TBasicAuthResource',
@@ -88,10 +90,10 @@ begin
         .SetResources(
           'Server.Resources.TFormAuthResource,' +
           'Server.Resources.TBasicAuthResource,' +
-          'Server.Resources.TBodyAuthResource',
+          'Server.Resources.TBodyAuthResource,' +
           'Server.Resources.TUserResource'
         );
-      {$IFEND}
+      {$ENDIF}
 
   if not FServer.Active then
     FServer.Active := True;

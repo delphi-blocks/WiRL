@@ -267,7 +267,9 @@ begin
     if Assigned(ABeforeExecute) then
       ABeforeExecute();
 
-    Client.Head(URL, Accept, ContentType);
+    Client.Request.Accept := Accept;
+    Client.Request.ContentType := ContentType;
+    Client.Head(URL);
 
     AfterHEAD();
 
@@ -298,7 +300,9 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-      Client.Options(URL, Accept, ContentType, LResponseStream);
+      Client.Request.Accept := Accept;
+      Client.Request.ContentType := ContentType;
+      Client.Options(URL, LResponseStream);
 
       AfterOPTIONS();
 
@@ -331,7 +335,9 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-      Client.Delete(URL, Accept, ContentType, LResponseStream);
+      Client.Request.Accept := Accept;
+      Client.Request.ContentType := ContentType;
+      Client.Delete(URL, LResponseStream);
 
       AfterDELETE();
 
@@ -372,7 +378,9 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-        Client.Get(URL, Accept, ContentType, LResponseStream);
+        Client.Request.Accept := Accept;
+        Client.Request.ContentType := ContentType;
+        Client.Get(URL, LResponseStream);
 
         AfterGET();
 
@@ -471,7 +479,9 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Patch(URL, Accept, ContentType, LContent, LResponseStream);
+        Client.Request.Accept := Accept;
+        Client.Request.ContentType := ContentType;
+        Client.Patch(URL, LContent, LResponseStream);
 
         AfterPATCH();
 
@@ -512,7 +522,9 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Post(URL, Accept, ContentType, LContent, LResponseStream);
+        Client.Request.Accept := Accept;
+        Client.Request.ContentType := ContentType;
+        Client.Post(URL, LContent, LResponseStream);
 
         AfterPOST();
 
@@ -572,7 +584,9 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Put(URL, Accept, ContentType, LContent, LResponseStream);
+        Client.Request.Accept := Accept;
+        Client.Request.ContentType := ContentType;
+        Client.Put(URL, LContent, LResponseStream);
 
         AfterPUT();
 

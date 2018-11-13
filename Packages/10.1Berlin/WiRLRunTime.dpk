@@ -51,7 +51,8 @@ requires
   IndyProtocols,
   IndyCore,
   bindengine,
-  bindcomp;
+  bindcomp,
+  soaprtl;
 
 contains
   WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
@@ -116,7 +117,8 @@ contains
   WiRL.http.Client.Interfaces in '..\..\Source\Client\WiRL.http.Client.Interfaces.pas',
   WiRL.http.Client in '..\..\Source\Client\WiRL.http.Client.pas',
   WiRL.http.Server.Interfaces in '..\..\Source\Core\WiRL.http.Server.Interfaces.pas',
-  WiRL.http.FileSystemEngine in '..\..\Source\Core\WiRL.http.FileSystemEngine.pas';
+  WiRL.http.FileSystemEngine in '..\..\Source\Core\WiRL.http.FileSystemEngine.pas',
+  WiRL.http.Client.NetHttp in '..\..\Source\Client\WiRL.http.Client.NetHttp.pas';
 
 end.
 

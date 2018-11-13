@@ -210,7 +210,7 @@ begin
     TFireDACJSONPersistor.DataSetsToJSON(LDataSets, LJSON);
     LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
     try
-      LStreamWriter.Write(LJSON.ToJSON);
+      LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally
       LStreamWriter.Free;
     end;

@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit Server.Resources;
+
+{$I WiRL.inc}
 
 interface
 
@@ -222,12 +224,12 @@ begin
   Result.City := ACity;
   Result.ZipCode := AZip;
 
-  {$IF CompilerVersion >= 28} //XE7
+  {$IFDEF HAS_NEW_ARRAY}
   FAddresses := FAddresses + [Result];
   {$ELSE}
   SetLength(FAddresses, Length(FAddresses) + 1);
-  FAddresses[Length(FAddresses)] := Result;
-  {$IFEND}
+  FAddresses[Length(FAddresses) - 1] := Result;
+  {$ENDIF}
 end;
 
 constructor TUserInfo.Create;

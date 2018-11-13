@@ -83,17 +83,4 @@ object MainForm: TMainForm
       OnExecute = TestActionExecute
     end
   end
-  object WiRLServer1: TWiRLServer
-    Active = False
-    Left = 336
-    Top = 96
-  end
-  object WiRLFileSystemEngine1: TWiRLFileSystemEngine
-    BasePath = '/'
-    EngineName = 'WiRL FileSystemEngine'
-    Server = WiRLServer1
-    RootFolder = '{AppPath}\www'
-    Left = 352
-    Top = 160
-  end
 end

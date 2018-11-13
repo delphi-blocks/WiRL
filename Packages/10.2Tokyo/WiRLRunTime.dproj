@@ -7,7 +7,7 @@
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Package</AppType>
         <FrameworkType>None</FrameworkType>
-        <ProjectVersion>18.2</ProjectVersion>
+        <ProjectVersion>18.4</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -156,50 +156,7 @@
         <DCCReference Include="..\..\Source\Client\WiRL.http.Client.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Interfaces.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.FileSystemEngine.pas"/>
-        <RcItem Include="..\..\media\TWiRLClient.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClient</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientApplication.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientApplication</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientMessagingResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientMessagingResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResourceJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResourceStream</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResourceJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResourceStream</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientToken.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientToken</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLFDResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLFDResource</ResourceId>
-        </RcItem>
+        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.NetHttp.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -230,12 +187,6 @@
                 <Platform value="Win32">True</Platform>
             </Platforms>
             <Deployment Version="3">
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLRunTime240.bpl" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>WiRLRunTime.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
                         <Overwrite>true</Overwrite>
@@ -253,6 +204,12 @@
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgsqlite3.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\WiRLRunTime250.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>WiRLRunTime.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

@@ -2010,7 +2010,7 @@ object MainForm: TMainForm
     Top = 289
     Width = 131
     Height = 25
-    Caption = 'btnDesGenericList'
+    Caption = 'GenericList'
     TabOrder = 17
     OnClick = btnDesGenericListClick
   end
@@ -2019,7 +2019,7 @@ object MainForm: TMainForm
     Top = 320
     Width = 131
     Height = 25
-    Caption = 'btnDesGenericObjectList'
+    Caption = 'GenericObjectList'
     TabOrder = 18
     OnClick = btnDesGenericObjectListClick
   end
@@ -2054,8 +2054,11 @@ object MainForm: TMainForm
       Top = 0
       Width = 224
       Height = 42
+      Hint = 'Standard: FIelds for records, Properties for Objects'
       Align = alLeft
-      Caption = 'Member Type '
+      Caption = 'Members '
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
       object rbMemberStandard: TRadioButton
         Left = 8
@@ -2064,6 +2067,8 @@ object MainForm: TMainForm
         Height = 17
         Caption = 'Standard'
         Checked = True
+        ParentShowHint = False
+        ShowHint = False
         TabOrder = 0
         TabStop = True
       end
@@ -2206,6 +2211,24 @@ object MainForm: TMainForm
       end
     end
   end
+  object btnSerFilterObject: TButton
+    Left = 8
+    Top = 444
+    Width = 131
+    Height = 25
+    Caption = 'FilterObject'
+    TabOrder = 22
+    OnClick = btnSerFilterObjectClick
+  end
+  object btnDesFilterObject: TButton
+    Left = 487
+    Top = 444
+    Width = 131
+    Height = 25
+    Caption = 'FilterObject'
+    TabOrder = 23
+    OnClick = btnDesFilterObjectClick
+  end
   object MainActionList: TActionList
     Left = 408
     Top = 24
@@ -2232,7 +2255,7 @@ object MainForm: TMainForm
     Left = 648
     Top = 40
     Content = {
-      414442530F00F92DAC010000FF00010001FF02FF030400120000006400730050
+      414442530F004933AC010000FF00010001FF02FF030400120000006400730050
       006500720073006F006E007300050000000000060000070032000000080000FF
       09FF0A0400080000004E0061006D0065000B00010000000D000C000E00320000
       000F00011000011100011200011300011400011500080000004E0061006D0065

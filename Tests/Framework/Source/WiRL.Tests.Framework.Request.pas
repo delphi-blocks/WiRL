@@ -1,5 +1,7 @@
 unit WiRL.Tests.Framework.Request;
 
+{$I WiRL.inc}
+
 interface
 
 uses
@@ -289,11 +291,11 @@ end;
 procedure TTestRequest.TestRawContent;
 var
   LBuffer: TBytes;
-  {$IF CompilerVersion <=28} //XE7
+  {$IFDEF HAS_NEW_ARRAY}
   LRawContent: TBytes;
-  {$IFEND}
+  {$ENDIF}
 begin
-  {$IF CompilerVersion >28} //XE7
+  {$IFDEF HAS_NEW_ARRAY}
     FRequest.RawContent := [0, 22, 65, 200];
   {$ELSE}
     SetLength(LRawContent, 4);
@@ -302,7 +304,7 @@ begin
     LRawContent[2] := 65;
     LRawContent[3] := 200;
     FRequest.RawContent := LRawContent;
-  {$IFEND}
+  {$ENDIF}
 
   Assert.AreEqual(4, Integer(FRequest.ContentStream.Size), 'Some bytes has been lost');
   FRequest.ContentStream.Position := 0;
