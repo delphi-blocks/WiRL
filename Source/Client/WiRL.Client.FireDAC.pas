@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit WiRL.Client.FireDAC;
 
+{$I ..\Core\WiRL.inc}
+
 interface
 
 uses
@@ -45,8 +47,11 @@ type
     property Item[Index: Integer]: TWiRLFDResourceDatasetsItem read GetItem;
   end;
 
-
+  {$IFDEF HAS_NEW_PIDS}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
+  {$ELSE}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
+  {$ENDIF}
   TWiRLFDResource = class(TWiRLClientResource)
   private
     FResourceDataSets: TWiRLFDResourceDatasets;

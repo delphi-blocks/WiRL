@@ -9,7 +9,7 @@
 {******************************************************************************}
 unit WiRL.http.Client;
 
-{$I WiRL.inc}
+{$I ..\Core\WiRL.inc}
 
 interface
 
@@ -30,7 +30,11 @@ type
 
   TAfterCommandEvent = procedure (ASender: TObject; ARequest: TWiRLRequest; AResponse: TWiRLResponse) of object;
 
+  {$IFDEF HAS_NEW_PIDS}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
+  {$ELSE}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
+  {$ENDIF}
   TWiRLClient = class(TComponent)
   private
   const

@@ -12,14 +12,17 @@
   {$DEFINE HAS_NETHTTP_CLIENT}
 {$IFEND}
 
-{$IF CompilerVersion >= 30} // Delphi 10 Seattle
+{$IF CompilerVersion >= 30} // Delphi 10.0 Seattle
   {$DEFINE HAS_HMAC_HASH}
   {$DEFINE HAS_GENERIC_CREATE}
 {$IFEND}
 
-{$IF CompilerVersion >= 31} // Delphi 10 Berlin
+{$IF CompilerVersion >= 31} // Delphi 10.1 Berlin
   {$DEFINE HAS_UTF8CHAR}
   {$DEFINE NO_ARRAY_HELPER_BUG}
 {$IFEND}
 
+{$IF CompilerVersion >= 33} // Delphi 10.3 Rio
+  {$DEFINE HAS_NEW_PIDS}
+{$IFEND}
 
