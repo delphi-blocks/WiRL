@@ -41,8 +41,6 @@ type
     procedure StopServerActionUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-  private
-    FServer: TWiRLServer;
   public
     procedure Log(const AMsg :string);
   end;
@@ -67,26 +65,6 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  // Create http server
-  FServer := TWiRLServer.Create(nil);
-
-  // Server configuration
-  FServer
-    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    // Engine configuration
-    .AddEngine<TWiRLEngine>('/rest')
-      .SetEngineName('WiRL Filters Demo')
-
-      // Application configuration
-      .AddApplication('/app')
-        .SetAppName('Filter App')
-        .SetWriters('*')
-        .SetReaders('*')
-        .SetFilters('*')
-        .SetResources(
-          'Server.Resources.TFilterDemoResource')
-  ;
-
   StartServerAction.Execute;
 end;
 

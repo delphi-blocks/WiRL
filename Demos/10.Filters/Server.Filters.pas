@@ -26,9 +26,14 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.http.Filters.Compression,
 
-  Server.Filters.Attributes, Server.Forms.Main;
+  Server.Filters.Attributes,
+  Server.Forms.Main;
 
 type
+  /// <summary>
+  ///   Logger Filter (Demo). This filter will log the Request's params before WiRL
+  ///   starts to process the http request
+  /// </summary>
   [PreMatching]
   TRequestLoggerFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
   private
@@ -38,7 +43,10 @@ type
     constructor Create(MainForm: TMainForm);
   end;
 
-  [PreMatching]
+  /// <summary>
+  ///   This filter will log the response after WiRL has finished processing the request
+  ///   (it's a response filter)
+  /// </summary>
   TResponseLoggerFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
   private
     FMainForm: TMainForm;
@@ -47,21 +55,30 @@ type
     constructor Create(MainForm: TMainForm);
   end;
 
+  /// <summary>
+  ///   This filter shows how to abort a request (WiRL will skip entirely the process)
+  /// </summary>
   [PreMatching]
   TAbortTest = class(TInterfacedObject, IWiRLContainerRequestFilter)
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
+  /// <summary>
+  ///   This filter shows how to change the priority
+  /// </summary>
   [Priority(TWiRLPriorities.USER)] // Default priority
   TRequestCheckerFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
   private
-//    [Context] FAuth: TWiRLAuthContext;
     [Context] FApplication: TWiRLApplication;
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
+  /// <summary>
+  ///   This class shows how to create a custom filter that you can apply to a single
+  ///   resource
+  /// </summary>
   [PoweredByWiRL]
   TResponsePoweredByFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
   public
