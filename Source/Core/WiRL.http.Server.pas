@@ -107,7 +107,7 @@ type
   public
     function AddEngine<T: constructor, TWiRLCustomEngine>(const ABasePath: string; AOwnsObjects: Boolean = True) :T; overload;
     procedure AddEngine(const ABasePath: string; AEngine: TWiRLCustomEngine; AOwnsObjects: Boolean = True); overload;
-    function AddEngines(AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLServer;
+    function AddEngines(AEngines: TArray<TWiRLCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLServer;
     procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
     procedure RemoveEngine(const ABasePath: string); overload;
     function GetEngine(const Url: string): TWiRLCustomEngine;
@@ -156,9 +156,9 @@ begin
 end;
 
 function TWiRLServer.AddEngines(
-  AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean): TWiRLServer;
+  AEngines: TArray<TWiRLCustomEngine>; AOwnsObjects: Boolean): TWiRLServer;
 var
-  LEngine: TWirlCustomEngine;
+  LEngine: TWiRLCustomEngine;
 begin
   for LEngine in AEngines do
     AddEngine(LEngine.BasePath, LEngine, AOwnsObjects);
@@ -230,7 +230,7 @@ end;
 procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
 var
   LContext: TWiRLContext;
-  LEngine: TWirlCustomEngine;
+  LEngine: TWiRLCustomEngine;
 begin
   inherited;
   LContext := TWiRLContext.Create;

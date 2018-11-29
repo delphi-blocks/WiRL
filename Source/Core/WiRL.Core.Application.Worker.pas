@@ -75,6 +75,7 @@ type
     // Filters handling
     function ApplyRequestFilters: Boolean;
     procedure ApplyResponseFilters;
+
     // HTTP Request handling
     procedure HandleRequest;
   end;
@@ -489,8 +490,7 @@ begin
   FContext.AuthContext := nil;
 end;
 
-function TWiRLApplicationWorker.HasRowConstraints(
-  const AAttrArray: TAttributeArray): Boolean;
+function TWiRLApplicationWorker.HasRowConstraints(const AAttrArray: TAttributeArray): Boolean;
 var
   LAttr: TCustomAttribute;
 begin

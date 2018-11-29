@@ -25,6 +25,12 @@ uses
   WiRL.http.Accept.MediaType;
 
 type
+  [NameBinding]
+  ContentEncodingAttribute = class(TCustomAttribute);
+
+  [NameBinding]
+  ContentDecodingAttribute = class(TCustomAttribute);
+
   /// <summary>
   ///   Base class for the encoding/decoding filters, only to introduce Encoding header
   ///   values
