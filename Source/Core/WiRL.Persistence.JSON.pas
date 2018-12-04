@@ -34,6 +34,7 @@ type
     function WriteEnum(const AValue: TValue): TJSONValue;
     function WriteInteger(const AValue: TValue): TJSONValue;
     function WriteFloat(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for Variant types
     /// </summary>
@@ -41,10 +42,12 @@ type
     ///   The variant will be written as string
     /// </remarks>
     function WriteVariant(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for static and dynamic arrays
     /// </summary>
     function WriteArray(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for the set type
     /// </summary>
@@ -53,6 +56,7 @@ type
     /// </remarks>
     /// <returns>[First,Second,Third]</returns>
     function WriteSet(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for a record type
     /// </summary>
@@ -60,10 +64,12 @@ type
     ///   For records the engine serialize the fields by default
     /// </remarks>
     function WriteRecord(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for a standard TObject (descendants)  type (no list, stream or streamable)
     /// </summary>
     function WriteObject(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for an Interface type
     /// </summary>
@@ -71,14 +77,17 @@ type
     ///   The object that implements the interface is serialized
     /// </remarks>
     function WriteInterface(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for TStream (descendants) objects
     /// </summary>
     function WriteStream(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for TDataSet (descendants) objects
     /// </summary>
     function WriteDataSet(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for "Enumerable" objects (Lists, Generic Lists, TStrings, etc...)
     /// </summary>
@@ -86,6 +95,15 @@ type
     ///   Objects must have GetEnumerator, Clear, Add methods
     /// </remarks>
     function WriteEnumerable(const AValue: TValue): TJSONValue;
+
+    /// <summary>
+    ///   Writer for "Dictionary" objects (TDictionary, TObjectDictionary)
+    /// </summary>
+    /// <remarks>
+    ///   Objects must have Keys, Values, GetEnumerator, Clear, Add methods
+    /// </remarks>
+    function WriteEnumerableMap(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Writer for "Streamable" objects
     /// </summary>
@@ -105,6 +123,7 @@ type
     ///   Serialize any Delphi type into a JSONValue, the Delphi type must be passed as a TValue
     /// </summary>
     function ValueToJSON(const AValue: TValue): TJSONValue;
+
     /// <summary>
     ///   Serialize any Delphi objects into a JSONValue
     /// </summary>
@@ -134,6 +153,8 @@ type
 
     function ReadStreamable(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
     function ReadEnumerable(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
+    function ReadEnumerableMap(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): Boolean;
+
 
     function ReadDataMember(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
   public
@@ -259,7 +280,9 @@ begin
         Result := WriteStream(AValue)
       else
       begin
-        Result := WriteEnumerable(AValue);
+        Result := WriteEnumerableMap(AValue);
+        if not Assigned(Result) then
+          Result := WriteEnumerable(AValue);
         if not Assigned(Result) then
           Result := WriteStreamable(AValue);
         if not Assigned(Result) then
@@ -470,6 +493,45 @@ begin
   end;
 end;
 
+function TNeonSerializerJSON.WriteEnumerableMap(const AValue: TValue): TJSONValue;
+var
+  LObject: TObject;
+  LJSONName: string;
+  LKeyValue, LValValue: TValue;
+  LJSONValue: TJSONValue;
+
+  LMap: IDynamicMap;
+begin
+  Result := nil;
+  LObject := AValue.AsObject;
+  if not Assigned(LObject) then
+    Exit(TJSONNull.Create);
+
+  LMap := TDynamicMap.GuessType(LObject);
+  if not Assigned(LMap) then
+    Exit;
+
+  case LMap.GetKeyType.TypeKind  of
+    tkChar, tkWChar,
+    tkString, tkLString,
+    tkWString, tkUString: ;
+  else
+    Exit(TJSONNull.Create);
+  end;
+
+  Result := TJSONObject.Create;
+  while LMap.MoveNext do
+  begin
+    LKeyValue := LMap.CurrentKey;
+    LValValue := LMap.CurrentValue;
+
+    LJSONName := LKeyValue.AsString;
+    LJSONValue := WriteDataMember(LValValue);
+
+    (Result as TJSONObject).AddPair(LJSONName, LJSONValue);
+  end;
+end;
+
 function TNeonSerializerJSON.WriteRecord(const AValue: TValue): TJSONValue;
 var
   LType: TRttiType;
@@ -657,7 +719,9 @@ begin
         Result := ReadStream(AJSONValue, AType, AData)
       else
       begin
-        if ReadEnumerable(AJSONValue, AType, AData) then
+        if ReadEnumerableMap(AJSONValue, AType, AData) then
+          Result := AData
+        else if ReadEnumerable(AJSONValue, AType, AData) then
           Result := AData
         else if ReadStreamable(AJSONValue, AType, AData) then
           Result := AData
@@ -732,8 +796,8 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadEnumerable(AJSONValue: TJSONValue; AType:
-    TRttiType; const AData: TValue): Boolean;
+function TNeonDeserializerJSON.ReadEnumerable(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): Boolean;
 var
   LItemValue: TValue;
   LList: IDynamicList;
@@ -760,6 +824,46 @@ begin
       LItemValue := ReadDataMember(LJSONItem, LItemType, LItemValue);
 
       LList.Add(LItemValue);
+    end;
+  end;
+end;
+
+function TNeonDeserializerJSON.ReadEnumerableMap(AJSONValue: TJSONValue;
+  AType: TRttiType; const AData: TValue): Boolean;
+var
+  LMap: IDynamicMap;
+  LEnum: TJSONPairEnumerator;
+  LKeyType, LValueType: TRttiType;
+
+  procedure NewItemFromPair(APair: TJSONPair);
+  var
+    LKey, LValue: TValue;
+  begin
+    LKey := LMap.NewKey;
+    LKey := ReadDataMember(APair.JsonString, LKeyType, LKey);
+
+    LValue := LMap.NewValue;
+    LValue := ReadDataMember(APair.JsonValue, LValueType, LValue);
+
+    LMap.Add(LKey, LValue);
+  end;
+
+begin
+  Result := False;
+  LMap := TDynamicMap.GuessType(AData.AsObject);
+  if Assigned(LMap) then
+  begin
+    Result := True;
+    LKeyType := LMap.GetKeyType;
+    LValueType := LMap.GetValueType;
+    LMap.Clear;
+
+    LEnum := (AJSONValue as TJSONObject).GetEnumerator;
+    try
+      while LEnum.MoveNext do
+        NewItemFromPair(LEnum.Current);
+    finally
+      LEnum.Free;
     end;
   end;
 end;

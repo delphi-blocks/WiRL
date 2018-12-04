@@ -89,6 +89,8 @@ type
     chkVisibilityPublished: TCheckBox;
     btnSerFilterObject: TButton;
     btnDesFilterObject: TButton;
+    btnSerDictionary: TButton;
+    btnDesDictionary: TButton;
     procedure btnSerDataSetClick(Sender: TObject);
     procedure btnSerComplexObjectClick(Sender: TObject);
     procedure btnSerSimpleTypesClick(Sender: TObject);
@@ -98,6 +100,7 @@ type
     procedure btnSerImageClick(Sender: TObject);
     procedure btnDesSimpleTypesClick(Sender: TObject);
     procedure btnDesDataSetClick(Sender: TObject);
+    procedure btnDesDictionaryClick(Sender: TObject);
     procedure btnDesFilterObjectClick(Sender: TObject);
     procedure btnDesGenericListClick(Sender: TObject);
     procedure btnDesGenericObjectListClick(Sender: TObject);
@@ -106,6 +109,7 @@ type
     procedure btnDesStreamablePropClick(Sender: TObject);
     procedure btnStreamablePropClick(Sender: TObject);
     procedure btnDesSimpleObjectClick(Sender: TObject);
+    procedure btnSerDictionaryClick(Sender: TObject);
     procedure btnSerSimpleObjectClick(Sender: TObject);
     procedure btnSerFilterObjectClick(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
@@ -162,6 +166,11 @@ begin
     LPerson.AddAddress('Parma', 'Italy');
     LPerson.Note.Date := Now;
     LPerson.Note.Text := 'Note Text';
+
+    LPerson.Map.Add('first', TNote.Create(Now, 'First Object'));
+    LPerson.Map.Add('second', TNote.Create(Now, 'Second Object'));
+    LPerson.Map.Add('third', TNote.Create(Now, 'Third Object'));
+    LPerson.Map.Add('fourth', TNote.Create(Now, 'Fourth Object'));
 
     SerializeObject(LPerson);
   finally
@@ -352,6 +361,19 @@ begin
   DeserializeObject(dsPersons);
 end;
 
+procedure TMainForm.btnDesDictionaryClick(Sender: TObject);
+var
+  LMap: TDictionary<string, TNote>;
+begin
+  LMap := TObjectDictionary<string, TNote>.Create([doOwnsValues]);
+  try
+    DeserializeObject(LMap);
+    SerializeObject(LMap);
+  finally
+    LMap.Free;
+  end;
+end;
+
 procedure TMainForm.btnDesFilterObjectClick(Sender: TObject);
 var
   LObj: TFilterClass;
@@ -455,6 +477,20 @@ begin
     SerializeObject(LSimple);
   finally
     LSimple.Free;
+  end;
+end;
+
+procedure TMainForm.btnSerDictionaryClick(Sender: TObject);
+var
+  LMap: TObjectDictionary<string, TNote>;
+begin
+  LMap := TObjectDictionary<string, TNote>.Create([doOwnsValues]);
+  try
+    LMap.Add('uno', TNote.Create(Now, 'Lorem ipsum dolor sit amet'));
+    LMap.Add('due', TNote.Create(Now+0.2, 'Fusce in libero posuere'));
+    SerializeObject(LMap);
+  finally
+    LMap.Free;
   end;
 end;
 

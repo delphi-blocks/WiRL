@@ -29,6 +29,21 @@ type
     function MoveNext: Boolean;
   end;
 
+  IDynamicMap = interface(IDynamicType)
+  ['{89E60A06-C1A9-4D70-83B8-85D9B29510DB}']
+    function NewKey: TValue;
+    function NewValue: TValue;
+    function GetKeyType: TRttiType;
+    function GetValueType: TRttiType;
+    procedure Add(const AKey, AValue: TValue);
+    procedure Clear;
+    function Count: Integer;
+    // Enumerator functions
+    function CurrentKey: TValue;
+    function CurrentValue: TValue;
+    function MoveNext: Boolean;
+  end;
+
   TDynamicStream = class(TInterfacedObject, IDynamicStream)
   private
     FInstance: TObject;
@@ -67,15 +82,62 @@ type
     function MoveNext: Boolean;
   end;
 
+  TDynamicMap = class(TInterfacedObject, IDynamicMap)
+  public type
+    TEnumerator = class
+    private
+      const CURRENT_PROP = 'Current';
+      const MOVENEXT_METH = 'MoveNext';
+    private
+      FInstance: TObject;
+      FMoveNextMethod: TRttiMethod;
+      FCurrentProperty: TRttiProperty;
+    public
+      constructor Create(AMethod: TRttiMethod; AInstance: TObject);
+      destructor Destroy; override;
+    public
+      function Current: TValue;
+      function MoveNext: Boolean;
+    end;
+  private
+    FInstance: TObject;
+    FKeyType: TRttiType;
+    FValueType: TRttiType;
+    FAddMethod: TRttiMethod;
+    FClearMethod: TRttiMethod;
+    FKeyEnum: TDynamicMap.TEnumerator;
+    FValueEnum: TDynamicMap.TEnumerator;
+    FCountProp: TRttiProperty;
+
+    constructor Create(AInstance: TObject; AKeyType, AValueType: TRttiType;
+      AAddMethod, AClearMethod: TRttiMethod; ACountProp: TRttiProperty;
+      AKeyEnum, AValueEnum: TDynamicMap.TEnumerator);
+  public
+    class function GuessType(AInstance: TObject): IDynamicMap;
+    destructor Destroy; override;
+  public
+    function NewKey: TValue;
+    function NewValue: TValue;
+    function GetKeyType: TRttiType;
+    function GetValueType: TRttiType;
+    procedure Add(const AKey, AValue: TValue);
+    procedure Clear;
+    function Count: Integer;
+    // Enumerator functions
+    function CurrentKey: TValue;
+    function CurrentValue: TValue;
+    function MoveNext: Boolean;
+  end;
+
 implementation
 
 uses
+  WiRL.Persistence.Types,
   WiRL.Rtti.Utils;
 
 { TDynamicStream }
 
-constructor TDynamicStream.Create(AInstance: TObject;
-  ALoadMethod, ASaveMethod: TRttiMethod);
+constructor TDynamicStream.Create(AInstance: TObject; ALoadMethod, ASaveMethod: TRttiMethod);
 begin
   FInstance := AInstance;
   FLoadMethod := ALoadMethod;
@@ -230,6 +292,173 @@ end;
 function TDynamicList.NewItem: TValue;
 begin
   Result := TRttiHelper.CreateNewValue(FItemType);
+end;
+
+{ TDynamicMap }
+
+procedure TDynamicMap.Add(const AKey, AValue: TValue);
+begin
+  FAddMethod.Invoke(FInstance, [AKey, AValue]);
+end;
+
+procedure TDynamicMap.Clear;
+begin
+  FClearMethod.Invoke(FInstance, []);
+end;
+
+function TDynamicMap.Count: Integer;
+begin
+  Result := FCountProp.GetValue(FInstance).AsInteger;
+end;
+
+constructor TDynamicMap.Create(AInstance: TObject; AKeyType, AValueType: TRttiType;
+  AAddMethod, AClearMethod: TRttiMethod; ACountProp: TRttiProperty;
+  AKeyEnum, AValueEnum: TDynamicMap.TEnumerator);
+begin
+  FInstance := AInstance;
+  FKeyType := AKeyType;
+  FValueType := AValueType;
+  FAddMethod := AAddMethod;
+  FClearMethod := AClearMethod;
+  FKeyEnum := AKeyEnum;
+  FValueEnum := AValueEnum;
+  FCountProp := ACountProp;
+end;
+
+function TDynamicMap.CurrentKey: TValue;
+begin
+  Result := FKeyEnum.Current;
+end;
+
+function TDynamicMap.CurrentValue: TValue;
+begin
+  Result := FValueEnum.Current;
+end;
+
+destructor TDynamicMap.Destroy;
+begin
+  FKeyEnum.Free;
+  FValueEnum.Free;
+  inherited;
+end;
+
+function TDynamicMap.GetKeyType: TRttiType;
+begin
+  Result := FKeyType;
+end;
+
+function TDynamicMap.GetValueType: TRttiType;
+begin
+  Result := FValueType;
+end;
+
+class function TDynamicMap.GuessType(AInstance: TObject): IDynamicMap;
+var
+  LMapType: TRttiType;
+  LKeyType, LValType: TRttiType;
+  LKeyProp, LValProp: TRttiProperty;
+  LCountProp: TRttiProperty;
+  LAddMethod, LClearMethod: TRttiMethod;
+
+  LKeyEnumMethod, LValEnumMethod: TRttiMethod;
+  LKeyEnumObject, LValEnumObject: TObject;
+  LKeyEnum, LValEnum: TDynamicMap.TEnumerator;
+begin
+  Result := nil;
+
+  LMapType := TRttiHelper.Context.GetType(AInstance.ClassType);
+
+  // Keys & Values Enumerator
+  LKeyProp := LMapType.GetProperty('Keys');
+  if not Assigned(LKeyProp) then
+    Exit;
+
+  LValProp := LMapType.GetProperty('Values');
+  if not Assigned(LValProp) then
+    Exit;
+
+  LKeyEnumObject := LKeyProp.GetValue(AInstance).AsObject;
+  LValEnumObject := LValProp.GetValue(AInstance).AsObject;
+
+  LKeyEnumMethod := TRttiHelper.Context.GetType(LKeyEnumObject.ClassInfo).GetMethod('GetEnumerator');
+  LValEnumMethod := TRttiHelper.Context.GetType(LValEnumObject.ClassInfo).GetMethod('GetEnumerator');
+
+  LKeyEnum := TDynamicMap.TEnumerator.Create(LKeyEnumMethod, LKeyEnumObject);
+  LValEnum := TDynamicMap.TEnumerator.Create(LValEnumMethod, LValEnumObject);
+  // End Keys & Values Enumerator
+
+  LClearMethod := LMapType.GetMethod('Clear');
+  if not Assigned(LClearMethod) then
+    Exit;
+
+  LAddMethod := LMapType.GetMethod('Add');
+  if not Assigned(LAddMethod) or (Length(LAddMethod.GetParameters) <> 2) then
+    Exit;
+
+  LKeyType := LAddMethod.GetParameters[0].ParamType;
+  LValType := LAddMethod.GetParameters[1].ParamType;
+
+  LCountProp := LMapType.GetProperty('Count');
+  if not Assigned(LCountProp) then
+    Exit;
+
+  Result := TDynamicMap.Create(
+    AInstance,
+    LKeyType,
+    LValType,
+    LAddMethod,
+    LClearMethod,
+    LCountProp,
+    LKeyEnum,
+    LValEnum
+  );
+end;
+
+function TDynamicMap.MoveNext: Boolean;
+begin
+  Result := (FKeyEnum.MoveNext and FValueEnum.MoveNext);
+end;
+
+function TDynamicMap.NewKey: TValue;
+begin
+  Result := TRttiHelper.CreateNewValue(FKeyType);
+end;
+
+function TDynamicMap.NewValue: TValue;
+begin
+  Result := TRttiHelper.CreateNewValue(FValueType);
+end;
+
+{ TDynamicMap.TEnumerator }
+
+constructor TDynamicMap.TEnumerator.Create(AMethod: TRttiMethod; AInstance: TObject);
+begin
+  // Memory creation, must destroy the object
+  FInstance := AMethod.Invoke(AInstance, []).AsObject;
+
+  FCurrentProperty := TRttiHelper.Context.GetType(FInstance.ClassInfo).GetProperty(CURRENT_PROP);
+  if not Assigned(FCurrentProperty) then
+    raise ENeonException.CreateFmt('Property [%s] not found', [CURRENT_PROP]);
+
+  FMoveNextMethod := TRttiHelper.Context.GetType(FInstance.ClassInfo).GetMethod(MOVENEXT_METH);
+  if not Assigned(FMoveNextMethod) then
+    raise ENeonException.CreateFmt('Method [%s] not found', [MOVENEXT_METH]);
+end;
+
+function TDynamicMap.TEnumerator.Current: TValue;
+begin
+  Result := FCurrentProperty.GetValue(FInstance);
+end;
+
+destructor TDynamicMap.TEnumerator.Destroy;
+begin
+  FInstance.Free;
+  inherited;
+end;
+
+function TDynamicMap.TEnumerator.MoveNext: Boolean;
+begin
+  Result := FMoveNextMethod.Invoke(FInstance, []).AsBoolean;
 end;
 
 end.

@@ -90,6 +90,8 @@ type
   private
     FDate: TDateTime;
     FText: string;
+  public
+    constructor Create(ADate: TDateTime; const AText: string); overload;
   published
     property Date: TDateTime read FDate write FDate;
     property Text: string read FText write FText;
@@ -105,6 +107,7 @@ type
     FNote: TNote;
     FOptions: TMySet;
     FSurname: string;
+    FMap: TObjectDictionary<string, TNote>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -121,6 +124,8 @@ type
     property Enum: TMyEnum read FEnum write FEnum;
     property Note: TNote read FNote write FNote;
     property Options: TMySet read FOptions write FOptions;
+
+    property Map: TObjectDictionary<string, TNote> read FMap write FMap;
   end;
 
   TCaseClass = class
@@ -200,6 +205,7 @@ begin
   FDoubleProp := 56.7870988623;
   FDateProp := Now;
   FOptions := [TMyEnum.First, TMyEnum.Second, TMyEnum.Fourth];
+  FMap := TObjectDictionary<string, TNote>.Create([doOwnsValues]);
 end;
 
 destructor TPerson.Destroy;
@@ -210,6 +216,7 @@ begin
     FAddresses[LIndex].Free;
   SetLength(FAddresses, 0);
   FNote.Free;
+  FMap.Free;
   inherited;
 end;
 
@@ -333,6 +340,14 @@ begin
     Result := True;
   end;
 
+end;
+
+{ TNote }
+
+constructor TNote.Create(ADate: TDateTime; const AText: string);
+begin
+  FDate := ADate;
+  FText := AText;
 end;
 
 end.
