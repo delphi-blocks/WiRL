@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -25,6 +25,11 @@ uses
   WiRL.http.Filters;
 
 type
+  TSwaggerSchemaCompiler = class
+  public
+    class procedure SetTypeProperties(AType: TRttiObject; AJSON: TJSONObject); static;
+  end;
+
   [PreMatching]
   TSwaggerFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
   private
@@ -42,24 +47,26 @@ type
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
 
-  function ExistsInArray(AArray: TJSONArray; AValue: string): Boolean;
+  function ExistsInArray(AArray: TJSONArray; const AValue: string): Boolean;
 
 implementation
 
 uses
-  WiRL.http.Server, System.TypInfo, WiRL.Core.JSON;
+  System.TypInfo,
+  WiRL.http.Server,
+  WiRL.Core.JSON;
 
-function ExistsInArray(AArray: TJSONArray; AValue: string): Boolean;
-  var
-    LValue: TJSONValue;
+function ExistsInArray(AArray: TJSONArray; const AValue: string): Boolean;
+var
+  LValue: TJSONValue;
+begin
+  for LValue in AArray do
   begin
-    for LValue in AArray do
-    begin
-      if LValue.Value.Equals(AValue) then
-        Exit(True);
-    end;
-    Result := False;
+    if LValue.Value.Equals(AValue) then
+      Exit(True);
   end;
+  Result := False;
+end;
 
 { TSwaggerFilter }
 
@@ -80,7 +87,7 @@ end;
 procedure TSwaggerFilter.AddResource(APaths: TJSONObject;
   AApplication: TWiRLApplication; LResource: TClass);
 
-  function FindOrCreatePath(APaths: TJSONObject; const AResourcePath: string) :TJSONObject;
+  function FindOrCreatePath(APaths: TJSONObject; const AResourcePath: string): TJSONObject;
   begin
     Result := APaths.GetValue(AResourcePath) as TJSONObject;
     if not Assigned(Result) then
@@ -89,7 +96,7 @@ procedure TSwaggerFilter.AddResource(APaths: TJSONObject;
       APaths.AddPair(AResourcePath, Result);
     end;
   end;
-  
+
 var
   LMethodPath: string;
   LResourcePath: string;
@@ -166,26 +173,13 @@ begin
   ASwagger.AddPair('paths', LPaths);
 end;
 
-procedure TSwaggerFilter.AddOperation(AJsonPath: TJSONObject; 
+procedure TSwaggerFilter.AddOperation(AJsonPath: TJSONObject;
   const AMethodName: string; AResourceMethod: TRttiMethod);
 
-
-  function GetTypeName(ATypeKind: TTypeKind): string;
+  function CreateResponseSchema(AResourceMethod: TRttiMethod): TJSONObject;
   begin
-    case ATypeKind of
-      tkInteger: Result :=  'integer';
-      tkFloat: Result := 'number';
-      tkInt64: Result := 'integer';
-      tkClass: Result := 'object';
-      tkDynArray, tkArray: Result := 'array';
-    else
-      Result := 'string';
-    end;
-  end;
-
-  function CreateResponseSchema(AResourceMethod: TRttiMethod) :TJSONObject;
-  begin
-    Result := TJSONObject.Create(TJSONPair.Create('type', GetTypeName(AResourceMethod.ReturnType.TypeKind)));
+    Result := TJSONObject.Create;
+    TSwaggerSchemaCompiler.SetTypeProperties(AResourceMethod.ReturnType, Result);
   end;
 
   function FindOrCreateOperation(APath: TJSONObject; const AMethodName: string) :TJSONObject;
@@ -217,7 +211,7 @@ begin
     LOperation.AddPair('summary', AResourceMethod.Name);
 
   LProduces := LOperation.GetValue('produces') as TJSONArray;
-  TRttiHelper.HasAttribute<ProducesAttribute>(AResourceMethod, 
+  TRttiHelper.HasAttribute<ProducesAttribute>(AResourceMethod,
     procedure (AAttr: ProducesAttribute)
     begin
       if not Assigned(LProduces) then
@@ -233,7 +227,7 @@ begin
   );
 
   LConsumes := LOperation.GetValue('consumes') as TJSONArray;
-  TRttiHelper.HasAttribute<ConsumesAttribute>(AResourceMethod, 
+  TRttiHelper.HasAttribute<ConsumesAttribute>(AResourceMethod,
     procedure (AAttr: ConsumesAttribute)
     begin
       if not Assigned(LConsumes) then
@@ -261,7 +255,7 @@ begin
       LParameter := CreateParameter(LRttiParameter);
       if Assigned(LParameter) then
         LParameters.Add(LParameter);
-    end;  
+    end;
   end;
 
   if not Assigned(LOperation.GetValue('responses')) then
@@ -276,8 +270,7 @@ begin
   end;
 end;
 
-function TSwaggerFilter.CreateParameter(
-  ARttiParameter: TRttiParameter): TJSONObject;
+function TSwaggerFilter.CreateParameter(ARttiParameter: TRttiParameter): TJSONObject;
 
   function GetParamPosition(ARttiParameter: TRttiParameter): string;
   begin
@@ -291,19 +284,8 @@ function TSwaggerFilter.CreateParameter(
       Result := 'header'
     else if TRttiHelper.HasAttribute<BodyParamAttribute>(ARttiParameter) then
       Result := 'body'
-    else 
-      Result := ''
-  end;
-
-  function GetParamType(ARttiParameter: TRttiParameter): string;
-  begin
-    case ARttiParameter.ParamType.TypeKind of
-      tkInteger: Result :=  'integer';
-      tkFloat: Result := 'number';
-      tkInt64: Result := 'integer';
     else
-      Result := 'string';
-    end;
+      Result := ''
   end;
 
   function GetParamSchema(ARttiParameter: TRttiParameter): TJSONObject;
@@ -321,17 +303,18 @@ begin
   if LParamType <> '' then
   begin
     LParameter := TJSONObject.Create;
+
     LParameter.AddPair(TJSONPair.Create('name', ARttiParameter.Name));
     LParameter.AddPair(TJSONPair.Create('in', LParamType));
-    if LParamType = 'path' then    
+
+    if LParamType = 'path' then
       LParameter.AddPair(TJSONPair.Create('required', TJSONTrue.Create))
     else
       LParameter.AddPair(TJSONPair.Create('required', TJSONFalse.Create));
 
     if LParamType <> 'body' then
     begin
-      LParameter.AddPair(TJSONPair.Create('type', GetParamType(ARttiParameter)));
-      //LParameter.AddPair(TJSONPair.Create('format', 'int64'));
+      TSwaggerSchemaCompiler.SetTypeProperties(ARttiParameter, LParameter);
     end
     else
     begin
@@ -370,12 +353,72 @@ begin
     procedure (AAttr: PathAttribute)
     begin
       LPath := AAttr.Value;
-    end);
+    end
+  );
   Result := LPath;
+end;
+
+{ TSwaggerSchemaCompiler }
+
+class procedure TSwaggerSchemaCompiler.SetTypeProperties(AType: TRttiObject; AJSON: TJSONObject);
+var
+  LTypeKind: TTypeKind;
+  LPTypeInfo: PTypeInfo;
+begin
+  LPTypeInfo := PTypeInfo(AType.Handle);
+  LTypeKind := PTypeInfo(AType.Handle)^.Kind;
+
+  case LTypeKind of
+    tkInteger, tkInt64:
+    begin
+      AJSON.AddPair(TJSONPair.Create('type', 'integer'));
+    end;
+
+    tkClass, tkRecord:
+    begin
+      AJSON.AddPair(TJSONPair.Create('type', 'object'));
+    end;
+
+    tkDynArray, tkArray:
+    begin
+      AJSON.AddPair(TJSONPair.Create('type', 'array'));
+    end;
+
+    tkEnumeration:
+    begin
+      if (LPTypeInfo = System.TypeInfo(Boolean)) then
+        AJSON.AddPair(TJSONPair.Create('type', 'boolean'))
+      else
+        AJSON.AddPair(TJSONPair.Create('type', 'string'));
+    end;
+
+    tkFloat:
+    begin
+      if (LPTypeInfo = System.TypeInfo(TDateTime)) then
+      begin
+        AJSON.AddPair(TJSONPair.Create('type', 'string'));
+        AJSON.AddPair(TJSONPair.Create('format', 'date-time'));
+      end
+      else if (LPTypeInfo = System.TypeInfo(TDate)) then
+      begin
+        AJSON.AddPair(TJSONPair.Create('type', 'string'));
+        AJSON.AddPair(TJSONPair.Create('format', 'date'));
+      end
+      else if (LPTypeInfo = System.TypeInfo(TTime)) then
+      begin
+        AJSON.AddPair(TJSONPair.Create('type', 'string'));
+        AJSON.AddPair(TJSONPair.Create('format', 'date-time'));
+      end
+      else
+        AJSON.AddPair(TJSONPair.Create('type', 'number'));
+    end;
+
+  else
+    AJSON.AddPair(TJSONPair.Create('type', 'string'));
+  end;
 end;
 
 initialization
   TWiRLFilterRegistry.Instance.RegisterFilter<TSwaggerFilter>;
-
 
 end.

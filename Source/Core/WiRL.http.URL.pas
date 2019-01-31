@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -54,13 +54,15 @@ type
     procedure BasePathChanged; virtual;
   public
     const URL_PATH_SEPARATOR = '/';
+    const URL_QUERY_START = '?';
     const URL_QUERY_SEPARATOR = '&';
-    const DUMMY_URL = 'http://localhost:1234/';
+    const URL_MOCK = 'http://localhost:1234/';
 
     constructor Create(const AURL: string); overload; virtual;
-    constructor CreateDummy(const APath: string; const ABaseURL: string = DUMMY_URL); overload; virtual;
-    constructor CreateDummy(const APaths: TArray<string>; const ABaseURL: string = DUMMY_URL); overload; virtual;
-    constructor CreateDummy(const AEnginePath, AAppPath, AResourcePath, AMethodPath: string); overload; virtual;
+
+    constructor MockURL(const APath: string; const ABaseURL: string = URL_MOCK); overload; virtual;
+    constructor MockURL(const APaths: TArray<string>; const ABaseURL: string = URL_MOCK); overload; virtual;
+    constructor MockURL(const AEnginePath, AAppPath, AResourcePath, AMethodPath: string); overload; virtual;
 
     constructor Create(ARequest: TWiRLRequest); overload; virtual;
     destructor Destroy; override;
@@ -76,7 +78,7 @@ type
     function ToJSONObject: TJSONObject; virtual;
     property URL: string read FURL write SetURL;
 
-    // protocollo://<username:password@>nomehost<:porta></percorso><?querystring>
+    // protocol://<username:password@>hostname<:port></path><?querystring>
     property Protocol: string read FProtocol;
     property UserName: string read FUserName;
     property Password: string read FPassword;
@@ -117,11 +119,10 @@ constructor TWiRLURL.Create(const AURL: string);
 begin
   inherited Create;
 
-  // init
   FURL := '';
   FPath := '';
 
-  {$ifndef DelphiXE7_UP}  
+  {$ifndef DelphiXE7_UP}
   SetLength(FPathTokens, 0);
   {$else}
   FPathTokens := [];
@@ -129,17 +130,16 @@ begin
 
   FSubResources := TWiRLURLDictionary.Create;
   FPathParams := TWiRLURLDictionary.Create;
+  FQueryTokens := TDictionary<string, string>.Create;
 
   FPortNumber := 0;
   FProtocol := '';
   FQuery := '';
-  FQueryTokens := TDictionary<string, string>.Create;
   FPassword := '';
   FHostName := '';
   FUserName := '';
   FResource := '';
 
-  // set value
   URL := AURL;
 end;
 
@@ -211,7 +211,7 @@ begin
     Create('http://' + ARequest.Host + ':' + ARequest.ServerPort.ToString + ARequest.PathInfo + LQuery);
 end;
 
-constructor TWiRLURL.CreateDummy(const AEnginePath, AAppPath, AResourcePath, AMethodPath: string);
+constructor TWiRLURL.MockURL(const AEnginePath, AAppPath, AResourcePath, AMethodPath: string);
 var
   LParamArray: TArray<string>;
 begin
@@ -221,15 +221,15 @@ begin
   LParamArray[2] := AResourcePath;
   LParamArray[3] := AMethodPath;
 
-  CreateDummy(LParamArray);
+  MockURL(LParamArray);
 end;
 
-constructor TWiRLURL.CreateDummy(const APaths: TArray<string>; const ABaseURL: string);
+constructor TWiRLURL.MockURL(const APaths: TArray<string>; const ABaseURL: string);
 begin
   Create(CombinePath([ABaseURL, CombinePath(APaths)]));
 end;
 
-constructor TWiRLURL.CreateDummy(const APath: string; const ABaseURL: string);
+constructor TWiRLURL.MockURL(const APath: string; const ABaseURL: string);
 begin
   Create(CombinePath([ABaseURL, APath]));
 end;
@@ -349,7 +349,7 @@ begin
   if FQuery <> '' then
   begin
     LQuery := FQuery;
-    while StartsStr(LQuery, '?') do
+    while StartsStr(LQuery, URL_QUERY_START) do
       LQuery := RightStr(LQuery, Length(LQuery) - 1);
 
     LStrings := TStringList.Create;

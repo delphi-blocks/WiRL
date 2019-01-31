@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -41,8 +41,6 @@ type
     procedure StopServerActionUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-  private
-    // FServer: TWiRLServer;
   public
     procedure Log(const AMsg :string);
   end;
@@ -59,7 +57,6 @@ uses
   WiRL.Rtti.Utils,
   WiRL.Core.MessageBody.Default,
   WiRL.Data.MessageBody.Default;
-
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin

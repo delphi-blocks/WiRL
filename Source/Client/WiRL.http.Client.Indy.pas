@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit WiRL.http.Client.Indy;
+
+{$I ..\Core\WiRL.inc}
 
 interface
 
@@ -15,7 +17,7 @@ uses
   System.SysUtils, System.Classes,
 
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
-  IdHTTPHeaderInfo, IdStack,
+  IdHTTPHeaderInfo, IdStack, IdResourceStringsProtocols,
 
   WiRL.http.Client.Interfaces,
   WiRL.http.Core,
@@ -58,6 +60,7 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
+    function GetUnknownResponseCode: string; override;
   public
     procedure SendHeaders; override;
 
@@ -101,19 +104,22 @@ type
 
 implementation
 
+const
+  DefaultUserAgent = 'Mozilla/3.0 (compatible; WiRL with Indy Library)';
+
 { TWiRLClientIndy }
 
 procedure TWiRLClientIndy.BuildResponseObject;
 var
-  i: Integer;
-  Name, Value: string;
+  LIndex: Integer;
+  LName, LValue: string;
 begin
   FResponse.HeaderFields.Clear;
-  for i := 0 to FHttpClient.Response.RawHeaders.Count - 1 do
+  for LIndex := 0 to FHttpClient.Response.RawHeaders.Count - 1 do
   begin
-    Name := FHttpClient.Response.RawHeaders.Names[i];
-    Value := FHttpClient.Response.RawHeaders.Values[Name];
-    FResponse.HeaderFields[Name] := Value;
+    LName := FHttpClient.Response.RawHeaders.Names[LIndex];
+    LValue := FHttpClient.Response.RawHeaders.Values[LName];
+    FResponse.HeaderFields[LName] := LValue;
   end;
 end;
 
@@ -210,15 +216,15 @@ end;
 
 procedure TWiRLClientIndy.BuildRequestObject;
 var
-  i: Integer;
+  LIndex: Integer;
 begin
   // Copy custom headers
   FHttpClient.Request.CustomHeaders.Clear;
-  for i := 0 to FRequest.FHeaderFields.Count - 1 do
+  for LIndex := 0 to FRequest.FHeaderFields.Count - 1 do
   begin
     FHttpClient.Request.CustomHeaders.AddValue(
-      FRequest.FHeaderFields.Names[i],
-      FRequest.FHeaderFields.ValueFromIndex[i]
+      FRequest.FHeaderFields.Names[LIndex],
+      FRequest.FHeaderFields.ValueFromIndex[LIndex]
     );
   end;
 
@@ -232,7 +238,7 @@ begin
   FHttpClient.Request.Referer := FRequest.Referer;
   FHttpClient.Request.Range := FRequest.Range;
   if FRequest.UserAgent = '' then
-    FHttpClient.Request.UserAgent := 'Mozilla/3.0 (compatible; WiRL with Indy Library)'
+    FHttpClient.Request.UserAgent := DefaultUserAgent
   else
     FHttpClient.Request.UserAgent := FRequest.UserAgent;
 
@@ -247,8 +253,7 @@ begin
   end;
 end;
 
-procedure TWiRLClientIndy.Options(const AURL: string;
-  AResponseContent: TStream);
+procedure TWiRLClientIndy.Options(const AURL: string; AResponseContent: TStream);
 begin
   BuildRequestObject;
   try
@@ -261,8 +266,7 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.Patch(const AURL: string; ARequestContent,
-  AResponseContent: TStream);
+procedure TWiRLClientIndy.Patch(const AURL: string; ARequestContent, AResponseContent: TStream);
 begin
   BuildRequestObject;
   try
@@ -276,8 +280,7 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.Post(const AURL: string; ARequestContent,
-  AResponseContent: TStream);
+procedure TWiRLClientIndy.Post(const AURL: string; ARequestContent, AResponseContent: TStream);
 begin
   BuildRequestObject;
   try
@@ -351,6 +354,11 @@ end;
 function TWiRLClientResponseIndy.GetStatusCode: Integer;
 begin
   Result := FIdHTTPResponse.ResponseCode;
+end;
+
+function TWiRLClientResponseIndy.GetUnknownResponseCode: string;
+begin
+  Result := RSHTTPUnknownResponseCode;
 end;
 
 procedure TWiRLClientResponseIndy.SendHeaders;
@@ -466,7 +474,7 @@ begin
 end;
 
 initialization
-
-  TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientIndy>('TIdHttp (Indy)');
+  TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientIndy>(
+    'TIdHttp (Indy)'{$IFNDEF HAS_NETHTTP_CLIENT}, True{$ENDIF});
 
 end.

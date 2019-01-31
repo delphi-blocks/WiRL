@@ -48,6 +48,8 @@ type
     procedure SetThreadPoolSize(AValue: Integer);
     function GetListener: IWiRLListener;
     procedure SetListener(AValue: IWiRLListener);
+    function GetServerImplementation: TObject;
+
 
     constructor Create;
     destructor Destroy; override;
@@ -212,6 +214,11 @@ end;
 function TWiRLTestServer.GetPort: Word;
 begin
   Result := 80;
+end;
+
+function TWiRLTestServer.GetServerImplementation: TObject;
+begin
+  Result := nil;
 end;
 
 function TWiRLTestServer.GetThreadPoolSize: Integer;

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -54,6 +54,7 @@ type
     procedure SetContentLanguage(const Value: string);
     function GetCookies: TWiRLCookies;
   protected
+    function GetUnknownResponseCode: string; virtual; abstract;
     function GetHeaderFields: TWiRLHeaderList;
     function GetContent: string; virtual; abstract;
     function GetContentStream: TStream; virtual; abstract;
@@ -66,6 +67,10 @@ type
   public
     procedure SendHeaders; virtual; abstract;
     destructor Destroy; override;
+
+    procedure FromWiRLStatus(AStatus: TWiRLHttpStatus);
+    procedure Redirect(ACode: Integer; const ALocation: string);
+    procedure SetNonStandardReasonString(const AValue: string);
 
     property HasContentLength: Boolean read FHasContentLength;
     property Date: TDateTime read GetDate write SetDate;
@@ -104,6 +109,17 @@ begin
   FMediaType.Free;
   FCookie.Free;
   inherited;
+end;
+
+procedure TWiRLResponse.FromWiRLStatus(AStatus: TWiRLHttpStatus);
+begin
+  StatusCode := AStatus.Code;
+
+  if not AStatus.Reason.IsEmpty then
+    ReasonString := AStatus.Reason;
+
+  if not AStatus.Location.IsEmpty then
+    Location := AStatus.Location;
 end;
 
 function TWiRLResponse.GetAllow: string;
@@ -215,6 +231,13 @@ begin
   Result := HeaderFields.Values['WWW-Authenticate'];
 end;
 
+procedure TWiRLResponse.Redirect(ACode: Integer; const ALocation: string);
+begin
+  Assert((ACode >= 300) and (ACode < 400), 'Redirect code must be of 300 class');
+  StatusCode := ACode;
+  Location := ALocation;
+end;
+
 procedure TWiRLResponse.SetAllow(const Value: string);
 begin
   HeaderFields.Values['Allow'] := Value;
@@ -270,6 +293,12 @@ end;
 procedure TWiRLResponse.SetLocation(const Value: string);
 begin
   HeaderFields.Values['Location'] := Value;
+end;
+
+procedure TWiRLResponse.SetNonStandardReasonString(const AValue: string);
+begin
+  if (ReasonString = '') or (ReasonString = GetUnknownResponseCode) then
+    ReasonString := Avalue;
 end;
 
 procedure TWiRLResponse.SetRawContent(const Value: TBytes);

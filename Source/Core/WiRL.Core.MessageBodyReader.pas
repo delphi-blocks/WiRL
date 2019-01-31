@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -190,7 +190,7 @@ begin
     if LEntry.Consumes.Contains(AMediaType) and
        LEntry.IsReadable(AParam, AParam.GetAttributes, AMediaType) then
     begin
-      {$IF HAS_NEW_ARRAY}
+      {$IFDEF HAS_NEW_ARRAY}
       LCompatibleEntries := LCompatibleEntries + [LEntry];
       {$ELSE}
       SetLength(LCompatibleEntries, Length(LCompatibleEntries) + 1);

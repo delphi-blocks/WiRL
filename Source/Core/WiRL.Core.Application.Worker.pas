@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -75,6 +75,7 @@ type
     // Filters handling
     function ApplyRequestFilters: Boolean;
     procedure ApplyResponseFilters;
+
     // HTTP Request handling
     procedure HandleRequest;
   end;
@@ -489,8 +490,7 @@ begin
   FContext.AuthContext := nil;
 end;
 
-function TWiRLApplicationWorker.HasRowConstraints(
-  const AAttrArray: TAttributeArray): Boolean;
+function TWiRLApplicationWorker.HasRowConstraints(const AAttrArray: TAttributeArray): Boolean;
 var
   LAttr: TCustomAttribute;
 begin
@@ -548,8 +548,9 @@ begin
       ContextInjection(LWriter as TObject);
 
     try
-      // The Status Code is 200 (default)
-      // Set the Response Status Code (201 for POSTs)
+      // Set the Response Status Code before the method invocation so, inside the method,
+      // we can override: HTTP response code, reason and location
+      FContext.Response.FromWiRLStatus(FResource.Method.Status);
 
       InvokeResourceMethod(LInstance, LWriter, LMediaType);
     finally
@@ -643,7 +644,7 @@ var
   LResURL: TWiRLURL;
   LPair: TPair<Integer, string>;
 begin
-  LResURL := TWiRLURL.CreateDummy(TWiRLEngine(FContext.Engine).BasePath,
+  LResURL := TWiRLURL.MockURL(TWiRLEngine(FContext.Engine).BasePath,
     FAppConfig.BasePath, FResource.Path, FResource.Method.Path);
   try
     Result := -1;

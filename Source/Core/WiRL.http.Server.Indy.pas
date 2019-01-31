@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,20 +14,17 @@ interface
 uses
   System.Classes, System.SysUtils, System.SyncObjs,
   IdContext, IdCookie, IdCustomHTTPServer, IdHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
-  IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
+  IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI, IdResourceStringsProtocols,
   WiRL.Core.Classes,
   WiRL.http.Core,
   WiRL.http.Cookie,
   WiRL.http.Server.Interfaces,
   WiRL.http.Engines,
-//  WiRL.Core.Engine,
   WiRL.http.Response,
   WiRL.http.Request,
   WiRL.Core.Auth.Context;
 
 type
-//  TWiRLEngines = TArray<TWiRLEngine>;
-
   TWiRLhttpServerIndy = class(TInterfacedObject, IWiRLServer)
   private
     FHttpServer: TIdHTTPServer;
@@ -64,7 +61,7 @@ type
   private
     FContext: TIdContext;
     FResponseInfo: TIdHTTPResponseInfo;
-    FCustomHeaders :TStrings;
+    FCustomHeaders: TStrings;
     procedure SendCookies;
   protected
     function GetContent: string; override;
@@ -75,6 +72,7 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
+    function GetUnknownResponseCode: string; override;
   public
     procedure SendHeaders; override;
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
@@ -105,7 +103,6 @@ type
     constructor Create(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
     destructor Destroy; override;
   end;
-
 
 implementation
 
@@ -223,7 +220,8 @@ end;
 procedure TWiRLhttpServerIndy.Shutdown;
 begin
   inherited;
-  FHttpServer.Active := False;
+  if FHttpServer.Active then
+    FHttpServer.Active := False;
   FHttpServer.Bindings.Clear;
 end;
 
@@ -411,6 +409,11 @@ begin
   Result := FResponseInfo.ResponseNo;
 end;
 
+function TWiRLHttpResponseIndy.GetUnknownResponseCode: string;
+begin
+  Result := RSHTTPUnknownResponseCode;
+end;
+
 procedure TWiRLHttpResponseIndy.SendCookies;
 var
   LWiRLCookie: TWiRLCookie;
@@ -449,17 +452,17 @@ procedure TWiRLHttpResponseIndy.SendHeaders;
   end;
 
 var
-  i :Integer;
+  LIndex :Integer;
 begin
   inherited;
   FResponseInfo.Date := GMTToLocalDateTime(HeaderFields['Date']);
   FResponseInfo.CustomHeaders.Clear;
 
-  for i := 0 to HeaderFields.Count - 1 do
+  for LIndex := 0 to HeaderFields.Count - 1 do
   begin
-    if IsIndyHeader(HeaderFields.Names[i]) then
+    if IsIndyHeader(HeaderFields.Names[LIndex]) then
       Continue;
-    FResponseInfo.CustomHeaders.Add(HeaderFields.Strings[i]);
+    FResponseInfo.CustomHeaders.Add(HeaderFields.Strings[LIndex]);
   end;
   if ContentType <> '' then
     ContentMediaType.Parse(ContentType);

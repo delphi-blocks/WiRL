@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -17,6 +17,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.JSON,
+  WiRL.http.Filters.Compression,
 
   Server.Filters.Attributes;
 

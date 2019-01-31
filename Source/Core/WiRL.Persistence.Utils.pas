@@ -114,7 +114,7 @@ begin
 //        ftInterface: ;
 //        ftIDispatch: ;
       ftGuid:          Result.AddPair(LPairName, LField.AsString);
-      ftTimeStamp:     Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime));
+      ftTimeStamp:     Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime, AConfig.UseUTCDate));
       ftFMTBcd:        Result.AddPair(LPairName, TJSONNumber.Create(LField.AsFloat));
       ftFixedWideChar: Result.AddPair(LPairName, LField.AsString);
       ftWideMemo:      Result.AddPair(LPairName, LField.AsString);

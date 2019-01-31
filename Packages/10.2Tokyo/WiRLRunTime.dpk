@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -10,7 +10,6 @@
 package WiRLRunTime;
 
 {$R *.res}
-{$R *.dres}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -116,7 +115,8 @@ contains
   WiRL.http.Client.Interfaces in '..\..\Source\Client\WiRL.http.Client.Interfaces.pas',
   WiRL.http.Client in '..\..\Source\Client\WiRL.http.Client.pas',
   WiRL.http.Server.Interfaces in '..\..\Source\Core\WiRL.http.Server.Interfaces.pas',
-  WiRL.http.FileSystemEngine in '..\..\Source\Core\WiRL.http.FileSystemEngine.pas';
+  WiRL.http.FileSystemEngine in '..\..\Source\Core\WiRL.http.FileSystemEngine.pas',
+  WiRL.http.Client.NetHttp in '..\..\Source\Client\WiRL.http.Client.NetHttp.pas';
 
 end.
 

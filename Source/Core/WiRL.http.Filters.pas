@@ -325,8 +325,7 @@ begin
   Result := LAborted;
 end;
 
-procedure TWiRLFilterRegistry.ApplyPreMatchingResponseFilters(
-  AContext: TWiRLContext);
+procedure TWiRLFilterRegistry.ApplyPreMatchingResponseFilters(AContext: TWiRLContext);
 var
   LResponseFilter: IWiRLContainerResponseFilter;
   LResponseContext: TWiRLContainerResponseContext;

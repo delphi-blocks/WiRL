@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit WiRL.Client.Resource.JSON;
 
+{$I ..\Core\WiRL.inc}
+
 interface
 
 uses
@@ -18,7 +20,11 @@ uses
   WiRL.http.Client;
 
 type
+  {$IFDEF HAS_NEW_PIDS}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
+  {$ELSE}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
+  {$ENDIF}
   TWiRLClientResourceJSON = class(TWiRLClientResource)
   private
     FResponse: TJSONValue;

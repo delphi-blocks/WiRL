@@ -164,6 +164,7 @@
         <DCCReference Include="..\..\Source\Client\WiRL.http.Client.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Interfaces.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.FileSystemEngine.pas"/>
+        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.NetHttp.pas"/>
         <RcItem Include="..\..\media\TWiRLClient.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLClient</ResourceId>
@@ -590,15 +591,15 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
             </Deployment>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

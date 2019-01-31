@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2017 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Data.FireDAC.Persistence;
 
 {$I WiRL.inc}
@@ -92,7 +101,7 @@ type
 implementation
 
 uses
-  {$IF HAS_NET_ENCODING}
+  {$IFDEF HAS_NET_ENCODING}
   System.NetEncoding,
   {$ELSE}
   Soap.EncdDecd,
@@ -155,7 +164,7 @@ end;
 
 function TFireDACDataSets.GetItems(AIndex: Integer): TFireDACDataSetPair;
 begin
-
+  Result := FDataSetList[AIndex];
 end;
 
 { TFireDACJSONPersistor }
@@ -163,7 +172,7 @@ end;
 class procedure TFireDACJSONPersistor.Base64Decode(ASource, ADestination: TStream);
 begin
   ASource.Seek(0, TSeekOrigin.soBeginning);
-  {$IF HAS_NET_ENCODING}
+  {$IFDEF HAS_NET_ENCODING}
   TNetEncoding.Base64.Decode(ASource, ADestination);
   {$ELSE}
   DecodeStream(ASource, ADestination);
@@ -173,7 +182,7 @@ end;
 class procedure TFireDACJSONPersistor.Base64Encode(ASource, ADestination: TStream);
 begin
   ASource.Seek(0, TSeekOrigin.soBeginning);
-  {$IF HAS_NET_ENCODING}
+  {$IFDEF HAS_NET_ENCODING}
   TNetEncoding.Base64.Encode(ASource, ADestination);
   {$ELSE}
   EncodeStream(ASource, ADestination);

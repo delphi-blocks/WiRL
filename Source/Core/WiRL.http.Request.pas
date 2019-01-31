@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -23,19 +23,6 @@ uses
   WiRL.http.Accept.Language;
 
 type
-  TWiRLMethod = class
-  const
-    GET = 'GET';
-    PUT = 'PUT';
-    POST = 'POST';
-    HEAD = 'HEAD';
-    DELETE = 'DELETE';
-    PATCH = 'PATCH';
-    OPTIONS = 'OPTIONS';
-    TRACE = 'TRACE';
-    CONNECT = 'CONNECT';
-  end;
-
   TWiRLRequest = class
   private
     FPathInfo: string;

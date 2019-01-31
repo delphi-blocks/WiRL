@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2018 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -71,7 +71,6 @@ begin
   // Server configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetThreadPoolSize(5)
     // Engine configuration
     .AddEngine<TWiRLEngine>('/rest')
       .SetEngineName('WiRL ContentType Demo')
@@ -82,7 +81,7 @@ begin
         .SetWriters('*')
         .SetReaders('*')
         .SetResources(
-          'Server.Resources.TSampleResource,Server.Resources.Entities.TLibraryResource')
+          'Server.Resources.TSampleResource')
   ;
 
   if not FServer.Active then
