@@ -181,10 +181,16 @@ type
     class procedure JSONToObject(AObject: TObject; const AJSON: string; AConfig: INeonConfiguration); overload;
 
     class function JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject; overload;
+    class function JSONToObject(AType: TRttiType; AJSON: TJSONValue; AConfig: INeonConfiguration): TObject; overload;
+
     class function JSONToObject(AType: TRttiType; const AJSON: string): TObject; overload;
+    class function JSONToObject(AType: TRttiType; const AJSON: string; AConfig: INeonConfiguration): TObject; overload;
 
     class function JSONToObject<T: class, constructor>(AJSON: TJSONValue): T; overload;
+    class function JSONToObject<T: class, constructor>(AJSON: TJSONValue; AConfig: INeonConfiguration): T; overload;
+
     class function JSONToObject<T: class, constructor>(const AJSON: string): T; overload;
+    class function JSONToObject<T: class, constructor>(const AJSON: string; AConfig: INeonConfiguration): T; overload;
   end;
 
 implementation
@@ -878,7 +884,7 @@ begin
   else if AType.Handle = System.TypeInfo(TTime) then
     Result := TValue.From<TTime>(TJSONHelper.JSONToDate(AJSONValue.Value, True))
   else if AType.Handle = System.TypeInfo(TDateTime) then
-    Result := TValue.From<TDateTime>(TJSONHelper.JSONToDate(AJSONValue.Value, True))
+    Result := TValue.From<TDateTime>(TJSONHelper.JSONToDate(AJSONValue.Value, FConfig.UseUTCDate))
   else
   begin
     if AJSONValue is TJSONNumber then
@@ -1090,21 +1096,18 @@ end;
 
 class function TNeonMapperJSON.JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject;
 begin
-  Result := TRttiHelper.CreateInstance(AType);
-  JSONToObject(Result, AJSON, TNeonConfiguration.Default);
+  Result := JSONToObject(AType, AJSON, TNeonConfiguration.Default);
 end;
 
 class function TNeonMapperJSON.JSONToObject(AType: TRttiType; const AJSON: string): TObject;
-var
-  LJSON: TJSONValue;
 begin
-  LJSON := TJSONObject.ParseJSONValue(AJSON);
-  try
-    Result := TRttiHelper.CreateInstance(AType);
-    JSONToObject(Result, LJSON, TNeonConfiguration.Default);
-  finally
-    LJSON.Free;
-  end;
+  Result := JSONToObject(AType, AJSON, TNeonConfiguration.Default);
+end;
+
+class function TNeonMapperJSON.JSONToObject(AType: TRttiType; AJSON: TJSONValue; AConfig: INeonConfiguration): TObject;
+begin
+  Result := TRttiHelper.CreateInstance(AType);
+  JSONToObject(Result, AJSON, AConfig);
 end;
 
 class function TNeonMapperJSON.JSONToObject<T>(AJSON: TJSONValue): T;
@@ -1180,8 +1183,7 @@ begin
   end;
 end;
 
-class procedure TNeonMapperJSON.JSONToObject(AObject: TObject; AJSON:
-    TJSONValue; AConfig: INeonConfiguration);
+class procedure TNeonMapperJSON.JSONToObject(AObject: TObject; AJSON: TJSONValue; AConfig: INeonConfiguration);
 var
   LReader: TNeonDeserializerJSON;
 begin
@@ -1191,6 +1193,30 @@ begin
   finally
     LReader.Free;
   end;
+end;
+
+class function TNeonMapperJSON.JSONToObject(AType: TRttiType; const AJSON: string;
+  AConfig: INeonConfiguration): TObject;
+var
+  LJSON: TJSONValue;
+begin
+  LJSON := TJSONObject.ParseJSONValue(AJSON);
+  try
+    Result := TRttiHelper.CreateInstance(AType);
+    JSONToObject(Result, LJSON, AConfig);
+  finally
+    LJSON.Free;
+  end;
+end;
+
+class function TNeonMapperJSON.JSONToObject<T>(AJSON: TJSONValue; AConfig: INeonConfiguration): T;
+begin
+  Result := JSONToObject(TRttiHelper.Context.GetType(TClass(T)), AJSON, AConfig) as T;
+end;
+
+class function TNeonMapperJSON.JSONToObject<T>(const AJSON: string; AConfig: INeonConfiguration): T;
+begin
+  Result := JSONToObject(TRttiHelper.Context.GetType(TClass(T)), AJSON, AConfig) as T;
 end;
 
 end.

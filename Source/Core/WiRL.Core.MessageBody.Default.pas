@@ -247,7 +247,7 @@ end;
 function TWiRLObjectProvider.ReadFrom(AParam: TRttiParameter; AMediaType:
     TMediaType; ARequest: TWiRLRequest): TValue;
 begin
-  Result := TNeonMapperJSON.JSONToObject(AParam.ParamType, ARequest.Content);
+  Result := TNeonMapperJSON.JSONToObject(AParam.ParamType, ARequest.Content, WiRLApplication.SerializerConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes:
