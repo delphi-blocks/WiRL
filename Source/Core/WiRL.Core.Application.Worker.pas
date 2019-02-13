@@ -38,11 +38,13 @@ type
       FParam: TRttiParameter;
       FDefaultValue: string;
     public
+      constructor Create(AWorker: TWiRLApplicationWorker; AParam: TRttiParameter; const ADefaultValue: string);
+    public
       function AsString(AAttr: TCustomAttribute): string;
       function AsInteger(AAttr: TCustomAttribute): Integer;
       function AsChar(AAttr: TCustomAttribute): Char;
       function AsFloat(AAttr: TCustomAttribute): Double;
-      constructor Create(AWorker: TWiRLApplicationWorker; AParam: TRttiParameter; const ADefaultValue: string);
+      function AsDateTime(AAttr: TCustomAttribute): TDateTime;
     end;
   private
     FContext: TWiRLContext;
@@ -83,7 +85,7 @@ type
 implementation
 
 uses
-  System.StrUtils, System.TypInfo,
+  System.StrUtils, System.TypInfo, System.DateUtils,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.Core.Exceptions,
@@ -353,7 +355,12 @@ begin
 
       tkFloat:
       begin
-        Result := TValue.From<Double>(LParamReader.AsFloat(LAttr));
+        if (AParam.ParamType.Handle = System.typeinfo(TDateTime)) or
+           (AParam.ParamType.Handle = System.typeinfo(TDate)) or
+           (AParam.ParamType.Handle = System.typeinfo(TTime)) then
+          Result := TValue.From<TDateTime>(LParamReader.AsDateTime(LAttr))
+        else
+          Result := TValue.From<Double>(LParamReader.AsFloat(LAttr));
       end;
 
       tkChar,
@@ -721,12 +728,15 @@ var
 begin
   LAttrArray := FParam.GetAttributes;
   LParamName := (AAttr as MethodParamAttribute).Value;
-  if LParamName = '' then
+  if LParamName.IsEmpty then
     LParamName := FParam.Name;
 
   if AAttr is PathParamAttribute then
   begin
+
     LParamIndex := FWorker.ParamNameToParamIndex(LParamName);
+    if LParamIndex = -1 then
+      raise EWiRLWebApplicationException.CreateFmt('Formal param [%s] does not match the path param(s) [%s]', [LParamName, FWorker.FResource.Method.Path]);
     Result := FContext.URL.PathTokens[LParamIndex];
   end
   else if AAttr is QueryParamAttribute then
@@ -739,7 +749,7 @@ begin
     Result := FContext.Request.HeaderFields[LParamName]
   else if AAttr is BodyParamAttribute then
     Result := FContext.Request.Content;
-  if Result = '' then
+  if Result.IsEmpty then
     Result := FDefaultValue;
 
   FWorker.ValidateMethodParam(LAttrArray, Result, True);
@@ -750,10 +760,21 @@ var
   LValue: string;
 begin
   LValue := AsString(AAttr);
-  if LValue = '' then
+  if LValue.IsEmpty then
     Result := 0
   else
     Result := StrToInt(LValue);
+end;
+
+function TWiRLApplicationWorker.TParamReader.AsDateTime(AAttr: TCustomAttribute): TDateTime;
+var
+  LValue: string;
+begin
+  LValue := AsString(AAttr);
+  if LValue.IsEmpty then
+    Result := 0
+  else
+    Result := ISO8601ToDate(LValue, FWorker.FAppConfig.UseUTCDate);
 end;
 
 function TWiRLApplicationWorker.TParamReader.AsFloat(AAttr: TCustomAttribute): Double;
@@ -761,7 +782,7 @@ var
   LValue: string;
 begin
   LValue := AsString(AAttr);
-  if LValue = '' then
+  if LValue.IsEmpty then
     Result := 0
   else
     Result := StrToFloat(LValue);
@@ -772,7 +793,7 @@ var
   LValue: string;
 begin
   LValue := AsString(AAttr);
-  if LValue = '' then
+  if LValue.IsEmpty then
     Result := #0
   else
     Result := LValue.Chars[0];
