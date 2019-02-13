@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
+  WiRL.Persistence.Types,
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
@@ -61,7 +62,10 @@ begin
     .SetEngineName('RESTEngine')
     .AddApplication('/app')
       .SetResources('*')
-      .SetFilters('*');
+      .SetFilters('*')
+      .ConfigureSerializer
+        .SetUseUTCDate(True)
+        .SetMemberCase(TNeonCase.SnakeCase);
 
   StartServerAction.Execute;
 end;
