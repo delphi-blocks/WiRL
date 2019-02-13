@@ -60,6 +60,7 @@ type
     FTokenCustomHeader: string;
     FSerializerConfig: INeonConfiguration;
     FEngine: TComponent;
+    FUseUTCDate: Boolean;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
     function AddWriter(const AWriter: string): Boolean;
@@ -105,6 +106,7 @@ type
     function SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
     function SetTokenCustomHeader(const ACustomHeader: string): TWiRLApplication;
     function SetAppName(const AAppName: string): TWiRLApplication;
+    function SetUseUTCDate(AValue: Boolean): TWiRLApplication;
     function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
     function SetSystemApp(ASystem: Boolean): TWiRLApplication;
 
@@ -130,6 +132,7 @@ type
     property Path: string read GetPath;
     property AppName: string read FAppName write FAppName;
     property BasePath: string read FBasePath write FBasePath;
+    property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
     property TokenLocation: TAuthTokenLocation read FTokenLocation write FTokenLocation;
     property TokenCustomHeader: string read FTokenCustomHeader write FTokenCustomHeader;
 
@@ -640,6 +643,12 @@ end;
 function TWiRLApplication.SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
 begin
   FTokenLocation := ALocation;
+  Result := Self;
+end;
+
+function TWiRLApplication.SetUseUTCDate(AValue: Boolean): TWiRLApplication;
+begin
+  FUseUTCDate := AValue;
   Result := Self;
 end;
 
