@@ -257,7 +257,8 @@ var
   LValue: TValue;
 begin
   case AValue.Kind of
-    tkClass: begin
+    tkClass:
+    begin
       // If the request content stream is used as a param to a resource
       // it will be freed at the end process
       if AValue.AsObject <> FContext.Request.ContentStream then
@@ -316,10 +317,12 @@ var
 begin
   // Search a default value
   LDefaultValue := '';
-  TRttiHelper.HasAttribute<DefaultValueAttribute>(AParam, procedure (LAttr: DefaultValueAttribute)
-  begin
-    LDefaultValue := LAttr.Value;
-  end);
+  TRttiHelper.HasAttribute<DefaultValueAttribute>(AParam,
+    procedure (LAttr: DefaultValueAttribute)
+    begin
+      LDefaultValue := LAttr.Value;
+    end
+  );
 
   LParamName := '';
   for LAttr in AAttrArray do
@@ -372,7 +375,10 @@ begin
         begin
           LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
           if Assigned(LReader) then
-            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request)
+          begin
+            ContextInjection(LReader as TObject);
+            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
+          end
           else
             Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
           if Result.AsObject = nil then
@@ -685,7 +691,6 @@ var
   LAttr: TCustomAttribute;
   LValidator: IConstraintValidator<TCustomConstraintAttribute>;
   LIntf: IInterface;
-//  LObj: TObject;
 begin
   // Loop inside every ConstraintAttribute
   for LAttr in AAttrArray do
@@ -694,9 +699,12 @@ begin
     begin
       if TCustomConstraintAttribute(LAttr).RawConstraint <> ARawConstraint then
         Continue;
+
       LIntf := TCustomConstraintAttribute(LAttr).GetValidator;
+
       if not Supports(LIntf as TObject, IConstraintValidator<TCustomConstraintAttribute>, LValidator) then
         raise EWiRLException.Create('Validator interface is not valid');
+
       if not LValidator.IsValid(AValue, FContext) then
         raise EWiRLValidationError.Create(GetConstraintErrorMessage(TCustomConstraintAttribute(LAttr)));
     end;
