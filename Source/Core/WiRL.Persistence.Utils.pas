@@ -113,7 +113,7 @@ begin
       ftVariant:       Result.AddPair(LPairName, LField.AsString);
 //        ftInterface: ;
 //        ftIDispatch: ;
-      ftGuid:          Result.AddPair(LPairName, LField.AsString);
+      ftGuid:          Result.AddPair(LPairName, Copy(LField.AsString, 2, LField.AsString.Length-2));
       ftTimeStamp:     Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime, AConfig.UseUTCDate));
       ftFMTBcd:        Result.AddPair(LPairName, TJSONNumber.Create(LField.AsFloat));
       ftFixedWideChar: Result.AddPair(LPairName, LField.AsString);
