@@ -11,6 +11,8 @@ unit WiRL.Persistence.JSON;
 
 interface
 
+{$I WiRL.inc}
+
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
   System.TypInfo, System.Generics.Collections, System.JSON, Data.DB,
