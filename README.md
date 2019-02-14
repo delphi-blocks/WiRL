@@ -1,8 +1,11 @@
-# WiRL
-## Delphi RESTful Library
+<p align="center">
+  <a href="http://wirl.delphiblocks.com/">
+    <img src="http://wirl.delphiblocks.com/assets/images/wirl-300.png" alt="Delphi RESTful Library" width="200" />
+  </a>
+</p>
 
-<a href="http://wirl.delphiblocks.com/">
-<img src="http://wirl.delphiblocks.com/assets/images/wirl-300.png" alt="Delphi RESTful Library" width="200" align="center" /></a>
+# WiRL [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0
+## Delphi RESTful Library
 
 **WiRL** was created to simplify RESTful service implementation in Delphi but, more importantly, to enable maximum interoperability with REST clients written in other languages and tools.
 
