@@ -387,8 +387,7 @@ begin
   Result := WriteObject(LObject);
 end;
 
-procedure TNeonSerializerJSON.WriteMembers(AType: TRttiType;
-  AInstance: Pointer; AResult: TJSONValue);
+procedure TNeonSerializerJSON.WriteMembers(AType: TRttiType; AInstance: Pointer; AResult: TJSONValue);
 var
   LJSONValue: TJSONValue;
   LMembers: TNeonRttiMembers;
@@ -692,8 +691,7 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadDataMember(AJSONValue: TJSONValue; AType:
-    TRttiType; const AData: TValue): TValue;
+function TNeonDeserializerJSON.ReadDataMember(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
 begin
   if AJSONValue is TJSONNull then
     Exit(TValue.Empty);
@@ -838,7 +836,11 @@ function TNeonDeserializerJSON.ReadEnumerableMap(AJSONValue: TJSONValue;
   AType: TRttiType; const AData: TValue): Boolean;
 var
   LMap: IDynamicMap;
+{$IFDEF HAS_NEW_JSON}
+  LEnum: TJSONObject.TEnumerator;
+{$ELSE}
   LEnum: TJSONPairEnumerator;
+{$ENDIF}
   LKeyType, LValueType: TRttiType;
 
   procedure NewItemFromPair(APair: TJSONPair);
@@ -894,8 +896,7 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadInt64(AJSONValue: TJSONValue; AType:
-    TRttiType): TValue;
+function TNeonDeserializerJSON.ReadInt64(AJSONValue: TJSONValue; AType: TRttiType): TValue;
 var
   LNumber: TJSONNumber;
 begin
@@ -1195,8 +1196,7 @@ begin
   end;
 end;
 
-class function TNeonMapperJSON.JSONToObject(AType: TRttiType; const AJSON: string;
-  AConfig: INeonConfiguration): TObject;
+class function TNeonMapperJSON.JSONToObject(AType: TRttiType; const AJSON: string; AConfig: INeonConfiguration): TObject;
 var
   LJSON: TJSONValue;
 begin

@@ -34,5 +34,6 @@
 
 {$IF CompilerVersion >= 33} // Delphi 10.3 Rio
   {$DEFINE HAS_NEW_PIDS}
+  {$DEFINE HAS_NEW_JSON}
 {$IFEND}
 
