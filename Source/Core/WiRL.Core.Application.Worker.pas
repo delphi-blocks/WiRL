@@ -44,6 +44,7 @@ type
       function AsInteger(AAttr: TCustomAttribute): Integer;
       function AsChar(AAttr: TCustomAttribute): Char;
       function AsFloat(AAttr: TCustomAttribute): Double;
+      function AsBoolean(AAttr: TCustomAttribute): Boolean;
       function AsDateTime(AAttr: TCustomAttribute): TDateTime;
     end;
   private
@@ -369,8 +370,13 @@ begin
         Result := TValue.From(LParamReader.AsChar(LAttr));
       end;
 
-//      tkEnumeration: ;
-//      tkSet: ;
+      tkEnumeration:
+      begin
+        if (AParam.ParamType.Handle = System.TypeInfo(Boolean)) then
+          Result := TValue.From<Boolean>(LParamReader.AsBoolean(LAttr));
+      end;
+
+      //      tkSet: ;
 
       tkClass:
       begin
@@ -786,6 +792,17 @@ begin
     Result := 0
   else
     Result := StrToFloat(LValue);
+end;
+
+function TWiRLApplicationWorker.TParamReader.AsBoolean(AAttr: TCustomAttribute): Boolean;
+var
+  LValue: string;
+begin
+  LValue := AsString(AAttr);
+  if LValue.IsEmpty then
+    Result := False
+  else
+    Result := StrToBool(LValue);
 end;
 
 function TWiRLApplicationWorker.TParamReader.AsChar(AAttr: TCustomAttribute): Char;
