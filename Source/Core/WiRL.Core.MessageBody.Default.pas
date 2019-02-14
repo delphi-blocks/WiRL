@@ -189,7 +189,7 @@ begin
 
       tkInt64: LStreamWriter.Write(AValue.AsType<Int64>);
 
-      tkEnumeration: AValue.ToString;
+      tkEnumeration: LStreamWriter.Write(AValue.ToString);
 
       tkFloat:
       begin
