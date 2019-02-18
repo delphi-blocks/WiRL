@@ -302,14 +302,6 @@ end;
 
 function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
     const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
-
-  function CreateParamInstance(AParam: TRttiParameter; const AValue: string): TObject;
-  begin
-    Result := TRttiHelper.CreateInstance(AParam.ParamType, AValue);
-    if not Assigned(Result) then
-      raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [AParam.Name]), Self.ClassName);
-  end;
-
 var
   LAttr: TCustomAttribute;
   LParamName: string;
@@ -376,7 +368,7 @@ begin
           Result := TValue.From<Boolean>(LParamReader.AsBoolean(LAttr));
       end;
 
-      //      tkSet: ;
+      //tkSet: ;
 
       tkClass:
       begin
@@ -394,6 +386,7 @@ begin
           end
           else
             Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
+
           if Result.AsObject = nil then
             raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, LParamName]), Self.ClassName);
         end
@@ -404,7 +397,7 @@ begin
           raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
       end;
 
-//      tkMethod: ;
+      //tkMethod: ;
 
       tkLString,
       tkUString,
@@ -419,13 +412,34 @@ begin
         Result := TValue.From(LParamReader.AsString(LAttr));
       end;
 
-//      tkArray: ;
-//      tkRecord: ;
-//      tkInterface: ;
-//      tkDynArray: ;
-//      tkClassRef: ;
-//      tkPointer: ;
-//      tkProcedure: ;
+      //tkArray: ;
+
+      tkRecord:
+      begin
+        if HasRowConstraints(AAttrArray) then
+        begin
+          ValidateMethodParam(AAttrArray, LParamReader.AsString(LAttr), True);
+        end;
+        if LAttr is BodyParamAttribute then
+        begin
+          LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
+          if Assigned(LReader) then
+          begin
+            ContextInjection(LReader as TObject);
+            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
+          end
+          else
+            Result := TRttiHelper.CreateNewValue(AParam.ParamType);
+        end
+        else
+          Result := TRttiHelper.CreateNewValue(AParam.ParamType);
+      end;
+
+      //tkInterface: ;
+      //tkDynArray: ;
+      //tkClassRef: ;
+      //tkPointer: ;
+      //tkProcedure: ;
       else
         raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
     end;
@@ -459,9 +473,9 @@ begin
       LAttrArray := LParam.GetAttributes;
 
       if Length(LAttrArray) = 0 then
-        raise EWiRLServerException.Create('Non annotated params are not allowed')
-      else
-        AArgumentArray[LIndex] := FillAnnotatedParam(LParam, LAttrArray, AInstance);
+        raise EWiRLServerException.Create('Non annotated params are not allowed');
+
+      AArgumentArray[LIndex] := FillAnnotatedParam(LParam, LAttrArray, AInstance);
     end;
 
   except

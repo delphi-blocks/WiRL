@@ -30,7 +30,7 @@ type
   ///   This is the <b>default</b> MessageBodyWriter for all Delphi string types.
   /// </summary>
   [Produces(TMediaType.WILDCARD)]
-  TStringTypesMBWriter = class(TMessageBodyWriter)
+  TWiRLStringWriter = class(TMessageBodyWriter)
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse); override;
@@ -41,18 +41,22 @@ type
   ///   double, etc...
   /// </summary>
   [Produces(TMediaType.TEXT_PLAIN)]
-  TSimpleTypesMBWriter = class(TMessageBodyWriter)
+  TWiRLSimpleTypesWriter = class(TMessageBodyWriter)
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
 
   /// <summary>
-  ///   This is the <b>default</b> MessageBodyWriter for Delphi array and record types
+  ///   This is the <b>default</b> MessageBodyProvider for Delphi array and record types
   /// </summary>
+  [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
-  TValueTypesMBWriter = class(TMessageBodyWriter)
+  TWiRLValueTypesProvider = class(TMessageBodyProvider)
   public
+    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      ARequest: TWiRLRequest): TValue; override;
+
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AResponse: TWiRLResponse); override;
   end;
@@ -112,9 +116,9 @@ uses
   WiRL.Persistence.Core,
   WiRL.Persistence.JSON;
 
-{ TStringTypesMBWriter }
+{ TWiRLStringWriter }
 
-procedure TStringTypesMBWriter.WriteTo(const AValue: TValue;
+procedure TWiRLStringWriter.WriteTo(const AValue: TValue;
   const AAttributes: TAttributeArray; AMediaType: TMediaType;
   AResponse: TWiRLResponse);
 var
@@ -168,9 +172,9 @@ begin
   end;
 end;
 
-{ TSimpleTypesMBWriter }
+{ TWiRLSimpleTypesWriter }
 
-procedure TSimpleTypesMBWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+procedure TWiRLSimpleTypesWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
   AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
@@ -210,9 +214,30 @@ begin
   end;
 end;
 
-{ TValueTypesMBWriter }
+{ TWiRLValueTypesProvider }
 
-procedure TValueTypesMBWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+function TWiRLValueTypesProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+  ARequest: TWiRLRequest): TValue;
+var
+  LDes: TNeonDeserializerJSON;
+  LJSON: TJSONValue;
+  LValue: TValue;
+begin
+  LDes := TNeonDeserializerJSON.Create(WiRLApplication.SerializerConfig);
+  try
+    LJSON := TJSONObject.ParseJSONValue(ARequest.Content);
+    try
+      TValue.Make(nil, AParam.ParamType.Handle, LValue);
+      Result := LDes.JSONToTValue(LJSON, AParam.ParamType, LValue);
+    finally
+      LJSON.Free;
+    end;
+  finally
+    LDes.Free;
+  end;
+end;
+
+procedure TWiRLValueTypesProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
   AMediaType: TMediaType; AResponse: TWiRLResponse);
 var
   LStreamWriter: TStreamWriter;
@@ -294,9 +319,9 @@ end;
 
 procedure RegisterMessageBodyClasses;
 begin
-  // TStringTypesMBWriter
+  // TWiRLStringWriter
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TStringTypesMBWriter,
+    TWiRLStringWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := False;
@@ -311,9 +336,9 @@ begin
     end
   );
 
-  // TSimpleTypesMBWriter
+  // TWiRLSimpleTypesWriter
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TSimpleTypesMBWriter,
+    TWiRLSimpleTypesWriter,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := False;
@@ -328,9 +353,25 @@ begin
     end
   );
 
-  // TValueTypesMBWriter
+  // TWiRLValueTypesProvider
+  TMessageBodyReaderRegistry.Instance.RegisterReader(
+    TWiRLValueTypesProvider,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := False;
+      case AType.TypeKind of
+        //tkArray, tkDynArray:
+        tkRecord: Result := True;
+      end;
+    end,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_LOW;
+    end
+  );
+
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TValueTypesMBWriter,
+    TWiRLValueTypesProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := False;
