@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -189,7 +189,7 @@ begin
 
       tkInt64: LStreamWriter.Write(AValue.AsType<Int64>);
 
-      tkEnumeration: AValue.ToString;
+      tkEnumeration: LStreamWriter.Write(AValue.ToString);
 
       tkFloat:
       begin
@@ -247,7 +247,7 @@ end;
 function TWiRLObjectProvider.ReadFrom(AParam: TRttiParameter; AMediaType:
     TMediaType; ARequest: TWiRLRequest): TValue;
 begin
-  Result := TNeonMapperJSON.JSONToObject(AParam.ParamType, ARequest.Content);
+  Result := TNeonMapperJSON.JSONToObject(AParam.ParamType, ARequest.Content, WiRLApplication.SerializerConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes:

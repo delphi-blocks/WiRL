@@ -1,3 +1,13 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
+
 {$IF CompilerVersion >= 27} // Delphi XE6
   {$DEFINE HAS_SYSTEM_JSON}
 {$IFEND}
@@ -24,5 +34,6 @@
 
 {$IF CompilerVersion >= 33} // Delphi 10.3 Rio
   {$DEFINE HAS_NEW_PIDS}
+  {$DEFINE HAS_NEW_JSON}
 {$IFEND}
 

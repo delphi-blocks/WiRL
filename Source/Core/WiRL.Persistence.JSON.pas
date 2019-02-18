@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -10,6 +10,8 @@
 unit WiRL.Persistence.JSON;
 
 interface
+
+{$I WiRL.inc}
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
@@ -181,10 +183,16 @@ type
     class procedure JSONToObject(AObject: TObject; const AJSON: string; AConfig: INeonConfiguration); overload;
 
     class function JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject; overload;
+    class function JSONToObject(AType: TRttiType; AJSON: TJSONValue; AConfig: INeonConfiguration): TObject; overload;
+
     class function JSONToObject(AType: TRttiType; const AJSON: string): TObject; overload;
+    class function JSONToObject(AType: TRttiType; const AJSON: string; AConfig: INeonConfiguration): TObject; overload;
 
     class function JSONToObject<T: class, constructor>(AJSON: TJSONValue): T; overload;
+    class function JSONToObject<T: class, constructor>(AJSON: TJSONValue; AConfig: INeonConfiguration): T; overload;
+
     class function JSONToObject<T: class, constructor>(const AJSON: string): T; overload;
+    class function JSONToObject<T: class, constructor>(const AJSON: string; AConfig: INeonConfiguration): T; overload;
   end;
 
 implementation
@@ -381,8 +389,7 @@ begin
   Result := WriteObject(LObject);
 end;
 
-procedure TNeonSerializerJSON.WriteMembers(AType: TRttiType;
-  AInstance: Pointer; AResult: TJSONValue);
+procedure TNeonSerializerJSON.WriteMembers(AType: TRttiType; AInstance: Pointer; AResult: TJSONValue);
 var
   LJSONValue: TJSONValue;
   LMembers: TNeonRttiMembers;
@@ -686,8 +693,7 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadDataMember(AJSONValue: TJSONValue; AType:
-    TRttiType; const AData: TValue): TValue;
+function TNeonDeserializerJSON.ReadDataMember(AJSONValue: TJSONValue; AType: TRttiType; const AData: TValue): TValue;
 begin
   if AJSONValue is TJSONNull then
     Exit(TValue.Empty);
@@ -832,7 +838,11 @@ function TNeonDeserializerJSON.ReadEnumerableMap(AJSONValue: TJSONValue;
   AType: TRttiType; const AData: TValue): Boolean;
 var
   LMap: IDynamicMap;
+{$IFDEF HAS_NEW_JSON}
+  LEnum: TJSONObject.TEnumerator;
+{$ELSE}
   LEnum: TJSONPairEnumerator;
+{$ENDIF}
   LKeyType, LValueType: TRttiType;
 
   procedure NewItemFromPair(APair: TJSONPair);
@@ -878,7 +888,7 @@ begin
   else if AType.Handle = System.TypeInfo(TTime) then
     Result := TValue.From<TTime>(TJSONHelper.JSONToDate(AJSONValue.Value, True))
   else if AType.Handle = System.TypeInfo(TDateTime) then
-    Result := TValue.From<TDateTime>(TJSONHelper.JSONToDate(AJSONValue.Value, True))
+    Result := TValue.From<TDateTime>(TJSONHelper.JSONToDate(AJSONValue.Value, FConfig.UseUTCDate))
   else
   begin
     if AJSONValue is TJSONNumber then
@@ -888,8 +898,7 @@ begin
   end;
 end;
 
-function TNeonDeserializerJSON.ReadInt64(AJSONValue: TJSONValue; AType:
-    TRttiType): TValue;
+function TNeonDeserializerJSON.ReadInt64(AJSONValue: TJSONValue; AType: TRttiType): TValue;
 var
   LNumber: TJSONNumber;
 begin
@@ -1090,21 +1099,18 @@ end;
 
 class function TNeonMapperJSON.JSONToObject(AType: TRttiType; AJSON: TJSONValue): TObject;
 begin
-  Result := TRttiHelper.CreateInstance(AType);
-  JSONToObject(Result, AJSON, TNeonConfiguration.Default);
+  Result := JSONToObject(AType, AJSON, TNeonConfiguration.Default);
 end;
 
 class function TNeonMapperJSON.JSONToObject(AType: TRttiType; const AJSON: string): TObject;
-var
-  LJSON: TJSONValue;
 begin
-  LJSON := TJSONObject.ParseJSONValue(AJSON);
-  try
-    Result := TRttiHelper.CreateInstance(AType);
-    JSONToObject(Result, LJSON, TNeonConfiguration.Default);
-  finally
-    LJSON.Free;
-  end;
+  Result := JSONToObject(AType, AJSON, TNeonConfiguration.Default);
+end;
+
+class function TNeonMapperJSON.JSONToObject(AType: TRttiType; AJSON: TJSONValue; AConfig: INeonConfiguration): TObject;
+begin
+  Result := TRttiHelper.CreateInstance(AType);
+  JSONToObject(Result, AJSON, AConfig);
 end;
 
 class function TNeonMapperJSON.JSONToObject<T>(AJSON: TJSONValue): T;
@@ -1180,8 +1186,7 @@ begin
   end;
 end;
 
-class procedure TNeonMapperJSON.JSONToObject(AObject: TObject; AJSON:
-    TJSONValue; AConfig: INeonConfiguration);
+class procedure TNeonMapperJSON.JSONToObject(AObject: TObject; AJSON: TJSONValue; AConfig: INeonConfiguration);
 var
   LReader: TNeonDeserializerJSON;
 begin
@@ -1191,6 +1196,29 @@ begin
   finally
     LReader.Free;
   end;
+end;
+
+class function TNeonMapperJSON.JSONToObject(AType: TRttiType; const AJSON: string; AConfig: INeonConfiguration): TObject;
+var
+  LJSON: TJSONValue;
+begin
+  LJSON := TJSONObject.ParseJSONValue(AJSON);
+  try
+    Result := TRttiHelper.CreateInstance(AType);
+    JSONToObject(Result, LJSON, AConfig);
+  finally
+    LJSON.Free;
+  end;
+end;
+
+class function TNeonMapperJSON.JSONToObject<T>(AJSON: TJSONValue; AConfig: INeonConfiguration): T;
+begin
+  Result := JSONToObject(TRttiHelper.Context.GetType(TClass(T)), AJSON, AConfig) as T;
+end;
+
+class function TNeonMapperJSON.JSONToObject<T>(const AJSON: string; AConfig: INeonConfiguration): T;
+begin
+  Result := JSONToObject(TRttiHelper.Context.GetType(TClass(T)), AJSON, AConfig) as T;
 end;
 
 end.

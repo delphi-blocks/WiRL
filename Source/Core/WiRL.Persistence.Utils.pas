@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -113,7 +113,7 @@ begin
       ftVariant:       Result.AddPair(LPairName, LField.AsString);
 //        ftInterface: ;
 //        ftIDispatch: ;
-      ftGuid:          Result.AddPair(LPairName, LField.AsString);
+      ftGuid:          Result.AddPair(LPairName, Copy(LField.AsString, 2, LField.AsString.Length-2));
       ftTimeStamp:     Result.AddPair(LPairName, TJSONHelper.DateToJSON(LField.AsDateTime, AConfig.UseUTCDate));
       ftFMTBcd:        Result.AddPair(LPairName, TJSONNumber.Create(LField.AsFloat));
       ftFixedWideChar: Result.AddPair(LPairName, LField.AsString);
