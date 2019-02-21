@@ -85,7 +85,6 @@
             <Form>MainForm</Form>
         </DCCReference>
         <DCCReference Include="Server.Resources.pas"/>
-        <DCCReference Include="..\..\Source\Extensions\WiRL.Schemas.Swagger.pas"/>
         <DCCReference Include="Server.Entities.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>

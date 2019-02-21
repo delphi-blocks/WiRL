@@ -13,6 +13,7 @@ object MainForm: TMainForm
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object TopPanel: TPanel
@@ -54,6 +55,22 @@ object MainForm: TMainForm
       TabOrder = 2
       Text = '8080'
     end
+  end
+  object memoLog: TMemo
+    Left = 0
+    Top = 73
+    Width = 554
+    Height = 216
+    Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Consolas'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+    ExplicitTop = 79
+    ExplicitHeight = 210
   end
   object MainActionList: TActionList
     Left = 104

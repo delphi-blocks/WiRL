@@ -16,6 +16,7 @@ type
   end;
 
   TArrayParam = TArray<TRecordParam>;
+  TArrayInt = TArray<Integer>;
 
 
 implementation

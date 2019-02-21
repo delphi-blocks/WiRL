@@ -16,11 +16,17 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
   WiRL.Persistence.Types,
+  WiRL.Core.Application,
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
 
 type
+
+  TExceptionListener = class(TInterfacedObject, IWiRLHandleExceptionListener)
+    procedure HandleException(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; E: Exception);
+  end;
+
   TMainForm = class(TForm)
     TopPanel: TPanel;
     StartButton: TButton;
@@ -30,6 +36,8 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
+    memoLog: TMemo;
+    procedure FormDestroy(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -37,7 +45,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    RESTServer: TWiRLServer;
+    FRESTServer: TWiRLServer;
+    FListener: IWiRLHandleExceptionListener;
   public
     { Public declarations }
   end;
@@ -49,6 +58,12 @@ implementation
 
 {$R *.dfm}
 
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  FListener := nil;
+  FRESTServer.Free;
+end;
+
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   StopServerAction.Execute;
@@ -56,10 +71,12 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  RESTServer := TWiRLServer.Create(Self);
+  FRESTServer := TWiRLServer.Create(Self);
+  FListener := TExceptionListener.Create;
 
-  RESTServer.AddEngine<TWiRLEngine>('/rest')
+  FRESTServer.AddEngine<TWiRLEngine>('/rest')
     .SetEngineName('RESTEngine')
+    .AddSubscriber(FListener)
     .AddApplication('/app')
       .SetResources('*')
       .SetFilters('*')
@@ -72,24 +89,32 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  RESTServer.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  if not RESTServer.Active then
-    RESTServer.Active := True;
+  FRESTServer.Port := StrToIntDef(PortNumberEdit.Text, 8080);
+  if not FRESTServer.Active then
+    FRESTServer.Active := True;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := not Assigned(RESTServer) or not RESTServer.Active;
+  StartServerAction.Enabled := not Assigned(FRESTServer) or not FRESTServer.Active;
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  RESTServer.Active := False;
+  FRESTServer.Active := False;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(RESTServer) and RESTServer.Active;
+  StopServerAction.Enabled := Assigned(FRESTServer) and FRESTServer.Active;
+end;
+
+{ TExceptionListener }
+
+procedure TExceptionListener.HandleException(const ASender: TWiRLEngine;
+  const AApplication: TWiRLApplication; E: Exception);
+begin
+  MainForm.memoLog.Lines.Add(E.Message);
 end;
 
 end.
