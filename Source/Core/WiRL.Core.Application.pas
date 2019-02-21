@@ -16,6 +16,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
+  WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
@@ -35,8 +36,6 @@ type
 
   TAuthTokenLocation = (Bearer, Cookie, Header);
   TSecretGenerator = reference to function(): TBytes;
-  TAttributeArray = TArray<TCustomAttribute>;
-  TArgumentArray = array of TValue;
 
   TWiRLApplication = class(TComponent)
   private

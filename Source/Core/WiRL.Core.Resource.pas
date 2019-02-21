@@ -201,7 +201,7 @@ begin
 
   LApp := (FContext.Application as TWiRLApplication);
 
-  FEnginePath := TWiRLEngine(FContext.Engine).BasePath;
+  FEnginePath := (FContext.Engine as TWiRLEngine).BasePath;
   FAppPath := LApp.BasePath;
   FInfo := LApp.GetResourceInfo(FContext.URL.Resource);
 
@@ -245,7 +245,7 @@ begin
 
     for LMethod in FMethods do
     begin
-      // Skip the non-Rest methods (no GET/POST/PUT methods)
+      // Skip the non-REST methods (no GET/POST/PUT methods)
       if not LMethod.Rest then
         Continue;
 

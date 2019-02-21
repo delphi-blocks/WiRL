@@ -326,8 +326,8 @@ begin
   except
     on E: Exception do
     begin
-      EWiRLWebApplicationException.HandleException(AContext, E);
       DoHandleException(AContext, LApplication, E);
+      EWiRLWebApplicationException.HandleException(AContext, E);
     end;
   end;
   LStopWatchEx.Stop;

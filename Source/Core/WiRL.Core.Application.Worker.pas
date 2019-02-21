@@ -14,9 +14,10 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
-  WiRL.Core.Application,
+  WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.Resource,
+  WiRL.Core.Application,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
@@ -514,13 +515,17 @@ begin
         InternalHandleRequest;
     except
       on E: Exception do
+      begin
         EWiRLWebApplicationException.HandleException(FContext, E);
+        ApplyResponseFilters;
+        raise;
+      end;
     end;
     ApplyResponseFilters;
   finally
     FreeAndNil(FAuthContext);
+    FContext.AuthContext := nil;
   end;
-  FContext.AuthContext := nil;
 end;
 
 function TWiRLApplicationWorker.HasRowConstraints(const AAttrArray: TAttributeArray): Boolean;

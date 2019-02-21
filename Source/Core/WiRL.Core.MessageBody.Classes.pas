@@ -14,6 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
 
+  WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.http.Request,
   WiRL.http.Response,
