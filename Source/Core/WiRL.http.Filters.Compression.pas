@@ -12,7 +12,7 @@ unit WiRL.http.Filters.Compression;
 interface
 
 uses
-  WinApi.Windows, System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes,
 
   WiRL.Core.Registry,
   WiRL.http.Filters,
@@ -30,6 +30,9 @@ type
 
   [NameBinding]
   ContentDecodingAttribute = class(TCustomAttribute);
+
+  [NameBinding]
+  CompressionAttribute = class(TCustomAttribute);
 
   /// <summary>
   ///   Base class for the encoding/decoding filters, only to introduce Encoding header
@@ -49,7 +52,7 @@ type
   /// <remarks>
   ///   Only the "deflate" ContentEncoding is supported
   /// </remarks>
-  [ContentDecoding]
+  [ContentDecoding, Compression]
   TRequestDecodingFilter = class(TCompressionFilter, IWiRLContainerRequestFilter)
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
@@ -62,7 +65,7 @@ type
   /// <remarks>
   ///   Only the "deflate" ContentEncoding is supported
   /// </remarks>
-  [ContentEncoding]
+  [ContentEncoding, Compression]
   TResponseEncodingFilter = class(TCompressionFilter, IWiRLContainerResponseFilter)
   public
     procedure Filter(AResponseContext: TWiRLContainerResponseContext);
@@ -74,7 +77,7 @@ type
   /// <remarks>
   ///   Not registered by default
   /// </remarks>
-  [ContentEncoding]
+  [ContentEncoding, Compression]
   TResponseEncodingFilterDebug = class(TCompressionFilter, IWiRLContainerResponseFilter)
   public
     procedure Filter(AResponseContext: TWiRLContainerResponseContext);
