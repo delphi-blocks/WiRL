@@ -143,7 +143,7 @@ type
     FOperation: TNeonOperation;
     FConfig: TNeonConfiguration;
     FInstance: Pointer;
-    [weak] FParent: TNeonRttiType;
+    FParent: TNeonRttiType;
   private
     function MatchesVisibility(AVisibility: TMemberVisibility): Boolean;
     function MatchesMemberChoice(AMemberType: TNeonMemberType): Boolean;
