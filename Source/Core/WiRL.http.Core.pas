@@ -127,6 +127,8 @@ type
     procedure SetValue(const AName, AValue: string);
     function GetValueFromLine(AIndex: Integer): string;
   public
+    constructor Create;
+
     function IndexOfName(const AName: string): Integer; reintroduce;
     property Names[Index: Integer]: string read GetName;
     property Values[const Name: string]: string read GetValue write SetValue; default;
@@ -178,6 +180,12 @@ end;
 
 const
   HeaderNameValueSeparator = ': ';
+
+constructor TWiRLHeaderList.Create;
+begin
+  inherited Create;
+  NameValueSeparator := ':';
+end;
 
 function TWiRLHeaderList.GetName(AIndex: Integer): string;
 var
