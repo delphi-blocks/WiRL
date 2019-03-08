@@ -277,8 +277,7 @@ var
   LStopWatch, LStopWatchEx: TStopWatch;
 begin
   inherited;
-  if EndsText('/favicon.ico', AContext.Request.PathInfo) then
-    Exit;
+
   LApplication := nil;
   LStopWatchEx := TStopwatch.StartNew;
   try

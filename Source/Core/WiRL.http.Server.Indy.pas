@@ -136,6 +136,9 @@ var
   LResponse: TWiRLResponse;
 begin
   inherited;
+  if EndsText('/favicon.ico', ARequestInfo.Document) then
+    Exit;
+
   LRequest := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
   try
     LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
