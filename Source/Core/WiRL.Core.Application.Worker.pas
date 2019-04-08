@@ -265,7 +265,7 @@ begin
     begin
       // If the request content stream is used as a param to a resource
       // it will be freed at the end process
-      if AValue.AsObject <> FContext.Request.ContentStream then
+      if (AValue.AsObject <> nil)and(AValue.AsObject <> FContext.Request.ContentStream) then
         if not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType) then
           AValue.AsObject.Free;
     end;
