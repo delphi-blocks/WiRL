@@ -48,10 +48,12 @@ type
   end;
 
   function ExistsInArray(AArray: TJSONArray; const AValue: string): Boolean;
+  function IncludeLeadingSlash(const AValue: string): string;
 
 implementation
 
 uses
+  System.StrUtils,
   System.TypInfo,
   WiRL.http.Server,
   WiRL.Core.JSON;
@@ -67,6 +69,15 @@ begin
   end;
   Result := False;
 end;
+
+function IncludeLeadingSlash(const AValue: string): string;
+begin
+  if not AValue.StartsWith('/') then
+    Result := '/' + AValue
+  else
+    Result := AValue;
+end;
+
 
 { TSwaggerFilter }
 
@@ -123,7 +134,9 @@ begin
       if LMethodName <> '' then
       begin
         LResourceMethodPath := GetPath(LResourceMethod);
-        LMethodPath := (AApplication.Engine as TWiRLEngine).BasePath + AApplication.BasePath + LResourcePath;
+
+        LMethodPath := IncludeLeadingSlash((AApplication.Engine as TWiRLEngine).BasePath) +
+          IncludeLeadingSlash(AApplication.BasePath) + IncludeLeadingSlash(LResourcePath);
         if (not LMethodPath.EndsWith('/')) and (not LResourceMethodPath.StartsWith('/')) then
           LMethodPath := LMethodPath + '/';
         LMethodPath := LMethodPath + LResourceMethodPath;
@@ -288,6 +301,17 @@ function TSwaggerFilter.CreateParameter(ARttiParameter: TRttiParameter): TJSONOb
       Result := ''
   end;
 
+  function GetParamName(ARttiParameter: TRttiParameter): string;
+  var
+    LParam: MethodParamAttribute;
+  begin
+    LParam := TRttiHelper.FindAttribute<MethodParamAttribute>(ARttiParameter);
+    if Assigned(LParam) then
+      Result := LParam.Value
+    else
+      Result := ARttiParameter.Name;
+  end;
+
   function GetParamSchema(ARttiParameter: TRttiParameter): TJSONObject;
   begin
     Result := TJSONObject.Create;
@@ -304,7 +328,7 @@ begin
   begin
     LParameter := TJSONObject.Create;
 
-    LParameter.AddPair(TJSONPair.Create('name', ARttiParameter.Name));
+    LParameter.AddPair(TJSONPair.Create('name', GetParamName(ARttiParameter)));
     LParameter.AddPair(TJSONPair.Create('in', LParamType));
 
     if LParamType = 'path' then
@@ -412,7 +436,6 @@ begin
       else
         AJSON.AddPair(TJSONPair.Create('type', 'number'));
     end;
-
   else
     AJSON.AddPair(TJSONPair.Create('type', 'string'));
   end;
