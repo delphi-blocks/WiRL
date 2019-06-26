@@ -1,14 +1,14 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{EBEA6D21-3813-485E-8BCA-048D1CABD9C1}</ProjectGuid>
-        <MainSource>WiRLRunTime.dpk</MainSource>
+        <ProjectGuid>{B7363784-25C2-456C-BE44-D3E58F77E983}</ProjectGuid>
+        <MainSource>WiRLDesign.dpk</MainSource>
+        <ProjectVersion>18.2</ProjectVersion>
+        <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Package</AppType>
-        <FrameworkType>None</FrameworkType>
-        <ProjectVersion>18.2</ProjectVersion>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -28,204 +28,99 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
-        <Cfg_2_Win32>true</Cfg_2_Win32>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
-        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
-        <SanitizedProjectName>WiRLRunTime</SanitizedProjectName>
+        <DCC_Description>WiRL REST components</DCC_Description>
+        <DllSuffix>230</DllSuffix>
+        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <DesignOnlyPackage>true</DesignOnlyPackage>
         <VerInfo_Locale>1040</VerInfo_Locale>
-        <DCC_Description>WiRL REST Library</DCC_Description>
         <GenDll>true</GenDll>
-        <DCC_S>false</DCC_S>
-        <DCC_K>false</DCC_K>
-        <DCC_F>false</DCC_F>
-        <DllSuffix>240</DllSuffix>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
-        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-        <DCC_E>false</DCC_E>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_ImageBase>00400000</DCC_ImageBase>
+        <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <GenPackage>true</GenPackage>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <SanitizedProjectName>WiRLDesign</SanitizedProjectName>
+        <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
+        <DCC_S>false</DCC_S>
+        <DCC_F>false</DCC_F>
+        <DCC_K>false</DCC_K>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_OSX32)'!=''">
-        <DCC_UsePackage>rtl;dbrtl;inet;IndySystem;IndyProtocols;IndyCore;FireDAC;FireDACCommonDriver;FireDACCommon;bindengine;bindcomp;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_UsePackage>rtl;dbrtl;inet;IndySystem;IndyProtocols;IndyCore;FireDAC;FireDACCommonDriver;FireDACCommon;bindengine;bindcomp;WiRLClient;$(DCC_UsePackage)</DCC_UsePackage>
-        <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UsePackage>rtl;WiRLRunTime;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(ModuleName)</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UsePackage>rtl;dbrtl;inet;IndySystem;IndyProtocols;IndyCore;FireDAC;FireDACCommonDriver;FireDACCommon;bindengine;bindcomp;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <DCC_DebugInformation>0</DCC_DebugInformation>
-        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="inet.dcp"/>
-        <DCCReference Include="dbrtl.dcp"/>
-        <DCCReference Include="FireDACCommon.dcp"/>
-        <DCCReference Include="FireDACCommonDriver.dcp"/>
-        <DCCReference Include="FireDAC.dcp"/>
-        <DCCReference Include="IndySystem.dcp"/>
-        <DCCReference Include="IndyProtocols.dcp"/>
-        <DCCReference Include="IndyCore.dcp"/>
-        <DCCReference Include="bindengine.dcp"/>
-        <DCCReference Include="bindcomp.dcp"/>
-        <DCCReference Include="soaprtl.dcp"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.FireDAC.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Messaging.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.Stream.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.Stream.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Token.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Worker.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Attributes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Context.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Cache.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Classes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Context.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Declarations.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Engine.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Injection.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Default.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Validators.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Cookie.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Core.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Engines.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Filters.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Request.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Response.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.URL.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Attributes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Core.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Indy.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Interfaces.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Interfaces.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.FileSystemEngine.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.NetHttp.pas"/>
-        <RcItem Include="..\..\media\TWiRLClient.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClient</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientApplication.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientApplication</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientMessagingResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientMessagingResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResourceJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientResourceStream</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResource</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceJSON.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResourceJSON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientSubResourceStream.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientSubResourceStream</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLClientToken.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLClientToken</ResourceId>
-        </RcItem>
-        <RcItem Include="..\..\media\TWiRLFDResource.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TWiRLFDResource</ResourceId>
-        </RcItem>
-        <BuildConfiguration Include="Debug">
+        <DCCReference Include="WiRLRunTime.dcp"/>
+        <DCCReference Include="DesignIDE.dcp"/>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.Register.pas"/>
+        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Editor.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Editor.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Register.pas"/>
+        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas"/>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Editor.pas">
+            <Form>WiRLAppEditor</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
-        <BuildConfiguration Include="Release">
+        <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
@@ -236,26 +131,14 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">WiRLRunTime.dpk</Source>
+                    <Source Name="MainSource">WiRLDesign.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRL240.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRL240.bpl not found</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k240.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp240.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
-            <Platforms>
-                <Platform value="OSX32">False</Platform>
-                <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
-            </Platforms>
             <Deployment Version="3">
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLRunTime240.bpl" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>WiRLRunTime.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
                         <Overwrite>true</Overwrite>
@@ -276,7 +159,22 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\17.0\Bpl\WiRLDesign230.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>WiRLDesign.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -615,16 +513,7 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
@@ -634,6 +523,11 @@
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
             </Deployment>
+            <Platforms>
+                <Platform value="OSX32">False</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
