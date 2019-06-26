@@ -69,8 +69,6 @@ object MainForm: TMainForm
     Font.Style = []
     ParentFont = False
     TabOrder = 1
-    ExplicitTop = 79
-    ExplicitHeight = 210
   end
   object MainActionList: TActionList
     Left = 104

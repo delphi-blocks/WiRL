@@ -25,7 +25,7 @@ uses
   WiRL.Core.Auth.Context,
   WiRL.http.Filters,
   WiRL.Core.Injection,
-  WiRL.Persistence.Core;
+  Neon.Core.Persistence;
 
 type
   TAuthChallenge = (Basic, Digest, Bearer, Form);

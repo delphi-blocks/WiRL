@@ -44,8 +44,8 @@ implementation
 
 uses
   Data.DB, Datasnap.DBClient,
-  WiRL.Persistence.Core,
-  WiRL.Persistence.JSON,
+  Neon.Core.Persistence,
+  Neon.Core.Persistence.JSON,
   WiRL.Core.JSON,
   WiRL.Data.Utils,
   WiRL.Rtti.Utils;
@@ -85,7 +85,7 @@ begin
     try
       { TODO -opaolo -c : LCurrent.Name can be empty and producing an JSON error 30/05/2017 16:26:09 }
       for LCurrent in LData do
-        LResult.AddPair(LCurrent.Name, TNeonMapperJSON.ObjectToJSON(LCurrent));
+        LResult.AddPair(LCurrent.Name, TNeon.ObjectToJSON(LCurrent));
 
       LStreamWriter.Write(TJSONHelper.ToJSON(LResult));
     finally

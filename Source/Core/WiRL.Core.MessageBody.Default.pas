@@ -113,8 +113,8 @@ uses
   WiRL.Core.JSON,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
-  WiRL.Persistence.Core,
-  WiRL.Persistence.JSON;
+  Neon.Core.Persistence,
+  Neon.Core.Persistence.JSON;
 
 { TWiRLStringWriter }
 
@@ -253,7 +253,7 @@ begin
       tkDynArray,
       tkRecord:
       begin
-        LJSON := TNeonMapperJSON.ValueToJSON(AValue, WiRLApplication.SerializerConfig);
+        LJSON := TNeon.ValueToJSON(AValue, WiRLApplication.SerializerConfig);
         try
           LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
         finally
@@ -272,7 +272,7 @@ end;
 function TWiRLObjectProvider.ReadFrom(AParam: TRttiParameter; AMediaType:
     TMediaType; ARequest: TWiRLRequest): TValue;
 begin
-  Result := TNeonMapperJSON.JSONToObject(AParam.ParamType, ARequest.Content, WiRLApplication.SerializerConfig);
+  Result := TNeon.JSONToObject(AParam.ParamType, ARequest.Content, WiRLApplication.SerializerConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes:
@@ -283,7 +283,7 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
   try
-    LJSON := TNeonMapperJSON.ObjectToJSON(AValue.AsObject, WiRLApplication.SerializerConfig);
+    LJSON := TNeon.ObjectToJSON(AValue.AsObject, WiRLApplication.SerializerConfig);
     try
       LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally

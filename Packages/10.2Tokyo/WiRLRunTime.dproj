@@ -36,7 +36,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
-        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>WiRLRunTime</SanitizedProjectName>
         <VerInfo_Locale>1040</VerInfo_Locale>
@@ -143,11 +143,6 @@
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.URL.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Attributes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Core.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.DynamicTypes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Persistence.Utils.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas"/>

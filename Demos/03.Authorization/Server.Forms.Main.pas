@@ -69,13 +69,11 @@ begin
   // Server configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetThreadPoolSize(75)
     // Engine configuration
     .AddEngine<TWiRLEngine>('/rest')
       .SetEngineName('WiRL Auth Demo')
 
       .AddApplication('/app')
-        .SetSystemApp(True)
         .SetAppName('Auth Application')
         .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
         .SetClaimsClass(TServerClaims)

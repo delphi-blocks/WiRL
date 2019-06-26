@@ -20,12 +20,13 @@ uses
   WiRL.Core.Application,
   WiRL.Core.Declarations,
   WiRL.Core.Attributes,
-  WiRL.Persistence.Core,
-  WiRL.Persistence.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Auth.Context,
-  WiRL.http.URL;
+  WiRL.http.URL,
+
+  Neon.Core.Persistence,
+  Neon.Core.Attributes;
 
 type
   TWiRLAuthResponse = record
