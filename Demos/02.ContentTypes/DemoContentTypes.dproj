@@ -37,7 +37,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>./$(Platform)/$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>./$(Platform)/$(Config)</DCC_ExeOutput>
-        <DCC_UnitSearchPath>..\..\Source\Core;..\..\Source\Data;..\..\Source\Data\FireDAC;..\..\Libs\Neon\Source;..\..\Libs\JWT\Source\Common;..\..\Libs\JWT\Source\JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\Source\Core;..\..\Source\Data;..\..\Source\Data\FireDAC;..\..\Source\Extensions;..\..\Libs\Neon\Source;..\..\Libs\JWT\Source\Common;..\..\Libs\JWT\Source\JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1040</VerInfo_Locale>
@@ -108,6 +108,8 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp250.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k250.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp250.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>

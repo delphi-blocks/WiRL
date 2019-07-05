@@ -23,7 +23,8 @@ uses
   WiRL.Core.MessageBody.Default,
   WiRL.Data.MessageBody.Default,
   WiRL.Data.FireDAC.MessageBody.Default,
-  WiRL.Core.JSON;
+  WiRL.Core.JSON,
+  WiRL.Schemas.Swagger;
 
 type
   [Path('sample')]

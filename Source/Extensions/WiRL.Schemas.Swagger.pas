@@ -15,6 +15,8 @@ uses
   System.SysUtils, System.Classes, System.JSON, System.Generics.Collections,
   System.Rtti,
 
+  Neon.Core.Persistence.Swagger,
+
   WiRL.Core.Application,
   WiRL.Core.Engine,
   WiRL.Core.Context,
@@ -25,24 +27,22 @@ uses
   WiRL.http.Filters;
 
 type
-  TSwaggerSchemaCompiler = class
-  public
-    class procedure SetTypeProperties(AType: TRttiObject; AJSON: TJSONObject); static;
-  end;
-
   [PreMatching]
   TSwaggerFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
   private
-    const
-      SwaggerVersion = '2.0';
+    const SwaggerVersion = '2.0';
+  private
+    FWiRLContext: TWiRLContext;
+    FApplication: TWiRLApplication;
 
     function GetPath(ARttiObject: TRttiObject): string;
 
-    procedure BuildSwagger(AContext: TWiRLContext; ASwagger: TJSONObject);
     procedure AddApplicationResource(APaths: TJSONObject; AApplication: TWiRLApplication);
     procedure AddResource(APaths: TJSONObject; AApplication: TWiRLApplication; LResource: TClass);
     procedure AddOperation(AJsonPath: TJSONObject; const AMethodName: string; AResourceMethod: TRttiMethod);
     function CreateParameter(ARttiParameter: TRttiParameter): TJSONObject;
+
+    function BuildSwagger: TJSONObject;
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
@@ -53,8 +53,7 @@ type
 implementation
 
 uses
-  System.StrUtils,
-  System.TypInfo,
+  System.StrUtils, System.TypInfo,
   WiRL.http.Server,
   WiRL.Core.JSON;
 
@@ -78,15 +77,14 @@ begin
     Result := AValue;
 end;
 
-
 { TSwaggerFilter }
 
-procedure TSwaggerFilter.AddApplicationResource(APaths: TJSONObject;
-  AApplication: TWiRLApplication);
+procedure TSwaggerFilter.AddApplicationResource(APaths: TJSONObject; AApplication: TWiRLApplication);
 var
   LResourceName: string;
   LResource: TClass;
 begin
+  FApplication := AApplication;
   // Loop on every resource of the application
   for LResourceName in AApplication.Resources.Keys do
   begin
@@ -147,10 +145,9 @@ begin
       end;
     end;
   end;
-
 end;
 
-procedure TSwaggerFilter.BuildSwagger(AContext: TWiRLContext; ASwagger: TJSONObject);
+function TSwaggerFilter.BuildSwagger: TJSONObject;
 var
   LInfo: TJSONObject;
   LPaths: TJSONObject;
@@ -158,42 +155,29 @@ var
   LEngine: TWiRLCustomEngine;
   LAppInfo: TWiRLApplicationInfo;
 begin
-  LServer := AContext.Server as TWiRLServer;
+  LServer := FWiRLContext.Server as TWiRLServer;
 
   // Info object
-  LInfo := TJSONObject.Create;
-  LInfo.AddPair('title', ChangeFileExt(ExtractFileName(ParamStr(0)), ''));
-  LInfo.AddPair('version', '1.0');
+  LInfo := TJSONObject.Create
+    .AddPair('title', ChangeFileExt(ExtractFileName(ParamStr(0)), ''))
+    .AddPair('version', '1.0');
 
   // Paths object
   LPaths := TJSONObject.Create;
 
   for LEngine in LServer.Engines do
-  begin
     if LEngine is TWiRLEngine then
-    begin
       for LAppInfo in TWiRLEngine(LEngine).Applications do
-      begin
         AddApplicationResource(LPaths, LAppInfo.Application);
-      end;
-    end;
-  end;
-  // Swagger object (root)
-  ASwagger.AddPair('swagger', SwaggerVersion);
-  ASwagger.AddPair('host', AContext.Request.Host);
-//  ASwagger.AddPair('basePath', LEngine.BasePath);
-  ASwagger.AddPair('info', LInfo);
-  ASwagger.AddPair('paths', LPaths);
+
+  Result := TJSONObject.Create
+    .AddPair('swagger', SwaggerVersion)
+    .AddPair('host', FWiRLContext.Request.Host)
+    .AddPair('info', LInfo)
+    .AddPair('paths', LPaths)
 end;
 
-procedure TSwaggerFilter.AddOperation(AJsonPath: TJSONObject;
-  const AMethodName: string; AResourceMethod: TRttiMethod);
-
-  function CreateResponseSchema(AResourceMethod: TRttiMethod): TJSONObject;
-  begin
-    Result := TJSONObject.Create;
-    TSwaggerSchemaCompiler.SetTypeProperties(AResourceMethod.ReturnType, Result);
-  end;
+procedure TSwaggerFilter.AddOperation(AJsonPath: TJSONObject; const AMethodName: string; AResourceMethod: TRttiMethod);
 
   function FindOrCreateOperation(APath: TJSONObject; const AMethodName: string) :TJSONObject;
   begin
@@ -279,7 +263,7 @@ begin
     LResponses.AddPair('200', LOkResponse);
     LResponses.AddPair('default', TJSONObject.Create(TJSONPair.Create('description', 'Error')));
     if Assigned(AResourceMethod.ReturnType) and (AResourceMethod.ReturnType.TypeKind <> tkUnknown) then
-      LOkResponse.AddPair('schema', CreateResponseSchema(AResourceMethod));
+      LOkResponse.AddPair('schema', TNeonSchemaGenerator.TypeToJSONSchema(AResourceMethod.ReturnType, FApplication.SerializerConfig));
   end;
 end;
 
@@ -307,58 +291,48 @@ function TSwaggerFilter.CreateParameter(ARttiParameter: TRttiParameter): TJSONOb
   begin
     LParam := TRttiHelper.FindAttribute<MethodParamAttribute>(ARttiParameter);
     if Assigned(LParam) then
-      Result := LParam.Value
-    else
+      Result := LParam.Value;
+
+    if Result.IsEmpty then
       Result := ARttiParameter.Name;
   end;
 
-  function GetParamSchema(ARttiParameter: TRttiParameter): TJSONObject;
-  begin
-    Result := TJSONObject.Create;
-    Result.AddPair('type', 'string');
-    Result.AddPair('format', 'byte');
-  end;
-
 var
-  LParameter: TJSONObject;
   LParamType: string;
 begin
   LParamType := GetParamPosition(ARttiParameter);
-  if LParamType <> '' then
+  if LParamType.IsEmpty then
+    Result := nil
+  else
   begin
-    LParameter := TJSONObject.Create;
+    if LParamType <> 'body' then
+      Result := TNeonSchemaGenerator.TypeToJSONSchema(ARttiParameter.ParamType, FApplication.SerializerConfig)
+    else
+    begin
+      Result := TJSONObject.Create
+        .AddPair('schema', TNeonSchemaGenerator.TypeToJSONSchema(ARttiParameter.ParamType, FApplication.SerializerConfig))
+    end;
 
-    LParameter.AddPair(TJSONPair.Create('name', GetParamName(ARttiParameter)));
-    LParameter.AddPair(TJSONPair.Create('in', LParamType));
+    Result.AddPair(TJSONPair.Create('name', GetParamName(ARttiParameter)));
+    Result.AddPair(TJSONPair.Create('in', LParamType));
 
     if LParamType = 'path' then
-      LParameter.AddPair(TJSONPair.Create('required', TJSONTrue.Create))
+      Result.AddPair(TJSONPair.Create('required', TJSONTrue.Create))
     else
-      LParameter.AddPair(TJSONPair.Create('required', TJSONFalse.Create));
-
-    if LParamType <> 'body' then
-    begin
-      TSwaggerSchemaCompiler.SetTypeProperties(ARttiParameter, LParameter);
-    end
-    else
-    begin
-      LParameter.AddPair(TJSONPair.Create('schema', GetParamSchema(ARttiParameter)));
-    end;
-  end
-  else
-    LParameter := nil;
-  Result := LParameter;
+      Result.AddPair(TJSONPair.Create('required', TJSONFalse.Create));
+  end;
 end;
 
 procedure TSwaggerFilter.Filter(ARequestContext: TWiRLContainerRequestContext);
 var
   LSwagger: TJSONObject;
 begin
+  FWiRLContext := ARequestContext.Context;
+
   if ARequestContext.Request.PathInfo.StartsWith('/swagger') then
   begin
-    LSwagger := TJSONObject.Create;
+    LSwagger := BuildSwagger;
     try
-      BuildSwagger(ARequestContext.Context, LSwagger);
       ARequestContext.Response.ContentType := TMediaType.APPLICATION_JSON;
       ARequestContext.Response.Content :=  TJSONHelper.ToJSON(LSwagger);
       ARequestContext.Abort;
@@ -380,65 +354,6 @@ begin
     end
   );
   Result := LPath;
-end;
-
-{ TSwaggerSchemaCompiler }
-
-class procedure TSwaggerSchemaCompiler.SetTypeProperties(AType: TRttiObject; AJSON: TJSONObject);
-var
-  LTypeKind: TTypeKind;
-  LPTypeInfo: PTypeInfo;
-begin
-  LPTypeInfo := PTypeInfo(AType.Handle);
-  LTypeKind := PTypeInfo(AType.Handle)^.Kind;
-
-  case LTypeKind of
-    tkInteger, tkInt64:
-    begin
-      AJSON.AddPair(TJSONPair.Create('type', 'integer'));
-    end;
-
-    tkClass, tkRecord:
-    begin
-      AJSON.AddPair(TJSONPair.Create('type', 'object'));
-    end;
-
-    tkDynArray, tkArray:
-    begin
-      AJSON.AddPair(TJSONPair.Create('type', 'array'));
-    end;
-
-    tkEnumeration:
-    begin
-      if (LPTypeInfo = System.TypeInfo(Boolean)) then
-        AJSON.AddPair(TJSONPair.Create('type', 'boolean'))
-      else
-        AJSON.AddPair(TJSONPair.Create('type', 'string'));
-    end;
-
-    tkFloat:
-    begin
-      if (LPTypeInfo = System.TypeInfo(TDateTime)) then
-      begin
-        AJSON.AddPair(TJSONPair.Create('type', 'string'));
-        AJSON.AddPair(TJSONPair.Create('format', 'date-time'));
-      end
-      else if (LPTypeInfo = System.TypeInfo(TDate)) then
-      begin
-        AJSON.AddPair(TJSONPair.Create('type', 'string'));
-        AJSON.AddPair(TJSONPair.Create('format', 'date'));
-      end
-      else if (LPTypeInfo = System.TypeInfo(TTime)) then
-      begin
-        AJSON.AddPair(TJSONPair.Create('type', 'string'));
-        AJSON.AddPair(TJSONPair.Create('format', 'date-time'));
-      end
-      else
-        AJSON.AddPair(TJSONPair.Create('type', 'number'));
-    end;
-  else
-    AJSON.AddPair(TJSONPair.Create('type', 'string'));
-  end;
 end;
 
 initialization
