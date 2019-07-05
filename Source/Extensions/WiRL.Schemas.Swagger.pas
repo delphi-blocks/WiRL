@@ -37,9 +37,9 @@ type
 
     function GetPath(ARttiObject: TRttiObject): string;
 
-    procedure AddApplicationResource(APaths: TJSONObject; AApplication: TWiRLApplication);
-    procedure AddResource(APaths: TJSONObject; AApplication: TWiRLApplication; LResource: TClass);
-    procedure AddOperation(AJsonPath: TJSONObject; const AMethodName: string; AResourceMethod: TRttiMethod);
+    procedure AddApplicationResource(APaths: TJSONObject; ATags: TJSONArray; AApplication: TWiRLApplication);
+    procedure AddResource(const AName: string; APaths: TJSONObject; AApplication: TWiRLApplication; LResource: TClass);
+    procedure AddOperation(AJsonPath: TJSONObject; const AMethodName, ATagName: string; AResourceMethod: TRttiMethod);
     function CreateParameter(ARttiParameter: TRttiParameter): TJSONObject;
 
     function BuildSwagger: TJSONObject;
@@ -79,7 +79,7 @@ end;
 
 { TSwaggerFilter }
 
-procedure TSwaggerFilter.AddApplicationResource(APaths: TJSONObject; AApplication: TWiRLApplication);
+procedure TSwaggerFilter.AddApplicationResource(APaths: TJSONObject; ATags: TJSONArray; AApplication: TWiRLApplication);
 var
   LResourceName: string;
   LResource: TClass;
@@ -88,12 +88,13 @@ begin
   // Loop on every resource of the application
   for LResourceName in AApplication.Resources.Keys do
   begin
+    ATags.Add(TJSONObject.Create.AddPair('name', LResourceName));
     LResource := AApplication.GetResourceInfo(LResourceName).TypeTClass;
-    AddResource(APaths, AApplication, LResource);
+    AddResource(LResourceName, APaths, AApplication, LResource);
   end;
 end;
 
-procedure TSwaggerFilter.AddResource(APaths: TJSONObject;
+procedure TSwaggerFilter.AddResource(const AName: string; APaths: TJSONObject;
   AApplication: TWiRLApplication; LResource: TClass);
 
   function FindOrCreatePath(APaths: TJSONObject; const AResourcePath: string): TJSONObject;
@@ -141,7 +142,7 @@ begin
         // If the resource is already documented add the information on
         // the same json object
         LJsonPath := FindOrCreatePath(APaths, LMethodPath);
-        AddOperation(LJsonPath, LMethodName, LResourceMethod);
+        AddOperation(LJsonPath, LMethodName, AName, LResourceMethod);
       end;
     end;
   end;
@@ -150,6 +151,7 @@ end;
 function TSwaggerFilter.BuildSwagger: TJSONObject;
 var
   LInfo: TJSONObject;
+  LTags: TJSONArray;
   LPaths: TJSONObject;
   LServer: TWiRLServer;
   LEngine: TWiRLCustomEngine;
@@ -164,20 +166,28 @@ begin
 
   // Paths object
   LPaths := TJSONObject.Create;
+  LTags := TJSONArray.Create;
 
   for LEngine in LServer.Engines do
+  begin
     if LEngine is TWiRLEngine then
+    begin
       for LAppInfo in TWiRLEngine(LEngine).Applications do
-        AddApplicationResource(LPaths, LAppInfo.Application);
+      begin
+        AddApplicationResource(LPaths, LTags, LAppInfo.Application);
+      end;
+    end;
+  end;
 
   Result := TJSONObject.Create
     .AddPair('swagger', SwaggerVersion)
     .AddPair('host', FWiRLContext.Request.Host)
     .AddPair('info', LInfo)
+    .AddPair('tags', LTags)
     .AddPair('paths', LPaths)
 end;
 
-procedure TSwaggerFilter.AddOperation(AJsonPath: TJSONObject; const AMethodName: string; AResourceMethod: TRttiMethod);
+procedure TSwaggerFilter.AddOperation(AJsonPath: TJSONObject; const AMethodName, ATagName: string; AResourceMethod: TRttiMethod);
 
   function FindOrCreateOperation(APath: TJSONObject; const AMethodName: string) :TJSONObject;
   begin
@@ -199,13 +209,16 @@ var
   LRttiParameter: TRttiParameter;
   LOkResponse: TJSONObject;
 begin
-  // Operation = Path+HttpMethod
+  // Operation = Path + HttpMethod
   // If more object method use the same operation add info on the
   // same operation
   LOperation := FindOrCreateOperation(AJsonPath, AMethodName);
 
   if not Assigned(LOperation.GetValue('summary')) then
     LOperation.AddPair('summary', AResourceMethod.Name);
+
+  if not ATagName.IsEmpty then
+    LOperation.AddPair('tags', TJSONArray.Create.Add(ATagName));
 
   LProduces := LOperation.GetValue('produces') as TJSONArray;
   TRttiHelper.HasAttribute<ProducesAttribute>(AResourceMethod,

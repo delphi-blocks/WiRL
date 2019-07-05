@@ -110,7 +110,7 @@ type
     function AddEngines(AEngines: TArray<TWiRLCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLServer;
     procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
     procedure RemoveEngine(const ABasePath: string); overload;
-    function GetEngine(const Url: string): TWiRLCustomEngine;
+    function GetEngine(const AURL: string): TWiRLCustomEngine;
     function SetPort(APort: Integer): TWiRLServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLServer;
 
@@ -202,13 +202,13 @@ begin
   Result := FActive;
 end;
 
-function TWiRLServer.GetEngine(const Url: string): TWiRLCustomEngine;
+function TWiRLServer.GetEngine(const AURL: string): TWiRLCustomEngine;
 var
   LUrlTokens: TArray<string>;
   LBaseUrl: string;
 begin
   Result := nil;
-  LUrlTokens := Url.Split(['/']);
+  LUrlTokens := AURL.Split(['/']);
   if Length(LUrlTokens) > 1 then
     LBaseUrl := LUrlTokens[1]
   else
@@ -220,11 +220,11 @@ begin
   if FEngines.TryGetValue('/', Result) then
     Exit;
 
-  if Url.Equals('/favicon.ico') then
+  if AURL.Equals('/favicon.ico') then
     Abort;
 
   if not Assigned(Result) then
-    raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [Url]);
+    raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [AURL]);
 end;
 
 procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
@@ -437,16 +437,17 @@ procedure TWiRLCustomEngine.SetServer(const Value: TWiRLServer);
 begin
   if FServer <> Value then
   begin
-    if Assigned(FServer) then
-      FServer.RemoveEngine(Self);
+//    if Assigned(FServer) then
+//      FServer.RemoveEngine(Self);
     FServer := Value;
-    if Assigned(FServer) then
-      FServer.AddEngine(BasePath, Self, False);
+//    if Assigned(FServer) then
+//      FServer.AddEngine(BasePath, Self, False);
   end;
 end;
 
 procedure TWiRLCustomEngine.Shutdown;
 begin
+
 end;
 
 procedure TWiRLCustomEngine.Startup;
