@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -25,9 +25,9 @@ uses
   WiRL.http.Server,
   WiRL.http.Server.Indy,
 
-  WiRL.Persistence.Types,
-  WiRL.Persistence.Core,
-  WiRL.Persistence.JSON,
+  Neon.Core.Persistence,
+  Neon.Core.Types,
+  Neon.Core.Persistence.JSON,
 
   Server.Resources;
 
@@ -89,6 +89,8 @@ type
     chkVisibilityPublished: TCheckBox;
     btnSerFilterObject: TButton;
     btnDesFilterObject: TButton;
+    btnSerDictionary: TButton;
+    btnDesDictionary: TButton;
     procedure btnSerDataSetClick(Sender: TObject);
     procedure btnSerComplexObjectClick(Sender: TObject);
     procedure btnSerSimpleTypesClick(Sender: TObject);
@@ -98,6 +100,7 @@ type
     procedure btnSerImageClick(Sender: TObject);
     procedure btnDesSimpleTypesClick(Sender: TObject);
     procedure btnDesDataSetClick(Sender: TObject);
+    procedure btnDesDictionaryClick(Sender: TObject);
     procedure btnDesFilterObjectClick(Sender: TObject);
     procedure btnDesGenericListClick(Sender: TObject);
     procedure btnDesGenericObjectListClick(Sender: TObject);
@@ -106,6 +109,7 @@ type
     procedure btnDesStreamablePropClick(Sender: TObject);
     procedure btnStreamablePropClick(Sender: TObject);
     procedure btnDesSimpleObjectClick(Sender: TObject);
+    procedure btnSerDictionaryClick(Sender: TObject);
     procedure btnSerSimpleObjectClick(Sender: TObject);
     procedure btnSerFilterObjectClick(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
@@ -163,6 +167,11 @@ begin
     LPerson.Note.Date := Now;
     LPerson.Note.Text := 'Note Text';
 
+    LPerson.Map.Add('first', TNote.Create(Now, 'First Object'));
+    LPerson.Map.Add('second', TNote.Create(Now, 'Second Object'));
+    LPerson.Map.Add('third', TNote.Create(Now, 'Third Object'));
+    LPerson.Map.Add('fourth', TNote.Create(Now, 'Fourth Object'));
+
     SerializeObject(LPerson);
   finally
     LPerson.Free;
@@ -173,7 +182,7 @@ function TMainForm.GetStringFromValue(const AValue: TValue): string;
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ValueToJSON(AValue, BuildSerializerConfig);
+  LJSON := TNeon.ValueToJSON(AValue, BuildSerializerConfig);
   try
     Result := TJSONHelper.ToJSON(LJSON);
   finally
@@ -255,7 +264,7 @@ procedure TMainForm.btnSerImageClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ObjectToJSON(imgSample, BuildSerializerConfig);
+  LJSON := TNeon.ObjectToJSON(imgSample, BuildSerializerConfig);
   try
     Log('Image', TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -350,6 +359,19 @@ procedure TMainForm.btnDesDataSetClick(Sender: TObject);
 begin
   dsPersons.EmptyDataSet;
   DeserializeObject(dsPersons);
+end;
+
+procedure TMainForm.btnDesDictionaryClick(Sender: TObject);
+var
+  LMap: TDictionary<string, TNote>;
+begin
+  LMap := TObjectDictionary<string, TNote>.Create([doOwnsValues]);
+  try
+    DeserializeObject(LMap);
+    SerializeObject(LMap);
+  finally
+    LMap.Free;
+  end;
 end;
 
 procedure TMainForm.btnDesFilterObjectClick(Sender: TObject);
@@ -458,6 +480,20 @@ begin
   end;
 end;
 
+procedure TMainForm.btnSerDictionaryClick(Sender: TObject);
+var
+  LMap: TObjectDictionary<string, TNote>;
+begin
+  LMap := TObjectDictionary<string, TNote>.Create([doOwnsValues]);
+  try
+    LMap.Add('uno', TNote.Create(Now, 'Lorem ipsum dolor sit amet'));
+    LMap.Add('due', TNote.Create(Now+0.2, 'Fusce in libero posuere'));
+    SerializeObject(LMap);
+  finally
+    LMap.Free;
+  end;
+end;
+
 procedure TMainForm.btnSerSimpleObjectClick(Sender: TObject);
 var
   LSimple: TCaseClass;
@@ -494,9 +530,9 @@ begin
 
   // Member type settings
   if rbMemberFields.Checked then
-    Result.SetMembers(TNeonMembers.Fields);
+    Result.SetMembers([TNeonMembers.Fields]);
   if rbMemberProperties.Checked then
-    Result.SetMembers(TNeonMembers.Properties);
+    Result.SetMembers([TNeonMembers.Properties]);
 
   // F Prefix setting
   if chkIgnorePrefix.Checked then
@@ -530,7 +566,7 @@ procedure TMainForm.SerializeObject(AObject: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ObjectToJSON(AObject, BuildSerializerConfig);
+  LJSON := TNeon.ObjectToJSON(AObject, BuildSerializerConfig);
   try
     Log(TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -544,12 +580,12 @@ var
 begin
   LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
   try
-    TNeonMapperJSON.JSONToObject(AObject, LJSON, BuildSerializerConfig);
+    TNeon.JSONToObject(AObject, LJSON, BuildSerializerConfig);
   finally
     LJSON.Free;
   end;
 
-  LJSON := TNeonMapperJSON.ObjectToJSON(AObject, BuildSerializerConfig);
+  LJSON := TNeon.ObjectToJSON(AObject, BuildSerializerConfig);
   try
     memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
   finally
@@ -599,7 +635,7 @@ begin
       .SetAppName('Content App')
       .SetResources('Server.Resources.TEntityResource')
       .ConfigureSerializer
-        .SetMembers(TNeonMembers.Standard)
+        .SetMembers([TNeonMembers.Standard])
         .SetVisibility([mvPublic, mvPublished])
         .SetMemberCase(TNeonCase.SnakeCase)
   ;
@@ -652,7 +688,7 @@ begin
   LRec.One := 'Paolo';
   LRec.Two := 47;
 
-  LJSON := TNeonMapperJSON.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
+  LJSON := TNeon.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
   try
     Log(TJSONHelper.PrettyPrint(LJSON));
   finally

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -63,6 +63,7 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
+    function GetUnknownResponseCode: string; override;
   public
     procedure SendHeaders; override;
 
@@ -425,6 +426,11 @@ end;
 function TWiRLClientResponseNetHttp.GetStatusCode: Integer;
 begin
   Result := FStatusCode;
+end;
+
+function TWiRLClientResponseNetHttp.GetUnknownResponseCode: string;
+begin
+  Result := 'Unknown Response Code';
 end;
 
 procedure TWiRLClientResponseNetHttp.SendHeaders;

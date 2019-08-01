@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -15,8 +15,8 @@ uses
   System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections,
   System.Math, System.Math.Vectors, System.Types,
 
-  WiRL.Persistence.Types,
-  WiRL.Persistence.Attributes;
+  Neon.Core.Types,
+  Neon.Core.Attributes;
 
 {$M+}
 
@@ -90,6 +90,8 @@ type
   private
     FDate: TDateTime;
     FText: string;
+  public
+    constructor Create(ADate: TDateTime; const AText: string); overload;
   published
     property Date: TDateTime read FDate write FDate;
     property Text: string read FText write FText;
@@ -105,6 +107,7 @@ type
     FNote: TNote;
     FOptions: TMySet;
     FSurname: string;
+    FMap: TObjectDictionary<string, TNote>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -121,6 +124,8 @@ type
     property Enum: TMyEnum read FEnum write FEnum;
     property Note: TNote read FNote write FNote;
     property Options: TMySet read FOptions write FOptions;
+
+    property Map: TObjectDictionary<string, TNote> read FMap write FMap;
   end;
 
   TCaseClass = class
@@ -132,7 +137,7 @@ type
     FThirdPascalCaseProp: TDateTime;
     FDefProp: Integer;
 
-    [NeonInclude, NeonMembers(TNeonMembers.Fields)]
+    [NeonInclude(Include.Always), NeonMembersSet([TNeonMembers.Fields])]
     FirstRecord: TMyRecord;
   public
     class function DefaultValues: TCaseClass;
@@ -158,7 +163,7 @@ type
     [NeonInclude]
     Field1: TArray<TDateTime>;
 
-    [NeonIncludeIf('ShouldInclude')]
+    [NeonInclude(Include.CustomFunction, 'ShouldInclude')]
     Field2: TRect;
   private
     function ShouldInclude(const AContext: TNeonIgnoreIfContext): Boolean;
@@ -170,7 +175,7 @@ type
     property Prop3: TDateTime read FProp3 write FProp3;
     [NeonIgnore]
     property Prop4: TPoint3D read FProp4 write FProp4;
-    [NeonIncludeIf('ShouldInclude')]
+    [NeonInclude(Include.CustomFunction, 'ShouldInclude')]
     property Prop5: TVector3D read FProp5 write FProp5;
   end;
 
@@ -200,6 +205,7 @@ begin
   FDoubleProp := 56.7870988623;
   FDateProp := Now;
   FOptions := [TMyEnum.First, TMyEnum.Second, TMyEnum.Fourth];
+  FMap := TObjectDictionary<string, TNote>.Create([doOwnsValues]);
 end;
 
 destructor TPerson.Destroy;
@@ -210,6 +216,7 @@ begin
     FAddresses[LIndex].Free;
   SetLength(FAddresses, 0);
   FNote.Free;
+  FMap.Free;
   inherited;
 end;
 
@@ -333,6 +340,14 @@ begin
     Result := True;
   end;
 
+end;
+
+{ TNote }
+
+constructor TNote.Create(ADate: TDateTime; const AText: string);
+begin
+  FDate := ADate;
+  FText := AText;
 end;
 
 end.

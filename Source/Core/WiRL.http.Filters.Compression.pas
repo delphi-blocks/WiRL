@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -12,7 +12,7 @@ unit WiRL.http.Filters.Compression;
 interface
 
 uses
-  WinApi.Windows, System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes,
 
   WiRL.Core.Registry,
   WiRL.http.Filters,
@@ -25,6 +25,15 @@ uses
   WiRL.http.Accept.MediaType;
 
 type
+  [NameBinding]
+  ContentEncodingAttribute = class(TCustomAttribute);
+
+  [NameBinding]
+  ContentDecodingAttribute = class(TCustomAttribute);
+
+  [NameBinding]
+  CompressionAttribute = class(TCustomAttribute);
+
   /// <summary>
   ///   Base class for the encoding/decoding filters, only to introduce Encoding header
   ///   values
@@ -43,7 +52,7 @@ type
   /// <remarks>
   ///   Only the "deflate" ContentEncoding is supported
   /// </remarks>
-  [ContentDecoding]
+  [ContentDecoding, Compression]
   TRequestDecodingFilter = class(TCompressionFilter, IWiRLContainerRequestFilter)
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
@@ -56,7 +65,7 @@ type
   /// <remarks>
   ///   Only the "deflate" ContentEncoding is supported
   /// </remarks>
-  [ContentEncoding]
+  [ContentEncoding, Compression]
   TResponseEncodingFilter = class(TCompressionFilter, IWiRLContainerResponseFilter)
   public
     procedure Filter(AResponseContext: TWiRLContainerResponseContext);
@@ -68,7 +77,7 @@ type
   /// <remarks>
   ///   Not registered by default
   /// </remarks>
-  [ContentEncoding]
+  [ContentEncoding, Compression]
   TResponseEncodingFilterDebug = class(TCompressionFilter, IWiRLContainerResponseFilter)
   public
     procedure Filter(AResponseContext: TWiRLContainerResponseContext);

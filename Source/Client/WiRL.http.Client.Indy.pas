@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -17,7 +17,7 @@ uses
   System.SysUtils, System.Classes,
 
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
-  IdHTTPHeaderInfo, IdStack,
+  IdHTTPHeaderInfo, IdStack, IdResourceStringsProtocols,
 
   WiRL.http.Client.Interfaces,
   WiRL.http.Core,
@@ -60,6 +60,7 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
+    function GetUnknownResponseCode: string; override;
   public
     procedure SendHeaders; override;
 
@@ -353,6 +354,11 @@ end;
 function TWiRLClientResponseIndy.GetStatusCode: Integer;
 begin
   Result := FIdHTTPResponse.ResponseCode;
+end;
+
+function TWiRLClientResponseIndy.GetUnknownResponseCode: string;
+begin
+  Result := RSHTTPUnknownResponseCode;
 end;
 
 procedure TWiRLClientResponseIndy.SendHeaders;

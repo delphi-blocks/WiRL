@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -23,7 +23,8 @@ uses
   WiRL.Core.MessageBody.Default,
   WiRL.Data.MessageBody.Default,
   WiRL.Data.FireDAC.MessageBody.Default,
-  WiRL.Core.JSON;
+  WiRL.Core.JSON,
+  WiRL.Schemas.Swagger;
 
 type
   [Path('sample')]

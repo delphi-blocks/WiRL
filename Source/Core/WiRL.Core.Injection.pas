@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Core.Injection;
 
 interface
@@ -154,7 +163,7 @@ begin
     AValue := AContext.URL
   // Engine
   else if (LType.InheritsFrom(TWiRLEngine)) then
-    AValue := AContext.Engine as TWirlEngine
+    AValue := AContext.Engine as TWiRLEngine
   // Application
   else if (LType.InheritsFrom(TWiRLApplication)) then
     AValue := AContext.Application

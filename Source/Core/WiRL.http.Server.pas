@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -107,10 +107,10 @@ type
   public
     function AddEngine<T: constructor, TWiRLCustomEngine>(const ABasePath: string; AOwnsObjects: Boolean = True) :T; overload;
     procedure AddEngine(const ABasePath: string; AEngine: TWiRLCustomEngine; AOwnsObjects: Boolean = True); overload;
-    function AddEngines(AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLServer;
+    function AddEngines(AEngines: TArray<TWiRLCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLServer;
     procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
     procedure RemoveEngine(const ABasePath: string); overload;
-    function GetEngine(const Url: string): TWiRLCustomEngine;
+    function GetEngine(const AURL: string): TWiRLCustomEngine;
     function SetPort(APort: Integer): TWiRLServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLServer;
 
@@ -156,9 +156,9 @@ begin
 end;
 
 function TWiRLServer.AddEngines(
-  AEngines: TArray<TWirlCustomEngine>; AOwnsObjects: Boolean): TWiRLServer;
+  AEngines: TArray<TWiRLCustomEngine>; AOwnsObjects: Boolean): TWiRLServer;
 var
-  LEngine: TWirlCustomEngine;
+  LEngine: TWiRLCustomEngine;
 begin
   for LEngine in AEngines do
     AddEngine(LEngine.BasePath, LEngine, AOwnsObjects);
@@ -202,13 +202,13 @@ begin
   Result := FActive;
 end;
 
-function TWiRLServer.GetEngine(const Url: string): TWiRLCustomEngine;
+function TWiRLServer.GetEngine(const AURL: string): TWiRLCustomEngine;
 var
   LUrlTokens: TArray<string>;
   LBaseUrl: string;
 begin
   Result := nil;
-  LUrlTokens := Url.Split(['/']);
+  LUrlTokens := AURL.Split(['/']);
   if Length(LUrlTokens) > 1 then
     LBaseUrl := LUrlTokens[1]
   else
@@ -220,17 +220,17 @@ begin
   if FEngines.TryGetValue('/', Result) then
     Exit;
 
-  if Url.Equals('/favicon.ico') then
+  if AURL.Equals('/favicon.ico') then
     Abort;
 
   if not Assigned(Result) then
-    raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [Url]);
+    raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [AURL]);
 end;
 
 procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
 var
   LContext: TWiRLContext;
-  LEngine: TWirlCustomEngine;
+  LEngine: TWiRLCustomEngine;
 begin
   inherited;
   LContext := TWiRLContext.Create;
@@ -437,16 +437,17 @@ procedure TWiRLCustomEngine.SetServer(const Value: TWiRLServer);
 begin
   if FServer <> Value then
   begin
-    if Assigned(FServer) then
-      FServer.RemoveEngine(Self);
+//    if Assigned(FServer) then
+//      FServer.RemoveEngine(Self);
     FServer := Value;
-    if Assigned(FServer) then
-      FServer.AddEngine(BasePath, Self, False);
+//    if Assigned(FServer) then
+//      FServer.AddEngine(BasePath, Self, False);
   end;
 end;
 
 procedure TWiRLCustomEngine.Shutdown;
 begin
+
 end;
 
 procedure TWiRLCustomEngine.Startup;

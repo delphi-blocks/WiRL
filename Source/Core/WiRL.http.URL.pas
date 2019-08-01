@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -479,6 +479,7 @@ class function TWiRLURL.URLEncode(const AString: string): string;
 begin
 //  Result := TNetEncoding.URL.Encode(AString);
   Result := TIdURI.PathEncode(AString);
+  Result := StringReplace(Result, '&', '%26', [rfReplaceAll]);
 end;
 
 class function TWiRLURL.URLEncode(const AStrings: TArray<string>): TArray<string>;

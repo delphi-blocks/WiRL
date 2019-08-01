@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -53,6 +53,7 @@ type
     /// </summary>
     EXIT_SUCCESS = 0;
     EXIT_FAILURE = 1;
+    ROOT_DIR = '/';
   private
     /// <summary>
     ///   Fork a Posix process
@@ -103,7 +104,7 @@ type
     ///   Console setup method, to be called before Run and before starting
     ///   any thread in the application
     /// </summary>
-    class procedure Setup(ASignalProc: TSignalProc);
+    class procedure Setup(ASignalProc: TSignalProc; const ARedirectTo: string = ROOT_DIR);
 
     /// <summary>
     ///   Infinte console loop
@@ -268,7 +269,7 @@ begin
   LogClose;
 end;
 
-class procedure TPosixDaemon.Setup(ASignalProc: TSignalProc);
+class procedure TPosixDaemon.Setup(ASignalProc: TSignalProc; const ARedirectTo: string);
 begin
   FSignalProc := ASignalProc;
 
@@ -288,7 +289,9 @@ begin
   RouteDescriptors;
 
   UserFileMask(027);
-  SetRootDirectory('/');
+  
+  if not ARedirectTo.IsEmpty then
+    SetRootDirectory(ARedirectTo);
 end;
 
 class procedure TPosixDaemon.Stop;

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -127,6 +127,8 @@ type
     procedure SetValue(const AName, AValue: string);
     function GetValueFromLine(AIndex: Integer): string;
   public
+    constructor Create;
+
     function IndexOfName(const AName: string): Integer; reintroduce;
     property Names[Index: Integer]: string read GetName;
     property Values[const Name: string]: string read GetValue write SetValue; default;
@@ -178,6 +180,12 @@ end;
 
 const
   HeaderNameValueSeparator = ': ';
+
+constructor TWiRLHeaderList.Create;
+begin
+  inherited Create;
+  NameValueSeparator := ':';
+end;
 
 function TWiRLHeaderList.GetName(AIndex: Integer): string;
 var

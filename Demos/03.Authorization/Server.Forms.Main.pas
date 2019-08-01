@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,7 +16,11 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
-  WiRL.http.Server, WiRL.http.Server.Indy, WiRL.Core.Engine;
+
+  WiRL.http.Server,
+  WiRL.http.Server.Indy,
+  WiRL.Core.Engine,
+  WiRL.Core.Application;
 
 type
   TMainForm = class(TForm)
@@ -69,14 +73,13 @@ begin
   // Server configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetThreadPoolSize(75)
     // Engine configuration
     .AddEngine<TWiRLEngine>('/rest')
       .SetEngineName('WiRL Auth Demo')
 
       .AddApplication('/app')
-        .SetSystemApp(True)
         .SetAppName('Auth Application')
+        .SetTokenLocation(TAuthTokenLocation.Bearer)
         .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
         .SetClaimsClass(TServerClaims)
       {$IFDEF HAS_NEW_ARRAY}

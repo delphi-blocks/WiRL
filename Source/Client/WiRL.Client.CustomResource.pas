@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit WiRL.Client.CustomResource;
+
+{$I ..\Core\WiRL.inc}
 
 interface
 
@@ -21,7 +23,11 @@ type
   TWiRLClientResponseProc = TProc<TStream>;
   TWiRLClientExceptionProc = TProc<Exception>;
 
+  {$IFDEF HAS_NEW_PIDS}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
+  {$ELSE}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
+  {$ENDIF}
   TWiRLClientCustomResource = class(TComponent)
   private
     FResource: string;

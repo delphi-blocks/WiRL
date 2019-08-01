@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2017 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -325,8 +325,7 @@ begin
   Result := LAborted;
 end;
 
-procedure TWiRLFilterRegistry.ApplyPreMatchingResponseFilters(
-  AContext: TWiRLContext);
+procedure TWiRLFilterRegistry.ApplyPreMatchingResponseFilters(AContext: TWiRLContext);
 var
   LResponseFilter: IWiRLContainerResponseFilter;
   LResponseContext: TWiRLContainerResponseContext;

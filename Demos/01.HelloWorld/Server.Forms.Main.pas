@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
+  Neon.Core.Types,
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
@@ -61,7 +62,10 @@ begin
     .SetEngineName('RESTEngine')
     .AddApplication('/app')
       .SetResources('*')
-      .SetFilters('*');
+      .SetFilters('*')
+      .ConfigureSerializer
+        .SetUseUTCDate(True)
+        .SetMemberCase(TNeonCase.SnakeCase);
 
   StartServerAction.Execute;
 end;

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,6 +16,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
+  WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
@@ -24,7 +25,7 @@ uses
   WiRL.Core.Auth.Context,
   WiRL.http.Filters,
   WiRL.Core.Injection,
-  WiRL.Persistence.Core;
+  Neon.Core.Persistence;
 
 type
   TAuthChallenge = (Basic, Digest, Bearer, Form);
@@ -35,8 +36,6 @@ type
 
   TAuthTokenLocation = (Bearer, Cookie, Header);
   TSecretGenerator = reference to function(): TBytes;
-  TAttributeArray = TArray<TCustomAttribute>;
-  TArgumentArray = array of TValue;
 
   TWiRLApplication = class(TComponent)
   private
@@ -60,6 +59,7 @@ type
     FTokenCustomHeader: string;
     FSerializerConfig: INeonConfiguration;
     FEngine: TComponent;
+    FUseUTCDate: Boolean;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
     function AddWriter(const AWriter: string): Boolean;
@@ -105,6 +105,7 @@ type
     function SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
     function SetTokenCustomHeader(const ACustomHeader: string): TWiRLApplication;
     function SetAppName(const AAppName: string): TWiRLApplication;
+    function SetUseUTCDate(AValue: Boolean): TWiRLApplication;
     function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
     function SetSystemApp(ASystem: Boolean): TWiRLApplication;
 
@@ -130,6 +131,7 @@ type
     property Path: string read GetPath;
     property AppName: string read FAppName write FAppName;
     property BasePath: string read FBasePath write FBasePath;
+    property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
     property TokenLocation: TAuthTokenLocation read FTokenLocation write FTokenLocation;
     property TokenCustomHeader: string read FTokenCustomHeader write FTokenCustomHeader;
 
@@ -640,6 +642,12 @@ end;
 function TWiRLApplication.SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
 begin
   FTokenLocation := ALocation;
+  Result := Self;
+end;
+
+function TWiRLApplication.SetUseUTCDate(AValue: Boolean): TWiRLApplication;
+begin
+  FUseUTCDate := AValue;
   Result := Self;
 end;
 

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,9 +14,10 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
-  WiRL.Core.Application,
+  WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.Resource,
+  WiRL.Core.Application,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
@@ -38,11 +39,14 @@ type
       FParam: TRttiParameter;
       FDefaultValue: string;
     public
+      constructor Create(AWorker: TWiRLApplicationWorker; AParam: TRttiParameter; const ADefaultValue: string);
+    public
       function AsString(AAttr: TCustomAttribute): string;
       function AsInteger(AAttr: TCustomAttribute): Integer;
       function AsChar(AAttr: TCustomAttribute): Char;
       function AsFloat(AAttr: TCustomAttribute): Double;
-      constructor Create(AWorker: TWiRLApplicationWorker; AParam: TRttiParameter; const ADefaultValue: string);
+      function AsBoolean(AAttr: TCustomAttribute): Boolean;
+      function AsDateTime(AAttr: TCustomAttribute): TDateTime;
     end;
   private
     FContext: TWiRLContext;
@@ -75,6 +79,7 @@ type
     // Filters handling
     function ApplyRequestFilters: Boolean;
     procedure ApplyResponseFilters;
+
     // HTTP Request handling
     procedure HandleRequest;
   end;
@@ -82,7 +87,7 @@ type
 implementation
 
 uses
-  System.StrUtils, System.TypInfo,
+  System.StrUtils, System.TypInfo, System.DateUtils,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.Core.Exceptions,
@@ -256,10 +261,11 @@ var
   LValue: TValue;
 begin
   case AValue.Kind of
-    tkClass: begin
+    tkClass:
+    begin
       // If the request content stream is used as a param to a resource
       // it will be freed at the end process
-      if AValue.AsObject <> FContext.Request.ContentStream then
+      if (AValue.AsObject <> nil)and(AValue.AsObject <> FContext.Request.ContentStream) then
         if not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType) then
           AValue.AsObject.Free;
     end;
@@ -297,14 +303,6 @@ end;
 
 function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
     const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
-
-  function CreateParamInstance(AParam: TRttiParameter; const AValue: string): TObject;
-  begin
-    Result := TRttiHelper.CreateInstance(AParam.ParamType, AValue);
-    if not Assigned(Result) then
-      raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [AParam.Name]), Self.ClassName);
-  end;
-
 var
   LAttr: TCustomAttribute;
   LParamName: string;
@@ -315,10 +313,12 @@ var
 begin
   // Search a default value
   LDefaultValue := '';
-  TRttiHelper.HasAttribute<DefaultValueAttribute>(AParam, procedure (LAttr: DefaultValueAttribute)
-  begin
-    LDefaultValue := LAttr.Value;
-  end);
+  TRttiHelper.HasAttribute<DefaultValueAttribute>(AParam,
+    procedure (LAttr: DefaultValueAttribute)
+    begin
+      LDefaultValue := LAttr.Value;
+    end
+  );
 
   LParamName := '';
   for LAttr in AAttrArray do
@@ -349,7 +349,12 @@ begin
 
       tkFloat:
       begin
-        Result := TValue.From<Double>(LParamReader.AsFloat(LAttr));
+        if (AParam.ParamType.Handle = System.typeinfo(TDateTime)) or
+           (AParam.ParamType.Handle = System.typeinfo(TDate)) or
+           (AParam.ParamType.Handle = System.typeinfo(TTime)) then
+          Result := TValue.From<TDateTime>(LParamReader.AsDateTime(LAttr))
+        else
+          Result := TValue.From<Double>(LParamReader.AsFloat(LAttr));
       end;
 
       tkChar,
@@ -358,8 +363,13 @@ begin
         Result := TValue.From(LParamReader.AsChar(LAttr));
       end;
 
-//      tkEnumeration: ;
-//      tkSet: ;
+      tkEnumeration:
+      begin
+        if (AParam.ParamType.Handle = System.TypeInfo(Boolean)) then
+          Result := TValue.From<Boolean>(LParamReader.AsBoolean(LAttr));
+      end;
+
+      //tkSet: ;
 
       tkClass:
       begin
@@ -371,9 +381,13 @@ begin
         begin
           LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
           if Assigned(LReader) then
-            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request)
+          begin
+            ContextInjection(LReader as TObject);
+            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
+          end
           else
             Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
+
           if Result.AsObject = nil then
             raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, LParamName]), Self.ClassName);
         end
@@ -384,7 +398,7 @@ begin
           raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
       end;
 
-//      tkMethod: ;
+      //tkMethod: ;
 
       tkLString,
       tkUString,
@@ -399,13 +413,34 @@ begin
         Result := TValue.From(LParamReader.AsString(LAttr));
       end;
 
-//      tkArray: ;
-//      tkRecord: ;
-//      tkInterface: ;
-//      tkDynArray: ;
-//      tkClassRef: ;
-//      tkPointer: ;
-//      tkProcedure: ;
+      //tkArray: ;
+
+      tkRecord:
+      begin
+        if HasRowConstraints(AAttrArray) then
+        begin
+          ValidateMethodParam(AAttrArray, LParamReader.AsString(LAttr), True);
+        end;
+        if LAttr is BodyParamAttribute then
+        begin
+          LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
+          if Assigned(LReader) then
+          begin
+            ContextInjection(LReader as TObject);
+            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
+          end
+          else
+            Result := TRttiHelper.CreateNewValue(AParam.ParamType);
+        end
+        else
+          Result := TRttiHelper.CreateNewValue(AParam.ParamType);
+      end;
+
+      //tkInterface: ;
+      //tkDynArray: ;
+      //tkClassRef: ;
+      //tkPointer: ;
+      //tkProcedure: ;
       else
         raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
     end;
@@ -439,9 +474,9 @@ begin
       LAttrArray := LParam.GetAttributes;
 
       if Length(LAttrArray) = 0 then
-        raise EWiRLServerException.Create('Non annotated params are not allowed')
-      else
-        AArgumentArray[LIndex] := FillAnnotatedParam(LParam, LAttrArray, AInstance);
+        raise EWiRLServerException.Create('Non annotated params are not allowed');
+
+      AArgumentArray[LIndex] := FillAnnotatedParam(LParam, LAttrArray, AInstance);
     end;
 
   except
@@ -480,17 +515,20 @@ begin
         InternalHandleRequest;
     except
       on E: Exception do
+      begin
         EWiRLWebApplicationException.HandleException(FContext, E);
+        ApplyResponseFilters;
+        raise;
+      end;
     end;
     ApplyResponseFilters;
   finally
     FreeAndNil(FAuthContext);
+    FContext.AuthContext := nil;
   end;
-  FContext.AuthContext := nil;
 end;
 
-function TWiRLApplicationWorker.HasRowConstraints(
-  const AAttrArray: TAttributeArray): Boolean;
+function TWiRLApplicationWorker.HasRowConstraints(const AAttrArray: TAttributeArray): Boolean;
 var
   LAttr: TCustomAttribute;
 begin
@@ -685,7 +723,6 @@ var
   LAttr: TCustomAttribute;
   LValidator: IConstraintValidator<TCustomConstraintAttribute>;
   LIntf: IInterface;
-//  LObj: TObject;
 begin
   // Loop inside every ConstraintAttribute
   for LAttr in AAttrArray do
@@ -694,9 +731,12 @@ begin
     begin
       if TCustomConstraintAttribute(LAttr).RawConstraint <> ARawConstraint then
         Continue;
+
       LIntf := TCustomConstraintAttribute(LAttr).GetValidator;
+
       if not Supports(LIntf as TObject, IConstraintValidator<TCustomConstraintAttribute>, LValidator) then
         raise EWiRLException.Create('Validator interface is not valid');
+
       if not LValidator.IsValid(AValue, FContext) then
         raise EWiRLValidationError.Create(GetConstraintErrorMessage(TCustomConstraintAttribute(LAttr)));
     end;
@@ -713,12 +753,15 @@ var
 begin
   LAttrArray := FParam.GetAttributes;
   LParamName := (AAttr as MethodParamAttribute).Value;
-  if LParamName = '' then
+  if LParamName.IsEmpty then
     LParamName := FParam.Name;
 
   if AAttr is PathParamAttribute then
   begin
+
     LParamIndex := FWorker.ParamNameToParamIndex(LParamName);
+    if LParamIndex = -1 then
+      raise EWiRLWebApplicationException.CreateFmt('Formal param [%s] does not match the path param(s) [%s]', [LParamName, FWorker.FResource.Method.Path]);
     Result := FContext.URL.PathTokens[LParamIndex];
   end
   else if AAttr is QueryParamAttribute then
@@ -731,7 +774,7 @@ begin
     Result := FContext.Request.HeaderFields[LParamName]
   else if AAttr is BodyParamAttribute then
     Result := FContext.Request.Content;
-  if Result = '' then
+  if Result.IsEmpty then
     Result := FDefaultValue;
 
   FWorker.ValidateMethodParam(LAttrArray, Result, True);
@@ -742,10 +785,21 @@ var
   LValue: string;
 begin
   LValue := AsString(AAttr);
-  if LValue = '' then
+  if LValue.IsEmpty then
     Result := 0
   else
     Result := StrToInt(LValue);
+end;
+
+function TWiRLApplicationWorker.TParamReader.AsDateTime(AAttr: TCustomAttribute): TDateTime;
+var
+  LValue: string;
+begin
+  LValue := AsString(AAttr);
+  if LValue.IsEmpty then
+    Result := 0
+  else
+    Result := ISO8601ToDate(LValue, FWorker.FAppConfig.UseUTCDate);
 end;
 
 function TWiRLApplicationWorker.TParamReader.AsFloat(AAttr: TCustomAttribute): Double;
@@ -753,10 +807,21 @@ var
   LValue: string;
 begin
   LValue := AsString(AAttr);
-  if LValue = '' then
+  if LValue.IsEmpty then
     Result := 0
   else
     Result := StrToFloat(LValue);
+end;
+
+function TWiRLApplicationWorker.TParamReader.AsBoolean(AAttr: TCustomAttribute): Boolean;
+var
+  LValue: string;
+begin
+  LValue := AsString(AAttr);
+  if LValue.IsEmpty then
+    Result := False
+  else
+    Result := StrToBool(LValue);
 end;
 
 function TWiRLApplicationWorker.TParamReader.AsChar(AAttr: TCustomAttribute): Char;
@@ -764,7 +829,7 @@ var
   LValue: string;
 begin
   LValue := AsString(AAttr);
-  if LValue = '' then
+  if LValue.IsEmpty then
     Result := #0
   else
     Result := LValue.Chars[0];

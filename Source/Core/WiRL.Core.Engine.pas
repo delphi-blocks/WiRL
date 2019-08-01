@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2018 WiRL Team                                      }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -277,8 +277,7 @@ var
   LStopWatch, LStopWatchEx: TStopWatch;
 begin
   inherited;
-  if EndsText('/favicon.ico', AContext.Request.PathInfo) then
-    Exit;
+
   LApplication := nil;
   LStopWatchEx := TStopwatch.StartNew;
   try
@@ -326,8 +325,8 @@ begin
   except
     on E: Exception do
     begin
-      EWiRLWebApplicationException.HandleException(AContext, E);
       DoHandleException(AContext, LApplication, E);
+      EWiRLWebApplicationException.HandleException(AContext, E);
     end;
   end;
   LStopWatchEx.Stop;
