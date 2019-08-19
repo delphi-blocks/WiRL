@@ -20,7 +20,8 @@ uses
   WiRL.Http.Accept.Charset,
   WiRL.Http.Accept.Encoding,
   WiRL.http.Accept.MediaType,
-  WiRL.http.Accept.Language;
+  WiRL.http.Accept.Language,
+  WiRL.http.MultipartData;
 
 type
   TWiRLRequest = class
@@ -32,6 +33,7 @@ type
     FAcceptableEncodings: TAcceptEncodingList;
     FAcceptableLanguages: TAcceptLanguageList;
     FAcceptableMediaTypes: TMediaTypeList;
+    FMultiPartFormData: TWiRLFormDataMultiPart;
     function GetAcceptableMediaTypes: TMediaTypeList;
     function GetContent: string;
     procedure SetContent(const Value: string);
@@ -73,6 +75,7 @@ type
     procedure SetFrom(const Value: string);
     procedure SetRange(const Value: string);
     procedure SetReferer(const Value: string);
+    function GetMultiPartFormData: TWiRLFormDataMultiPart;
   protected
     FMethod: string;
     function GetHttpQuery: string; virtual; abstract;
@@ -119,6 +122,7 @@ type
     property AcceptLanguage: string read GetAcceptLanguage write SetAcceptLanguage;
     property AcceptableLanguages: TAcceptLanguageList read GetAcceptableLanguages;
     property ContentMediaType: TMediaType read GetContentMediaType;
+    property MultiPartFormData: TWiRLFormDataMultiPart read GetMultiPartFormData;
   end;
 
 implementation
@@ -132,6 +136,8 @@ begin
   FAcceptableLanguages.Free;
   FAcceptableMediaTypes.Free;
   FAcceptableEncodings.Free;
+  if Assigned(FMultiPartFormData) then
+    FMultiPartFormData.Free;
   inherited;
 end;
 
@@ -252,6 +258,15 @@ end;
 function TWiRLRequest.GetHost: string;
 begin
   Result := HeaderFields.Values['Host'];
+end;
+
+function TWiRLRequest.GetMultiPartFormData: TWiRLFormDataMultiPart;
+begin
+  if not Assigned(FMultiPartFormData) then
+  begin
+    FMultiPartFormData := TWiRLFormDataMultiPart.Create(ContentStream, HeaderFields);
+  end;
+  Result := FMultiPartFormData;
 end;
 
 function TWiRLRequest.GetPathInfo: string;

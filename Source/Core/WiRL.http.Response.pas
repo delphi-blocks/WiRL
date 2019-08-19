@@ -54,7 +54,7 @@ type
     procedure SetContentLanguage(const Value: string);
     function GetCookies: TWiRLCookies;
   protected
-    function GetUnknownResponseCode: string; virtual; abstract;
+    function IsUnknownResponseCode: Boolean; virtual;
     function GetHeaderFields: TWiRLHeaderList;
     function GetContent: string; virtual; abstract;
     function GetContentStream: TStream; virtual; abstract;
@@ -226,6 +226,11 @@ begin
   Result := HeaderFields.Values['Server'];
 end;
 
+function TWiRLResponse.IsUnknownResponseCode: Boolean;
+begin
+  Result := False;
+end;
+
 function TWiRLResponse.GetWWWAuthenticate: string;
 begin
   Result := HeaderFields.Values['WWW-Authenticate'];
@@ -297,7 +302,7 @@ end;
 
 procedure TWiRLResponse.SetNonStandardReasonString(const AValue: string);
 begin
-  if (ReasonString = '') or (ReasonString = GetUnknownResponseCode) then
+  if (ReasonString = '') or IsUnknownResponseCode then
     ReasonString := Avalue;
 end;
 

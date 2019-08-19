@@ -115,7 +115,7 @@ end;
 constructor TMediaType.Create(const AAcceptItem: string);
 begin
   inherited;
-  ParseMediaType(FAcceptItemOnly);
+  ParseMediaType(FValue);
   ParseMediaTypeParams;
 end;
 

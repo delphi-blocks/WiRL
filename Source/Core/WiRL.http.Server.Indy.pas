@@ -72,7 +72,7 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
-    function GetUnknownResponseCode: string; override;
+    function IsUnknownResponseCode: Boolean; override;
   public
     procedure SendHeaders; override;
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
@@ -412,9 +412,9 @@ begin
   Result := FResponseInfo.ResponseNo;
 end;
 
-function TWiRLHttpResponseIndy.GetUnknownResponseCode: string;
+function TWiRLHttpResponseIndy.IsUnknownResponseCode: Boolean;
 begin
-  Result := RSHTTPUnknownResponseCode;
+  Result := ReasonString = RSHTTPUnknownResponseCode;
 end;
 
 procedure TWiRLHttpResponseIndy.SendCookies;
