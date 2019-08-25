@@ -160,7 +160,7 @@ begin
     AValue := AContext.Response
   // URL info
   else if (LType.InheritsFrom(TWiRLURL)) then
-    AValue := AContext.URL
+    AValue := AContext.RequestURL
   // Engine
   else if (LType.InheritsFrom(TWiRLEngine)) then
     AValue := AContext.Engine as TWiRLEngine

@@ -65,7 +65,7 @@ type
     function ContextInjectionByType(const AObject: TRttiObject; out AValue: TValue): Boolean;
 
     procedure CheckAuthorization(AAuth: TWiRLAuthContext);
-    function FillAnnotatedParam(AParam: TRttiParameter; const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
+    function FillAnnotatedParam(AParam: TWiRLMethodParam; AResourceInstance: TObject): TValue;
     procedure FillResourceMethodParameters(AInstance: TObject; var AArgumentArray: TArgumentArray);
     procedure InvokeResourceMethod(AInstance: TObject; const AWriter: IMessageBodyWriter; AMediaType: TMediaType); virtual;
     function ParamNameToParamIndex(const AParamName: string): Integer;
@@ -108,6 +108,7 @@ begin
   FAppConfig := AContext.Application as TWiRLApplication;
 
   FResource := TWiRLResource.Create(AContext);
+  AContext.Resource := FResource;
 end;
 
 destructor TWiRLApplicationWorker.Destroy;
@@ -258,14 +259,13 @@ end;
 procedure TWiRLApplicationWorker.CollectGarbage(const AValue: TValue);
 var
   LIndex: Integer;
-  LValue: TValue;
 begin
   case AValue.Kind of
     tkClass:
     begin
       // If the request content stream is used as a param to a resource
       // it will be freed at the end process
-      if (AValue.AsObject <> nil)and(AValue.AsObject <> FContext.Request.ContentStream) then
+      if AValue.AsObject <> FContext.Request.ContentStream then
         if not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType) then
           AValue.AsObject.Free;
     end;
@@ -275,15 +275,8 @@ begin
     tkArray,
     tkDynArray:
     begin
-      for LIndex := 0 to AValue.GetArrayLength -1 do
-      begin
-        LValue := AValue.GetArrayElement(LIndex);
-        case LValue.Kind of
-          tkClass: LValue.AsObject.Free;
-          tkInterface: TObject(LValue.AsInterface).Free;
-          tkArray, tkDynArray: CollectGarbage(LValue); //recursion
-        end;
-      end;
+      for LIndex := 0 to AValue.GetArrayLength - 1 do
+        CollectGarbage(AValue.GetArrayElement(LIndex));
     end;
   end;
 end;
@@ -294,16 +287,15 @@ begin
     ContextInjection(AInstance, FContext);
 end;
 
-function TWiRLApplicationWorker.ContextInjectionByType(const AObject: TRttiObject;
-  out AValue: TValue): Boolean;
+function TWiRLApplicationWorker.ContextInjectionByType(const AObject: TRttiObject; out AValue: TValue): Boolean;
 begin
   Result := TWiRLContextInjectionRegistry.Instance.
     ContextInjectionByType(AObject, FContext, AValue);
 end;
 
-function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TRttiParameter;
-    const AAttrArray: TAttributeArray; AResourceInstance: TObject): TValue;
+function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLMethodParam; AResourceInstance: TObject): TValue;
 var
+  LParam: TRttiParameter;
   LAttr: TCustomAttribute;
   LParamName: string;
   LContextValue: TValue;
@@ -311,9 +303,10 @@ var
   LDefaultValue: string;
   LParamReader: TParamReader;
 begin
+  LParam := AParam.RttiParam;
   // Search a default value
   LDefaultValue := '';
-  TRttiHelper.HasAttribute<DefaultValueAttribute>(AParam,
+  TRttiHelper.HasAttribute<DefaultValueAttribute>(LParam,
     procedure (LAttr: DefaultValueAttribute)
     begin
       LDefaultValue := LAttr.Value;
@@ -321,26 +314,26 @@ begin
   );
 
   LParamName := '';
-  for LAttr in AAttrArray do
+  for LAttr in AParam.Attributes do
   begin
     // Loop only inside attributes that define how to read the parameter
     if not ( (LAttr is ContextAttribute) or (LAttr is MethodParamAttribute) ) then
       Continue;
 
-    LParamReader := TParamReader.Create(Self, AParam, LDefaultValue);
+    LParamReader := TParamReader.Create(Self, LParam, LDefaultValue);
 
     // context injection
-    if (LAttr is ContextAttribute) and (AParam.ParamType.IsInstance) then
+    if (LAttr is ContextAttribute) and (LParam.ParamType.IsInstance) then
     begin
-      if ContextInjectionByType(AParam, LContextValue) then
+      if ContextInjectionByType(LParam, LContextValue) then
         Exit(LContextValue);
     end;
 
     LParamName := (LAttr as MethodParamAttribute).Value;
     if (LParamName = '') or (LAttr is BodyParamAttribute) then
-      LParamName := AParam.Name;
+      LParamName := LParam.Name;
 
-    case AParam.ParamType.TypeKind of
+    case LParam.ParamType.TypeKind of
       tkInt64,
       tkInteger:
       begin
@@ -349,9 +342,9 @@ begin
 
       tkFloat:
       begin
-        if (AParam.ParamType.Handle = System.typeinfo(TDateTime)) or
-           (AParam.ParamType.Handle = System.typeinfo(TDate)) or
-           (AParam.ParamType.Handle = System.typeinfo(TTime)) then
+        if (LParam.ParamType.Handle = System.typeinfo(TDateTime)) or
+           (LParam.ParamType.Handle = System.typeinfo(TDate)) or
+           (LParam.ParamType.Handle = System.typeinfo(TTime)) then
           Result := TValue.From<TDateTime>(LParamReader.AsDateTime(LAttr))
         else
           Result := TValue.From<Double>(LParamReader.AsFloat(LAttr));
@@ -365,7 +358,7 @@ begin
 
       tkEnumeration:
       begin
-        if (AParam.ParamType.Handle = System.TypeInfo(Boolean)) then
+        if (LParam.ParamType.Handle = System.TypeInfo(Boolean)) then
           Result := TValue.From<Boolean>(LParamReader.AsBoolean(LAttr));
       end;
 
@@ -373,26 +366,26 @@ begin
 
       tkClass:
       begin
-        if HasRowConstraints(AAttrArray) then
+        if HasRowConstraints(AParam.Attributes) then
         begin
-          ValidateMethodParam(AAttrArray, LParamReader.AsString(LAttr), True);
+          ValidateMethodParam(AParam.Attributes, LParamReader.AsString(LAttr), True);
         end;
         if LAttr is BodyParamAttribute then
         begin
-          LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
+          LReader := FAppConfig.ReaderRegistry.FindReader(LParam.ParamType, FContext.Request.ContentMediaType);
           if Assigned(LReader) then
           begin
             ContextInjection(LReader as TObject);
-            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
+            Result := LReader.ReadFrom(LParam, FContext.Request.ContentMediaType, FContext.Request);
           end
           else
-            Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
+            Result := TRttiHelper.CreateInstance(LParam.ParamType, LParamReader.AsString(LAttr));
 
           if Result.AsObject = nil then
             raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, LParamName]), Self.ClassName);
         end
         else
-          Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
+          Result := TRttiHelper.CreateInstance(LParam.ParamType, LParamReader.AsString(LAttr));
 
         if Result.AsObject = nil then
           raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
@@ -417,23 +410,23 @@ begin
 
       tkRecord:
       begin
-        if HasRowConstraints(AAttrArray) then
+        if HasRowConstraints(AParam.Attributes) then
         begin
-          ValidateMethodParam(AAttrArray, LParamReader.AsString(LAttr), True);
+          ValidateMethodParam(AParam.Attributes, LParamReader.AsString(LAttr), True);
         end;
         if LAttr is BodyParamAttribute then
         begin
-          LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
+          LReader := FAppConfig.ReaderRegistry.FindReader(LParam.ParamType, FContext.Request.ContentMediaType);
           if Assigned(LReader) then
           begin
             ContextInjection(LReader as TObject);
-            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
+            Result := LReader.ReadFrom(LParam, FContext.Request.ContentMediaType, FContext.Request);
           end
           else
-            Result := TRttiHelper.CreateNewValue(AParam.ParamType);
+            Result := TRttiHelper.CreateNewValue(LParam.ParamType);
         end
         else
-          Result := TRttiHelper.CreateNewValue(AParam.ParamType);
+          Result := TRttiHelper.CreateNewValue(LParam.ParamType);
       end;
 
       //tkInterface: ;
@@ -444,41 +437,26 @@ begin
       else
         raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
     end;
-    ValidateMethodParam(AAttrArray, Result, False);
+    ValidateMethodParam(AParam.Attributes, Result, False);
   end;
 end;
 
-procedure TWiRLApplicationWorker.FillResourceMethodParameters(AInstance: TObject;
-  var AArgumentArray: TArgumentArray);
+procedure TWiRLApplicationWorker.FillResourceMethodParameters(AInstance: TObject; var AArgumentArray: TArgumentArray);
 var
-  LParam: TRttiParameter;
-  LParamArray: TArray<TRttiParameter>;
-  LAttrArray: TArray<TCustomAttribute>;
-
-  LIndex: Integer;
+  LMethodParam: TWiRLMethodParam;
 begin
   try
-    { TODO -opaolo -c : Move the functionality on TResource/TResourceMethod? 18/01/2017 19:29:42 }
-    LParamArray := FResource.Method.RttiObject.GetParameters;
-
-    // The method has no parameters so simply call as it is
-    if Length(LParamArray) = 0 then
+    if FResource.Method.Params.Count = 0 then
       Exit;
 
-    SetLength(AArgumentArray, Length(LParamArray));
-
-    for LIndex := Low(LParamArray) to High(LParamArray) do
+    AArgumentArray := [];
+    for LMethodParam in FResource.Method.Params do
     begin
-      LParam := LParamArray[LIndex];
-
-      LAttrArray := LParam.GetAttributes;
-
-      if Length(LAttrArray) = 0 then
+      if not LMethodParam.Rest then
         raise EWiRLServerException.Create('Non annotated params are not allowed');
 
-      AArgumentArray[LIndex] := FillAnnotatedParam(LParam, LAttrArray, AInstance);
+      AArgumentArray := AArgumentArray + [FillAnnotatedParam(LMethodParam, AInstance)];
     end;
-
   except
     on E: Exception do
     begin
@@ -552,13 +530,13 @@ var
 begin
   if not FResource.Found then
     raise EWiRLNotFoundException.Create(
-      Format('Resource [%s] not found', [FContext.URL.Resource]),
+      Format('Resource [%s] not found', [FContext.RequestURL.Resource]),
       Self.ClassName, 'HandleRequest'
     );
 
   if not Assigned(FResource.Method) then
     raise EWiRLNotFoundException.Create(
-      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.URL.Resource + FContext.URL.SubResources.ToString]),
+      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.RequestURL.Resource + FContext.RequestURL.SubResources.ToString]),
       Self.ClassName, 'HandleRequest'
     );
 
@@ -637,6 +615,7 @@ begin
   LMethodResult := nil;
   LContentType := FContext.Response.ContentType;
   try
+    LArgumentArray := [];
     FillResourceMethodParameters(AInstance, LArgumentArray);
     LMethodResult := FResource.Method.RttiObject.Invoke(AInstance, LArgumentArray);
 
@@ -762,7 +741,7 @@ begin
     LParamIndex := FWorker.ParamNameToParamIndex(LParamName);
     if LParamIndex = -1 then
       raise EWiRLWebApplicationException.CreateFmt('Formal param [%s] does not match the path param(s) [%s]', [LParamName, FWorker.FResource.Method.Path]);
-    Result := FContext.URL.PathTokens[LParamIndex];
+    Result := FContext.RequestURL.PathTokens[LParamIndex];
   end
   else if AAttr is QueryParamAttribute then
     Result := FContext.Request.QueryFields.Values[LParamName]
