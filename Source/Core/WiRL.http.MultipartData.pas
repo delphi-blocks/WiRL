@@ -12,14 +12,14 @@ unit WiRL.http.MultipartData;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.NetEncoding,
   System.Generics.Collections, System.Generics.Defaults,
 
   WiRL.http.Core,
+  WiRL.http.Accept.MediaType,
   WiRL.http.Accept.Parser;
 
 type
-
   TWiRLContentDisposition = class(THeaderItem)
   private
     FModificationDate: TDateTime;
@@ -28,7 +28,6 @@ type
     FSize: Int64;
     FReadDate: TDateTime;
     FCreationDate: TDateTime;
-    FValue: string;
     FVoice: string;
     FHandling: string;
     FPreviewType: string;
@@ -59,30 +58,26 @@ type
 
   TWiRLFormDataPart = class
   private
-    FContentTransfer: string;
-    FHeaderEncoding: Char;
-    FCharset: string;
-    FContentType: string;
+    FContentTransferEncoding: string;
+    FContentType: TContentTypeItem;
     FContentStream: TStream;
-    FHeaderCharSet: string;
     FContentDisposition: TWiRLContentDisposition;
-    FName: string;
-    FFileName: string;
     FHeaders: TStrings;
     function GetContent: string;
     function GetContentStream: TStream;
     function GetRawContent: TBytes;
+    function GetCharset: string;
+    function GetFileName: string;
+    function GetName: string;
   public
     constructor Create;
     destructor Destroy; override;
 
-    property Name: string read FName write FName;
-    property FileName: string read FFileName write FFileName;
-    property ContentTransfer: string read FContentTransfer write FContentTransfer;
-    property ContentType: string read FContentType write FContentType;
-    property Charset: string read FCharset write FCharset;
-    property HeaderCharSet: string read FHeaderCharSet write FHeaderCharSet;
-    property HeaderEncoding: Char read FHeaderEncoding write FHeaderEncoding;
+    property Name: string read GetName;
+    property FileName: string read GetFileName;
+    property ContentTransferEncoding: string read FContentTransferEncoding write FContentTransferEncoding;
+    property ContentType: TContentTypeItem read FContentType write FContentType;
+    property Charset: string read GetCharset;
     property Headers: TStrings read FHeaders;
 
     property Content: string read GetContent;
@@ -95,30 +90,40 @@ type
   private
     FMIMEBoundary: string;
     FFormDataList: TObjectList<TWiRLFormDataPart>;
+    FEpilogue: string;
+    FPreamble: string;
     function GetMIMEBoundary(const AContentType: string): string;
     function GetPart(const AName: string): TWiRLFormDataPart;
     procedure Parse(AStream: TStream; HeaderFields: TWiRLHeaderList);
-    function AddPart(const FileName, Name: string; Headers: TStrings): TWiRLFormDataPart;
+    function AddPart(Headers: TStrings; const Body: string): TWiRLFormDataPart;
   public
     constructor Create(AStream: TStream; HeaderFields: TWiRLHeaderList);
     destructor Destroy; override;
     function FindPart(const AName: string): TWiRLFormDataPart;
     property Parts[const AName: string]: TWiRLFormDataPart read GetPart; default;
+    property Preamble: string read FPreamble;
+    property Epilogue: string read FEpilogue;
   end;
 
 implementation
 
 uses
-  IdBaseComponent,
-  IdMessageCoder,
-  IdMessage,
-  IdGlobal,
   IdGlobalProtocols,
-  IdTCPStream,
-  IdBuffer,
-  IdMessageCoderMIME,
-
   WiRL.Core.Exceptions;
+
+type
+  TMimeStreamReader = class(TStreamReader)
+  private
+    FLastLineBreak: string;
+  public
+    function ReadLine: string; override;
+    property LastLineBreak: string read FLastLineBreak;
+  end;
+
+  TMimeStreamReaderWorkaround = class helper for TStreamReader
+  public
+    procedure FillBufferWorkaround;
+  end;
 
 { TWiRLContentDisposition }
 
@@ -131,7 +136,7 @@ begin
   for LPosition := 0 to Parameters.Count - 1 do
   begin
     if FParameters.Names[LPosition] = FILENAME_NAME then
-      FFileName := UnquotedStr(FParameters.ValueFromIndex[LPosition])
+      FFileName := AnsiDequotedStr(FParameters.ValueFromIndex[LPosition], '"')
     else if FParameters.Names[LPosition] = CREATIONDATE_NAME then
       FCreationDate := CookieStrToLocalDateTime(FParameters.ValueFromIndex[LPosition])
     else if FParameters.Names[LPosition] = MODIFICATIONDATE_NAME then
@@ -141,7 +146,7 @@ begin
     else if FParameters.Names[LPosition] = SIZE_NAME then
       FSize := StrToInt64(FParameters.ValueFromIndex[LPosition])
     else if FParameters.Names[LPosition] = NAME_NAME then
-      FName := UnquotedStr(FParameters.ValueFromIndex[LPosition])
+      FName := AnsiDequotedStr(FParameters.ValueFromIndex[LPosition], '"')
     else if FParameters.Names[LPosition] = VOICE_NAME then
       FVoice := FParameters.ValueFromIndex[LPosition]
     else if FParameters.Names[LPosition] = HANDLING_NAME then
@@ -159,15 +164,22 @@ begin
   inherited;
   FContentStream := TMemoryStream.Create;
   FContentDisposition := TWiRLContentDisposition.Create('');
+  FContentType := TContentTypeItem.Create('');
   FHeaders := TStringList.Create;
 end;
 
 destructor TWiRLFormDataPart.Destroy;
 begin
   FContentDisposition.Free;
+  FContentType.Free;
   FContentStream.Free;
   FHeaders.Free;
   inherited;
+end;
+
+function TWiRLFormDataPart.GetCharset: string;
+begin
+  Result := FContentType.Charset;
 end;
 
 function TWiRLFormDataPart.GetContent: string;
@@ -178,6 +190,16 @@ end;
 function TWiRLFormDataPart.GetContentStream: TStream;
 begin
   Result := FContentStream;
+end;
+
+function TWiRLFormDataPart.GetFileName: string;
+begin
+  Result := FContentDisposition.FileName;
+end;
+
+function TWiRLFormDataPart.GetName: string;
+begin
+  Result := FContentDisposition.Name;
 end;
 
 function TWiRLFormDataPart.GetRawContent: TBytes;
@@ -199,14 +221,34 @@ end;
 
 { TWiRLFormDataMultiPart }
 
-function TWiRLFormDataMultiPart.AddPart(const FileName, Name: string; Headers: TStrings): TWiRLFormDataPart;
+function TWiRLFormDataMultiPart.AddPart(Headers: TStrings; const Body: string): TWiRLFormDataPart;
+var
+  LRawBody: TBytes;
 begin
   Result := TWiRLFormDataPart.Create;
-  Result.FFileName := FileName;
-  Result.FName := Name;
   Result.FHeaders.Assign(Headers);
   Result.FContentDisposition.Parse(Headers.Values['Content-Disposition']);
-  Result.FContentType := Headers.Values['Content-Type'];
+  Result.FContentTransferEncoding := Headers.Values['Content-Transfer-Encoding'];
+  Result.FContentType.Parse(Headers.Values['Content-Type']);
+
+  if Result.FContentType.MediaType = TMediaType.APPLICATION_OCTET_STREAM then
+  begin
+    if (Result.FContentTransferEncoding = '') or (CompareText(Result.FContentTransferEncoding, 'BINARY') = 0) then
+    begin
+      LRawBody := TEncoding.ANSI.GetBytes(Body);
+    end
+    else if CompareText(Result.FContentTransferEncoding, 'BASE64') = 0 then
+    begin
+      LRawBody := TNetEncoding.Base64.DecodeStringToBytes(Body);
+    end
+    else
+      raise EWiRLException.CreateFmt('[%s] Encoding not supported', [Result.FContentTransferEncoding]);
+  end
+  else
+  begin
+    LRawBody := TEncoding.ANSI.GetBytes(Body);
+  end;
+  Result.FContentStream.WriteData(LRawBody, Length(LRawBody));
   FFormDataList.Add(Result);
 end;
 
@@ -257,120 +299,166 @@ begin
 end;
 
 procedure TWiRLFormDataMultiPart.Parse(AStream: TStream; HeaderFields: TWiRLHeaderList);
+type
+  TPartSearchStatus = (ssPreamble, ssHeader, ssBody, ssEpilogue);
 var
-  Line: string;
-  Decoder: TIdMessageDecoder;
-  MsgEnd: Boolean;
-  NewPart :TWiRLFormDataPart;
-  PartName :string;
-  ContentType :string;
-  ContentDisposition :string;
+  LStreamReader: TMimeStreamReader;
+  LLine, LBody: string;
+  LHeaders: TStrings;
+  LLastLineBreak: string;
+  LSearchStatus: TPartSearchStatus;
 
-  procedure ProcessTextPart(var VDecoder: TIdMessageDecoder; APart :TWiRLFormDataPart);
+  procedure AddHeader(const HeaderLine: string);
   var
-    MStream: TMemoryStream;
-    NewDecoder: TIdMessageDecoder;
+    LSepIndex: Integer;
   begin
-    NewDecoder := nil;
-    MStream := TMemoryStream.Create;
-    try
-      NewDecoder := VDecoder.ReadBody(MStream, MsgEnd);
-      try
-        MStream.Position := 0;
-        MStream.SaveToStream(APart.ContentStream);
-      except
-        FreeAndNil(NewDecoder);
-        raise;
-      end;
-    finally
-      MStream.Free;
+    LSepIndex := Pos(':', HeaderLine);
+    if LSepIndex > 0 then
+    begin
+      LHeaders.AddPair(Trim(Copy(HeaderLine, 1, LSepIndex - 1)), Trim(Copy(HeaderLine, LSepIndex + 1, Length(HeaderLine) - LSepIndex)));
     end;
-    VDecoder.Free;
-    VDecoder := NewDecoder;
-  end;
-
-  procedure ProcessAttachment(var VDecoder: TIdMessageDecoder; APart :TWiRLFormDataPart);
-  var
-    DestStream: TMemoryStream;
-    NewDecoder: TIdMessageDecoder;
-  begin
-    NewDecoder := nil;
-    DestStream := TMemoryStream.Create;
-    try
-      NewDecoder := VDecoder.ReadBody(DestStream, MsgEnd);
-      try
-        DestStream.SaveToStream(APart.ContentStream);
-      except
-        FreeAndNil(NewDecoder);
-        raise;
-      end;
-    finally
-      DestStream.Free;
-    end;
-    VDecoder.Free;
-    VDecoder := NewDecoder;
   end;
 
 begin
-  Decoder := nil;
+  LSearchStatus := ssPreamble;
+  LBody := '';
+  FPreamble := '';
+  FEpilogue := '';
+  LLastLineBreak := '';
+  LStreamReader := TMimeStreamReader.Create(AStream, TEncoding.ANSI);
   try
-    repeat
-      Line := ReadLnFromStream(AStream, -1, True);
-      if TextIsSame(Line, '--' + FMIMEBoundary) then
+    LHeaders := TStringList.Create;
+    try
+      while not LStreamReader.EndOfStream do
       begin
-        Decoder := TIdMessageDecoderMIME.Create(nil);
-        TIdMessageDecoderMIME(Decoder).MIMEBoundary := FMIMEBoundary;
-        Decoder.SourceStream := AStream;
-        Decoder.FreeSourceStream := False;
-        Break;
+        LLine := LStreamReader.ReadLine;
+        // Boundary found
+        if CompareStr(LLine, '--' + FMIMEBoundary) = 0 then
+        begin
+          if LSearchStatus = ssBody then
+          begin
+            SetLength(LBody, Length(LBody) - Length(LLastLineBreak));
+            AddPart(LHeaders, LBody);
+          end
+          else if LSearchStatus = ssPreamble then
+          begin
+            SetLength(LBody, Length(LBody) - Length(LLastLineBreak));
+            FPreamble := LBody;
+          end;
+          LBody := '';
+          LHeaders.Clear;
+          LSearchStatus := ssHeader;
+        end
+        // Last boundary found
+        else if CompareStr(LLine, '--' + FMIMEBoundary + '--') = 0 then
+        begin
+          SetLength(LBody, Length(LBody) - Length(LLastLineBreak));
+          AddPart(LHeaders, LBody);
+          LSearchStatus := ssEpilogue;
+          LBody := '';
+        end
+        else if LSearchStatus = ssHeader then
+        begin
+          if LLine <> '' then
+          begin
+            AddHeader(LLine);
+          end
+          else
+          begin
+            LSearchStatus := ssBody;
+          end;
+        end
+        else //if SearchStatus = ssBody then
+        begin
+          LBody := LBody + LLine + LStreamReader.LastLineBreak;
+          LLastLineBreak := LStreamReader.LastLineBreak;
+        end;
       end;
-      if TextIsSame(Line, '--' + FMIMEBoundary + '--') then
+
+      if LSearchStatus = ssEpilogue then
       begin
-        Break;
+        FEpilogue := LBody;
       end;
-    until False;
-
-    if Decoder <> nil then begin
-      MsgEnd := False;
-      repeat
-        Decoder.ReadHeader;
-        ContentDisposition := Decoder.Headers.Values['Content-Disposition'];
-        ContentType := Decoder.Headers.Values['Content-Type'];
-        PartName := ExtractHeaderSubItem(ContentDisposition, 'name'{$IFNDEF VER210}, QuoteMIME{$ENDIF});
-        NewPart := AddPart(Decoder.Filename, PartName, Decoder.Headers);
-
-        case Decoder.PartType of
-          mcptText:       ProcessTextPart(Decoder, NewPart);
-          mcptAttachment: ProcessAttachment(Decoder, NewPart);
-          mcptIgnore:     begin
-                            FreeAndNil(Decoder);
-                            Decoder := TIdMessageDecoderMIME.Create(nil);
-                            TIdMessageDecoderMIME(Decoder).MIMEBoundary := FMIMEBoundary;
-                            Decoder.SourceStream := AStream;
-                            Decoder.FreeSourceStream := False;
-                          end;
-//          mcptEOF:        begin
-//                            FreeAndNil(Decoder);
-//                            MsgEnd := True;
-//                          end;
-        end;
-        if NewPart.ContentStream.Size > 0 then
-        begin
-          NewPart.ContentStream.Position := 0;
-        end;
-        (*********)
-        if Assigned(Decoder) then
-        begin
-          TIdMessageDecoderMIME(Decoder).MIMEBoundary := FMIMEBoundary;
-          Decoder.SourceStream := AStream;
-          Decoder.FreeSourceStream := False;
-        end;
-        (*********)
-      until (Decoder = nil) or MsgEnd;
+    finally
+      LHeaders.Free;
     end;
   finally
-    Decoder.Free;
+    LStreamReader.Free;
   end;
+end;
+
+{ TMimeStreamReader }
+
+function TMimeStreamReader.ReadLine: string;
+var
+  NewLineIndex: Integer;
+  PostNewLineIndex: Integer;
+  LChar: Char;
+begin
+  FLastLineBreak := '';
+  Result := '';
+  if FBufferedData = nil then
+    Exit;
+  NewLineIndex := 0;
+  PostNewLineIndex := 0;
+
+  while True do
+  begin
+    if (NewLineIndex + 2 > FBufferedData.Length) and (not FNoDataInStream) then
+      FillBufferWorkaround;
+      //FillBuffer(CurrentEncoding);
+
+    if NewLineIndex >= FBufferedData.Length then
+    begin
+      if FNoDataInStream then
+      begin
+        PostNewLineIndex := NewLineIndex;
+        Break;
+      end
+      else
+      begin
+        FillBufferWorkaround;
+        if FBufferedData.Length = 0 then
+          Break;
+      end;
+    end;
+    LChar := FBufferedData[NewLineIndex];
+    if LChar = #10 then
+    begin
+      PostNewLineIndex := NewLineIndex + 1;
+      FLastLineBreak := #10;
+      Break;
+    end
+    else
+    if (LChar = #13) and (NewLineIndex + 1 < FBufferedData.Length) and (FBufferedData[NewLineIndex + 1] = #10) then
+    begin
+      PostNewLineIndex := NewLineIndex + 2;
+      FLastLineBreak := #13 + #10;
+      Break;
+    end
+    else
+    if LChar = #13 then
+    begin
+      PostNewLineIndex := NewLineIndex + 1;
+      FLastLineBreak := #13;
+      Break;
+    end;
+
+    Inc(NewLineIndex);
+  end;
+
+  Result := FBufferedData.ToString;
+  SetLength(Result, NewLineIndex);
+  FBufferedData.Remove(0, PostNewLineIndex);
+end;
+
+{ TMimeStreamReaderWorkaround }
+
+procedure TMimeStreamReaderWorkaround.FillBufferWorkaround;
+begin
+  // Workaround to access to private field
+  with Self do
+    FillBuffer(FEncoding);
 end;
 
 end.

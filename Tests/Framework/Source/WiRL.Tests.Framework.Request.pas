@@ -115,15 +115,25 @@ type
     [Test]
     procedure TestWriteQuery;
     [Test]
-    procedure TestFormDataBase;
+    [TestCase('SimpleString', '123456789012345678901234567890')]
+    [TestCase('CRLF', '12345678' + #13#10 + '311')]
+    [TestCase('CR', '12345678' + #13 + '311')]
+    [TestCase('LF', '12345678' + #10 + '311')]
+    procedure TestFormDataBase(const Content: string);
     [Test]
     procedure TestFormDataCharset;
+    [Test]
+    procedure TestFormDataMultiEncoding;
     [Test]
     procedure TestFormDataBinary;
     [Test]
     procedure TestFormDataBase64;
     [Test]
     procedure TestFormDataHeader;
+    [Test]
+    procedure TestFormDataPreamble;
+    [Test]
+    procedure TestFormDataEpilogue;
   end;
 
 implementation
@@ -131,10 +141,10 @@ implementation
 const
   MultiPartTest =
     '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test1"' + sLineBreak +
+    'Content-Disposition: form-data; name="test1"; filename="test1.txt"' + sLineBreak +
     'Content-Type: text/plain' + sLineBreak +
     '' + sLineBreak +
-    '123456789012345678901234567890' + sLineBreak +
+    '%s' + sLineBreak +
     '--1234' + sLineBreak +
     'Content-Disposition: form-data; name="test2"' + sLineBreak +
     'Content-Type: text/plain; charset=utf-8' + sLineBreak +
@@ -153,7 +163,51 @@ const
     'Content-Transfer-Encoding: base64' + sLineBreak +
     '' + sLineBreak +
     'dGVzdA==' + sLineBreak +
-    '--1234--' + sLineBreak;
+    '--1234--';
+
+  MultiPartPrologueTest =
+    'Preamble' + sLineBreak +
+    '--1234' + sLineBreak +
+    'Content-Disposition: form-data; name="test1"' + sLineBreak +
+    'Content-Type: text/plain' + sLineBreak +
+    '' + sLineBreak +
+    '%s' + sLineBreak +
+    '--1234' + sLineBreak +
+    'Content-Disposition: form-data; name="test2"' + sLineBreak +
+    'Content-Type: text/plain; charset=utf-8' + sLineBreak +
+    'x-header: test' + sLineBreak +
+    '' + sLineBreak +
+    'ии' + sLineBreak +
+    '--1234' + sLineBreak +
+    'Content-Disposition: form-data; name="test3"' + sLineBreak +
+    'Content-Type: application/octet-stream' + sLineBreak +
+    '' + sLineBreak +
+    #$00#$01#$02#$03#$04#$05#$06#$07#$08#$09#$0a#$0b#$0c#$0d#$0e#$0f +
+    #$10#$11#$12#$13#$14#$15#$16#$17#$18#$19#$1a#$1b#$1c#$1d#$1e#$1f + sLineBreak +
+    '--1234' + sLineBreak +
+    'Content-Disposition: form-data; name="test4"' + sLineBreak +
+    'Content-Type: application/octet-stream' + sLineBreak +
+    'Content-Transfer-Encoding: base64' + sLineBreak +
+    '' + sLineBreak +
+    'dGVzdA==' + sLineBreak +
+    '--1234--' + sLineBreak +
+    'Epilogue';
+
+  MultiPartEncTest =
+    '--1234' + sLineBreak +
+    'Content-Disposition: form-data; name="test1"; filename="test1.txt"' + sLineBreak +
+    'Content-Type: text/plain; charset=utf-8' + sLineBreak +
+    '' + sLineBreak +
+    'и' + sLineBreak +
+    '--1234' + sLineBreak +
+    'Content-Disposition: form-data; name="test2"' + sLineBreak +
+    'Content-Type: text/plain; charset=iso-8859-1' + sLineBreak +
+    'x-header: test' + sLineBreak +
+    '' + sLineBreak +
+    '*' + sLineBreak +
+    '--1234--';
+
+
 
 { TTestRequest }
 
@@ -297,29 +351,63 @@ begin
   Assert.NotImplemented;
 end;
 
-procedure TTestRequest.TestFormDataBase;
+procedure TTestRequest.TestFormDataBase(const Content: string);
 begin
   FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
-  FRequest.ContentStream := TStringStream.Create(MultiPartTest, TEncoding.UTF8);
-  Assert.AreEqual('123456789012345678901234567890' + sLineBreak, FRequest.MultiPartFormData['test1'].Content);
-  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test1'].ContentType);
+  FRequest.ContentStream := TStringStream.Create(Format(MultiPartTest, [Content]), TEncoding.UTF8);
+  Assert.AreEqual(Content, FRequest.MultiPartFormData['test1'].Content);
+  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test1'].ContentType.MediaType);
 end;
 
 procedure TTestRequest.TestFormDataCharset;
 begin
   FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
   FRequest.ContentStream := TStringStream.Create(MultiPartTest, TEncoding.UTF8);
-  Assert.AreEqual('ии' + sLineBreak, FRequest.MultiPartFormData['test2'].Content);
+  Assert.AreEqual('ии', FRequest.MultiPartFormData['test2'].Content);
   Assert.AreEqual('test', FRequest.MultiPartFormData['test2'].Headers.Values['x-header']);
+end;
+
+procedure TTestRequest.TestFormDataEpilogue;
+begin
+  FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
+  FRequest.ContentStream := TStringStream.Create(MultiPartPrologueTest, TEncoding.UTF8);
+  Assert.AreEqual('Epilogue', FRequest.MultiPartFormData.Epilogue);
 end;
 
 procedure TTestRequest.TestFormDataHeader;
 begin
   FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
   FRequest.ContentStream := TStringStream.Create(MultiPartTest, TEncoding.UTF8);
-  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test1'].ContentType);
+  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test1'].ContentType.MediaType);
+  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test2'].ContentType.MediaType);
   Assert.AreEqual('test1', FRequest.MultiPartFormData['test1'].ContentDisposition.Name);
+  Assert.AreEqual('test1.txt', FRequest.MultiPartFormData['test1'].ContentDisposition.FileName);
+  Assert.AreEqual('form-data', FRequest.MultiPartFormData['test1'].ContentDisposition.Value);
+  Assert.AreEqual('test1', FRequest.MultiPartFormData['test1'].Name);
+  Assert.AreEqual('test1.txt', FRequest.MultiPartFormData['test1'].FileName);
+  Assert.AreEqual('', FRequest.MultiPartFormData['test1'].Charset);
+  Assert.AreEqual('utf-8', FRequest.MultiPartFormData['test2'].Charset);
+end;
 
+procedure TTestRequest.TestFormDataMultiEncoding;
+var
+  LSpecialCharPos: Integer;
+  LBytes: TBytes;
+begin
+  LSpecialCharPos := Pos('*', MultiPartEncTest);
+  LBytes := TEncoding.UTF8.GetBytes(MultiPartEncTest);
+  LBytes[LSpecialCharPos] := Ord(AnsiChar('и'));
+  FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
+  FRequest.ContentStream := TBytesStream.Create(LBytes);
+  Assert.AreEqual('и', FRequest.MultiPartFormData['test1'].Content);
+  Assert.AreEqual('и', FRequest.MultiPartFormData['test2'].Content);
+end;
+
+procedure TTestRequest.TestFormDataPreamble;
+begin
+  FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
+  FRequest.ContentStream := TStringStream.Create(MultiPartPrologueTest, TEncoding.UTF8);
+  Assert.AreEqual('Preamble', FRequest.MultiPartFormData.Preamble);
 end;
 
 procedure TTestRequest.TestFormDataBinary;

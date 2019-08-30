@@ -52,7 +52,6 @@ type
     property Boundary: string read FBoundary write FBoundary;
   end;
 
-
   TAcceptItem = class abstract(THeaderItem)
   protected
     const QFACTOR_NAME = 'q';
