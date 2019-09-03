@@ -37,21 +37,6 @@ type
     property Value: string read FValue write FValue;
   end;
 
-  TContentTypeItem = class(THeaderItem)
-  protected
-    const CHARSET_NAME = 'charset';
-    const BOUNDARY_NAME = 'boundary';
-  protected
-    FBoundary: string;
-    FCharset: string;
-  public
-    procedure Parse(const AHeaderItem: string); override;
-
-    property MediaType: string read FValue write FValue;
-    property Charset: string read FCharset write FCharset;
-    property Boundary: string read FBoundary write FBoundary;
-  end;
-
   TAcceptItem = class abstract(THeaderItem)
   protected
     const QFACTOR_NAME = 'q';
@@ -389,22 +374,6 @@ begin
   for LIndex := 1 to High(LParts) do
   begin
     FParameters.Add(Trim(LParts[LIndex]));
-  end;
-end;
-
-{ TContentTypeItem }
-
-procedure TContentTypeItem.Parse(const AHeaderItem: string);
-var
-  LPosition: Integer;
-begin
-  inherited Parse(AHeaderItem);
-  for LPosition := 0 to Parameters.Count - 1 do
-  begin
-    if FParameters.Names[LPosition] = CHARSET_NAME then
-      FCharset := FParameters.ValueFromIndex[LPosition]
-    else if FParameters.Names[LPosition] = BOUNDARY_NAME then
-      FBoundary := FParameters.ValueFromIndex[LPosition];
   end;
 end;
 

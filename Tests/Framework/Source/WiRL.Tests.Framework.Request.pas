@@ -139,72 +139,74 @@ type
 implementation
 
 const
+  sCRLF = #13#10;
+
   MultiPartTest =
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test1"; filename="test1.txt"' + sLineBreak +
-    'Content-Type: text/plain' + sLineBreak +
-    '' + sLineBreak +
-    '%s' + sLineBreak +
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test2"' + sLineBreak +
-    'Content-Type: text/plain; charset=utf-8' + sLineBreak +
-    'x-header: test' + sLineBreak +
-    '' + sLineBreak +
-    'ии' + sLineBreak +
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test3"' + sLineBreak +
-    'Content-Type: application/octet-stream' + sLineBreak +
-    '' + sLineBreak +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test1"; filename="test1.txt"' + sCRLF +
+    'Content-Type: text/plain' + sCRLF +
+    '' + sCRLF +
+    '%s' + sCRLF +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test2"' + sCRLF +
+    'Content-Type: text/plain; charset=utf-8' + sCRLF +
+    'x-header: test' + sCRLF +
+    '' + sCRLF +
+    'ии' + sCRLF +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test3"' + sCRLF +
+    'Content-Type: application/octet-stream' + sCRLF +
+    '' + sCRLF +
     #$00#$01#$02#$03#$04#$05#$06#$07#$08#$09#$0a#$0b#$0c#$0d#$0e#$0f +
-    #$10#$11#$12#$13#$14#$15#$16#$17#$18#$19#$1a#$1b#$1c#$1d#$1e#$1f + sLineBreak +
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test4"' + sLineBreak +
-    'Content-Type: application/octet-stream' + sLineBreak +
-    'Content-Transfer-Encoding: base64' + sLineBreak +
-    '' + sLineBreak +
-    'dGVzdA==' + sLineBreak +
+    #$10#$11#$12#$13#$14#$15#$16#$17#$18#$19#$1a#$1b#$1c#$1d#$1e#$1f + sCRLF +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test4"' + sCRLF +
+    'Content-Type: application/octet-stream' + sCRLF +
+    'Content-Transfer-Encoding: base64' + sCRLF +
+    '' + sCRLF +
+    'dGVzdA==' + sCRLF +
     '--1234--';
 
   MultiPartPrologueTest =
-    'Preamble' + sLineBreak +
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test1"' + sLineBreak +
-    'Content-Type: text/plain' + sLineBreak +
-    '' + sLineBreak +
-    '%s' + sLineBreak +
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test2"' + sLineBreak +
-    'Content-Type: text/plain; charset=utf-8' + sLineBreak +
-    'x-header: test' + sLineBreak +
-    '' + sLineBreak +
-    'ии' + sLineBreak +
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test3"' + sLineBreak +
-    'Content-Type: application/octet-stream' + sLineBreak +
-    '' + sLineBreak +
+    'Preamble' + sCRLF +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test1"' + sCRLF +
+    'Content-Type: text/plain' + sCRLF +
+    '' + sCRLF +
+    '%s' + sCRLF +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test2"' + sCRLF +
+    'Content-Type: text/plain; charset=utf-8' + sCRLF +
+    'x-header: test' + sCRLF +
+    '' + sCRLF +
+    'ии' + sCRLF +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test3"' + sCRLF +
+    'Content-Type: application/octet-stream' + sCRLF +
+    '' + sCRLF +
     #$00#$01#$02#$03#$04#$05#$06#$07#$08#$09#$0a#$0b#$0c#$0d#$0e#$0f +
-    #$10#$11#$12#$13#$14#$15#$16#$17#$18#$19#$1a#$1b#$1c#$1d#$1e#$1f + sLineBreak +
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test4"' + sLineBreak +
-    'Content-Type: application/octet-stream' + sLineBreak +
-    'Content-Transfer-Encoding: base64' + sLineBreak +
-    '' + sLineBreak +
-    'dGVzdA==' + sLineBreak +
-    '--1234--' + sLineBreak +
+    #$10#$11#$12#$13#$14#$15#$16#$17#$18#$19#$1a#$1b#$1c#$1d#$1e#$1f + sCRLF +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test4"' + sCRLF +
+    'Content-Type: application/octet-stream' + sCRLF +
+    'Content-Transfer-Encoding: base64' + sCRLF +
+    '' + sCRLF +
+    'dGVzdA==' + sCRLF +
+    '--1234--' + sCRLF +
     'Epilogue';
 
   MultiPartEncTest =
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test1"; filename="test1.txt"' + sLineBreak +
-    'Content-Type: text/plain; charset=utf-8' + sLineBreak +
-    '' + sLineBreak +
-    'и' + sLineBreak +
-    '--1234' + sLineBreak +
-    'Content-Disposition: form-data; name="test2"' + sLineBreak +
-    'Content-Type: text/plain; charset=iso-8859-1' + sLineBreak +
-    'x-header: test' + sLineBreak +
-    '' + sLineBreak +
-    '*' + sLineBreak +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test1"; filename="test1.txt"' + sCRLF +
+    'Content-Type: text/plain; charset=utf-8' + sCRLF +
+    '' + sCRLF +
+    'и' + sCRLF +
+    '--1234' + sCRLF +
+    'Content-Disposition: form-data; name="test2"' + sCRLF +
+    'Content-Type: text/plain; charset=iso-8859-1' + sCRLF +
+    'x-header: test' + sCRLF +
+    '' + sCRLF +
+    '*' + sCRLF +
     '--1234--';
 
 
@@ -356,7 +358,7 @@ begin
   FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
   FRequest.ContentStream := TStringStream.Create(Format(MultiPartTest, [Content]), TEncoding.UTF8);
   Assert.AreEqual(Content, FRequest.MultiPartFormData['test1'].Content);
-  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test1'].ContentType.MediaType);
+  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test1'].ContentType);
 end;
 
 procedure TTestRequest.TestFormDataCharset;
@@ -378,8 +380,8 @@ procedure TTestRequest.TestFormDataHeader;
 begin
   FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
   FRequest.ContentStream := TStringStream.Create(MultiPartTest, TEncoding.UTF8);
-  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test1'].ContentType.MediaType);
-  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test2'].ContentType.MediaType);
+  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test1'].ContentMediaType.MediaType);
+  Assert.AreEqual('text/plain', FRequest.MultiPartFormData['test2'].ContentMediaType.MediaType);
   Assert.AreEqual('test1', FRequest.MultiPartFormData['test1'].ContentDisposition.Name);
   Assert.AreEqual('test1.txt', FRequest.MultiPartFormData['test1'].ContentDisposition.FileName);
   Assert.AreEqual('form-data', FRequest.MultiPartFormData['test1'].ContentDisposition.Value);

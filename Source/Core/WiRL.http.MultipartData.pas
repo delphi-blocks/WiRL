@@ -59,16 +59,18 @@ type
   TWiRLFormDataPart = class
   private
     FContentTransferEncoding: string;
-    FContentType: TContentTypeItem;
+    FContentMediaType: TMediaType;
     FContentStream: TStream;
     FContentDisposition: TWiRLContentDisposition;
-    FHeaders: TStrings;
+    FHeaderFields: TWiRLHeaderList;
+    FContentType: string;
     function GetContent: string;
     function GetContentStream: TStream;
     function GetRawContent: TBytes;
     function GetCharset: string;
     function GetFileName: string;
     function GetName: string;
+    function GetContentMediaType: TMediaType;
   public
     constructor Create;
     destructor Destroy; override;
@@ -76,9 +78,10 @@ type
     property Name: string read GetName;
     property FileName: string read GetFileName;
     property ContentTransferEncoding: string read FContentTransferEncoding write FContentTransferEncoding;
-    property ContentType: TContentTypeItem read FContentType write FContentType;
+    property ContentMediaType: TMediaType read GetContentMediaType;
+    property ContentType: string read FContentType write FContentType;
     property Charset: string read GetCharset;
-    property Headers: TStrings read FHeaders;
+    property HeaderFields: TWiRLHeaderList read FHeaderFields;
 
     property Content: string read GetContent;
     property RawContent: TBytes read GetRawContent;
@@ -92,12 +95,11 @@ type
     FFormDataList: TObjectList<TWiRLFormDataPart>;
     FEpilogue: string;
     FPreamble: string;
-    function GetMIMEBoundary(const AContentType: string): string;
     function GetPart(const AName: string): TWiRLFormDataPart;
-    procedure Parse(AStream: TStream; HeaderFields: TWiRLHeaderList);
+    procedure Parse(AStream: TStream);
     function AddPart(Headers: TStrings; const Body: string): TWiRLFormDataPart;
   public
-    constructor Create(AStream: TStream; HeaderFields: TWiRLHeaderList);
+    constructor Create(AStream: TStream; const AMIMEBoundary: string);
     destructor Destroy; override;
     function FindPart(const AName: string): TWiRLFormDataPart;
     property Parts[const AName: string]: TWiRLFormDataPart read GetPart; default;
@@ -118,11 +120,6 @@ type
   public
     function ReadLine: string; override;
     property LastLineBreak: string read FLastLineBreak;
-  end;
-
-  TMimeStreamReaderWorkaround = class helper for TStreamReader
-  public
-    procedure FillBufferWorkaround;
   end;
 
 { TWiRLContentDisposition }
@@ -164,27 +161,33 @@ begin
   inherited;
   FContentStream := TMemoryStream.Create;
   FContentDisposition := TWiRLContentDisposition.Create('');
-  FContentType := TContentTypeItem.Create('');
-  FHeaders := TStringList.Create;
+  FHeaderFields := TWiRLHeaderList.Create;
 end;
 
 destructor TWiRLFormDataPart.Destroy;
 begin
   FContentDisposition.Free;
-  FContentType.Free;
+  FContentMediaType.Free;
   FContentStream.Free;
-  FHeaders.Free;
+  FHeaderFields.Free;
   inherited;
 end;
 
 function TWiRLFormDataPart.GetCharset: string;
 begin
-  Result := FContentType.Charset;
+  Result := FContentMediaType.Charset;
 end;
 
 function TWiRLFormDataPart.GetContent: string;
 begin
   Result := EncodingFromCharSet(Charset).GetString(RawContent);
+end;
+
+function TWiRLFormDataPart.GetContentMediaType: TMediaType;
+begin
+  if not Assigned(FContentMediaType) then
+    FContentMediaType := TMediaType.Create(ContentType);
+  Result := FContentMediaType;
 end;
 
 function TWiRLFormDataPart.GetContentStream: TStream;
@@ -226,12 +229,12 @@ var
   LRawBody: TBytes;
 begin
   Result := TWiRLFormDataPart.Create;
-  Result.FHeaders.Assign(Headers);
+  Result.FHeaderFields.Assign(Headers);
   Result.FContentDisposition.Parse(Headers.Values['Content-Disposition']);
   Result.FContentTransferEncoding := Headers.Values['Content-Transfer-Encoding'];
-  Result.FContentType.Parse(Headers.Values['Content-Type']);
+  Result.FContentType := Headers.Values['Content-Type'];
 
-  if Result.FContentType.MediaType = TMediaType.APPLICATION_OCTET_STREAM then
+  if Result.ContentMediaType.MediaType = TMediaType.APPLICATION_OCTET_STREAM then
   begin
     if (Result.FContentTransferEncoding = '') or (CompareText(Result.FContentTransferEncoding, 'BINARY') = 0) then
     begin
@@ -252,12 +255,12 @@ begin
   FFormDataList.Add(Result);
 end;
 
-constructor TWiRLFormDataMultiPart.Create(AStream: TStream; HeaderFields: TWiRLHeaderList);
+constructor TWiRLFormDataMultiPart.Create(AStream: TStream; const AMIMEBoundary: string);
 begin
   inherited Create;
   FFormDataList := TObjectList<TWiRLFormDataPart>.Create(True);
-  FMIMEBoundary := GetMIMEBoundary(HeaderFields['content-type']);
-  Parse(AStream, HeaderFields);
+  FMIMEBoundary := AMIMEBoundary;
+  Parse(AStream);
 end;
 
 destructor TWiRLFormDataMultiPart.Destroy;
@@ -278,19 +281,6 @@ begin
   end;
 end;
 
-function TWiRLFormDataMultiPart.GetMIMEBoundary(
-  const AContentType: string): string;
-var
-  LContentTypeParser: TContentTypeItem;
-begin
-  LContentTypeParser := TContentTypeItem.Create(AContentType);
-  try
-    Result := LContentTypeParser.Boundary;
-  finally
-    LContentTypeParser.Free;
-  end;
-end;
-
 function TWiRLFormDataMultiPart.GetPart(const AName: string): TWiRLFormDataPart;
 begin
   Result := FindPart(AName);
@@ -298,7 +288,7 @@ begin
     raise EWiRLException.CreateFmt('Part named [%s] not found', [AName]);
 end;
 
-procedure TWiRLFormDataMultiPart.Parse(AStream: TStream; HeaderFields: TWiRLHeaderList);
+procedure TWiRLFormDataMultiPart.Parse(AStream: TStream);
 type
   TPartSearchStatus = (ssPreamble, ssHeader, ssBody, ssEpilogue);
 var
@@ -394,7 +384,9 @@ var
   NewLineIndex: Integer;
   PostNewLineIndex: Integer;
   LChar: Char;
+  LOriginalEncoding: TEncoding;
 begin
+  LOriginalEncoding := CurrentEncoding;
   FLastLineBreak := '';
   Result := '';
   if FBufferedData = nil then
@@ -405,8 +397,7 @@ begin
   while True do
   begin
     if (NewLineIndex + 2 > FBufferedData.Length) and (not FNoDataInStream) then
-      FillBufferWorkaround;
-      //FillBuffer(CurrentEncoding);
+      FillBuffer(LOriginalEncoding);
 
     if NewLineIndex >= FBufferedData.Length then
     begin
@@ -417,7 +408,7 @@ begin
       end
       else
       begin
-        FillBufferWorkaround;
+        FillBuffer(LOriginalEncoding);
         if FBufferedData.Length = 0 then
           Break;
       end;
@@ -450,15 +441,6 @@ begin
   Result := FBufferedData.ToString;
   SetLength(Result, NewLineIndex);
   FBufferedData.Remove(0, PostNewLineIndex);
-end;
-
-{ TMimeStreamReaderWorkaround }
-
-procedure TMimeStreamReaderWorkaround.FillBufferWorkaround;
-begin
-  // Workaround to access to private field
-  with Self do
-    FillBuffer(FEncoding);
 end;
 
 end.
