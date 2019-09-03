@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
 
   WiRL.Core.Singleton,
+  WiRL.http.Core,
   WiRL.http.Response,
   WiRL.Core.Resource,
   WiRL.http.Accept.MediaType,
@@ -38,7 +39,7 @@ type
     ///   Write a type to an HTTP message (body)
     /// </summary>
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
   end;
 
   TIsWritableFunction = reference to function(AType: TRttiType;

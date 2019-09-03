@@ -252,6 +252,7 @@ begin
     LRawBody := TEncoding.ANSI.GetBytes(Body);
   end;
   Result.FContentStream.WriteData(LRawBody, Length(LRawBody));
+  Result.FContentStream.Position := 0;
   FFormDataList.Add(Result);
 end;
 

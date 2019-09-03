@@ -17,6 +17,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
 
   WiRL.Core.Singleton,
+  WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.http.Request,
   WiRL.Core.Declarations,
@@ -38,7 +39,7 @@ type
     ///   Read a type from the HTTP Request stream
     /// </summary>
     function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
   end;
 
   TIsReadableFunction = reference to function(AType: TRttiType;

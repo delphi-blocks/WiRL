@@ -21,6 +21,7 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
+  WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
   WiRL.Core.Auth.Context,
@@ -90,6 +91,7 @@ uses
   System.StrUtils, System.TypInfo, System.DateUtils,
   WiRL.http.Request,
   WiRL.http.Response,
+  WiRL.http.MultipartData,
   WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
@@ -263,9 +265,7 @@ begin
   case AValue.Kind of
     tkClass:
     begin
-      // If the request content stream is used as a param to a resource
-      // it will be freed at the end process
-      if (AValue.AsObject <> nil)and(AValue.AsObject <> FContext.Request.ContentStream) then
+      if (AValue.AsObject <> nil) then
         if not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType) then
           AValue.AsObject.Free;
     end;
@@ -307,9 +307,28 @@ var
   LAttr: TCustomAttribute;
   LParamName: string;
   LContextValue: TValue;
-  LReader: IMessageBodyReader;
   LDefaultValue: string;
+  LReader: IMessageBodyReader;
   LParamReader: TParamReader;
+  LFormDataPart: TWiRLFormDataPart;
+
+  function GetObjectFromParam(AParam: TRttiParameter; AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream) :TValue;
+  var
+    LReader: IMessageBodyReader;
+  begin
+    LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, AMediaType);
+    if Assigned(LReader) then
+    begin
+      ContextInjection(LReader as TObject);
+      Result := LReader.ReadFrom(AParam, AMediaType, AHeaderFields, AContentStream);
+    end
+    else
+      Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
+
+    if Result.AsObject = nil then
+      raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [AMediaType.Value, LParamName]), Self.ClassName);
+  end;
+
 begin
   // Search a default value
   LDefaultValue := '';
@@ -377,19 +396,14 @@ begin
         begin
           ValidateMethodParam(AAttrArray, LParamReader.AsString(LAttr), True);
         end;
-        if LAttr is BodyParamAttribute then
+        if (LAttr is FormParamAttribute) and (FContext.Request.ContentMediaType.MediaType = TMediaType.MULTIPART_FORM_DATA) then
         begin
-          LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, FContext.Request.ContentMediaType);
-          if Assigned(LReader) then
-          begin
-            ContextInjection(LReader as TObject);
-            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
-          end
-          else
-            Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
-
-          if Result.AsObject = nil then
-            raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, LParamName]), Self.ClassName);
+          LFormDataPart := FContext.Request.MultiPartFormData[LParamName];
+          Result := GetObjectFromParam(AParam, LFormDataPart.ContentMediaType, LFormDataPart.HeaderFields, LFormDataPart.ContentStream);
+        end
+        else if LAttr is BodyParamAttribute then
+        begin
+          Result := GetObjectFromParam(AParam, FContext.Request.ContentMediaType, FContext.Request.HeaderFields, FContext.Request.ContentStream);
         end
         else
           Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
@@ -427,7 +441,7 @@ begin
           if Assigned(LReader) then
           begin
             ContextInjection(LReader as TObject);
-            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request);
+            Result := LReader.ReadFrom(AParam, FContext.Request.ContentMediaType, FContext.Request.HeaderFields, FContext.Request.ContentStream);
           end
           else
             Result := TRttiHelper.CreateNewValue(AParam.ParamType);
@@ -655,7 +669,7 @@ begin
         try
           LStream.Position := 0;
           FContext.Response.ContentStream := LStream;
-          AWriter.WriteTo(LMethodResult, FResource.Method.AllAttributes, AMediaType, FContext.Response);
+          AWriter.WriteTo(LMethodResult, FResource.Method.AllAttributes, AMediaType, FContext.Response.HeaderFields, FContext.Response.ContentStream);
           LStream.Position := 0;
         except
           on E: Exception do
@@ -767,7 +781,12 @@ begin
   else if AAttr is QueryParamAttribute then
     Result := FContext.Request.QueryFields.Values[LParamName]
   else if AAttr is FormParamAttribute then
-    Result := FContext.Request.ContentFields.Values[LParamName]
+  begin
+    if FContext.Request.ContentMediaType.MediaType = TMediaType.MULTIPART_FORM_DATA then
+      Result := FContext.Request.MultiPartFormData[LParamName].Content
+    else
+      Result := FContext.Request.ContentFields.Values[LParamName]
+  end
   else if AAttr is CookieParamAttribute then
     Result := FContext.Request.CookieFields[LParamName]
   else if AAttr is HeaderParamAttribute then
