@@ -54,11 +54,11 @@ type
     procedure TestHost;
     [Test]
     procedure TestQueryFields;
-//    [Test]
+    //[Test]
     procedure TestContentFields;
     [Test]
     procedure TestHeaderFields;
-//    [Test]
+    //[Test]
     procedure TestCookieFields;
     [Test]
     [TestCase('Simple default charset', 'Ciao,text/plain')]
@@ -366,7 +366,7 @@ begin
   FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
   FRequest.ContentStream := TStringStream.Create(MultiPartTest, TEncoding.UTF8);
   Assert.AreEqual('ии', FRequest.MultiPartFormData['test2'].Content);
-  Assert.AreEqual('test', FRequest.MultiPartFormData['test2'].Headers.Values['x-header']);
+  Assert.AreEqual('test', FRequest.MultiPartFormData['test2'].HeaderFields.Values['x-header']);
 end;
 
 procedure TTestRequest.TestFormDataEpilogue;

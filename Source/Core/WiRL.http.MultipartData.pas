@@ -295,7 +295,7 @@ type
 var
   LStreamReader: TMimeStreamReader;
   LLine, LBody: string;
-  LHeaders: TStrings;
+  LHeaders: TWiRLHeaderList;
   LLastLineBreak: string;
   LSearchStatus: TPartSearchStatus;
 
@@ -318,7 +318,7 @@ begin
   LLastLineBreak := '';
   LStreamReader := TMimeStreamReader.Create(AStream, TEncoding.ANSI);
   try
-    LHeaders := TStringList.Create;
+    LHeaders := TWiRLHeaderList.Create;
     try
       while not LStreamReader.EndOfStream do
       begin
