@@ -86,7 +86,8 @@ type
 implementation
 
 uses
-  System.DateUtils;
+  System.DateUtils,
+  WiRL.Core.Exceptions;
 
 { TWiRLAuthContext }
 
@@ -174,7 +175,11 @@ begin
         try
           FVerified := LJWT.Verified;
           if FVerified then
+          begin
+            if LJWT.Claims.Expiration < Now
+              then raise EWiRLNotAuthorizedException.Create('Expiration time passed', 'TWiRLAuthContext', 'Verify');
             TJSONHelper.JSONCopyFrom(LJWT.Claims.JSON, FSubject.JSON);
+          end;
         finally
           LJWT.Free;
         end;
