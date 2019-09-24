@@ -264,7 +264,7 @@ function TWiRLRequest.GetMultiPartFormData: TWiRLFormDataMultiPart;
 begin
   if not Assigned(FMultiPartFormData) then
   begin
-    FMultiPartFormData := TWiRLFormDataMultiPart.Create(ContentStream, HeaderFields);
+    FMultiPartFormData := TWiRLFormDataMultiPart.Create(ContentStream, ContentMediaType.Boundary);
   end;
   Result := FMultiPartFormData;
 end;

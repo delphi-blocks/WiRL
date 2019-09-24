@@ -63,7 +63,6 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
-    function GetUnknownResponseCode: string; override;
   public
     procedure SendHeaders; override;
 
@@ -426,11 +425,6 @@ end;
 function TWiRLClientResponseNetHttp.GetStatusCode: Integer;
 begin
   Result := FStatusCode;
-end;
-
-function TWiRLClientResponseNetHttp.GetUnknownResponseCode: string;
-begin
-  Result := 'Unknown Response Code';
 end;
 
 procedure TWiRLClientResponseNetHttp.SendHeaders;

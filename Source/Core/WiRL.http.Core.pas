@@ -143,10 +143,28 @@ type
     property Values[const Name: string]: string read GetValue write SetValue; default;
   end;
 
+  TWiRLStreamWrapper = class(TStream)
+  private
+    FOwnsStream: Boolean;
+    FStream: TStream;
+  protected
+    function GetSize: Int64; override;
+    procedure SetSize(const NewSize: Int64); overload; override;
+  public
+    function Read(var Buffer; Count: Longint): Longint; overload; override;
+    function Write(const Buffer; Count: Longint): Longint; overload; override;
+    function Seek(Offset: Longint; Origin: Word): Longint; overload; override;
+
+    constructor Create(AStream: TStream; AOwnsStream: Boolean = False);
+    destructor Destroy; override;
+    property Stream: TStream read FStream;
+  end;
+
 var
   GetDefaultCharSetEncoding: TEncoding = nil;
 
 function EncodingFromCharSet(const ACharset: string): TEncoding;
+function ContentStreamToString(const ACharset: string; AContentStream: TStream): string;
 
 implementation
 
@@ -160,6 +178,28 @@ begin
     Result := GetDefaultCharSetEncoding;
   if Result = nil then
     Result := TEncoding.UTF8;
+end;
+
+function ContentStreamToString(const ACharset: string; AContentStream: TStream): string;
+var
+  LEncoding: TEncoding;
+  LBuffer: TBytes;
+  LPos :Int64;
+begin
+  Result := '';
+  if Assigned(AContentStream) and (AContentStream.Size > 0) then
+  begin
+    LPos := AContentStream.Position;
+    try
+      LEncoding := EncodingFromCharSet(ACharset);
+      AContentStream.Position := 0;
+      SetLength(LBuffer, AContentStream.Size);
+      AContentStream.Read(LBuffer[0], AContentStream.Size);
+      Result := LEncoding.GetString(LBuffer);
+    finally
+      AContentStream.Position := LPos;
+    end;
+  end;
 end;
 
 function EncodingFromCharSet(const ACharset: string): TEncoding;
@@ -329,6 +369,47 @@ end;
 constructor TWiRLHttpStatus.Create;
 begin
   Create(200, '', '');
+end;
+
+{ TWiRLStreamWrapper }
+
+constructor TWiRLStreamWrapper.Create(AStream: TStream; AOwnsStream: Boolean);
+begin
+  inherited Create;
+  FStream := AStream;
+  FOwnsStream := AOwnsStream;
+end;
+
+destructor TWiRLStreamWrapper.Destroy;
+begin
+  if FOwnsStream then
+    FStream.Free;
+  inherited;
+end;
+
+function TWiRLStreamWrapper.GetSize: Int64;
+begin
+  Result := FStream.Size;
+end;
+
+function TWiRLStreamWrapper.Read(var Buffer; Count: Longint): Longint;
+begin
+  Result := FStream.Read(Buffer, Count);
+end;
+
+function TWiRLStreamWrapper.Seek(Offset: Longint; Origin: Word): Longint;
+begin
+  Result := FStream.Seek(Offset, Origin);
+end;
+
+procedure TWiRLStreamWrapper.SetSize(const NewSize: Int64);
+begin
+  FStream.Size := NewSize;
+end;
+
+function TWiRLStreamWrapper.Write(const Buffer; Count: Longint): Longint;
+begin
+  Result := FStream.Write(Buffer, Count);
 end;
 
 end.

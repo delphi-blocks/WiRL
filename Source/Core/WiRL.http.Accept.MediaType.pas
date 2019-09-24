@@ -26,13 +26,16 @@ type
     FVersion: Integer;
     FCharset: string;
     FDialect: string;
+    FBoundary: string;
     procedure ParseMediaType(const AFullMediaType: string);
     procedure ParseMediaTypeParams;
+    function GetMediaType: string;
   public
     const DELIM_MEDIA = '/';
     const VERSION_NAME = 'version';
     const DIALECT_NAME = 'dialect';
     const CHARSET_NAME = 'charset';
+    const BOUNDARY_NAME = 'boundary';
 
     const CHARSET_ISO_8859_1 = 'iso-8859-1';
     const CHARSET_UTF8 = 'utf-8';
@@ -72,11 +75,13 @@ type
 
     class function GetWildcard: string; override;
 
+    property MediaType: string read GetMediaType;
     property MainType: string read FMainType;
     property SubType: string read FSubType;
     property Version: Integer read FVersion write FVersion;
     property Dialect: string read FDialect write FDialect;
     property Charset: string read FCharset write FCharset;
+    property Boundary: string read FBoundary write FBoundary;
   end;
 
   TMediaTypeList = class(TAcceptItemList<TMediaType>)
@@ -104,6 +109,7 @@ begin
   Self.FVersion  := ASource.Version;
   Self.FDialect  := ASource.Dialect;
   Self.FCharset  := ASource.Charset;
+  Self.FBoundary  := ASource.Boundary;
 end;
 
 function TMediaType.Clone: TMediaType;
@@ -153,6 +159,11 @@ begin
   Result := WILDCARD;
 end;
 
+function TMediaType.GetMediaType: string;
+begin
+  Result := MainType + DELIM_MEDIA + SubType;
+end;
+
 procedure TMediaType.ParseMediaType(const AFullMediaType: string);
 var
   LParts: TStringArray;
@@ -177,7 +188,9 @@ begin
     else if FParameters.Names[LPosition] = DIALECT_NAME then
       FDialect := FParameters.ValueFromIndex[LPosition]
     else if FParameters.Names[LPosition] = CHARSET_NAME then
-      FCharset := FParameters.ValueFromIndex[LPosition];
+      FCharset := FParameters.ValueFromIndex[LPosition]
+    else if FParameters.Names[LPosition] = BOUNDARY_NAME then
+      FBoundary := FParameters.ValueFromIndex[LPosition];
   end;
 end;
 

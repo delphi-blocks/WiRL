@@ -17,6 +17,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
   WiRL.http.Accept.MediaType,
+  WiRL.http.Core,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.Core.Classes,
@@ -44,10 +45,10 @@ type
     function GetStorageFormat(AMediaType: TMediaType): TFDStorageFormat;
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
-      ARequest: TWiRLRequest): TValue; override;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
 
   /// <summary>
@@ -63,10 +64,10 @@ type
   TWiRLFireDACDataSetArrayProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
-      ARequest: TWiRLRequest): TValue; override;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
 
   /// <summary>
@@ -81,10 +82,10 @@ type
   TWiRLFireDACDataSetsProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
-      ARequest: TWiRLRequest): TValue; override;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
 
 implementation
@@ -99,8 +100,8 @@ uses
 
 { TWiRLFireDACDataSetArrayProvider }
 
-function TWiRLFireDACDataSetArrayProvider.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+function TWiRLFireDACDataSetArrayProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 var
   LJSON: TJSONObject;
   LStreamReader: TStreamReader;
@@ -109,8 +110,8 @@ var
   LDSArray: TArray<TFDMemTable>;
   LMemTable: TFDMemTable;
 begin
-  ARequest.ContentStream.Position := soFromBeginning;
-  LStreamReader := TStreamReader.Create(ARequest.ContentStream);
+  AContentStream.Position := soFromBeginning;
+  LStreamReader := TStreamReader.Create(AContentStream);
   try
     LJSON := TJSONObject.ParseJSONValue(LStreamReader.ReadToEnd) as TJSONObject;
     try
@@ -134,8 +135,8 @@ begin
   end;
 end;
 
-procedure TWiRLFireDACDataSetArrayProvider.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
+procedure TWiRLFireDACDataSetArrayProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LIndex: Integer;
   LStreamWriter: TStreamWriter;
@@ -145,7 +146,7 @@ var
 begin
   Assert(AValue.IsArray);
 
-  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
+  LStreamWriter := TStreamWriter.Create(AContentStream);
   try
     LResult := TJSONObject.Create;
     try
@@ -173,15 +174,15 @@ end;
 
 { TWiRLFireDACDataSetsProvider }
 
-function TWiRLFireDACDataSetsProvider.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+function TWiRLFireDACDataSetsProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 var
   LJSON: TJSONObject;
   LStreamReader: TStreamReader;
   LDataSets: TFireDACDataSets;
 begin
-  ARequest.ContentStream.Position := soFromBeginning;
-  LStreamReader := TStreamReader.Create(ARequest.ContentStream);
+  AContentStream.Position := soFromBeginning;
+  LStreamReader := TStreamReader.Create(AContentStream);
   try
     LJSON := TJSONObject.ParseJSONValue(LStreamReader.ReadToEnd) as TJSONObject;
     try
@@ -196,8 +197,8 @@ begin
   end;
 end;
 
-procedure TWiRLFireDACDataSetsProvider.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
+procedure TWiRLFireDACDataSetsProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LJSON: TJSONObject;
   LStreamWriter: TStreamWriter;
@@ -208,7 +209,7 @@ begin
   LJSON := TJSONObject.Create;
   try
     TFireDACJSONPersistor.DataSetsToJSON(LDataSets, LJSON);
-    LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
+    LStreamWriter := TStreamWriter.Create(AContentStream);
     try
       LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally
@@ -236,8 +237,8 @@ begin
     );
 end;
 
-function TWiRLFireDACAdaptedDataSetProvider.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+function TWiRLFireDACAdaptedDataSetProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 var
   LDataSet: TFDMemTable;
   LStorageFormat: TFDStorageFormat;
@@ -245,22 +246,22 @@ begin
   LDataSet := TFDMemTable.Create(nil);
   try
     LStorageFormat := GetStorageFormat(AMediaType);
-    LDataSet.LoadFromStream(ARequest.ContentStream, LStorageFormat);
+    LDataSet.LoadFromStream(AContentStream, LStorageFormat);
     Result := TValue.From<TFDMemTable>(LDataSet);
   except
     LDataSet.Free;
   end;
 end;
 
-procedure TWiRLFireDACAdaptedDataSetProvider.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
+procedure TWiRLFireDACAdaptedDataSetProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LDataSet: TFDAdaptedDataSet;
   LStorageFormat: TFDStorageFormat;
 begin
   LDataSet := AValue.AsType<TFDAdaptedDataSet>;
   LStorageFormat := GetStorageFormat(AMediaType);
-  LDataSet.SaveToStream(AResponse.ContentStream, LStorageFormat);
+  LDataSet.SaveToStream(AContentStream, LStorageFormat);
 end;
 
 { RegisterMessageBodyClasses }
