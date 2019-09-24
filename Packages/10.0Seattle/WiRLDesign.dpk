@@ -28,7 +28,7 @@ package WiRLDesign;
 {$DESCRIPTION 'WiRL REST components'}
 {$LIBSUFFIX '230'}
 {$DESIGNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,
