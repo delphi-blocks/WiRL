@@ -282,7 +282,10 @@ begin
   else if AAccept.Empty or AAccept.IsWildCard then
     Result := AProduces.CloneList
   else
-    Result := AProduces.IntersectionList(AAccept);
+    Result := AAccept.IntersectionList(AProduces);
+
+  if Result.Empty and AAccept.HasWildCard then
+    Result := AProduces.CloneList;
 
   { TODO -opaolo -c : This have to be configuration-related 02/06/2017 18:00:25 }
   if Result.Empty then

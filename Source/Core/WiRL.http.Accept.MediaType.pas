@@ -150,6 +150,8 @@ begin
     Result := TUnicodeLEEncodingNoBOM.Create
   else if Self.Charset = CHARSET_UTF16 then
     Result := TUnicodeLEEncodingNoBOM.Create
+  else if Self.Charset = CHARSET_ISO_8859_1 then
+    Result := TEncoding.GetEncoding(CHARSET_ISO_8859_1)
   else
     Result := TMBCSEncoding.Create;
 end;

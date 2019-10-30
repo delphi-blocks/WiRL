@@ -117,6 +117,7 @@ type
     FAllAttributes: TArray<TCustomAttribute>;
     FStatus: TWiRLHttpStatus;
     FParams: TWiRLMethodParamList;
+    FName: string;
 
     procedure ProcessAttributes;
     procedure ProcessParams;
@@ -127,6 +128,7 @@ type
     function HasFilter(AAttribute: TCustomAttribute): Boolean;
   public
     property Rest: Boolean read FRest;
+    property Name: string read FName;
     property Path: string read FPath;
     property Async: Boolean read FAsync;
     property Auth: TWiRLMethodAuthorization read FAuth;
@@ -431,6 +433,7 @@ begin
   FStatus := TWiRLHttpStatus.Create;
   FParams := TWiRLMethodParamList.Create(True);
   FMethodResult := TWiRLMethodResult.Create(FRttiMethod.ReturnType);
+  FName := FRttiMethod.Name;
 
   FIsFunction := Assigned(FRttiMethod.ReturnType);
 
