@@ -111,6 +111,7 @@ implementation
 
 uses
   IdGlobalProtocols,
+  WiRL.RTTI.Utils,
   WiRL.Core.Exceptions;
 
 type
@@ -120,6 +121,13 @@ type
   public
     function ReadLine: string; override;
     property LastLineBreak: string read FLastLineBreak;
+  end;
+
+  // Dirty hack to access some private member in Delphi Tokyo or less
+  TStreamReaderHelper = class helper for TStreamReader
+    function GetBufferedData: TStringBuilder;
+    function GetNoDataInStream: Boolean;
+    procedure DoFillBuffer(var Encoding: TEncoding);
   end;
 
 { TWiRLContentDisposition }
@@ -390,31 +398,31 @@ begin
   LOriginalEncoding := CurrentEncoding;
   FLastLineBreak := '';
   Result := '';
-  if FBufferedData = nil then
+  if GetBufferedData = nil then
     Exit;
   NewLineIndex := 0;
   PostNewLineIndex := 0;
 
   while True do
   begin
-    if (NewLineIndex + 2 > FBufferedData.Length) and (not FNoDataInStream) then
-      FillBuffer(LOriginalEncoding);
+    if (NewLineIndex + 2 > GetBufferedData.Length) and (not GetNoDataInStream) then
+      DoFillBuffer(LOriginalEncoding);
 
-    if NewLineIndex >= FBufferedData.Length then
+    if NewLineIndex >= GetBufferedData.Length then
     begin
-      if FNoDataInStream then
+      if GetNoDataInStream then
       begin
         PostNewLineIndex := NewLineIndex;
         Break;
       end
       else
       begin
-        FillBuffer(LOriginalEncoding);
-        if FBufferedData.Length = 0 then
+        DoFillBuffer(LOriginalEncoding);
+        if GetBufferedData.Length = 0 then
           Break;
       end;
     end;
-    LChar := FBufferedData[NewLineIndex];
+    LChar := GetBufferedData[NewLineIndex];
     if LChar = #10 then
     begin
       PostNewLineIndex := NewLineIndex + 1;
@@ -422,7 +430,7 @@ begin
       Break;
     end
     else
-    if (LChar = #13) and (NewLineIndex + 1 < FBufferedData.Length) and (FBufferedData[NewLineIndex + 1] = #10) then
+    if (LChar = #13) and (NewLineIndex + 1 < GetBufferedData.Length) and (GetBufferedData[NewLineIndex + 1] = #10) then
     begin
       PostNewLineIndex := NewLineIndex + 2;
       FLastLineBreak := #13 + #10;
@@ -439,9 +447,29 @@ begin
     Inc(NewLineIndex);
   end;
 
-  Result := FBufferedData.ToString;
+  Result := GetBufferedData.ToString;
   SetLength(Result, NewLineIndex);
-  FBufferedData.Remove(0, PostNewLineIndex);
+  GetBufferedData.Remove(0, PostNewLineIndex);
+end;
+
+{ TStreamReaderHelper }
+
+procedure TStreamReaderHelper.DoFillBuffer(var Encoding: TEncoding);
+begin
+  with Self do
+    FillBuffer(Encoding);
+end;
+
+function TStreamReaderHelper.GetBufferedData: TStringBuilder;
+begin
+  with Self do
+    Result := FBufferedData;
+end;
+
+function TStreamReaderHelper.GetNoDataInStream: Boolean;
+begin
+  with Self do
+    Result := FNoDataInStream;
 end;
 
 end.
