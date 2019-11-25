@@ -20,6 +20,7 @@ uses
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.Core.Registry,
+  WiRL.Core.Exceptions,
   WiRL.Tests.Mock.Filters;
 
 
@@ -61,6 +62,10 @@ type
 
     [GET, Path('/exception'), Produces(TMediaType.APPLICATION_JSON)]
     function TestException: string;
+
+    [GET, Path('/exception401'), Produces(TMediaType.APPLICATION_JSON)]
+    [Change401To400]
+    function TestException401: string;
 
     [POST, Path('/postecho'), Produces(TMediaType.TEXT_PLAIN)]
     function PostEcho([BodyParam] AContent: string): string;
@@ -131,6 +136,11 @@ end;
 function THelloWorldResource.TestException: string;
 begin
   raise Exception.Create('User Error Message');
+end;
+
+function THelloWorldResource.TestException401: string;
+begin
+  raise EWiRLNotAuthorizedException.Create('NotAuthorizedException');
 end;
 
 initialization

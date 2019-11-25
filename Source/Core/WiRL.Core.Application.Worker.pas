@@ -501,20 +501,21 @@ var
 begin
   FAuthContext := GetAuthContext;
   try
-    FContext.AuthContext := FAuthContext;
     try
-      LProcessResource := not ApplyRequestFilters;
-      if LProcessResource then
-        InternalHandleRequest;
-    except
-      on E: Exception do
-      begin
-        EWiRLWebApplicationException.HandleException(FContext, E);
-        ApplyResponseFilters;
-        raise;
+      FContext.AuthContext := FAuthContext;
+      try
+        LProcessResource := not ApplyRequestFilters;
+        if LProcessResource then
+          InternalHandleRequest;
+      except
+        on E: Exception do
+        begin
+          EWiRLWebApplicationException.HandleException(FContext, E);
+        end;
       end;
+    finally
+      ApplyResponseFilters;
     end;
-    ApplyResponseFilters;
   finally
     FreeAndNil(FAuthContext);
     FContext.AuthContext := nil;

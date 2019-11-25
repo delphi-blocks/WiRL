@@ -78,6 +78,7 @@ type
     FContent: string;
     FReasonString: string;
     FResponseError: TWiRLResponseError;
+    FHeadersSent: Boolean;
     function GetResponseError: TWiRLResponseError;
   protected
     function GetContent: string; override;
@@ -91,6 +92,7 @@ type
   public
     procedure SendHeaders; override;
     property Error: TWiRLResponseError read GetResponseError;
+    property HeadersSent: Boolean read FHeadersSent;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -401,6 +403,7 @@ begin
   FResponseError := TWiRLResponseError.Create;
   FStatusCode := 200;
   FReasonString := 'OK';
+  FHeadersSent := False;
 end;
 
 destructor TWiRLTestResponse.Destroy;
@@ -462,6 +465,7 @@ end;
 procedure TWiRLTestResponse.SendHeaders;
 begin
   inherited;
+  FHeadersSent := True;
 end;
 
 procedure TWiRLTestResponse.SetContent(const Value: string);

@@ -50,6 +50,8 @@ type
     procedure TestPerMatchingFilter;
     [Test]
     procedure TestPerMatchingFilterWithInvalidResource;
+    [Test]
+    procedure TestChangeHeaderOnResponseFilter;
   end;
 
 implementation
@@ -83,6 +85,15 @@ begin
   FServer.Free;
   FRequest.Free;
   FResponse.Free;
+end;
+
+procedure TTestFilter.TestChangeHeaderOnResponseFilter;
+begin
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/exception401';
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(400, FResponse.StatusCode);
+  Assert.IsTrue(FResponse.HeadersSent);
 end;
 
 procedure TTestFilter.TestMatchingBindingRequestFilter;
