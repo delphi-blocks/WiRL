@@ -60,6 +60,9 @@ type
     class function IsObjectOfType(ARttiType: TRttiType; const AClass: TClass;
       const AAllowInherithance: Boolean = True): Boolean; overload; static;
 
+    class function IsInterfaceOfType(ARttiType: TRttiType; const IID: TGUID;
+      const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
     // Create new value data
     class function CreateNewValue(AType: TRttiType): TValue; static;
 
@@ -532,6 +535,23 @@ class function TRttiHelper.IsDynamicArrayOf<T>(ARttiType: TRttiType;
   const AAllowInherithance: Boolean): Boolean;
 begin
   Result := TRttiHelper.IsDynamicArrayOf(ARttiType, TClass(T), AAllowInherithance);
+end;
+
+class function TRttiHelper.IsInterfaceOfType(ARttiType: TRttiType;
+  const IID: TGUID; const AAllowInherithance: Boolean): Boolean;
+var
+  LInterfaceType: TRttiInterfaceType;
+begin
+  Result := False;
+  if ARttiType is TRttiInterfaceType then
+  begin
+    LInterfaceType := TRttiInterfaceType(ARttiType);
+    repeat
+      if LInterfaceType.GUID = IID then
+        Exit(True);
+      LInterfaceType := LInterfaceType.BaseType;
+    until (LInterfaceType = nil) or (not AAllowInherithance);
+  end;
 end;
 
 class function TRttiHelper.IsObjectOfType(ARttiType: TRttiType;

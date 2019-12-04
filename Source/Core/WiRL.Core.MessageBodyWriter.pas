@@ -123,6 +123,9 @@ type
 
     procedure RegisterWriter<T: class>(const AWriterClass: TClass; AAffinity: Integer = 0); overload;
 
+    procedure RegisterWriter(const AWriterClass: TClass; ASubjectIntf:
+        TGUID; const AGetAffinity: TGetAffinityFunction); overload;
+
     function UnregisterWriter(const AWriterClass: TClass): Integer; overload;
     function UnregisterWriter(const AQualifiedClassName: string): Integer; overload;
   public
@@ -430,6 +433,19 @@ begin
       Result := LIndex;
       Break;
     end;
+end;
+
+procedure TMessageBodyWriterRegistry.RegisterWriter(const AWriterClass: TClass;
+  ASubjectIntf: TGUID; const AGetAffinity: TGetAffinityFunction);
+begin
+  RegisterWriter(
+    AWriterClass,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsInterfaceOfType(AType, ASubjectIntf);
+    end,
+    AGetAffinity
+  );
 end;
 
 end.

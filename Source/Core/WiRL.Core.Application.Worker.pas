@@ -270,7 +270,7 @@ begin
           AValue.AsObject.Free;
     end;
 
-    tkInterface: TObject(AValue.AsInterface).Free;
+    //tkInterface: TObject(AValue.AsInterface).Free;
 
     tkArray,
     tkDynArray:
@@ -316,9 +316,6 @@ var
     end
     else
       Result := TRttiHelper.CreateInstance(AParam.ParamType, LParamReader.AsString(LAttr));
-
-    if Result.AsObject = nil then
-      raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [AMediaType.Value, LParamName]), Self.ClassName);
   end;
   
 begin
@@ -383,7 +380,7 @@ begin
 
       //tkSet: ;
 
-      tkClass:
+      tkClass, tkInterface:
       begin
         if HasRowConstraints(AParam.Attributes) then
         begin
@@ -402,8 +399,16 @@ begin
         else
           Result := TRttiHelper.CreateInstance(LParam.ParamType, LParamReader.AsString(LAttr));
 
-        if Result.AsObject = nil then
-          raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
+        if Result.IsObject then
+        begin
+          if Result.AsObject = nil then
+            raise EWiRLServerException.Create(Format('Unsupported data type for param [%s]', [LParamName]), Self.ClassName);
+        end
+        else
+        begin
+          if Result.AsInterface = nil then
+            raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, LParamName]), Self.ClassName);
+        end;
       end;
 
       //tkMethod: ;

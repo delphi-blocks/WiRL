@@ -120,6 +120,9 @@ type
 
     procedure RegisterReader<T: class>(const AReaderClass: TClass); overload;
 
+    procedure RegisterReader(const AReaderClass: TClass; ASubjectIntf: TGUID;
+      const AGetAffinity: TGetAffinityFunction); overload;
+
     class property Instance: TMessageBodyReaderRegistry read GetInstance;
   end;
 
@@ -363,6 +366,19 @@ begin
   );
 
   Result := LList;
+end;
+
+procedure TMessageBodyReaderRegistry.RegisterReader(const AReaderClass: TClass;
+  ASubjectIntf: TGUID; const AGetAffinity: TGetAffinityFunction);
+begin
+  RegisterReader(
+    AReaderClass,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsInterfaceOfType(AType, ASubjectIntf);
+    end,
+    AGetAffinity
+  );
 end;
 
 end.
