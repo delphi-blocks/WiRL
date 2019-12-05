@@ -60,6 +60,8 @@
         <DllSuffix>260</DllSuffix>
         <DCC_DcuOutput>..\..\Lib\$(DLLSUFFIX)\$(Platform)\$(Config)</DCC_DcuOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <DCC_DcpOutput>..\..\Lib\$(DLLSUFFIX)\$(Platform)\$(Config)</DCC_DcpOutput>
+        <DCC_BplOutput>..\..\Bin\260\$(Platform)\$(Config)</DCC_BplOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>rtl;WiRLRunTime;$(DCC_UsePackage)</DCC_UsePackage>
