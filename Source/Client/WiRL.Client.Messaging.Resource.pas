@@ -9,7 +9,7 @@
 {******************************************************************************}
 unit WiRL.Client.Messaging.Resource;
 
-{$I WiRL.inc}
+{$I ..\..\Source\Core\WiRL.inc}
 
 interface
 
