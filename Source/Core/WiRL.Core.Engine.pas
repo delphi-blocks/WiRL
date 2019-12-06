@@ -283,23 +283,23 @@ begin
   try
     if not DoBeforeRequestStart() then
     begin
-      if Length(AContext.URL.PathTokens) < 1 then
+      if Length(AContext.RequestURL.PathTokens) < 1 then
         raise EWiRLNotFoundException.Create(
-          Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.URL.BasePath]),
+          Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.RequestURL.BasePath]),
           Self.ClassName, 'HandleRequest'
         );
-      LApplicationPath := TWiRLURL.CombinePath([AContext.URL.PathTokens[0]]);
+      LApplicationPath := TWiRLURL.CombinePath([AContext.RequestURL.PathTokens[0]]);
       if (BasePath <> '') and (BasePath <> TWiRLURL.URL_PATH_SEPARATOR) then
       begin
-        if not AContext.URL.MatchPath(BasePath + TWiRLURL.URL_PATH_SEPARATOR) then
+        if not AContext.RequestURL.MatchPath(BasePath + TWiRLURL.URL_PATH_SEPARATOR) then
           raise EWiRLNotFoundException.Create(
-            Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.URL.BasePath]),
+            Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.RequestURL.BasePath]),
             Self.ClassName, 'HandleRequest'
           );
-        LApplicationPath := TWiRLURL.CombinePath([AContext.URL.PathTokens[0], AContext.URL.PathTokens[1]]);
+        LApplicationPath := TWiRLURL.CombinePath([AContext.RequestURL.PathTokens[0], AContext.RequestURL.PathTokens[1]]);
       end;
       // Change the URI BasePath (?)
-      AContext.URL.BasePath := LApplicationPath;
+      AContext.RequestURL.BasePath := LApplicationPath;
 
       if FApplications.TryGetValue(LApplicationPath, LApplication) then
       begin
@@ -318,7 +318,7 @@ begin
       end
       else
         raise EWiRLNotFoundException.Create(
-          Format('Application [%s] not found. URL [%s]', [LApplicationPath, AContext.URL.URL]),
+          Format('Application [%s] not found. URL [%s]', [LApplicationPath, AContext.RequestURL.URL]),
           Self.ClassName, 'HandleRequest'
         );
     end;

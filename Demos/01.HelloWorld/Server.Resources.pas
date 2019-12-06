@@ -12,7 +12,7 @@ unit Server.Resources;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.JSON,
+  System.Classes, System.SysUtils, System.JSON, System.NetEncoding,
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.Core.Registry,
@@ -74,6 +74,13 @@ type
 
     [POST, Path('/poststream'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
     function PostStreamExample([BodyParam] AContent: TStream): string;
+
+    [POST, Path('/multipart'), Produces(TMediaType.APPLICATION_JSON), Consumes(TMediaType.MULTIPART_FORM_DATA)]
+    function PostMultiPartExample(
+      [FormParam] AValue: string;
+      [FormParam] AContent: TStream;
+      [FormParam] AJSON: TJSONObject
+    ): TJSONObject;
   end;
 
   [Path('/entity')]
@@ -162,6 +169,23 @@ end;
 function THelloWorldResource.PostJSONExample(AContent: TJSONObject): string;
 begin
   Result := 'Name=' + AContent.GetValue<string>('name');
+end;
+
+function THelloWorldResource.PostMultiPartExample(
+      [FormParam] AValue: string;
+      [FormParam] AContent: TStream;
+      [FormParam] AJSON: TJSONObject
+    ): TJSONObject;
+var
+  LContentBuffer: TBytes;
+begin
+  SetLength(LContentBuffer, AContent.Size);
+  AContent.ReadBuffer(LContentBuffer, AContent.Size);
+  Result := TJSONObject.Create;
+  Result
+    .AddPair('AValue', AValue)
+    .AddPair('AJSON', AJSON.ToJSON)
+    .AddPair('AContent', TNetEncoding.Base64.EncodeBytesToString(LContentBuffer));
 end;
 
 function THelloWorldResource.PostStreamExample(AContent: TStream): string;

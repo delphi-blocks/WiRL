@@ -50,7 +50,9 @@ requires
   IndyProtocols,
   IndyCore,
   bindengine,
-  bindcomp;
+  bindcomp,
+  JOSE,
+  NeonRunTime;
 
 contains
   WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
@@ -111,7 +113,8 @@ contains
   WiRL.http.Client in '..\..\Source\Client\WiRL.http.Client.pas',
   WiRL.http.Server.Interfaces in '..\..\Source\Core\WiRL.http.Server.Interfaces.pas',
   WiRL.http.FileSystemEngine in '..\..\Source\Core\WiRL.http.FileSystemEngine.pas',
-  WiRL.http.Client.NetHttp in '..\..\Source\Client\WiRL.http.Client.NetHttp.pas';
+  WiRL.http.Client.NetHttp in '..\..\Source\Client\WiRL.http.Client.NetHttp.pas',
+  WiRL.http.MultipartData in '..\..\Source\Core\WiRL.http.MultipartData.pas';
 
 end.
 

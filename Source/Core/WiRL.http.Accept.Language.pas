@@ -49,7 +49,7 @@ end;
 procedure TAcceptLanguage.Parse(const AAcceptItem: string);
 begin
   inherited;
-  ParseLanguage(FAcceptItemOnly);
+  ParseLanguage(FValue);
 end;
 
 procedure TAcceptLanguage.ParseLanguage(const AFullLanguage: string);

@@ -20,35 +20,44 @@ uses
   WiRL.Core.Declarations;
 
 type
-  TAcceptItem = class abstract
+  THeaderItem = class abstract
   protected
     const DELIM_PARAMS = ';';
     const DELIM_VALUE = '=';
+  protected
+    FValue: string;
+    FOriginalItem: string;
+    FParameters: TStringList;
+    procedure Assign(ASource: THeaderItem);
+  public
+    constructor Create(const AHeaderItem: string); virtual;
+    destructor Destroy; override;
+    procedure Parse(const AHeaderItem: string); virtual;
+    property Parameters: TStringList read FParameters;
+    property Value: string read FValue write FValue;
+  end;
+
+  TAcceptItem = class abstract(THeaderItem)
+  protected
     const QFACTOR_NAME = 'q';
   protected
-    FOriginalItem: string;
-    FAcceptItemOnly: string;
-    FParameters: TStringList;
     FPFactor: Integer;
     FQFactor: Double;
     function GetIsWildcard: Boolean;
     function GetWeigth: Integer; virtual;
     procedure Assign(ASource: TAcceptItem);
   public
-    constructor Create(const AAcceptItem: string); virtual;
-    destructor Destroy; override;
-
+    constructor Create(const AHeaderItem: string); override;
 
     function ToString: string; override;
     function ToStringDebug: string; virtual;
-    procedure Parse(const AAcceptItem: string); virtual;
+    procedure Parse(const AHeaderItem: string); override;
 
     function Matches(const AAcceptItem: string): Boolean; overload;
 
     class function GetWildcard: string; virtual;
 
-    property AcceptItemOnly: string read FAcceptItemOnly write FAcceptItemOnly;
-    property Parameters: TStringList read FParameters;
+    property AcceptItemOnly: string read FValue write FValue;
     property PFactor: Integer read FPFactor write FPFactor;
     property QFactor: Double read FQFactor write FQFactor;
     property Weight: Integer read GetWeigth;
@@ -100,47 +109,28 @@ uses
 
 procedure TAcceptItem.Assign(ASource: TAcceptItem);
 begin
+  inherited Assign(ASource);
   Self.AcceptItemOnly := ASource.AcceptItemOnly;
-  Self.Parameters.Assign(ASource.Parameters);
   Self.PFactor := ASource.PFactor;
   Self.QFactor := ASource.QFactor;
 end;
 
-constructor TAcceptItem.Create(const AAcceptItem: string);
+constructor TAcceptItem.Create(const AHeaderItem: string);
 begin
+  inherited Create(AHeaderItem);
   FQFactor := 1;
-  FParameters := TStringList.Create;
-  FParameters.Delimiter := DELIM_PARAMS;
-
-  Parse(AAcceptItem);
 end;
 
-destructor TAcceptItem.Destroy;
-begin
-  FParameters.Free;
-  inherited;
-end;
-
-procedure TAcceptItem.Parse(const AAcceptItem: string);
+procedure TAcceptItem.Parse(const AHeaderItem: string);
 var
   LUSFormat: TFormatSettings;
-  LIndex: Integer;
-  LParts: TStringArray;
   LPosition: Integer;
 begin
-  FOriginalItem := AAcceptItem;
-  FParameters.Clear;
-
+  inherited Parse(AHeaderItem);
   LUSFormat := TFormatSettings.Create('en-US');
 
-  LParts := AAcceptItem.Split([DELIM_PARAMS]);
-
-  if Length(LParts) > 0 then
-    FAcceptItemOnly := Trim(LParts[0]);
-
-  for LIndex := 1 to High(LParts) do
+  for LPosition := 0 to Parameters.Count - 1 do
   begin
-    LPosition := FParameters.Add(Trim(LParts[LIndex]));
     if FParameters.Names[LPosition] = QFACTOR_NAME then
       FQFactor := StrToFloat(FParameters.ValueFromIndex[LPosition], LUSFormat)
   end;
@@ -148,7 +138,7 @@ end;
 
 function TAcceptItem.GetIsWildcard: Boolean;
 begin
-  Result := FAcceptItemOnly = GetWildcard;
+  Result := FValue = GetWildcard;
 end;
 
 function TAcceptItem.GetWeigth: Integer;
@@ -170,7 +160,7 @@ function TAcceptItem.ToString: string;
 var
   LParam: string;
 begin
-  Result := FAcceptItemOnly;
+  Result := FValue;
 
   for LParam in FParameters do
     Result := Result + DELIM_PARAMS + LParam
@@ -347,6 +337,44 @@ begin
 {$ELSE}
   Result := T(TAcceptItemClass(T).Create(AAcceptItem));
 {$ENDIF}
+end;
+
+constructor THeaderItem.Create(const AHeaderItem: string);
+begin
+  FParameters := TStringList.Create;
+  FParameters.Delimiter := DELIM_PARAMS;
+
+  Parse(AHeaderItem);
+end;
+
+destructor THeaderItem.Destroy;
+begin
+  FParameters.Free;
+  inherited;
+end;
+
+procedure THeaderItem.Assign(ASource: THeaderItem);
+begin
+  Self.Parameters.Assign(ASource.Parameters);
+end;
+
+procedure THeaderItem.Parse(const AHeaderItem: string);
+var
+  LIndex: Integer;
+  LParts: TStringArray;
+begin
+  FOriginalItem := AHeaderItem;
+  FParameters.Clear;
+
+  LParts := AHeaderItem.Split([DELIM_PARAMS]);
+
+  if Length(LParts) > 0 then
+    FValue := Trim(LParts[0]);
+
+  for LIndex := 1 to High(LParts) do
+  begin
+    FParameters.Add(Trim(LParts[LIndex]));
+  end;
 end;
 
 end.

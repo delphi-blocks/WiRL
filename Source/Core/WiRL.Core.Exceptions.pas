@@ -335,7 +335,6 @@ begin
     AContext.Response.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
     AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
   end;
-  AContext.Response.SendHeaders;
 end;
 
 procedure EWiRLWebApplicationException.CreateAndFillValues;

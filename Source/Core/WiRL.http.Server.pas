@@ -145,7 +145,7 @@ begin
   LEngineInfo := TWiRLEngineInfo.Create(AEngine, AOwnsObjects);
   FEngines.Add(LEngineInfo);
   if AEngine.Server <> Self then
-    AEngine.Server := Self;
+    AEngine.FServer := Self;
 end;
 
 function TWiRLServer.AddEngine<T>(const ABasePath: string; AOwnsObjects: Boolean): T;
@@ -239,17 +239,20 @@ begin
     LContext.Request := ARequest;
     LContext.Response := AResponse;
     try
-      if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
-      begin
-        LEngine := GetEngine(ARequest.PathInfo);
-        LContext.Engine := LEngine;
-        LEngine.HandleRequest(LContext);
+      try
+        if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
+        begin
+          LEngine := GetEngine(ARequest.PathInfo);
+          LContext.Engine := LEngine;
+          LEngine.HandleRequest(LContext);
+        end;
+        TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
+      except
+        on E: Exception do
+          EWiRLWebApplicationException.HandleException(LContext, E);
       end;
-      TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
+    finally
       AResponse.SendHeaders;
-    except
-      on E: Exception do
-        EWiRLWebApplicationException.HandleException(LContext, E);
     end;
   finally
     LContext.Free;
@@ -437,11 +440,11 @@ procedure TWiRLCustomEngine.SetServer(const Value: TWiRLServer);
 begin
   if FServer <> Value then
   begin
-//    if Assigned(FServer) then
-//      FServer.RemoveEngine(Self);
+    if Assigned(FServer) then
+      FServer.RemoveEngine(Self);
     FServer := Value;
-//    if Assigned(FServer) then
-//      FServer.AddEngine(BasePath, Self, False);
+    if Assigned(FServer) then
+      FServer.AddEngine(BasePath, Self, False);
   end;
 end;
 

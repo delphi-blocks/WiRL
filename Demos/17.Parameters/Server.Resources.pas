@@ -19,6 +19,8 @@ uses
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.Core.Application.Worker,
+  //WiRL.Core.ParamReader,
+  WiRL.Core.Resource,
   WiRL.Core.MessageBody.Default,
   WiRL.Core.Auth.Context,
   WiRL.http.Accept.MediaType,
@@ -60,8 +62,14 @@ type
     [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
     function ParamRecord([BodyParam] AParam: TRecordParam): TRecordParam;
 
-  end;
+    [GET, Path('/array')]
+    [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
+    function ParamArray([QueryParam] AParam: TArrayInt): TArrayInt;
 
+    [POST, Path('/arraybody')]
+    [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
+    function ParamArrayBody([BodyParam] AParam: TArrayParam): TArrayParam;
+  end;
 
 implementation
 
@@ -83,6 +91,16 @@ begin
 end;
 
 function TParametersResource.ParamDate(AParam: TDate): TDate;
+begin
+  Result := AParam;
+end;
+
+function TParametersResource.ParamArray(AParam: TArrayInt): TArrayInt;
+begin
+  Result := AParam;
+end;
+
+function TParametersResource.ParamArrayBody(AParam: TArrayParam): TArrayParam;
 begin
   Result := AParam;
 end;

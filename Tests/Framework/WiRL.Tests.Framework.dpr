@@ -29,7 +29,10 @@ uses
   WiRL.Tests.Framework.Response in 'Source\WiRL.Tests.Framework.Response.pas',
   WiRL.Tests.Mock.Filters in '..\Mock\WiRL.Tests.Mock.Filters.pas',
   WiRL.Tests.Framework.Filters in 'Source\WiRL.Tests.Framework.Filters.pas',
-  WiRL.Tests.Framework.Serialization in 'Source\WiRL.Tests.Framework.Serialization.pas';
+  WiRL.Tests.Framework.Serialization in 'Source\WiRL.Tests.Framework.Serialization.pas',
+  WiRL.Tests.Framework.HeaderParser in 'Source\WiRL.Tests.Framework.HeaderParser.pas',
+  WiRL.Tests.Framework.ContentNegotiation in 'Source\WiRL.Tests.Framework.ContentNegotiation.pas',
+  WiRL.Tests.Mock.MessageBodyXML in '..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas';
 
 var
   runner : ITestRunner;
