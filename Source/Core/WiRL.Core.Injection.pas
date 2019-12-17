@@ -24,8 +24,7 @@ uses
 type
   IContextFactory = interface
   ['{43596462-9B26-4B84-BD5C-0225900F6C93}']
-    function CreateContext(const AObject: TRttiObject;
-      AContext: TWiRLContext): TValue;
+    function CreateContext(const AObject: TRttiObject; AContext: TWiRLContext): TValue;
   end;
 
   TWiRLContextInjectionRegistry = class

@@ -53,7 +53,7 @@ begin
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthFormResource', 'DoLogin');
 
-  FAuthContext.Generate(FApplication.Secret);
+  FAuthContext.Generate(FApplication.ConfigJWT.KeyPair.PrivateKey.Key);
   Result := GetGeneratedToken;
 end;
 

@@ -62,8 +62,10 @@ begin
     .SetEngineName('RESTEngine')
     .AddApplication('/app')
       .SetResources('*')
-      .SetFilters('*')
-      .ConfigureSerializer
+      .SetFilters('*');
+
+  RESTServer.CurrentEngine<TWiRLEngine>.CurrentApp
+      .ConfigureNeon
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase);
 

@@ -311,7 +311,7 @@ var
   LAuthChallengeHeader: string;
 begin
   if Assigned(AContext.Application) and (AContext.Application is TWiRLApplication) then
-    LAuthChallengeHeader := TWiRLApplication(AContext.Application).AuthChallengeHeader
+    LAuthChallengeHeader := TWiRLApplication(AContext.Application).ConfigAuth.AuthChallengeHeader
   else
     LAuthChallengeHeader := '';
 

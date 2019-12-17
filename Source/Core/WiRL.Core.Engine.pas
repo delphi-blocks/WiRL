@@ -89,6 +89,7 @@ type
     class function GetServerDirectory: string; static;
     class function GetServerFileName: string; static;
   private
+    FCurrentApp: TWiRLApplication;
     FRttiContext: TRttiContext;
     FApplications: TWiRLApplicationList;
     FSubscribers: TList<IWiRLHandleListener>;
@@ -116,6 +117,7 @@ type
     function AddApplication(const AName, ABasePath: string; const AResources: TArray<string>): TWiRLApplication; overload; virtual; deprecated;
     procedure AddApplication(AApplication: TWiRLApplication); overload; virtual;
     procedure RemoveApplication(AApplication: TWiRLApplication); virtual;
+    function CurrentApp: TWiRLApplication;
 
     function AddSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
     function RemoveSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
@@ -153,6 +155,7 @@ begin
   try
     Result.SetBasePath(ABasePath);
     Result.Engine := Self;
+    FCurrentApp := Result;
   except
     Result.Free;
     raise
@@ -179,6 +182,13 @@ begin
   FSubscribers := TList<IWiRLHandleListener>.Create;
   FEngineName := DefaultEngineName;
   BasePath := '/rest';
+end;
+
+function TWiRLEngine.CurrentApp: TWiRLApplication;
+begin
+  if not Assigned(FCurrentApp) then
+    raise EWiRLServerException.Create('No current application defined');
+  Result := FCurrentApp;
 end;
 
 procedure TWiRLEngine.DefineProperties(Filer: TFiler);

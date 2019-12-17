@@ -17,10 +17,13 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
 
+  JOSE.Core.JWA,
+  WiRL.Configuration.Auth,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Engine,
-  WiRL.Core.Application;
+  WiRL.Core.Application, WiRL.Core.MessageBodyReader,
+  WiRL.Core.MessageBodyWriter, WiRL.http.Filters, WiRL.Core.Registry;
 
 type
   TMainForm = class(TForm)
@@ -70,33 +73,37 @@ begin
   // Create http server
   FServer := TWiRLServer.Create(nil);
 
-  // Server configuration
+  // Server & Apps configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+
     // Engine configuration
     .AddEngine<TWiRLEngine>('/rest')
       .SetEngineName('WiRL Auth Demo')
 
+      // App base configuration
       .AddApplication('/app')
         .SetAppName('Auth Application')
-        .SetTokenLocation(TAuthTokenLocation.Bearer)
-        .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
-        .SetClaimsClass(TServerClaims)
-      {$IFDEF HAS_NEW_ARRAY}
         .SetResources([
           'Server.Resources.TFormAuthResource',
           'Server.Resources.TBasicAuthResource',
           'Server.Resources.TBodyAuthResource',
           'Server.Resources.TUserResource'
-        ]);
-      {$ELSE}
-        .SetResources(
-          'Server.Resources.TFormAuthResource,' +
-          'Server.Resources.TBasicAuthResource,' +
-          'Server.Resources.TBodyAuthResource,' +
-          'Server.Resources.TUserResource'
-        );
-      {$ENDIF}
+        ])
+  ;
+
+  // Auth configuration (App plugin configuration)
+  FServer.CurrentEngine<TWiRLEngine>.CurrentApp
+    .ConfigureAuth
+      .SetTokenType(TAuthTokenType.JWT)
+      .SetTokenLocation(TAuthTokenLocation.Bearer);
+
+  // JWT configuration (App plugin configuration)
+  FServer.CurrentEngine<TWiRLEngine>.CurrentApp
+    .ConfigureJWT
+      .SetClaimClass(TServerClaims)
+      .SetAlgorithm(TJOSEAlgorithmId.HS256)
+      .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text));
 
   if not FServer.Active then
     FServer.Active := True;

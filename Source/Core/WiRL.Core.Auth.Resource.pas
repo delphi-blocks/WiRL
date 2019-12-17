@@ -143,7 +143,7 @@ begin
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
 
-  FAuthContext.Generate(FApplication.Secret);
+  FAuthContext.Generate(FApplication.ConfigJWT.KeyPair.PrivateKey.Key);
   Result := GetGeneratedToken;
 end;
 
@@ -175,7 +175,7 @@ begin
       );
   end;
 
-  FAuthContext.Generate(FApplication.Secret);
+  FAuthContext.Generate(FApplication.ConfigJWT.KeyPair.PrivateKey.Key);
   Result := GetGeneratedToken;
 end;
 
@@ -208,7 +208,7 @@ begin
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
 
-  FAuthContext.Generate(FApplication.Secret);
+  FAuthContext.Generate(FApplication.ConfigJWT.KeyPair.PrivateKey.Key);
   Result := GetGeneratedToken;
 end;
 
