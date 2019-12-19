@@ -61,6 +61,7 @@ implementation
 uses
   WiRL.Core.Engine,
   WiRL.Core.Application,
+  WiRL.Configuration.Core,
   WiRL.http.URL,
   WiRL.http.Server,
   WiRL.http.Request,
@@ -166,6 +167,8 @@ begin
   // Application
   else if (LType.InheritsFrom(TWiRLApplication)) then
     AValue := AContext.Application
+  else if (LType.InheritsFrom(TWiRLConfigurationNRef)) then
+    AValue := (AContext.Application as TWiRLApplication).GetConfigByClassRef(LType)
   else if CustomContextInjectionByType(AObject, AContext, AValue) then
     //
   else

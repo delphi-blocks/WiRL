@@ -5,6 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Defaults,
 
+  WiRL.Core.Application,
   WiRL.Configuration.Core,
   Neon.Core.Persistence,
   Neon.Core.Types;
@@ -12,7 +13,7 @@ uses
 {$SCOPEDENUMS ON}
 
 type
-  IWiRLConfigurationNeon = interface
+  IWiRLConfigurationNeon = interface(IWiRLConfiguration)
   ['{BD3F569C-5FF0-44E4-A61E-99EF881F0BEA}']
     function SetMembers(AValue: TNeonMembersSet): IWiRLConfigurationNeon;
     function SetMemberCase(AValue: TNeonCase): IWiRLConfigurationNeon;
@@ -23,8 +24,10 @@ type
     function SetPrettyPrint(AValue: Boolean): IWiRLConfigurationNeon;
 
     function GetSerializers: TNeonSerializerRegistry;
+    function GetNeonConfig: INeonConfiguration;
   end;
 
+  [Implements(IWiRLConfigurationNeon)]
   TWiRLConfigurationNeon = class(TWiRLConfigurationNRef, IWiRLConfigurationNeon)
   private
     FPrettyPrint: Boolean;
@@ -176,5 +179,9 @@ begin
   FVisibility := AValue;
   Result := Self;
 end;
+
+initialization
+
+  TWiRLConfigClassRegistry.Instance.RegisterConfigClass(TWiRLConfigurationNeon);
 
 end.

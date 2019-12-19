@@ -24,7 +24,8 @@ uses
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBody.Classes,
-  WiRL.Core.Exceptions;
+  WiRL.Core.Exceptions,
+  WiRL.Configuration.Neon;
 
 type
   /// <summary>
@@ -223,7 +224,7 @@ var
   LJSON: TJSONValue;
   LValue: TValue;
 begin
-  LDes := TNeonDeserializerJSON.Create(WiRLApplication.ConfigNeon.GetNeonConfig);
+  LDes := TNeonDeserializerJSON.Create(WiRLApplication.Configure<IWiRLConfigurationNeon>.GetNeonConfig);
   try
     LJSON := TJSONObject.ParseJSONValue(ContentStreamToString(AMediaType.Charset, AContentStream));
     try
@@ -253,7 +254,7 @@ begin
       tkDynArray,
       tkRecord:
       begin
-        LJSON := TNeon.ValueToJSON(AValue, WiRLApplication.ConfigNeon.GetNeonConfig);
+        LJSON := TNeon.ValueToJSON(AValue, WiRLApplication.Configure<IWiRLConfigurationNeon>.GetNeonConfig);
         try
           LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
         finally
@@ -272,7 +273,7 @@ end;
 function TWiRLObjectProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 begin
-  Result := TNeon.JSONToObject(AParam.ParamType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLApplication.ConfigNeon.GetNeonConfig);
+  Result := TNeon.JSONToObject(AParam.ParamType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLApplication.Configure<IWiRLConfigurationNeon>.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -283,7 +284,7 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AContentStream);
   try
-    LJSON := TNeon.ObjectToJSON(AValue.AsObject, WiRLApplication.ConfigNeon.GetNeonConfig);
+    LJSON := TNeon.ObjectToJSON(AValue.AsObject, WiRLApplication.Configure<IWiRLConfigurationNeon>.GetNeonConfig);
     try
       LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally

@@ -16,9 +16,9 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
+  WiRL.Configuration.Core,
   WiRL.Configuration.JWT,
   WiRL.Configuration.Auth,
-  WiRL.Configuration.Neon,
 
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
@@ -28,11 +28,10 @@ uses
   WiRL.Core.Context,
   WiRL.Core.Auth.Context,
   WiRL.http.Filters,
-  WiRL.Core.Injection,
-  Neon.Core.Persistence;
+  WiRL.Core.Injection;
 
 type
-  TWiRLApplication = class(TComponent)
+  TWiRLApplication = class(TComponent, IWiRLApplication)
   private
     class var FRttiContext: TRttiContext;
   private
@@ -40,12 +39,14 @@ type
     FFilterRegistry: TWiRLFilterRegistry;
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
+    FConfigRegistry: TWiRLConfigRegistry;
+    FAppConfigurator: TAppConfigurator;
     FBasePath: string;
     FAppName: string;
     FSystemApp: Boolean;
     FConfigJWT: TWiRLConfigurationJWT;
     FConfigAuth: TWiRLConfigurationAuth;
-    FConfigNeon: TWiRLConfigurationNeon;
+    //FConfigNeon: TWiRLConfigurationNeon;
     FEngine: TComponent;
     FUseUTCDate: Boolean;
     function AddResource(const AResource: string): Boolean;
@@ -54,7 +55,7 @@ type
     function AddReader(const AReader: string): Boolean;
     function GetConfigJWT: TWiRLConfigurationJWT;
     function GetConfigAuth: TWiRLConfigurationAuth;
-    function GetConfigNeon: TWiRLConfigurationNeon;
+    //function GetConfigNeon: TWiRLConfigurationNeon;
 
     procedure SetEngine(const Value: TComponent);
     function GetPath: string;
@@ -69,6 +70,7 @@ type
   protected
     procedure SetParentComponent(AParent: TComponent); override;
     procedure DefineProperties(Filer: TFiler); override;
+    function GetAppConfigurator: TAppConfigurator;
   public
     class procedure InitializeRtti;
 
@@ -79,23 +81,25 @@ type
     procedure Shutdown;
 
     // Fluent-like configuration methods
-    function SetResources(const AResources: TArray<string>): TWiRLApplication; overload;
-    function SetResources(const AResources: string): TWiRLApplication; overload;
-    function SetFilters(const AFilters: TArray<string>): TWiRLApplication; overload;
-    function SetFilters(const AFilters: string): TWiRLApplication; overload;
-    function SetWriters(const AWriters: TArray<string>): TWiRLApplication; overload;
-    function SetWriters(const AWriters: string): TWiRLApplication; overload;
-    function SetReaders(const AReaders: TArray<string>): TWiRLApplication; overload;
-    function SetReaders(const AReaders: string): TWiRLApplication; overload;
-    function SetBasePath(const ABasePath: string): TWiRLApplication;
-    function SetAppName(const AAppName: string): TWiRLApplication;
-    function SetUseUTCDate(AValue: Boolean): TWiRLApplication;
-    function SetSystemApp(ASystem: Boolean): TWiRLApplication;
+    function SetResources(const AResources: TArray<string>): IWiRLApplication; overload;
+    function SetResources(const AResources: string): IWiRLApplication; overload;
+    function SetFilters(const AFilters: TArray<string>): IWiRLApplication; overload;
+    function SetFilters(const AFilters: string): IWiRLApplication; overload;
+    function SetWriters(const AWriters: TArray<string>): IWiRLApplication; overload;
+    function SetWriters(const AWriters: string): IWiRLApplication; overload;
+    function SetReaders(const AReaders: TArray<string>): IWiRLApplication; overload;
+    function SetReaders(const AReaders: string): IWiRLApplication; overload;
+    function SetBasePath(const ABasePath: string): IWiRLApplication;
+    function SetAppName(const AAppName: string): IWiRLApplication;
+    function SetUseUTCDate(AValue: Boolean): IWiRLApplication;
+    function SetSystemApp(ASystem: Boolean): IWiRLApplication;
 
 
     function ConfigureJWT: IWiRLConfigurationJWT;
     function ConfigureAuth: IWiRLConfigurationAuth;
-    function ConfigureNeon: IWiRLConfigurationNeon;
+    function Configure<T: IInterface>: T;
+    function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
+    function GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
 
     function GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
 
@@ -122,9 +126,18 @@ type
     property Writers: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property Readers: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
 
-    property ConfigNeon: TWiRLConfigurationNeon read GetConfigNeon;
     property ConfigAuth: TWiRLConfigurationAuth read GetConfigAuth;
     property ConfigJWT: TWiRLConfigurationJWT read GetConfigJWT;
+  end;
+
+  TAppConfiguratorImpl = class(TAppConfigurator)
+  private
+    FApplication: TWiRLApplication;
+  protected
+    function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface; override;
+  public
+    property Application: TWiRLApplication read FApplication;
+    constructor Create(AApplication: TWiRLApplication);
   end;
 
 implementation
@@ -308,13 +321,13 @@ begin
   end;
 end;
 
-function TWiRLApplication.SetBasePath(const ABasePath: string): TWiRLApplication;
+function TWiRLApplication.SetBasePath(const ABasePath: string): IWiRLApplication;
 begin
   FBasePath := ABasePath;
   Result := Self;
 end;
 
-function TWiRLApplication.SetAppName(const AAppName: string): TWiRLApplication;
+function TWiRLApplication.SetAppName(const AAppName: string): IWiRLApplication;
 begin
   FAppName := AAppName;
   Result := Self;
@@ -332,7 +345,7 @@ begin
   end;
 end;
 
-function TWiRLApplication.SetReaders(const AReaders: TArray<string>): TWiRLApplication;
+function TWiRLApplication.SetReaders(const AReaders: TArray<string>): IWiRLApplication;
 var
   LReader: string;
 begin
@@ -341,17 +354,17 @@ begin
     Self.AddReader(LReader);
 end;
 
-function TWiRLApplication.SetReaders(const AReaders: string): TWiRLApplication;
+function TWiRLApplication.SetReaders(const AReaders: string): IWiRLApplication;
 begin
   Result := SetReaders(AReaders.Split([',']));
 end;
 
-function TWiRLApplication.SetResources(const AResources: string): TWiRLApplication;
+function TWiRLApplication.SetResources(const AResources: string): IWiRLApplication;
 begin
   Result := SetResources(AResources.Split([',']));
 end;
 
-function TWiRLApplication.SetFilters(const AFilters: string): TWiRLApplication;
+function TWiRLApplication.SetFilters(const AFilters: string): IWiRLApplication;
 begin
   Result := SetFilters(AFilters.Split([',']));
 end;
@@ -363,7 +376,7 @@ begin
     Engine := AParent as TWiRLEngine;
 end;
 
-function TWiRLApplication.SetWriters(const AWriters: TArray<string>): TWiRLApplication;
+function TWiRLApplication.SetWriters(const AWriters: TArray<string>): IWiRLApplication;
 var
   LWriter: string;
 begin
@@ -372,7 +385,7 @@ begin
     Self.AddWriter(LWriter);
 end;
 
-function TWiRLApplication.SetWriters(const AWriters: string): TWiRLApplication;
+function TWiRLApplication.SetWriters(const AWriters: string): IWiRLApplication;
 begin
   Result := SetWriters(AWriters.Split([',']));
 end;
@@ -389,9 +402,6 @@ begin
 
   if FReaderRegistry.Count = 0 then
     FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
-
-  if not Assigned(FConfigNeon) then
-    FConfigNeon := TWiRLConfigurationNeon.Create;
 end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
@@ -434,7 +444,7 @@ begin
   Writer.WriteListEnd;
 end;
 
-function TWiRLApplication.SetFilters(const AFilters: TArray<string>): TWiRLApplication;
+function TWiRLApplication.SetFilters(const AFilters: TArray<string>): IWiRLApplication;
 var
   LFilter: string;
 begin
@@ -443,13 +453,47 @@ begin
     Self.AddFilter(LFilter);
 end;
 
-function TWiRLApplication.SetResources(const AResources: TArray<string>): TWiRLApplication;
+function TWiRLApplication.SetResources(const AResources: TArray<string>): IWiRLApplication;
 var
   LResource: string;
 begin
   Result := Self;
   for LResource in AResources do
     Self.AddResource(LResource);
+end;
+
+function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
+begin
+  if not FConfigRegistry.TryGetValue(AClass, Result) then
+    raise EWiRLException.CreateFmt('Config class [%s] not found', [AClass.ClassName]);
+end;
+
+function TWiRLApplication.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
+var
+  LConfig: TWiRLConfigurationNRef;
+  LConfigClass: TWiRLConfigurationNRefClass;
+begin
+  LConfigClass := TWiRLConfigClassRegistry.Instance.GetImplementationOf(AInterfaceRef);
+  if not FConfigRegistry.TryGetValue(LConfigClass, LConfig) then
+  begin
+    LConfig := TRttiHelper.CreateInstance(LConfigClass) as TWiRLConfigurationNRef;
+    LConfig.Application := Self;
+    FConfigRegistry.Add(LConfigClass, LConfig);
+  end;
+
+  if not Supports(LConfig, AInterfaceRef, Result) then
+    raise EWiRLException.Create('Invalid config');
+end;
+
+function TWiRLApplication.Configure<T>: T;
+var
+  LInterfaceRef: TGUID;
+  LInterface: IInterface;
+begin
+  LInterfaceRef := GetTypeData(TypeInfo(T))^.GUID;
+  LInterface := GetConfigByInterfaceRef(LInterfaceRef);
+  if not Supports(LInterface, LInterfaceRef, Result) then
+    raise EWiRLException.Create('Invalid config');
 end;
 
 function TWiRLApplication.ConfigureAuth: IWiRLConfigurationAuth;
@@ -462,11 +506,6 @@ begin
   Result := ConfigJWT;
 end;
 
-function TWiRLApplication.ConfigureNeon: IWiRLConfigurationNeon;
-begin
-  Result := GetConfigNeon;
-end;
-
 constructor TWiRLApplication.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -475,6 +514,9 @@ begin
   FFilterRegistry.OwnsObjects := False;
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
+  FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
+
+  FAppConfigurator := TAppConfiguratorImpl.Create(Self);
 
   if csDesigning in ComponentState then
   begin
@@ -499,9 +541,17 @@ begin
   FWriterRegistry.Free;
   FFilterRegistry.Free;
   FResourceRegistry.Free;
+  FConfigRegistry.Free;
   FConfigJWT.Free;
+  FConfigAuth.Free;
+  FAppConfigurator.Free;
 
   inherited;
+end;
+
+function TWiRLApplication.GetAppConfigurator: TAppConfigurator;
+begin
+  Result := FAppConfigurator;
 end;
 
 function TWiRLApplication.GetConfigAuth: TWiRLConfigurationAuth;
@@ -534,13 +584,6 @@ end;
 function TWiRLApplication.GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
 begin
   FResourceRegistry.TryGetValue(AResourceName, Result);
-end;
-
-function TWiRLApplication.GetConfigNeon: TWiRLConfigurationNeon;
-begin
-  if not Assigned(FConfigNeon) then
-    FConfigNeon := TWiRLConfigurationNeon.Create;
-  Result := FConfigNeon;
 end;
 
 function TWiRLApplication.HasParent: Boolean;
@@ -591,16 +634,30 @@ begin
   Reader.ReadListEnd;
 end;
 
-function TWiRLApplication.SetSystemApp(ASystem: Boolean): TWiRLApplication;
+function TWiRLApplication.SetSystemApp(ASystem: Boolean): IWiRLApplication;
 begin
   FSystemApp := ASystem;
   Result := Self;
 end;
 
-function TWiRLApplication.SetUseUTCDate(AValue: Boolean): TWiRLApplication;
+function TWiRLApplication.SetUseUTCDate(AValue: Boolean): IWiRLApplication;
 begin
   FUseUTCDate := AValue;
   Result := Self;
+end;
+
+{ TAppConfiguratorImpl }
+
+constructor TAppConfiguratorImpl.Create(AApplication: TWiRLApplication);
+begin
+  inherited Create;
+  FApplication := AApplication;
+end;
+
+function TAppConfiguratorImpl.GetConfigByInterfaceRef(
+  AInterfaceRef: TGUID): IInterface;
+begin
+  Result := FApplication.GetConfigByInterfaceRef(AInterfaceRef);
 end;
 
 initialization

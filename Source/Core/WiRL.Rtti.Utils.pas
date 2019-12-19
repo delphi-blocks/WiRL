@@ -24,7 +24,9 @@ type
     class var FContext: TRttiContext;
   public
     // TRttiObject helpers functions
-    class function FindAttribute<T: TCustomAttribute>(AType: TRttiObject): T; static;
+    class function FindAttribute<T: TCustomAttribute>(AClass: TClass): T; overload; static;
+
+    class function FindAttribute<T: TCustomAttribute>(AType: TRttiObject): T; overload; static;
 
     class function HasAttribute<T: TCustomAttribute>(
       AClass: TClass): Boolean; overload; static;
@@ -305,6 +307,11 @@ begin
         end;
       end;
     end;
+end;
+
+class function TRttiHelper.FindAttribute<T>(AClass: TClass): T;
+begin
+  Result := FindAttribute<T>(Context.GetType(AClass));
 end;
 
 class function TRttiHelper.ForEachAttribute<T>(AInstance: TObject;
