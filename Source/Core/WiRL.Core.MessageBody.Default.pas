@@ -55,6 +55,8 @@ type
   [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
   TWiRLValueTypesProvider = class(TMessageBodyProvider)
+  private
+    [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
@@ -70,6 +72,8 @@ type
   [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
   TWiRLObjectProvider = class(TMessageBodyProvider)
+  private
+    [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
@@ -224,7 +228,7 @@ var
   LJSON: TJSONValue;
   LValue: TValue;
 begin
-  LDes := TNeonDeserializerJSON.Create(WiRLApplication.Configure<IWiRLConfigurationNeon>.GetNeonConfig);
+  LDes := TNeonDeserializerJSON.Create(WiRLConfigurationNeon.GetNeonConfig);
   try
     LJSON := TJSONObject.ParseJSONValue(ContentStreamToString(AMediaType.Charset, AContentStream));
     try
@@ -254,7 +258,7 @@ begin
       tkDynArray,
       tkRecord:
       begin
-        LJSON := TNeon.ValueToJSON(AValue, WiRLApplication.Configure<IWiRLConfigurationNeon>.GetNeonConfig);
+        LJSON := TNeon.ValueToJSON(AValue, WiRLConfigurationNeon.GetNeonConfig);
         try
           LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
         finally
@@ -273,7 +277,7 @@ end;
 function TWiRLObjectProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 begin
-  Result := TNeon.JSONToObject(AParam.ParamType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLApplication.Configure<IWiRLConfigurationNeon>.GetNeonConfig);
+  Result := TNeon.JSONToObject(AParam.ParamType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -284,7 +288,7 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AContentStream);
   try
-    LJSON := TNeon.ObjectToJSON(AValue.AsObject, WiRLApplication.Configure<IWiRLConfigurationNeon>.GetNeonConfig);
+    LJSON := TNeon.ObjectToJSON(AValue.AsObject, WiRLConfigurationNeon.GetNeonConfig);
     try
       LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
     finally

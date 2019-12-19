@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Configuration.Auth;
 
 interface
@@ -19,7 +28,7 @@ type
 
   TAuthTokenLocation = (Bearer, Cookie, Header);
 
-  IWiRLConfigurationAuth = interface
+  IWiRLConfigurationAuth = interface(IWiRLConfiguration)
   ['{0C449E50-5CE6-43C0-9DA6-AB773EC1792F}']
     //function Configure: IWiRLConfigurationAuth;
     function SetAuthChallenge(AChallenge: TAuthChallenge; const ARealm: string): IWiRLConfigurationAuth;
@@ -29,6 +38,7 @@ type
     function SetTokenCustomHeader(const ACustomHeader: string): IWiRLConfigurationAuth;
   end;
 
+  [Implements(IWiRLConfigurationAuth)]
   TWiRLConfigurationAuth = class sealed(TWiRLConfigurationNRef, IWiRLConfigurationAuth)
   public
     function Configure: IWiRLConfigurationAuth;
@@ -123,5 +133,9 @@ begin
   FTokenType := ATokenType;
   Result := Self;
 end;
+
+initialization
+
+  TWiRLConfigClassRegistry.Instance.RegisterConfigClass(TWiRLConfigurationAuth);
 
 end.

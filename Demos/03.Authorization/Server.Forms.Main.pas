@@ -19,6 +19,7 @@ uses
 
   JOSE.Core.JWA,
   WiRL.Configuration.Auth,
+  WiRL.Configuration.JWT,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Engine,
@@ -90,20 +91,18 @@ begin
           'Server.Resources.TBodyAuthResource',
           'Server.Resources.TUserResource'
         ])
-  ;
 
-  // Auth configuration (App plugin configuration)
-  FServer.CurrentEngine<TWiRLEngine>.CurrentApp
-    .ConfigureAuth
-      .SetTokenType(TAuthTokenType.JWT)
-      .SetTokenLocation(TAuthTokenLocation.Bearer);
+    // Auth configuration
+      .Plugin.Configure<IWiRLConfigurationAuth>
+        .SetTokenType(TAuthTokenType.JWT)
+        .SetTokenLocation(TAuthTokenLocation.Bearer)
+        .BackToApp
 
-  // JWT configuration (App plugin configuration)
-  FServer.CurrentEngine<TWiRLEngine>.CurrentApp
-    .ConfigureJWT
-      .SetClaimClass(TServerClaims)
-      .SetAlgorithm(TJOSEAlgorithmId.HS256)
-      .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text));
+    // JWT configuration (App plugin configuration)
+      .Plugin.Configure<IWiRLConfigurationJWT>
+        .SetClaimClass(TServerClaims)
+        .SetAlgorithm(TJOSEAlgorithmId.HS256)
+        .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text));
 
   if not FServer.Active then
     FServer.Active := True;

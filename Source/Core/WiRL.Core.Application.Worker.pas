@@ -89,6 +89,7 @@ implementation
 
 uses
   System.StrUtils, System.TypInfo, System.DateUtils,
+  WiRL.Configuration.JWT,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.http.MultipartData,
@@ -207,16 +208,16 @@ var
   end;
 
 begin
-  case FAppConfig.ConfigAuth.TokenLocation of
+  case FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenLocation of
     TAuthTokenLocation.Bearer: LToken := ExtractJWTToken(FContext.Request.Authorization);
     TAuthTokenLocation.Cookie: LToken := FContext.Request.CookieFields['token'];
-    TAuthTokenLocation.Header: LToken := FContext.Request.HeaderFields[FAppConfig.ConfigAuth.TokenCustomHeader];
+    TAuthTokenLocation.Header: LToken := FContext.Request.HeaderFields[FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenCustomHeader];
   end;
 
   if LToken.IsEmpty then
     Exit;
 
-  AContext.Verify(LToken, FAppConfig.ConfigJWT.KeyPair.PublicKey.Key);
+  AContext.Verify(LToken, FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PublicKey.Key);
 end;
 
 procedure TWiRLApplicationWorker.CheckAuthorization(AAuth: TWiRLAuthContext);
@@ -487,8 +488,8 @@ end;
 
 function TWiRLApplicationWorker.GetAuthContext: TWiRLAuthContext;
 begin
-  if Assigned(FAppConfig.ConfigJWT.ClaimClass) then
-    Result := TWiRLAuthContext.Create(FAppConfig.ConfigJWT.ClaimClass)
+  if Assigned(FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.ClaimClass) then
+    Result := TWiRLAuthContext.Create(FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.ClaimClass)
   else
     Result := TWiRLAuthContext.Create;
 

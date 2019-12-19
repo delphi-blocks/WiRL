@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Configuration.JWT;
 
 interface
@@ -16,7 +25,7 @@ uses
 type
   TSecretGenerator = reference to function(): TBytes;
 
-  IWiRLConfigurationJWT = interface
+  IWiRLConfigurationJWT = interface(IWiRLConfiguration)
   ['{BF13669E-7B9C-4D56-AE9C-C9EF6EE733DA}']
     function SetClaimClass(AClaimClass: TWiRLSubjectClass): IWiRLConfigurationJWT;
     function SetAlgorithm(AAlgorithm: TJOSEAlgorithmId): IWiRLConfigurationJWT;
@@ -28,6 +37,7 @@ type
 
   TConfigurator = reference to procedure(AJWTConf: IWiRLConfigurationJWT);
 
+  [Implements(IWiRLConfigurationJWT)]
   TWiRLConfigurationJWT = class sealed(TWiRLConfigurationNRef, IWiRLConfigurationJWT)
   private
     const SCRT_SGN = 'd2lybC5zdXBlcnNlY3JldC5zZWVkLmZvci5zaWduaW5n';
@@ -130,5 +140,9 @@ begin
   KeyPair.SetSymmetricKey(ASecret);
   Result := Self;
 end;
+
+initialization
+
+  TWiRLConfigClassRegistry.Instance.RegisterConfigClass(TWiRLConfigurationJWT);
 
 end.

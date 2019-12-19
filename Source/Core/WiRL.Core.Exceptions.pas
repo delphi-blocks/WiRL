@@ -139,6 +139,7 @@ implementation
 
 uses
   System.TypInfo,
+  WiRL.Configuration.Auth,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Application;
 
@@ -311,7 +312,7 @@ var
   LAuthChallengeHeader: string;
 begin
   if Assigned(AContext.Application) and (AContext.Application is TWiRLApplication) then
-    LAuthChallengeHeader := TWiRLApplication(AContext.Application).ConfigAuth.AuthChallengeHeader
+    LAuthChallengeHeader := TWiRLApplication(AContext.Application).GetConfiguration<TWiRLConfigurationAuth>.AuthChallengeHeader
   else
     LAuthChallengeHeader := '';
 

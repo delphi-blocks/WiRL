@@ -36,6 +36,9 @@ type
 
 implementation
 
+uses
+  WiRL.Configuration.JWT;
+
 { TBodyAuthResource }
 
 function TBodyAuthResource.DoLogin(ABody: TJSONObject): TJSONObject;
@@ -53,7 +56,7 @@ begin
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthFormResource', 'DoLogin');
 
-  FAuthContext.Generate(FApplication.ConfigJWT.KeyPair.PrivateKey.Key);
+  FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
   Result := GetGeneratedToken;
 end;
 

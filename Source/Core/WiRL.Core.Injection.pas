@@ -168,7 +168,7 @@ begin
   else if (LType.InheritsFrom(TWiRLApplication)) then
     AValue := AContext.Application
   else if (LType.InheritsFrom(TWiRLConfigurationNRef)) then
-    AValue := (AContext.Application as TWiRLApplication).GetConfigByClassRef(LType)
+    AValue := (AContext.Application as TWiRLApplication).GetConfigByClassRef(TWiRLConfigurationNRefClass(LType))
   else if CustomContextInjectionByType(AObject, AContext, AValue) then
     //
   else

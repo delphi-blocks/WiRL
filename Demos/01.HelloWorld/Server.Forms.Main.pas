@@ -16,6 +16,7 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
   Neon.Core.Types,
+  WiRL.Configuration.Neon,
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
@@ -62,10 +63,9 @@ begin
     .SetEngineName('RESTEngine')
     .AddApplication('/app')
       .SetResources('*')
-      .SetFilters('*');
+      .SetFilters('*')
 
-  RESTServer.CurrentEngine<TWiRLEngine>.CurrentApp
-      .ConfigureNeon
+      .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase);
 
