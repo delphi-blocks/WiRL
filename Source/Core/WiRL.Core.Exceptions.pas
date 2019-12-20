@@ -14,8 +14,12 @@ interface
 uses
   System.SysUtils,
   System.Rtti,
+  System.Generics.Collections,
+  WiRL.Rtti.Utils,
+  WiRL.Core.Singleton,
   WiRL.Core.JSON,
   WiRL.Core.Context,
+  WiRL.http.Request,
   WiRL.http.Response;
 
 type
@@ -47,6 +51,8 @@ type
   ///   This exception may be thrown by a resource method if a specific HTTP error response needs to be produced.
   /// </summary>
   EWiRLWebApplicationException = class(EWiRLException)
+  private
+    class function HandleCustomException(AContext: TWiRLContext; E: Exception): Boolean; static;
   private
     FValues: TJSONObject;
     FStatus: Integer;
@@ -94,7 +100,8 @@ type
 
     destructor Destroy; override;
 
-    class function ExceptionToJSON(E: Exception): string;
+    class function ExceptionToJSON(E: Exception): string; overload;
+    class procedure ExceptionToJSON(E: Exception; StatusCode: Integer; AJSONObject: TJSONObject); overload;
     class procedure HandleException(AContext: TWiRLContext; E: Exception); static;
 
     function ToJSON: string;
@@ -134,6 +141,68 @@ type
   public
     constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
   end;
+
+  TWiRLExceptionContext = class(TObject)
+  private
+    FRequest: TWiRLRequest;
+    FResponse: TWiRLResponse;
+    FContext: TWiRLContext;
+    FError: Exception;
+  public
+    property Context: TWiRLContext read FContext;
+    property Request: TWiRLRequest read FRequest;
+    property Response: TWiRLResponse read FResponse;
+    property Error: Exception read FError;
+    constructor Create(AContext: TWiRLContext; AError: Exception);
+  end;
+
+  IWiRLExceptionMapper = interface
+    ['{CD2233A7-F5CE-4D9F-AA0A-0C42C6C7F6DE}']
+    procedure HandleException(AExceptionContext: TWiRLExceptionContext);
+  end;
+
+  TWiRLExceptionMapper = class(TInterfacedObject, IWiRLExceptionMapper)
+  public
+    procedure HandleException(AExceptionContext: TWiRLExceptionContext); virtual; abstract;
+  end;
+
+  TWiRLExceptionMapperConstructorInfo = class
+  private
+    FConstructorFunc: TFunc<TObject>;
+    FExceptionMapperClass: TClass;
+    FExceptionClass: ExceptClass;
+  public
+    property ExceptionMapperClass: TClass read FExceptionMapperClass;
+    property ExceptionClass: ExceptClass read FExceptionClass;
+    property ConstructorFunc: TFunc<TObject> read FConstructorFunc write FConstructorFunc;
+
+    procedure HandleException(AContext: TWiRLContext; E: Exception);
+
+    constructor Create(AExceptionMapperClass: TClass; AExceptionClass: ExceptClass; AConstructorFunc: TFunc<TObject>);
+  end;
+
+  TWiRLExceptionMapperRegistry = class(TObjectList<TWiRLExceptionMapperConstructorInfo>)
+  private
+    type
+      TWiRLExceptionMapperRegistrySingleton = TWiRLSingleton<TWiRLExceptionMapperRegistry>;
+  protected
+    class function GetInstance: TWiRLExceptionMapperRegistry; static; inline;
+  public
+    constructor Create; virtual;
+
+//    function FilterByClassName(const AClassName: string; out AConstructorInfo: TWiRLFilterConstructorInfo) :Boolean;
+    function RegisterExceptionMapper<TMapper: class; TException: Exception>: TWiRLExceptionMapperConstructorInfo; overload;
+    function RegisterExceptionMapper<TMapper: class; TException: Exception>(const AConstructorFunc: TFunc<TObject>): TWiRLExceptionMapperConstructorInfo; overload;
+
+//    function ApplyPreMatchingRequestFilters(AContext: TWiRLContext): Boolean;
+//    procedure ApplyPreMatchingResponseFilters(AContext: TWiRLContext);
+//
+//    procedure FetchRequestFilter(const PreMatching: Boolean; ARequestProc: TProc<TWiRLFilterConstructorInfo>);
+//    procedure FetchResponseFilter(const PreMatching: Boolean; AResponseProc: TProc<TWiRLFilterConstructorInfo>);
+
+    class property Instance: TWiRLExceptionMapperRegistry read GetInstance;
+  end;
+
 
 implementation
 
@@ -291,18 +360,42 @@ begin
   inherited;
 end;
 
+class procedure EWiRLWebApplicationException.ExceptionToJSON(E: Exception; StatusCode: Integer; AJSONObject: TJSONObject);
+begin
+  AJSONObject.AddPair(TJSONPair.Create('status', TJSONNumber.Create(StatusCode)));
+  AJSONObject.AddPair(TJSONPair.Create('exception', TJSONString.Create(E.ClassName)));
+  AJSONObject.AddPair(TJSONPair.Create('message', TJSONString.Create(E.Message)));
+end;
+
 class function EWiRLWebApplicationException.ExceptionToJSON(E: Exception): string;
+const
+  InternalServerError = 500;
 var
   LJSON: TJSONObject;
 begin
   LJSON := TJSONObject.Create;
   try
-    LJSON.AddPair(TJSONPair.Create('status', TJSONNumber.Create(500)));
-    LJSON.AddPair(TJSONPair.Create('exception', TJSONString.Create(E.ClassName)));
-    LJSON.AddPair(TJSONPair.Create('message', TJSONString.Create(E.Message)));
+    ExceptionToJSON(E, InternalServerError, LJSON);
     Result := TJSONHelper.ToJSON(LJSON);
   finally
     LJSON.Free;
+  end;
+end;
+
+class function EWiRLWebApplicationException.HandleCustomException(
+  AContext: TWiRLContext; E: Exception): Boolean;
+var
+  LCtorInfo: TWiRLExceptionMapperConstructorInfo;
+begin
+  Result := False;
+
+  for LCtorInfo in TWiRLExceptionMapperRegistry.Instance do
+  begin
+    if E.ClassType.InheritsFrom(LCtorInfo.ExceptionClass) then
+    begin
+      LCtorInfo.HandleException(AContext, E);
+      Exit(True);
+    end;
   end;
 end;
 
@@ -315,6 +408,9 @@ begin
     LAuthChallengeHeader := TWiRLApplication(AContext.Application).GetConfiguration<TWiRLConfigurationAuth>.AuthChallengeHeader
   else
     LAuthChallengeHeader := '';
+
+  if HandleCustomException(AContext, E) then
+    Exit;
 
   if E is EWiRLWebApplicationException then
   begin
@@ -500,6 +596,103 @@ begin
   end;
 
   inherited Create(AMessage, 406, LPairArray);
+end;
+
+{ TWiRLExceptionContext<E> }
+
+constructor TWiRLExceptionContext.Create(AContext: TWiRLContext; AError: Exception);
+begin
+  inherited Create;
+  FContext := AContext;
+  FRequest := AContext.Request;
+  FResponse := AContext.Response;
+  FError := AError;
+end;
+
+{ TWiRLExceptionMapperRegistry }
+
+constructor TWiRLExceptionMapperRegistry.Create;
+begin
+  inherited Create;
+end;
+
+class function TWiRLExceptionMapperRegistry.GetInstance: TWiRLExceptionMapperRegistry;
+begin
+  Result := TWiRLExceptionMapperRegistrySingleton.Instance;
+end;
+
+function TWiRLExceptionMapperRegistry.RegisterExceptionMapper<TMapper, TException>: TWiRLExceptionMapperConstructorInfo;
+begin
+  Result := RegisterExceptionMapper<TMapper, TException>(nil);
+end;
+
+function TWiRLExceptionMapperRegistry.RegisterExceptionMapper<TMapper, TException>(
+  const AConstructorFunc: TFunc<TObject>): TWiRLExceptionMapperConstructorInfo;
+begin
+  if not Supports(TClass(TMapper), IWiRLExceptionMapper) then
+    raise EWiRLServerException.Create(
+      Format('Exception mapper registration error: [%s] should be a valid exception mapper', [TClass(TMapper).QualifiedClassName]),
+      Self.ClassName,
+      'RegisterExceptionMapper'
+    );
+
+  if not TClass(TException).InheritsFrom(Exception) then
+    raise EWiRLServerException.Create(
+      Format('Exception mapper registration error: [%s] should be a valid exception', [TClass(TException).QualifiedClassName]),
+      Self.ClassName,
+      'RegisterExceptionMapper'
+    );
+
+  Result := TWiRLExceptionMapperConstructorInfo.Create(TClass(TMapper), ExceptClass(TException), AConstructorFunc);
+  Add(Result);
+end;
+
+{ TWiRLExceptionMapperConstructorInfo }
+
+constructor TWiRLExceptionMapperConstructorInfo.Create(
+  AExceptionMapperClass: TClass; AExceptionClass: ExceptClass;
+  AConstructorFunc: TFunc<TObject>);
+begin
+  inherited Create;
+  FExceptionMapperClass := AExceptionMapperClass;
+  FExceptionClass := AExceptionClass;
+  FConstructorFunc := AConstructorFunc;
+end;
+
+procedure TWiRLExceptionMapperConstructorInfo.HandleException(
+  AContext: TWiRLContext; E: Exception);
+var
+  LObject: TObject;
+  LExceptionMapper: IWiRLExceptionMapper;
+  LExceptionContext: TWiRLExceptionContext;
+begin
+  if Assigned(ConstructorFunc) then
+  begin
+    LObject := ConstructorFunc();
+    if not Supports(LObject, IWiRLExceptionMapper, LExceptionMapper) then
+      raise EWiRLServerException.Create(
+        Format('Constructor for [%s] should create a valid exception mapper', [FExceptionMapperClass.ClassName]),
+        Self.ClassName,
+        'HandleException'
+      );
+  end
+  else
+  begin
+    LObject := TRttiHelper.CreateInstance(FExceptionMapperClass);
+    if not Supports(LObject, IWiRLExceptionMapper, LExceptionMapper) then
+      raise EWiRLServerException.Create(
+        Format('Class [%s] should implements an exception mapper interface', [FExceptionMapperClass.ClassName]),
+        Self.ClassName,
+        'HandleException'
+      );
+  end;
+
+  LExceptionContext := TWiRLExceptionContext.Create(AContext, E);
+  try
+    LExceptionMapper.HandleException(LExceptionContext);
+  finally
+    LExceptionContext.Free;
+  end;
 end;
 
 end.
