@@ -224,7 +224,7 @@ begin
     Abort;
 
   if not Assigned(Result) then
-    raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [AURL]);
+    raise EWiRLNotFoundException.Create(Format('Engine not found for URL [%s]', [AURL]));
 end;
 
 procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
