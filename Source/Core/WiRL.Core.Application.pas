@@ -17,9 +17,6 @@ uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
   WiRL.Configuration.Core,
-  WiRL.Configuration.JWT,
-  WiRL.Configuration.Auth,
-
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyReader,
@@ -40,22 +37,17 @@ type
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
     FConfigRegistry: TWiRLConfigRegistry;
+
     FAppConfigurator: TAppConfigurator;
     FBasePath: string;
     FAppName: string;
     FSystemApp: Boolean;
-    FConfigJWT: TWiRLConfigurationJWT;
-    FConfigAuth: TWiRLConfigurationAuth;
-    //FConfigNeon: TWiRLConfigurationNeon;
     FEngine: TComponent;
     FUseUTCDate: Boolean;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
     function AddWriter(const AWriter: string): Boolean;
     function AddReader(const AReader: string): Boolean;
-    function GetConfigJWT: TWiRLConfigurationJWT;
-    function GetConfigAuth: TWiRLConfigurationAuth;
-    //function GetConfigNeon: TWiRLConfigurationNeon;
 
     procedure SetEngine(const Value: TComponent);
     function GetPath: string;
@@ -93,11 +85,11 @@ type
     function SetAppName(const AAppName: string): IWiRLApplication;
     function SetUseUTCDate(AValue: Boolean): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
+    function AddApplication(const ABasePath: string): IWiRLApplication;
 
-
-    function ConfigureJWT: IWiRLConfigurationJWT;
-    function ConfigureAuth: IWiRLConfigurationAuth;
     function Configure<T: IInterface>: T;
+    function GetConfiguration<T: TWiRLConfigurationNRef>: T;
+
     function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
     function GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
 
@@ -125,9 +117,6 @@ type
     property Filters: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property Writers: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property Readers: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
-
-    property ConfigAuth: TWiRLConfigurationAuth read GetConfigAuth;
-    property ConfigJWT: TWiRLConfigurationJWT read GetConfigJWT;
   end;
 
   TAppConfiguratorImpl = class(TAppConfigurator)
@@ -166,6 +155,12 @@ begin
 end;
 
 { TWiRLApplication }
+
+function TWiRLApplication.AddApplication(
+  const ABasePath: string): IWiRLApplication;
+begin
+  Result := (FEngine as TWiRLEngine).AddApplication(ABasePath);
+end;
 
 function TWiRLApplication.AddFilter(const AFilter: string): Boolean;
 var
@@ -465,7 +460,11 @@ end;
 function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
 begin
   if not FConfigRegistry.TryGetValue(AClass, Result) then
-    raise EWiRLException.CreateFmt('Config class [%s] not found', [AClass.ClassName]);
+  begin
+    Result := TRttiHelper.CreateInstance(AClass) as TWiRLConfigurationNRef;
+    Result.Application := Self;
+    FConfigRegistry.Add(AClass, Result);
+  end;
 end;
 
 function TWiRLApplication.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
@@ -474,12 +473,7 @@ var
   LConfigClass: TWiRLConfigurationNRefClass;
 begin
   LConfigClass := TWiRLConfigClassRegistry.Instance.GetImplementationOf(AInterfaceRef);
-  if not FConfigRegistry.TryGetValue(LConfigClass, LConfig) then
-  begin
-    LConfig := TRttiHelper.CreateInstance(LConfigClass) as TWiRLConfigurationNRef;
-    LConfig.Application := Self;
-    FConfigRegistry.Add(LConfigClass, LConfig);
-  end;
+  LConfig := GetConfigByClassRef(LConfigClass);
 
   if not Supports(LConfig, AInterfaceRef, Result) then
     raise EWiRLException.Create('Invalid config');
@@ -494,16 +488,6 @@ begin
   LInterface := GetConfigByInterfaceRef(LInterfaceRef);
   if not Supports(LInterface, LInterfaceRef, Result) then
     raise EWiRLException.Create('Invalid config');
-end;
-
-function TWiRLApplication.ConfigureAuth: IWiRLConfigurationAuth;
-begin
-  Result := ConfigAuth;
-end;
-
-function TWiRLApplication.ConfigureJWT: IWiRLConfigurationJWT;
-begin
-  Result := ConfigJWT;
 end;
 
 constructor TWiRLApplication.Create(AOwner: TComponent);
@@ -542,8 +526,6 @@ begin
   FFilterRegistry.Free;
   FResourceRegistry.Free;
   FConfigRegistry.Free;
-  FConfigJWT.Free;
-  FConfigAuth.Free;
   FAppConfigurator.Free;
 
   inherited;
@@ -554,18 +536,9 @@ begin
   Result := FAppConfigurator;
 end;
 
-function TWiRLApplication.GetConfigAuth: TWiRLConfigurationAuth;
+function TWiRLApplication.GetConfiguration<T>: T;
 begin
-  if not Assigned(FConfigAuth) then
-    FConfigAuth := TWiRLConfigurationAuth.Default;
-  Result := FConfigAuth;
-end;
-
-function TWiRLApplication.GetConfigJWT: TWiRLConfigurationJWT;
-begin
-  if not Assigned(FConfigJWT) then
-    FConfigJWT := TWiRLConfigurationJWT.Create;
-  Result := FConfigJWT;
+  Result := GetConfigByClassRef(TWiRLConfigurationNRefClass(T)) as T;
 end;
 
 function TWiRLApplication.GetParentComponent: TComponent;

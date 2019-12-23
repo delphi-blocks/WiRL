@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Configuration.Core;
 
 interface
@@ -34,6 +43,7 @@ type
     function SetUseUTCDate(AValue: Boolean): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function GetAppConfigurator: TAppConfigurator;
+    function AddApplication(const ABasePath: string): IWiRLApplication;
 
     property Plugin: TAppConfigurator read GetAppConfigurator;
   end;
@@ -75,7 +85,7 @@ type
     FInterfaceRef: TGUID;
   public
     property InterfaceRef: TGUID read FInterfaceRef;
-    constructor Create(const AInterfaceRef: TGUID);
+    constructor Create(AInterfaceRef: TGUID);
   end;
 
   TWiRLConfigRegistry = class(TObjectDictionary<TWiRLConfigurationNRefClass, TWiRLConfigurationNRef>)
@@ -171,7 +181,7 @@ end;
 
 { ImplementsAttribute }
 
-constructor ImplementsAttribute.Create(const AInterfaceRef: TGUID);
+constructor ImplementsAttribute.Create(AInterfaceRef: TGUID);
 begin
   FInterfaceRef := AInterfaceRef;
 end;
