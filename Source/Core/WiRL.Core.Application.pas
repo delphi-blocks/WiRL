@@ -44,6 +44,7 @@ type
     FSystemApp: Boolean;
     FEngine: TComponent;
     FUseUTCDate: Boolean;
+    FErrorMediaType: string;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
     function AddWriter(const AWriter: string): Boolean;
@@ -84,6 +85,7 @@ type
     function SetBasePath(const ABasePath: string): IWiRLApplication;
     function SetAppName(const AAppName: string): IWiRLApplication;
     function SetUseUTCDate(AValue: Boolean): IWiRLApplication;
+    function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function AddApplication(const ABasePath: string): IWiRLApplication;
 
@@ -111,6 +113,7 @@ type
     property AppName: string read FAppName write FAppName;
     property BasePath: string read FBasePath write FBasePath;
     property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
+    property ErrorMediaType: string read FErrorMediaType write FErrorMediaType;
 
     // Fake property to display the right property editors
     property Resources: TWiRLResourceRegistry read FResourceRegistry write FResourceRegistry;
@@ -137,6 +140,7 @@ uses
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
   WiRL.http.URL,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Attributes,
   WiRL.Core.Engine;
 
@@ -340,6 +344,13 @@ begin
   end;
 end;
 
+function TWiRLApplication.SetErrorMediaType(
+  const AMediaType: string): IWiRLApplication;
+begin
+  FErrorMediaType := AMediaType;
+  Result := Self;
+end;
+
 function TWiRLApplication.SetReaders(const AReaders: TArray<string>): IWiRLApplication;
 var
   LReader: string;
@@ -502,6 +513,7 @@ begin
 
   FAppConfigurator := TAppConfiguratorImpl.Create(Self);
 
+  FErrorMediaType := TMediaType.APPLICATION_JSON;
   if csDesigning in ComponentState then
   begin
     AddResource('*');

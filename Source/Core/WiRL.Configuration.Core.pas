@@ -42,6 +42,7 @@ type
     function SetAppName(const AAppName: string): IWiRLApplication;
     function SetUseUTCDate(AValue: Boolean): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
+    function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function GetAppConfigurator: TAppConfigurator;
     function AddApplication(const ABasePath: string): IWiRLApplication;
 

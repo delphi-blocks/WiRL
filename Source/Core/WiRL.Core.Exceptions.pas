@@ -43,6 +43,7 @@ type
     class function MakeValueArray(APair1: Pair): TExceptionValues; overload; static;
     class function MakeValueArray(APair1, APair2: Pair): TExceptionValues; overload; static;
     class function MakeValueArray(APair1, APair2, APair3: Pair): TExceptionValues; overload; static;
+    class function AddValuePair(APairArray: TExceptionValues; APair: Pair): TExceptionValues;
   end;
 
   EWiRLException = class(Exception);
@@ -53,21 +54,29 @@ type
   EWiRLWebApplicationException = class(EWiRLException)
   private
     class function HandleCustomException(AContext: TWiRLContext; E: Exception): Boolean; static;
+    class procedure BuildReponse(E: Exception; const AErrorMediaType: string; AResponse: TWiRLResponse);
   private
     FValues: TJSONObject;
     FStatus: Integer;
 
     procedure CreateAndFillValues;
+    function GetStatus: Integer; virtual;
+    procedure SetStatus(const Value: Integer); virtual;
   public
     /// <summary>
     ///   Construct an exception with a blank message and default HTTP status code of 500.
     /// </summary>
-    constructor Create; overload;
+    constructor Create; overload; virtual;
 
     /// <summary>
     ///   Construct an exception with specified message and default HTTP status code of 500.
     /// </summary>
     constructor Create(const AMessage: string); overload;
+
+    /// <summary>
+    ///   Construct an exception with a format string
+    /// </summary>
+    constructor CreateFmt(const Msg: string; const Args: array of const);
 
     /// <summary>
     ///   Construct an exception with specified message and specified HTTP status code.
@@ -105,41 +114,58 @@ type
     class procedure HandleException(AContext: TWiRLContext; E: Exception); static;
 
     function ToJSON: string;
-    property Status: Integer read FStatus write FStatus;
+    property Status: Integer read GetStatus write SetStatus;
+  end;
+
+  StatusCodeAttribute = class(TCustomAttribute)
+  private
+    FStatusCode: Integer;
+  public
+    property StatusCode: Integer read FStatusCode;
+    constructor Create(AStatusCode: Integer);
   end;
 
   // Client errors (400)
 
-  EWiRLNotFoundException = class(EWiRLWebApplicationException)
+  EWiRLHttpStatusException = class(EWiRLWebApplicationException)
   public
-    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+    /// <summary>
+    ///   Construct a web exception with an issuer and a method
+    /// </summary>
+    /// <param name="AMessage">The exception's message</param>
+    /// <param name="AIssuer">The issuer, for examples the class generating the exception</param>
+    /// <param name="AMethod">The method name, for examples the method generating the exception</param>
+    constructor Create(const AMessage: string; const AIssuer: string; const AMethod: string = ''); overload;
+    /// <summary>
+    ///   Construct a web exception reading the StatusCode from an attribute
+    /// </summary>
+    constructor Create; override;
   end;
 
-  EWiRLNotAuthorizedException = class(EWiRLWebApplicationException)
-  public
-    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+  [StatusCode(404)]
+  EWiRLNotFoundException = class(EWiRLHttpStatusException)
   end;
 
-  EWiRLNotAcceptableException = class(EWiRLWebApplicationException)
-  public
-    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+  [StatusCode(401)]
+  EWiRLNotAuthorizedException = class(EWiRLHttpStatusException)
   end;
 
-  EWiRLUnsupportedMediaTypeException = class(EWiRLWebApplicationException)
-  public
-    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+  [StatusCode(406)]
+  EWiRLNotAcceptableException = class(EWiRLHttpStatusException)
+  end;
+
+  [StatusCode(415)]
+  EWiRLUnsupportedMediaTypeException = class(EWiRLHttpStatusException)
   end;
 
   // Server errors (500)
 
-  EWiRLServerException = class(EWiRLWebApplicationException)
-  public
-    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+  [StatusCode(500)]
+  EWiRLServerException = class(EWiRLHttpStatusException)
   end;
 
-  EWiRLNotImplementedException = class(EWiRLWebApplicationException)
-  public
-    constructor Create(const AMessage: string; const AIssuer: string = ''; const AMethod: string = '');
+  [StatusCode(501)]
+  EWiRLNotImplementedException = class(EWiRLHttpStatusException)
   end;
 
   TWiRLExceptionContext = class(TObject)
@@ -190,15 +216,8 @@ type
   public
     constructor Create; virtual;
 
-//    function FilterByClassName(const AClassName: string; out AConstructorInfo: TWiRLFilterConstructorInfo) :Boolean;
     function RegisterExceptionMapper<TMapper: class; TException: Exception>: TWiRLExceptionMapperConstructorInfo; overload;
     function RegisterExceptionMapper<TMapper: class; TException: Exception>(const AConstructorFunc: TFunc<TObject>): TWiRLExceptionMapperConstructorInfo; overload;
-
-//    function ApplyPreMatchingRequestFilters(AContext: TWiRLContext): Boolean;
-//    procedure ApplyPreMatchingResponseFilters(AContext: TWiRLContext);
-//
-//    procedure FetchRequestFilter(const PreMatching: Boolean; ARequestProc: TProc<TWiRLFilterConstructorInfo>);
-//    procedure FetchResponseFilter(const PreMatching: Boolean; AResponseProc: TProc<TWiRLFilterConstructorInfo>);
 
     class property Instance: TWiRLExceptionMapperRegistry read GetInstance;
   end;
@@ -302,12 +321,12 @@ end;
 
 constructor EWiRLWebApplicationException.Create;
 begin
-  Create('', 500);
+  Create('', 0);
 end;
 
 constructor EWiRLWebApplicationException.Create(const AMessage: string);
 begin
-  Create(AMessage, 500);
+  Create(AMessage, 0);
 end;
 
 constructor EWiRLWebApplicationException.Create(const AMessage: string; AStatus: Integer);
@@ -332,6 +351,28 @@ begin
     for LPair in AValues do
       if not LPair.Value.IsEmpty then
         LData.AddPair(LPair.ToJSONPair);
+  end;
+end;
+
+class procedure EWiRLWebApplicationException.BuildReponse(E: Exception; const AErrorMediaType: string; AResponse: TWiRLResponse);
+var
+  LWebException: EWiRLWebApplicationException;
+begin
+  if E is EWiRLWebApplicationException then
+  begin
+    LWebException := E as EWiRLWebApplicationException;
+
+    AResponse.StatusCode := LWebException.Status;
+    AResponse.SetNonStandardReasonString(LWebException.Message);
+    AResponse.Content := LWebException.ToJSON;
+    AResponse.ContentType := TMediaType.APPLICATION_JSON;
+  end
+  else if E is Exception then
+  begin
+    AResponse.StatusCode := 500;
+    AResponse.SetNonStandardReasonString(E.Message);
+    AResponse.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
+    AResponse.ContentType := TMediaType.APPLICATION_JSON;
   end;
 end;
 
@@ -365,6 +406,22 @@ begin
   AJSONObject.AddPair(TJSONPair.Create('status', TJSONNumber.Create(StatusCode)));
   AJSONObject.AddPair(TJSONPair.Create('exception', TJSONString.Create(E.ClassName)));
   AJSONObject.AddPair(TJSONPair.Create('message', TJSONString.Create(E.Message)));
+end;
+
+function EWiRLWebApplicationException.GetStatus: Integer;
+var
+  LAttr: StatusCodeAttribute;
+begin
+  inherited;
+  if FStatus = 0 then
+  begin
+    LAttr := TRttiHelper.FindAttribute<StatusCodeAttribute>(Self.ClassType);
+    if Assigned(LAttr) then
+      FStatus := LAttr.StatusCode
+    else
+      FStatus := 500;
+  end;
+  Result := FStatus;
 end;
 
 class function EWiRLWebApplicationException.ExceptionToJSON(E: Exception): string;
@@ -401,45 +458,51 @@ end;
 
 class procedure EWiRLWebApplicationException.HandleException(AContext: TWiRLContext; E: Exception);
 var
-  LWebException: EWiRLWebApplicationException;
   LAuthChallengeHeader: string;
+  LErrorMediaType: string;
 begin
   if Assigned(AContext.Application) and (AContext.Application is TWiRLApplication) then
-    LAuthChallengeHeader := TWiRLApplication(AContext.Application).GetConfiguration<TWiRLConfigurationAuth>.AuthChallengeHeader
+  begin
+    LAuthChallengeHeader := TWiRLApplication(AContext.Application).GetConfiguration<TWiRLConfigurationAuth>.AuthChallengeHeader;
+    LErrorMediaType := TWiRLApplication(AContext.Application).ErrorMediaType;
+  end
   else
     LAuthChallengeHeader := '';
 
   if HandleCustomException(AContext, E) then
     Exit;
 
-  if E is EWiRLWebApplicationException then
+  if LErrorMediaType = TMediaType.WILDCARD then
   begin
-    LWebException := E as EWiRLWebApplicationException;
-
-    AContext.Response.StatusCode := LWebException.Status;
-    AContext.Response.SetNonStandardReasonString(LWebException.Message);
-    AContext.Response.Content := LWebException.ToJSON;
-    AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
-
-    // Set the Authorization challenge
-    if (LWebException.Status = 401) and (LAuthChallengeHeader <> '') then
-      AContext.Response.HeaderFields['WWW-Authenticate'] := LAuthChallengeHeader;
-  end
-  else if E is Exception then
-  begin
-    AContext.Response.StatusCode := 500;
-    AContext.Response.SetNonStandardReasonString(E.Message);
-    AContext.Response.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
-    AContext.Response.ContentType := TMediaType.APPLICATION_JSON;
+    if AContext.Request.Accept <> '' then
+      LErrorMediaType := AContext.Request.Accept
+    else
+      LErrorMediaType := TMediaType.APPLICATION_JSON;
   end;
+
+  EWiRLWebApplicationException.BuildReponse(E, LErrorMediaType, AContext.Response);
+  if (AContext.Response.StatusCode = 401) and (LAuthChallengeHeader <> '') then
+    AContext.Response.HeaderFields['WWW-Authenticate'] := LAuthChallengeHeader;
+
+end;
+
+procedure EWiRLWebApplicationException.SetStatus(const Value: Integer);
+begin
+  FStatus := Value;
 end;
 
 procedure EWiRLWebApplicationException.CreateAndFillValues;
 begin
   FValues := TJSONObject.Create;
-  FValues.AddPair(TJSONPair.Create('status', TJSONNumber.Create(FStatus)));
+  FValues.AddPair(TJSONPair.Create('status', TJSONNumber.Create(Status)));
   FValues.AddPair(TJSONPair.Create('exception', TJSONString.Create(Self.ClassName)));
   FValues.AddPair(TJSONPair.Create('message', TJSONString.Create(Self.Message)));
+end;
+
+constructor EWiRLWebApplicationException.CreateFmt(const Msg: string;
+  const Args: array of const);
+begin
+  Create(Format(Msg, Args));
 end;
 
 function EWiRLWebApplicationException.ToJSON: string;
@@ -448,111 +511,6 @@ begin
     CreateAndFillValues;
 
   Result := TJSONHelper.ToJSON(FValues)
-end;
-
-{ EWiRLNotFoundException }
-
-constructor EWiRLNotFoundException.Create(const AMessage: string; const
-    AIssuer: string = ''; const AMethod: string = '');
-var
-  LPairArray: TExceptionValues;
-begin
-  if not AIssuer.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
-  end;
-  if not AMethod.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
-  end;
-
-  inherited Create(AMessage, 404, LPairArray);
-end;
-
-{ EWiRLServerException }
-
-constructor EWiRLServerException.Create(const AMessage: string; const AIssuer:
-    string = ''; const AMethod: string = '');
-var
-  LPairArray: TExceptionValues;
-begin
-  if not AIssuer.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
-  end;
-  if not AMethod.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
-  end;
-
-  inherited Create(AMessage, 500, LPairArray);
-end;
-
-{ EWiRLNotAuthorizedException }
-
-constructor EWiRLNotAuthorizedException.Create(const AMessage: string; const
-    AIssuer: string = ''; const AMethod: string = '');
-var
-  LPairArray: TExceptionValues;
-begin
-  if not AIssuer.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
-  end;
-  if not AMethod.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
-  end;
-
-  inherited Create(AMessage, 401, LPairArray);
-end;
-
-{ EWiRLNotImplementedException }
-
-constructor EWiRLNotImplementedException.Create(
-  const AMessage, AIssuer, AMethod: string);
-var
-  LPairArray: TExceptionValues;
-begin
-  if not AIssuer.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
-  end;
-  if not AMethod.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
-  end;
-
-  inherited Create(AMessage, 501, LPairArray);
-end;
-
-{ EWiRLUnsupportedMediaTypeException }
-
-constructor EWiRLUnsupportedMediaTypeException.Create(
-  const AMessage, AIssuer, AMethod: string);
-var
-  LPairArray: TExceptionValues;
-begin
-  if not AIssuer.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
-  end;
-  if not AMethod.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
-  end;
-
-  inherited Create(AMessage, 415, LPairArray);
 end;
 
 { TValuesUtil }
@@ -570,32 +528,20 @@ begin
   Result[1] := APair2;
 end;
 
+class function TValuesUtil.AddValuePair(APairArray: TExceptionValues;
+  APair: Pair): TExceptionValues;
+begin
+  SetLength(APairArray, Length(APairArray) + 1);
+  APairArray[Length(APairArray) - 1] := APair;
+  Result := APairArray;
+end;
+
 class function TValuesUtil.MakeValueArray(APair1, APair2, APair3: Pair): TExceptionValues;
 begin
   SetLength(Result, 3);
   Result[0] := APair1;
   Result[1] := APair2;
   Result[2] := APair3;
-end;
-
-{ EWiRLNotAcceptableException }
-
-constructor EWiRLNotAcceptableException.Create(const AMessage, AIssuer, AMethod: string);
-var
-  LPairArray: TExceptionValues;
-begin
-  if not AIssuer.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('issuer', AIssuer);
-  end;
-  if not AMethod.IsEmpty then
-  begin
-    SetLength(LPairArray, Length(LPairArray) + 1);
-    LPairArray[Length(LPairArray) - 1] := Pair.S('method', AMethod);
-  end;
-
-  inherited Create(AMessage, 406, LPairArray);
 end;
 
 { TWiRLExceptionContext<E> }
@@ -693,6 +639,38 @@ begin
   finally
     LExceptionContext.Free;
   end;
+end;
+
+{ EWiRLHttpStatusException }
+
+constructor EWiRLHttpStatusException.Create(const AMessage, AIssuer,
+  AMethod: string);
+var
+  LPairArray: TExceptionValues;
+begin
+  if not AIssuer.IsEmpty then
+  begin
+    LPairArray := TValuesUtil.AddValuePair(LPairArray, Pair.S('issuer', AIssuer));
+  end;
+  if not AMethod.IsEmpty then
+  begin
+    LPairArray := TValuesUtil.AddValuePair(LPairArray, Pair.S('method', AMethod));
+  end;
+
+  Create(AMessage, 0, LPairArray);
+end;
+
+constructor EWiRLHttpStatusException.Create;
+begin
+  inherited Create;
+end;
+
+{ StatusCodeAttribute }
+
+constructor StatusCodeAttribute.Create(AStatusCode: Integer);
+begin
+  inherited Create;
+  FStatusCode := AStatusCode;
 end;
 
 end.
