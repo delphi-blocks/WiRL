@@ -52,9 +52,12 @@ type
     const TEXT_XML = 'text/xml';
     const TEXT_CSV = 'text/csv';
     const TEXT_HTML = 'text/html';
+    const IMAGE_PNG = 'image/png';
+    const IMAGE_JPEG = 'image/jpeg';
     const APPLICATION_PDF = 'application/pdf';
     const APPLICATION_XML = 'application/xml';
     const APPLICATION_JSON = 'application/json';
+    const APPLICATION_JAVASCRIPT = 'application/javascript';
     const APPLICATION_XHTML_XML = 'application/xhtml+xml';
     const APPLICATION_SVG_XML = 'application/svg+xml';
     const APPLICATION_ATOM_XML = 'application/atom+xml';
@@ -70,7 +73,7 @@ type
 
     function Clone: TMediaType;
     procedure Assign(ASource: TMediaType);
-
+    function IsType(const AType: string): Boolean;
     function GetDelphiEncoding: TEncoding;
 
     class function GetWildcard: string; override;
@@ -159,6 +162,11 @@ end;
 class function TMediaType.GetWildcard: string;
 begin
   Result := WILDCARD;
+end;
+
+function TMediaType.IsType(const AType: string): Boolean;
+begin
+  Result := SameText(MediaType, AType);
 end;
 
 function TMediaType.GetMediaType: string;

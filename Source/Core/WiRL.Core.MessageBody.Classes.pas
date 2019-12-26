@@ -14,6 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
 
+  WiRL.Core.JSON,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.http.Core,
@@ -44,7 +45,11 @@ type
 
   TMessageBodyProvider = class(TInterfacedObject, IMessageBodyReader, IMessageBodyWriter)
   protected
+    [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
+
+    procedure WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
+    procedure WriteJSONPToStream(AJSON: TJSONValue; AStream: TStream);
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
@@ -54,5 +59,34 @@ type
   end;
 
 implementation
+
+uses
+  Neon.Core.Persistence,
+  Neon.Core.Persistence.JSON;
+
+{ TMessageBodyProvider }
+
+procedure TMessageBodyProvider.WriteJSONPToStream(AJSON: TJSONValue; AStream: TStream);
+var
+  LCallback: string;
+  LBytes: TBytes;
+begin
+  LCallback := FRequest.QueryFields.Values['callback'];
+  if LCallback.IsEmpty then
+    LCallback := 'callback';
+
+  LBytes := TEncoding.UTF8.GetBytes(LCallback + '(');
+  AStream.Write(LBytes[0], Length(LBytes));
+
+  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.SerializerConfig.GetPrettyPrint);
+
+  LBytes := TEncoding.UTF8.GetBytes(');');
+  AStream.Write(LBytes[0], Length(LBytes));
+end;
+
+procedure TMessageBodyProvider.WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
+begin
+  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.SerializerConfig.GetPrettyPrint);
+end;
 
 end.
