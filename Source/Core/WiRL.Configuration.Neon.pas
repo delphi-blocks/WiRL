@@ -187,7 +187,6 @@ begin
 end;
 
 initialization
-
   TWiRLConfigClassRegistry.Instance.RegisterConfigClass(TWiRLConfigurationNeon);
 
 end.

@@ -30,8 +30,7 @@ type
     procedure FindDefaultServer;
   protected
     FEngineName: string;
-    procedure Notification(AComponent: TComponent; Operation: TOperation);
-      override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); overload; override;
     constructor Create(ABasePath: string); reintroduce; overload;

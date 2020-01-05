@@ -135,7 +135,6 @@ begin
 end;
 
 initialization
-
   TWiRLConfigClassRegistry.Instance.RegisterConfigClass(TWiRLConfigurationAuth);
 
 end.

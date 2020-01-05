@@ -95,7 +95,7 @@ object MainForm: TMainForm
     object WiRLApplication1: TWiRLApplication
       AppName = 'Filter Demo'
       BasePath = '/app'
-      TokenLocation = Bearer
+      UseUTCDate = False
       Resource.List = (
         'Server.Resources.TFilterDemoResource')
       Filter.List = (

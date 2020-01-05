@@ -635,6 +635,7 @@ begin
     .AddApplication('/app')
       .SetAppName('Content App')
       .SetResources('Server.Resources.TEntityResource')
+
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetMembers([TNeonMembers.Standard])
         .SetVisibility([mvPublic, mvPublished])

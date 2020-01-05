@@ -142,7 +142,6 @@ begin
 end;
 
 initialization
-
   TWiRLConfigClassRegistry.Instance.RegisterConfigClass(TWiRLConfigurationJWT);
 
 end.
