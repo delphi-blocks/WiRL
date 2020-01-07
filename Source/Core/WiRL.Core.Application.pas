@@ -120,6 +120,7 @@ type
     property Filters: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property Writers: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property Readers: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
+    property Configs: TWiRLConfigRegistry read FConfigRegistry write FConfigRegistry;
   end;
 
   TAppConfiguratorImpl = class(TAppConfigurator)

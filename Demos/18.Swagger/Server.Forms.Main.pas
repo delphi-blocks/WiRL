@@ -81,6 +81,7 @@ begin
     .AddApplication('/app')
       .SetResources('*')
       .SetFilters('*')
+
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase);

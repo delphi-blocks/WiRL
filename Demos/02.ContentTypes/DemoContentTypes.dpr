@@ -12,7 +12,8 @@ program DemoContentTypes;
 uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
-  Server.Resources in 'Server.Resources.pas';
+  Server.Resources in 'Server.Resources.pas',
+  Server.Entities in 'Server.Entities.pas';
 
 {$R *.res}
 

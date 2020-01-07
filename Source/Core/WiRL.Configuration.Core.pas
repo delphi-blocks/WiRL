@@ -13,12 +13,13 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.TypInfo, System.Generics.Collections,
-  WiRL.Core.JSON,
+  System.JSON,
 
+  WiRL.Core.JSON,
   WiRL.Core.Singleton,
   WiRL.Core.Exceptions,
   Neon.Core.Persistence,
-  Neon.Core.Persistence.JSON, System.JSON;
+  Neon.Core.Persistence.JSON;
 
 type
   TAppConfigurator = class(TInterfacedObject)
@@ -50,11 +51,13 @@ type
   end;
 
   IWiRLConfiguration = interface
-    ['{E53BA2F7-6CC5-4710-AB18-B0F30E909655}']
+  ['{E53BA2F7-6CC5-4710-AB18-B0F30E909655}']
     function BackToApp: IWiRLApplication;
   end;
 
-  // A non-reference-counted IInterface implementation.
+  /// <summary>
+  ///   A non-reference counted IInterface implementation
+  /// </summary>
   TWiRLConfigurationNRef = class(TPersistent, IWiRLConfiguration)
   private
     FNeonConfig: TNeonConfiguration;
@@ -76,6 +79,7 @@ type
     property Application: IWiRLApplication read FApplication write FApplication;
     property AsString: string read GetAsString;
     property AsJSON: TJSONObject read GetAsJSON;
+
     function BackToApp: IWiRLApplication;
   end;
 
@@ -194,8 +198,7 @@ begin
   inherited Create();
 end;
 
-function TWiRLConfigClassRegistry.GetImplementationOf(
-  AInterfaceRef: TGUID): TWiRLConfigurationNRefClass;
+function TWiRLConfigClassRegistry.GetImplementationOf(AInterfaceRef: TGUID): TWiRLConfigurationNRefClass;
 begin
   if not TryGetValue(AInterfaceRef, Result) then
     raise EWiRLException.Create('Implementation class not found');
@@ -206,8 +209,7 @@ begin
   Result := TWiRLConfigClassRegistrySingleton.Instance;
 end;
 
-procedure TWiRLConfigClassRegistry.RegisterConfigClass(
-  AConfigurationClass: TWiRLConfigurationNRefClass);
+procedure TWiRLConfigClassRegistry.RegisterConfigClass(AConfigurationClass: TWiRLConfigurationNRefClass);
 var
   LImplementsAttribute: ImplementsAttribute;
 begin
