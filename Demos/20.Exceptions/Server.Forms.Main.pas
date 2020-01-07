@@ -12,22 +12,14 @@ unit Server.Forms.Main;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
-  Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
-
-  Neon.Core.Types,
-  WiRL.Configuration.Neon,
-  WiRL.Core.Application,
+  System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
+  Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
   WiRL.Core.Engine,
   WiRL.http.Server,
-  WiRL.http.Server.Indy;
+  WiRL.http.Server.Indy,
+  WiRL.Core.Application;
 
 type
-
-  TExceptionListener = class(TInterfacedObject, IWiRLHandleExceptionListener)
-    procedure HandleException(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; E: Exception);
-  end;
-
   TMainForm = class(TForm)
     TopPanel: TPanel;
     StartButton: TButton;
@@ -37,8 +29,7 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    memoLog: TMemo;
-    procedure FormDestroy(Sender: TObject);
+    lstLog: TListBox;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
@@ -46,10 +37,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FRESTServer: TWiRLServer;
-    FListener: IWiRLHandleExceptionListener;
+    FServer: TWiRLServer;
   public
-    { Public declarations }
+    procedure Log(const AMsg :string);
   end;
 
 var
@@ -59,11 +49,12 @@ implementation
 
 {$R *.dfm}
 
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  FListener := nil;
-  FRESTServer.Free;
-end;
+uses
+  Neon.Core.Types,
+  WiRL.Configuration.Neon,
+  WiRL.Core.JSON,
+  WiRL.Rtti.Utils;
+
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -72,50 +63,65 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  FRESTServer := TWiRLServer.Create(Self);
-  FListener := TExceptionListener.Create;
-
-  FRESTServer.AddEngine<TWiRLEngine>('/rest')
-    .SetEngineName('RESTEngine')
-    .AddSubscriber(FListener)
-    .AddApplication('/app')
-      .SetResources('*')
-      .SetFilters('*')
-      .Plugin.Configure<IWiRLConfigurationNeon>
-        .SetUseUTCDate(True)
-        .SetMemberCase(TNeonCase.SnakeCase);
-
   StartServerAction.Execute;
+end;
+
+procedure TMainForm.Log(const AMsg: string);
+begin
+  TThread.Synchronize(nil,
+    procedure ()
+    begin
+      lstLog.Items.Add(AMsg);
+    end
+  );
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FRESTServer.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-  if not FRESTServer.Active then
-    FRESTServer.Active := True;
+  // Create http server
+  FServer := TWiRLServer.Create(nil);
+
+  // Engine configuration
+  FServer
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    .SetThreadPoolSize(5)
+    .AddEngine<TWiRLEngine>('/rest')
+    .SetEngineName('WiRL custom Exceptions')
+
+    // Application configuration
+    .AddApplication('/app')
+      .SetAppName('Default App')
+      .SetResources('*')
+      .SetFilters('*')
+
+      .Plugin.Configure<IWiRLConfigurationNeon>
+        .SetUseUTCDate(True)
+        .SetMemberCase(TNeonCase.SnakeCase)
+        .BackToApp
+
+  ;
+
+  if not FServer.Active then
+    FServer.Active := True;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := not Assigned(FRESTServer) or not FRESTServer.Active;
+  StartServerAction.Enabled := (FServer = nil) or (FServer.Active = False);
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  FRESTServer.Active := False;
+  FServer.Active := False;
+  FServer.Free;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(FRESTServer) and FRESTServer.Active;
+  StopServerAction.Enabled := Assigned(FServer) and (FServer.Active = True);
 end;
 
-{ TExceptionListener }
-
-procedure TExceptionListener.HandleException(const ASender: TWiRLEngine;
-  const AApplication: TWiRLApplication; E: Exception);
-begin
-  MainForm.memoLog.Lines.Add(E.Message);
-end;
+initialization
+  ReportMemoryLeaksOnShutdown := True;
 
 end.

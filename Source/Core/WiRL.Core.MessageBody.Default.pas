@@ -24,7 +24,8 @@ uses
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBody.Classes,
-  WiRL.Core.Exceptions;
+  WiRL.Core.Exceptions,
+  WiRL.Configuration.Neon;
 
 type
   /// <summary>
@@ -53,7 +54,10 @@ type
   /// </summary>
   [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
+  [Produces(TMediaType.APPLICATION_JAVASCRIPT)]
   TWiRLValueTypesProvider = class(TMessageBodyProvider)
+  private
+    [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
@@ -68,7 +72,10 @@ type
   /// </summary>
   [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
+  [Produces(TMediaType.APPLICATION_JAVASCRIPT)]
   TWiRLObjectProvider = class(TMessageBodyProvider)
+  private
+    [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
@@ -82,6 +89,7 @@ type
   /// </summary>
   [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
+  [Produces(TMediaType.APPLICATION_JAVASCRIPT)]
   TWiRLJSONValueProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
@@ -159,16 +167,15 @@ end;
 procedure TWiRLJSONValueProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
-  LStreamWriter: TStreamWriter;
   LJSONValue: TJSONValue;
 begin
-  LStreamWriter := TStreamWriter.Create(AContentStream);
-  try
-    LJSONValue := AValue.AsObject as TJSONValue;
-    if Assigned(LJSONValue) then
-      LStreamWriter.Write(TJSONHelper.ToJSON(LJSONValue));
-  finally
-    LStreamWriter.Free;
+  LJSONValue := AValue.AsObject as TJSONValue;
+  if Assigned(LJSONValue) then
+  begin
+    if AMediaType.IsType(TMediaType.APPLICATION_JAVASCRIPT) then
+      WriteJSONPToStream(LJSONValue, AContentStream)
+    else
+      WriteJSONToStream(LJSONValue, AContentStream);
   end;
 end;
 
@@ -223,7 +230,7 @@ var
   LJSON: TJSONValue;
   LValue: TValue;
 begin
-  LDes := TNeonDeserializerJSON.Create(WiRLApplication.SerializerConfig);
+  LDes := TNeonDeserializerJSON.Create(WiRLConfigurationNeon.GetNeonConfig);
   try
     LJSON := TJSONObject.ParseJSONValue(ContentStreamToString(AMediaType.Charset, AContentStream));
     try
@@ -240,30 +247,23 @@ end;
 procedure TWiRLValueTypesProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
-  LStreamWriter: TStreamWriter;
-  LEncoding: TEncoding;
-
   LJSON: TJSONValue;
 begin
-  LEncoding := AMediaType.GetDelphiEncoding;
-  LStreamWriter := TStreamWriter.Create(AContentStream, LEncoding);
-  try
-    case AValue.Kind of
-      tkArray,
-      tkDynArray,
-      tkRecord:
-      begin
-        LJSON := TNeon.ValueToJSON(AValue, WiRLApplication.SerializerConfig);
-        try
-          LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
-        finally
-          LJSON.Free;
-        end;
+  case AValue.Kind of
+    tkArray,
+    tkDynArray,
+    tkRecord:
+    begin
+      LJSON := TNeon.ValueToJSON(AValue, WiRLConfigurationNeon.GetNeonConfig);
+      try
+        if AMediaType.IsType(TMediaType.APPLICATION_JAVASCRIPT) then
+          WriteJSONPToStream(LJSON, AContentStream)
+        else
+          WriteJSONToStream(LJSON, AContentStream);
+      finally
+        LJSON.Free;
       end;
     end;
-  finally
-    LStreamWriter.Free;
-    LEncoding.Free;
   end;
 end;
 
@@ -272,25 +272,22 @@ end;
 function TWiRLObjectProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 begin
-  Result := TNeon.JSONToObject(AParam.ParamType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLApplication.SerializerConfig);
+  Result := TNeon.JSONToObject(AParam.ParamType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
-  LStreamWriter: TStreamWriter;
   LJSON: TJSONValue;
 begin
-  LStreamWriter := TStreamWriter.Create(AContentStream);
+  LJSON := TNeon.ObjectToJSON(AValue.AsObject, WiRLConfigurationNeon.GetNeonConfig);
   try
-    LJSON := TNeon.ObjectToJSON(AValue.AsObject, WiRLApplication.SerializerConfig);
-    try
-      LStreamWriter.Write(TJSONHelper.ToJSON(LJSON));
-    finally
-      LJSON.Free;
-    end;
+    if AMediaType.IsType(TMediaType.APPLICATION_JAVASCRIPT) then
+      WriteJSONPToStream(LJSON, AContentStream)
+    else
+      WriteJSONToStream(LJSON, AContentStream);
   finally
-    LStreamWriter.Free;
+    LJSON.Free;
   end;
 end;
 

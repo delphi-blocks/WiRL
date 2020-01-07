@@ -24,7 +24,9 @@ uses
   WiRL.Data.MessageBody.Default,
   WiRL.Data.FireDAC.MessageBody.Default,
   WiRL.Core.JSON,
-  WiRL.Schemas.Swagger;
+  WiRL.Schemas.Swagger,
+
+  Server.Entities;
 
 type
   [Path('sample')]
@@ -50,10 +52,14 @@ type
     [GET, Produces(TMediaType.APPLICATION_XML)]
     function HelloWorld_XML: string;
 
-    [GET, Produces('image/jpg')]
+    [GET, Path('/entity')]
+    [Produces(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JAVASCRIPT)]
+    function GetEntityJSON: TArray<TSimpleClass>;
+
+    [GET, Produces(TMediaType.IMAGE_JPEG)]
     function JpegImage: TStream;
 
-    [GET, Produces('application/pdf')]
+    [GET, Produces(TMediaType.APPLICATION_PDF)]
     function PdfDocument: TStream;
 
     [GET, Path('/dataset1')]
@@ -107,7 +113,6 @@ begin
   Result.AppendRecord(['Luca', 'Minuti']);
   Result.AppendRecord(['Alberto', 'Dal Dosso']);
   Result.AppendRecord(['Paolo', 'Rossi']);
-
 end;
 
 function TSampleResource.DataSet2: TFDMemTable;
@@ -131,6 +136,19 @@ begin
   Result[0] := DataSet1;
   Result[1] := DataSet2;
   {$ENDIF}
+end;
+
+function TSampleResource.GetEntityJSON: TArray<TSimpleClass>;
+var
+  LEntity: TSimpleClass;
+  LIndex: Integer;
+begin
+  Result := [];
+  for LIndex := 0 to 100 do
+  begin
+    LEntity := TSimpleClass.RandomEntity;
+    Result := Result + [LEntity];
+  end;
 end;
 
 function TSampleResource.GetInteger: Integer;

@@ -17,6 +17,7 @@ uses
 
   Neon.Core.Persistence.Swagger,
 
+  WiRL.Configuration.Neon,
   WiRL.Core.Application,
   WiRL.Core.Engine,
   WiRL.Core.Context,
@@ -34,6 +35,7 @@ type
   private
     FWiRLContext: TWiRLContext;
     FApplication: TWiRLApplication;
+    FConfigurationNeon: TWiRLConfigurationNeon;
 
     function GetPath(ARttiObject: TRttiObject): string;
 
@@ -85,6 +87,7 @@ var
   LResource: TClass;
 begin
   FApplication := AApplication;
+  FConfigurationNeon := FApplication.GetConfiguration<TWiRLConfigurationNeon>;
   // Loop on every resource of the application
   for LResourceName in AApplication.Resources.Keys do
   begin
@@ -276,7 +279,7 @@ begin
     LResponses.AddPair('200', LOkResponse);
     LResponses.AddPair('default', TJSONObject.Create(TJSONPair.Create('description', 'Error')));
     if Assigned(AResourceMethod.ReturnType) and (AResourceMethod.ReturnType.TypeKind <> tkUnknown) then
-      LOkResponse.AddPair('schema', TNeonSchemaGenerator.TypeToJSONSchema(AResourceMethod.ReturnType, FApplication.SerializerConfig));
+      LOkResponse.AddPair('schema', TNeonSchemaGenerator.TypeToJSONSchema(AResourceMethod.ReturnType, FConfigurationNeon.GetNeonConfig));
   end;
 end;
 
@@ -319,11 +322,11 @@ begin
   else
   begin
     if LParamType <> 'body' then
-      Result := TNeonSchemaGenerator.TypeToJSONSchema(ARttiParameter.ParamType, FApplication.SerializerConfig)
+      Result := TNeonSchemaGenerator.TypeToJSONSchema(ARttiParameter.ParamType, FConfigurationNeon.GetNeonConfig)
     else
     begin
       Result := TJSONObject.Create
-        .AddPair('schema', TNeonSchemaGenerator.TypeToJSONSchema(ARttiParameter.ParamType, FApplication.SerializerConfig))
+        .AddPair('schema', TNeonSchemaGenerator.TypeToJSONSchema(ARttiParameter.ParamType, FConfigurationNeon.GetNeonConfig))
     end;
 
     Result.AddPair(TJSONPair.Create('name', GetParamName(ARttiParameter)));

@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.SyncObjs, System.Diagnostics, System.Rtti,
 
+  WiRL.Configuration.Core,
   WiRL.Core.Classes,
   WiRL.Core.Context,
   WiRL.Rtti.Utils,
@@ -89,6 +90,7 @@ type
     class function GetServerDirectory: string; static;
     class function GetServerFileName: string; static;
   private
+    FCurrentApp: IWiRLApplication;
     FRttiContext: TRttiContext;
     FApplications: TWiRLApplicationList;
     FSubscribers: TList<IWiRLHandleListener>;
@@ -112,10 +114,11 @@ type
 
     procedure HandleRequest(AContext: TWiRLContext); override;
 
-    function AddApplication(const ABasePath: string): TWiRLApplication; overload; virtual;
-    function AddApplication(const AName, ABasePath: string; const AResources: TArray<string>): TWiRLApplication; overload; virtual; deprecated;
-    procedure AddApplication(AApplication: TWiRLApplication); overload; virtual;
-    procedure RemoveApplication(AApplication: TWiRLApplication); virtual;
+    function AddApplication(const ABasePath: string): IWiRLApplication; overload; virtual;
+    function AddApplication(const AName, ABasePath: string; const AResources: TArray<string>): IWiRLApplication; overload; virtual; deprecated;
+    procedure AddApplication(AApplication: IWiRLApplication); overload; virtual;
+    procedure RemoveApplication(AApplication: IWiRLApplication); virtual;
+    function CurrentApp: IWiRLApplication;
 
     function AddSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
     function RemoveSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
@@ -139,7 +142,7 @@ uses
   WiRL.Core.Utils;
 
 function TWiRLEngine.AddApplication(const AName, ABasePath: string;
-  const AResources: TArray<string>): TWiRLApplication;
+  const AResources: TArray<string>): IWiRLApplication;
 begin
   Result := Self
     .AddApplication(ABasePath)
@@ -147,21 +150,25 @@ begin
     .SetResources(AResources);
 end;
 
-function TWiRLEngine.AddApplication(const ABasePath: string): TWiRLApplication;
+function TWiRLEngine.AddApplication(const ABasePath: string): IWiRLApplication;
+var
+  LApplication: TWiRLApplication;
 begin
-  Result := TWiRLApplication.Create(Self);
+  LApplication := TWiRLApplication.Create(Self);
   try
-    Result.SetBasePath(ABasePath);
-    Result.Engine := Self;
+    LApplication.SetBasePath(ABasePath);
+    LApplication.Engine := Self;
+    FCurrentApp := LApplication;
   except
-    Result.Free;
+    LApplication.Free;
     raise
   end;
+  Result := LApplication;
 end;
 
-procedure TWiRLEngine.AddApplication(AApplication: TWiRLApplication);
+procedure TWiRLEngine.AddApplication(AApplication: IWiRLApplication);
 begin
-  Applications.AddApplication(AApplication);
+  Applications.AddApplication(AApplication as TWiRLApplication);
 end;
 
 function TWiRLEngine.AddSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
@@ -179,6 +186,13 @@ begin
   FSubscribers := TList<IWiRLHandleListener>.Create;
   FEngineName := DefaultEngineName;
   BasePath := '/rest';
+end;
+
+function TWiRLEngine.CurrentApp: IWiRLApplication;
+begin
+  if not Assigned(FCurrentApp) then
+    raise EWiRLServerException.Create('No current application defined');
+  Result := FCurrentApp;
 end;
 
 procedure TWiRLEngine.DefineProperties(Filer: TFiler);
@@ -334,9 +348,9 @@ begin
   DoAfterRequestEnd(LStopWatchEx);
 end;
 
-procedure TWiRLEngine.RemoveApplication(AApplication: TWiRLApplication);
+procedure TWiRLEngine.RemoveApplication(AApplication: IWiRLApplication);
 begin
-  FApplications.RemoveApplication(AApplication);
+  FApplications.RemoveApplication(AApplication as TWiRLApplication);
 end;
 
 function TWiRLEngine.RemoveSubscriber(const ASubscriber: IWiRLHandleListener): TWiRLEngine;
