@@ -30,8 +30,7 @@ type
     procedure FindDefaultServer;
   protected
     FEngineName: string;
-    procedure Notification(AComponent: TComponent; Operation: TOperation);
-      override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); overload; override;
     constructor Create(ABasePath: string); reintroduce; overload;
@@ -86,6 +85,7 @@ type
     DefaultPort = 8080;
     DefaultThreadPoolSize = 50;
   private
+    FCurrentEngine: TWiRLCustomEngine;
     FHttpServer: IWiRLServer;
     FActive: Boolean;
     FServerVendor: string;
@@ -111,6 +111,7 @@ type
     procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
     procedure RemoveEngine(const ABasePath: string); overload;
     function GetEngine(const AURL: string): TWiRLCustomEngine;
+    function CurrentEngine<T: constructor, TWiRLCustomEngine>: T;
     function SetPort(APort: Integer): TWiRLServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLServer;
 
@@ -153,6 +154,7 @@ begin
   Result := TRttiHelper.CreateInstance(TClass(T), [nil]) as T;
   TWiRLCustomEngine(Result).BasePath := ABasePath;
   AddEngine(ABasePath, Result, AOwnsObjects);
+  FCurrentEngine := Result;
 end;
 
 function TWiRLServer.AddEngines(
@@ -175,6 +177,11 @@ begin
   FActive := False;
   Port := DefaultPort;
   ThreadPoolSize := DefaultThreadPoolSize;
+end;
+
+function TWiRLServer.CurrentEngine<T>: T;
+begin
+  Result := FCurrentEngine as T;
 end;
 
 destructor TWiRLServer.Destroy;

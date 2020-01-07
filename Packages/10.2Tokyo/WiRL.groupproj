@@ -6,7 +6,7 @@
         <Projects Include="..\..\Libs\JWT\Packages\10.2Tokyo\JOSE.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\..\Libs\Neon\Packages\10.3.Rio\NeonRunTime.dproj">
+        <Projects Include="..\..\Libs\Neon\Packages\10.2Tokyo\NeonRunTime.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="WiRLRunTime.dproj">
@@ -33,13 +33,13 @@
         <MSBuild Projects="..\..\Libs\JWT\Packages\10.2Tokyo\JOSE.dproj" Targets="Make"/>
     </Target>
     <Target Name="NeonRunTime">
-        <MSBuild Projects="..\..\Libs\Neon\Packages\10.3.Rio\NeonRunTime.dproj"/>
+        <MSBuild Projects="..\..\Libs\Neon\Packages\10.2Tokyo\NeonRunTime.dproj"/>
     </Target>
     <Target Name="NeonRunTime:Clean">
-        <MSBuild Projects="..\..\Libs\Neon\Packages\10.3.Rio\NeonRunTime.dproj" Targets="Clean"/>
+        <MSBuild Projects="..\..\Libs\Neon\Packages\10.2Tokyo\NeonRunTime.dproj" Targets="Clean"/>
     </Target>
     <Target Name="NeonRunTime:Make">
-        <MSBuild Projects="..\..\Libs\Neon\Packages\10.3.Rio\NeonRunTime.dproj" Targets="Make"/>
+        <MSBuild Projects="..\..\Libs\Neon\Packages\10.2Tokyo\NeonRunTime.dproj" Targets="Make"/>
     </Target>
     <Target Name="WiRLRunTime">
         <MSBuild Projects="WiRLRunTime.dproj"/>

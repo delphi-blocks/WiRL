@@ -14,12 +14,16 @@ interface
 uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
+
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Application,
-  WiRL.http.Filters, WiRL.Core.MessageBodyReader, WiRL.Core.MessageBodyWriter,
-  WiRL.Core.Registry;
+  WiRL.http.Filters,
+  WiRL.Core.MessageBodyReader,
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Core.Registry,
+  WiRL.Configuration.Core;
 
 type
   TMainForm = class(TForm)

@@ -137,7 +137,7 @@ type
     FThirdPascalCaseProp: TDateTime;
     FDefProp: Integer;
 
-    [NeonInclude(Include.Always), NeonMembersSet([TNeonMembers.Fields])]
+    [NeonInclude(IncludeIf.Always), NeonMembersSet([TNeonMembers.Fields])]
     FirstRecord: TMyRecord;
   public
     class function DefaultValues: TCaseClass;
@@ -163,7 +163,7 @@ type
     [NeonInclude]
     Field1: TArray<TDateTime>;
 
-    [NeonInclude(Include.CustomFunction, 'ShouldInclude')]
+    [NeonInclude(IncludeIf.CustomFunction, 'ShouldInclude')]
     Field2: TRect;
   private
     function ShouldInclude(const AContext: TNeonIgnoreIfContext): Boolean;
@@ -175,7 +175,7 @@ type
     property Prop3: TDateTime read FProp3 write FProp3;
     [NeonIgnore]
     property Prop4: TPoint3D read FProp4 write FProp4;
-    [NeonInclude(Include.CustomFunction, 'ShouldInclude')]
+    [NeonInclude(IncludeIf.CustomFunction, 'ShouldInclude')]
     property Prop5: TVector3D read FProp5 write FProp5;
   end;
 

@@ -24,6 +24,7 @@ uses
   WiRL.Core.Application,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
+  WiRL.Configuration.Neon,
 
   Neon.Core.Persistence,
   Neon.Core.Types,
@@ -634,7 +635,8 @@ begin
     .AddApplication('/app')
       .SetAppName('Content App')
       .SetResources('Server.Resources.TEntityResource')
-      .ConfigureSerializer
+
+      .Plugin.Configure<IWiRLConfigurationNeon>
         .SetMembers([TNeonMembers.Standard])
         .SetVisibility([mvPublic, mvPublished])
         .SetMemberCase(TNeonCase.SnakeCase)

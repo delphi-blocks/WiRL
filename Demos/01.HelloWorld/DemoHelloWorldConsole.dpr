@@ -39,17 +39,9 @@ begin
 
           // Adds and configures an application
           .AddApplication('/app')
-          {$IF CompilerVersion >=28} //XE7
             .SetResources([
               'Server.Resources.THelloWorldResource',
-              'Server.Resources.TEntityResource'
-            ]);
-          {$ELSE}
-            .SetResources(
-              'Server.Resources.THelloWorldResource,'+
-              'Server.Resources.TEntityResource'
-            );
-          {$IFEND}
+              'Server.Resources.TEntityResource'])
         ;
       end
     );

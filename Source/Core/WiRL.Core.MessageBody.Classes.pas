@@ -61,6 +61,7 @@ type
 implementation
 
 uses
+  WiRL.Configuration.Neon,
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON;
 
@@ -78,7 +79,7 @@ begin
   LBytes := TEncoding.UTF8.GetBytes(LCallback + '(');
   AStream.Write(LBytes[0], Length(LBytes));
 
-  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.SerializerConfig.GetPrettyPrint);
+  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.GetConfiguration<TWiRLConfigurationNeon>.GetNeonConfig.GetPrettyPrint);
 
   LBytes := TEncoding.UTF8.GetBytes(');');
   AStream.Write(LBytes[0], Length(LBytes));
@@ -86,7 +87,7 @@ end;
 
 procedure TMessageBodyProvider.WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
 begin
-  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.SerializerConfig.GetPrettyPrint);
+  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.GetConfiguration<TWiRLConfigurationNeon>.GetNeonConfig.GetPrettyPrint);
 end;
 
 end.

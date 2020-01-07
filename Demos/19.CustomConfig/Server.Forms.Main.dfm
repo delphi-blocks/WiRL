@@ -80,26 +80,4 @@ object MainForm: TMainForm
       OnUpdate = StopServerActionUpdate
     end
   end
-  object WiRLServer1: TWiRLServer
-    Active = False
-    ThreadPoolSize = 5
-    Left = 208
-    Top = 112
-  end
-  object WiRLEngine1: TWiRLEngine
-    BasePath = '/rest'
-    EngineName = 'WiRL Filters'
-    Server = WiRLServer1
-    Left = 288
-    Top = 120
-    object WiRLApplication1: TWiRLApplication
-      AppName = 'Filter Demo'
-      BasePath = '/app'
-      UseUTCDate = False
-      Resource.List = (
-        'Server.Resources.TFilterDemoResource')
-      Filter.List = (
-        '*')
-    end
-  end
 end
