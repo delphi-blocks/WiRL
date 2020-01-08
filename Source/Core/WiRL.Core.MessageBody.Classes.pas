@@ -14,7 +14,6 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
 
-  WiRL.Core.JSON,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.http.Core,
@@ -29,6 +28,7 @@ uses
 type
   TMessageBodyWriter = class(TInterfacedObject, IMessageBodyWriter)
   protected
+    [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -37,6 +37,7 @@ type
 
   TMessageBodyReader = class(TInterfacedObject, IMessageBodyReader)
   protected
+    [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
@@ -47,9 +48,6 @@ type
   protected
     [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
-
-    procedure WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
-    procedure WriteJSONPToStream(AJSON: TJSONValue; AStream: TStream);
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
@@ -59,35 +57,5 @@ type
   end;
 
 implementation
-
-uses
-  WiRL.Configuration.Neon,
-  Neon.Core.Persistence,
-  Neon.Core.Persistence.JSON;
-
-{ TMessageBodyProvider }
-
-procedure TMessageBodyProvider.WriteJSONPToStream(AJSON: TJSONValue; AStream: TStream);
-var
-  LCallback: string;
-  LBytes: TBytes;
-begin
-  LCallback := FRequest.QueryFields.Values['callback'];
-  if LCallback.IsEmpty then
-    LCallback := 'callback';
-
-  LBytes := TEncoding.UTF8.GetBytes(LCallback + '(');
-  AStream.Write(LBytes[0], Length(LBytes));
-
-  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.GetConfiguration<TWiRLConfigurationNeon>.GetNeonConfig.GetPrettyPrint);
-
-  LBytes := TEncoding.UTF8.GetBytes(');');
-  AStream.Write(LBytes[0], Length(LBytes));
-end;
-
-procedure TMessageBodyProvider.WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
-begin
-  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.GetConfiguration<TWiRLConfigurationNeon>.GetNeonConfig.GetPrettyPrint);
-end;
 
 end.
