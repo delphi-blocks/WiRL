@@ -16,14 +16,11 @@ uses
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
 
   WiRL.Core.Engine,
-  WiRL.http.Server,
-  WiRL.http.Server.Indy,
   WiRL.Core.Application,
-  WiRL.http.Filters,
-  WiRL.Core.MessageBodyReader,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.Registry,
-  WiRL.Configuration.Core;
+  WiRL.Core.MessageBody.Default,
+  WiRL.Data.MessageBody.Default,
+  WiRL.http.Server,
+  WiRL.http.Server.Indy;
 
 type
   TMainForm = class(TForm)
@@ -36,15 +33,14 @@ type
     PortNumberEdit: TEdit;
     Label1: TLabel;
     lstLog: TListBox;
-    WiRLServer1: TWiRLServer;
-    WiRLEngine1: TWiRLEngine;
-    WiRLApplication1: TWiRLApplication;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
     procedure StopServerActionUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  private
+    FServer: TWiRLServer;
   public
     procedure Log(const AMsg :string);
   end;
@@ -58,9 +54,7 @@ implementation
 
 uses
   WiRL.Core.JSON,
-  WiRL.Rtti.Utils,
-  WiRL.Core.MessageBody.Default,
-  WiRL.Data.MessageBody.Default;
+  WiRL.Rtti.Utils;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -84,26 +78,42 @@ end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  if not WiRLServer1.Active then
-  begin
-    WiRLServer1.Port := StrToIntDef(PortNumberEdit.Text, 8080);
-    WiRLServer1.Active := True;
-  end;
+  // Create http server
+  FServer := TWiRLServer.Create(nil);
+
+  // Server configuration
+  FServer
+    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
+    // Engine configuration
+    .AddEngine<TWiRLEngine>('/rest')
+      .SetEngineName('WiRL Filter Demo')
+
+      // Application configuration
+      .AddApplication('/app')
+        .SetAppName('Filter App')
+        .SetFilters('*')
+        .SetResources(
+          'Server.Resources.TFilterDemoResource')
+  ;
+
+  if not FServer.Active then
+    FServer.Active := True;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := (WiRLServer1 = nil) or (WiRLServer1.Active = False);
+  StartServerAction.Enabled := (FServer = nil) or (FServer.Active = False);
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  WiRLServer1.Active := False;
+  FServer.Active := False;
+  FServer.Free;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(WiRLServer1) and (WiRLServer1.Active = True);
+  StopServerAction.Enabled := Assigned(FServer) and (FServer.Active = True);
 end;
 
 initialization
