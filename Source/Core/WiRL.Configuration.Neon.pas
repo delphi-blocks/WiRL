@@ -31,6 +31,8 @@ type
     function SetIgnoreFieldPrefix(AValue: Boolean): IWiRLConfigurationNeon;
     function SetUseUTCDate(AValue: Boolean): IWiRLConfigurationNeon;
     function SetPrettyPrint(AValue: Boolean): IWiRLConfigurationNeon;
+    function AddSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
+    function RemoveSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
   end;
 
   [Implements(IWiRLConfigurationNeon)]
@@ -61,6 +63,9 @@ type
     function SetUseUTCDate(AValue: Boolean): IWiRLConfigurationNeon;
     function SetPrettyPrint(AValue: Boolean): IWiRLConfigurationNeon;
 
+    function AddSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
+    function RemoveSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
+
     function GetSerializers: TNeonSerializerRegistry;
 
     function GetNeonConfig: INeonConfiguration;
@@ -77,7 +82,9 @@ type
 implementation
 
 uses
-  System.TypInfo;
+  System.TypInfo,
+  Neon.Core.Serializers.RTL,
+  Neon.Core.Serializers.DB;
 
 { TWiRLConfigurationNeon }
 
@@ -104,6 +111,12 @@ begin
   Result.SetPrettyPrint(True);
 end;
 
+function TWiRLConfigurationNeon.AddSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
+begin
+  FSerializers.RegisterSerializer(ASerializerClass);
+  Result := Self;
+end;
+
 class function TWiRLConfigurationNeon.Snake: IWiRLConfigurationNeon;
 begin
   Result := TWiRLConfigurationNeon.Create;
@@ -126,6 +139,7 @@ end;
 function TWiRLConfigurationNeon.GetNeonConfig: INeonConfiguration;
 begin
   Result := TNeonConfiguration.Default;
+  Result.GetSerializers.Assign(FSerializers);
   Result
    .SetMembers(FMembers)
    .SetMemberCase(FMemberCase)
@@ -133,14 +147,23 @@ begin
    .SetVisibility(FVisibility)
    .SetIgnoreFieldPrefix(FIgnoreFieldPrefix)
    .SetUseUTCDate(FUseUTCDate)
-   .SetPrettyPrint(FPrettyPrint);
-
-  Result.GetSerializers.Assign(FSerializers);
+   .SetPrettyPrint(FPrettyPrint)
+   .GetSerializers
+     .RegisterSerializer(TGUIDSerializer)
+     .RegisterSerializer(TStreamSerializer)
+     .RegisterSerializer(TDataSetSerializer)
+  ;
 end;
 
 function TWiRLConfigurationNeon.GetSerializers: TNeonSerializerRegistry;
 begin
   Result := FSerializers;
+end;
+
+function TWiRLConfigurationNeon.RemoveSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
+begin
+  FSerializers.UnregisterSerializer(ASerializerClass);
+  Result := Self;
 end;
 
 

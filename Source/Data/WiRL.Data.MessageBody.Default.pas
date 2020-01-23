@@ -20,11 +20,15 @@ uses
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBody.Classes,
   WiRL.Core.MessageBodyReader,
-  WiRL.Core.MessageBodyWriter;
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Configuration.Neon;
 
 type
   [Produces(TMediaType.APPLICATION_JSON)]
   TArrayDataSetWriter = class(TMessageBodyWriter)
+  private
+    [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
+  public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
@@ -86,7 +90,7 @@ begin
     try
       { TODO -opaolo -c : LCurrent.Name can be empty and producing an JSON error 30/05/2017 16:26:09 }
       for LCurrent in LData do
-        LResult.AddPair(LCurrent.Name, TNeon.ObjectToJSON(LCurrent));
+        LResult.AddPair(LCurrent.Name, TNeon.ObjectToJSON(LCurrent, WiRLConfigurationNeon.GetNeonConfig));
 
       LStreamWriter.Write(TJSONHelper.ToJSON(LResult));
     finally
