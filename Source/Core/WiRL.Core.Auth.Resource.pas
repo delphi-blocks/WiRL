@@ -189,10 +189,12 @@ begin
 
   LAuthField := AAuth.Substring(AUTH_BASIC.Length);
   LAuthField := TBase64.Decode(LAuthField);
-  Result := LAuthField.Split([':']);
+  LColonIdx := LAuthField.IndexOf(':');
 
-  if Length(Result) < 2 then
+  if LColonIdx <= 0 then
     raise EWiRLNotAuthorizedException.Create(ERR_BASIC_MALFORMED, Self.ClassName, 'DoLogin');
+
+  Result := [LAuthField.Substring(0, LColonIdx), LAuthField.Substring(LColonIdx + 1, MaxInt)];
 end;
 
 { TWiRLAuthBodyResource }
