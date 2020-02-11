@@ -183,6 +183,7 @@ end;
 function TWiRLAuthBasicResource.ExtractData(const AAuth: string): TArray<string>;
 var
   LAuthField: string;
+  LColonIdx: Integer;
 begin
   if not AAuth.StartsWith(AUTH_BASIC) then
     raise EWiRLNotAuthorizedException.Create(ERR_BASIC_HEADER, Self.ClassName, 'DoLogin');
