@@ -16,6 +16,7 @@ uses
 
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
+  WiRL.http.Core,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.Core.Attributes,
@@ -27,29 +28,32 @@ uses
 type
   TMessageBodyWriter = class(TInterfacedObject, IMessageBodyWriter)
   protected
+    [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); virtual; abstract;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); virtual; abstract;
   end;
 
   TMessageBodyReader = class(TInterfacedObject, IMessageBodyReader)
   protected
+    [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
-      ARequest: TWiRLRequest): TValue; virtual; abstract;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
   end;
 
   TMessageBodyProvider = class(TInterfacedObject, IMessageBodyReader, IMessageBodyWriter)
   protected
+    [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
-      ARequest: TWiRLRequest): TValue; virtual; abstract;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); virtual; abstract;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); virtual; abstract;
   end;
 
 implementation

@@ -16,8 +16,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.Core.JSON,
-  WiRL.Persistence.JSON,
-  WiRL.Persistence.Core;
+  Neon.Core.Persistence.JSON;
 
 type
   TBasicObject = class
@@ -71,7 +70,7 @@ procedure TTestSerialization.TestBasicObjectDeserialization;
 var
   LBasicObject: TBasicObject;
 begin
-  LBasicObject := TNeonMapperJSON.JsonToObject<TBasicObject>('{"Name": "Luca", "Age": 42}');
+  LBasicObject := TNeon.JsonToObject<TBasicObject>('{"Name": "Luca", "Age": 42}');
   try
     Assert.AreEqual('Luca', LBasicObject.Name);
     Assert.AreEqual(42, LBasicObject.Age);
@@ -89,7 +88,7 @@ begin
   try
     LBasicObject.Name := 'Luca';
     LBasicObject.Age := 42;
-    LJson := TNeonMapperJSON.ObjectToJSON(LBasicObject);
+    LJson := TNeon.ObjectToJSON(LBasicObject);
     try
       Assert.AreEqual('Luca', LJson.GetValue<string>('Name'));
       Assert.AreEqual(42, LJson.GetValue<Integer>('Age'));
@@ -112,7 +111,7 @@ begin
     try
       LCompositeObject.Basic.Name := 'Luca';
       LCompositeObject.Basic.Age := 42;
-      LJson := TNeonMapperJSON.ObjectToJSON(LCompositeObject);
+      LJson := TNeon.ObjectToJSON(LCompositeObject);
       try
         LJsonBasic := LJson.GetValue<TJSONValue>('Basic');
         Assert.AreEqual('Luca', LJsonBasic.GetValue<string>('Name'));

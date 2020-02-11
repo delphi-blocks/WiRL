@@ -1,3 +1,6 @@
 [submodule "Libs/JWT"]
 	path = Libs/JWT
 	url = https://github.com/paolo-rossi/delphi-jose-jwt.git
+[submodule "Libs/Neon"]
+	path = Libs/Neon
+	url = https://github.com/paolo-rossi/delphi-neon

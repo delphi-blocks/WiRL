@@ -26,13 +26,16 @@ type
     FVersion: Integer;
     FCharset: string;
     FDialect: string;
+    FBoundary: string;
     procedure ParseMediaType(const AFullMediaType: string);
     procedure ParseMediaTypeParams;
+    function GetMediaType: string;
   public
     const DELIM_MEDIA = '/';
     const VERSION_NAME = 'version';
     const DIALECT_NAME = 'dialect';
     const CHARSET_NAME = 'charset';
+    const BOUNDARY_NAME = 'boundary';
 
     const CHARSET_ISO_8859_1 = 'iso-8859-1';
     const CHARSET_UTF8 = 'utf-8';
@@ -49,9 +52,12 @@ type
     const TEXT_XML = 'text/xml';
     const TEXT_CSV = 'text/csv';
     const TEXT_HTML = 'text/html';
+    const IMAGE_PNG = 'image/png';
+    const IMAGE_JPEG = 'image/jpeg';
     const APPLICATION_PDF = 'application/pdf';
     const APPLICATION_XML = 'application/xml';
     const APPLICATION_JSON = 'application/json';
+    const APPLICATION_JAVASCRIPT = 'application/javascript';
     const APPLICATION_XHTML_XML = 'application/xhtml+xml';
     const APPLICATION_SVG_XML = 'application/svg+xml';
     const APPLICATION_ATOM_XML = 'application/atom+xml';
@@ -67,16 +73,18 @@ type
 
     function Clone: TMediaType;
     procedure Assign(ASource: TMediaType);
-
+    function IsType(const AType: string): Boolean;
     function GetDelphiEncoding: TEncoding;
 
     class function GetWildcard: string; override;
 
+    property MediaType: string read GetMediaType;
     property MainType: string read FMainType;
     property SubType: string read FSubType;
     property Version: Integer read FVersion write FVersion;
     property Dialect: string read FDialect write FDialect;
     property Charset: string read FCharset write FCharset;
+    property Boundary: string read FBoundary write FBoundary;
   end;
 
   TMediaTypeList = class(TAcceptItemList<TMediaType>)
@@ -104,6 +112,7 @@ begin
   Self.FVersion  := ASource.Version;
   Self.FDialect  := ASource.Dialect;
   Self.FCharset  := ASource.Charset;
+  Self.FBoundary  := ASource.Boundary;
 end;
 
 function TMediaType.Clone: TMediaType;
@@ -115,7 +124,7 @@ end;
 constructor TMediaType.Create(const AAcceptItem: string);
 begin
   inherited;
-  ParseMediaType(FAcceptItemOnly);
+  ParseMediaType(FValue);
   ParseMediaTypeParams;
 end;
 
@@ -144,6 +153,8 @@ begin
     Result := TUnicodeLEEncodingNoBOM.Create
   else if Self.Charset = CHARSET_UTF16 then
     Result := TUnicodeLEEncodingNoBOM.Create
+  else if Self.Charset = CHARSET_ISO_8859_1 then
+    Result := TEncoding.GetEncoding(CHARSET_ISO_8859_1)
   else
     Result := TMBCSEncoding.Create;
 end;
@@ -151,6 +162,16 @@ end;
 class function TMediaType.GetWildcard: string;
 begin
   Result := WILDCARD;
+end;
+
+function TMediaType.IsType(const AType: string): Boolean;
+begin
+  Result := SameText(MediaType, AType);
+end;
+
+function TMediaType.GetMediaType: string;
+begin
+  Result := MainType + DELIM_MEDIA + SubType;
 end;
 
 procedure TMediaType.ParseMediaType(const AFullMediaType: string);
@@ -177,7 +198,9 @@ begin
     else if FParameters.Names[LPosition] = DIALECT_NAME then
       FDialect := FParameters.ValueFromIndex[LPosition]
     else if FParameters.Names[LPosition] = CHARSET_NAME then
-      FCharset := FParameters.ValueFromIndex[LPosition];
+      FCharset := FParameters.ValueFromIndex[LPosition]
+    else if FParameters.Names[LPosition] = BOUNDARY_NAME then
+      FBoundary := FParameters.ValueFromIndex[LPosition];
   end;
 end;
 

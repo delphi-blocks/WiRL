@@ -1,9 +1,9 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'WiRL Filters Server'
-  ClientHeight = 201
-  ClientWidth = 464
+  Caption = 'WiRL ContentTypes Server'
+  ClientHeight = 340
+  ClientWidth = 554
   Color = clBtnFace
   Constraints.MinHeight = 240
   Constraints.MinWidth = 480
@@ -20,11 +20,12 @@ object MainForm: TMainForm
   object TopPanel: TPanel
     Left = 0
     Top = 0
-    Width = 464
+    Width = 554
     Height = 73
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 464
     object Label1: TLabel
       Left = 28
       Top = 17
@@ -60,11 +61,15 @@ object MainForm: TMainForm
   object lstLog: TListBox
     Left = 0
     Top = 73
-    Width = 464
-    Height = 128
+    Width = 554
+    Height = 267
     Align = alClient
     ItemHeight = 13
     TabOrder = 1
+    ExplicitLeft = 176
+    ExplicitTop = 112
+    ExplicitWidth = 121
+    ExplicitHeight = 97
   end
   object MainActionList: TActionList
     Left = 384
@@ -78,28 +83,6 @@ object MainForm: TMainForm
       Caption = 'Stop Server'
       OnExecute = StopServerActionExecute
       OnUpdate = StopServerActionUpdate
-    end
-  end
-  object WiRLServer1: TWiRLServer
-    Active = False
-    ThreadPoolSize = 5
-    Left = 208
-    Top = 112
-  end
-  object WiRLEngine1: TWiRLEngine
-    BasePath = '/rest'
-    EngineName = 'WiRL Filters'
-    Server = WiRLServer1
-    Left = 288
-    Top = 120
-    object WiRLApplication1: TWiRLApplication
-      AppName = 'Filter Demo'
-      BasePath = '/app'
-      TokenLocation = Bearer
-      Resource.List = (
-        'Server.Resources.TFilterDemoResource')
-      Filter.List = (
-        '*')
     end
   end
 end

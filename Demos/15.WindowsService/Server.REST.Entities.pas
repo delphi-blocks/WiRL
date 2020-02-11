@@ -13,7 +13,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections,
-  WiRL.Persistence.Attributes;
+  Neon.Core.Attributes;
 
 {$M+}
 

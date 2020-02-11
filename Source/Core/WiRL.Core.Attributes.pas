@@ -20,6 +20,8 @@ uses
 
 type
 
+{$SCOPEDENUMS ON}
+
 {$REGION 'JAX-Like Attributes'}
 
   /// <summary>
@@ -209,6 +211,26 @@ type
   public
     constructor Create;
   end;
+
+  /// <summary>
+  ///   Binds the value of a HTTP multipart-data to a resource method parameter, resource class
+  ///   field, or resource class entity property.
+  /// </summary>
+  FormDataParamAttribute = class(MethodParamAttribute);
+
+  /// <summary>
+  ///   Binds the value of a HTTP multipart-data to a resource method parameter, resource class
+  ///   field, or resource class entity property.
+  /// </summary>
+  MultiPartAttribute = class(MethodParamAttribute)
+  private
+    FMediaType: string;
+  public
+    constructor Create(const AValue: string = ''; const AMediaType: string = '');
+    property MediaType: string read FMediaType write FMediaType;
+  end;
+
+  TMethodParamType = (Path, Query, Form, Header, Cookie, Body, FormData, MultiPart);
 
   /// <summary>
   ///   WiRL provides the Context attribute to inject a variety of resources in your
@@ -576,6 +598,14 @@ constructor ResponseRedirectionAttribute.Create(ACode: Integer; const ALocation:
 begin
   inherited Create(ACode, AReason);
   FLocation := ALocation;
+end;
+
+{ MultiPartAttribute }
+
+constructor MultiPartAttribute.Create(const AValue: string; const AMediaType: string);
+begin
+  inherited Create(AValue);
+  FMediaType := AMediaType;
 end;
 
 end.

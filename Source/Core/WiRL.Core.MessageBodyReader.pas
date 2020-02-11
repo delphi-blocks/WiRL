@@ -17,6 +17,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
 
   WiRL.Core.Singleton,
+  WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.http.Request,
   WiRL.Core.Declarations,
@@ -38,7 +39,7 @@ type
     ///   Read a type from the HTTP Request stream
     /// </summary>
     function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
   end;
 
   TIsReadableFunction = reference to function(AType: TRttiType;
@@ -118,6 +119,9 @@ type
       const AGetAffinity: TGetAffinityFunction); overload;
 
     procedure RegisterReader<T: class>(const AReaderClass: TClass); overload;
+
+    procedure RegisterReader(const AReaderClass: TClass; ASubjectIntf: TGUID;
+      const AGetAffinity: TGetAffinityFunction); overload;
 
     class property Instance: TMessageBodyReaderRegistry read GetInstance;
   end;
@@ -362,6 +366,19 @@ begin
   );
 
   Result := LList;
+end;
+
+procedure TMessageBodyReaderRegistry.RegisterReader(const AReaderClass: TClass;
+  ASubjectIntf: TGUID; const AGetAffinity: TGetAffinityFunction);
+begin
+  RegisterReader(
+    AReaderClass,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsInterfaceOfType(AType, ASubjectIntf);
+    end,
+    AGetAffinity
+  );
 end;
 
 end.

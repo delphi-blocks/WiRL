@@ -38,12 +38,6 @@ type
     function GetPreamble: TBytes; override;
   end;
 
-  TWiRLDebug = class
-  public
-    class procedure LogMessage(const AMessage: string);
-  end;
-
-
 implementation
 
 uses
@@ -88,16 +82,6 @@ end;
 function TUnicodeBEEncodingNoBOM.GetPreamble: TBytes;
 begin
   SetLength(Result, 0);
-end;
-
-{ TWiRLDebug }
-
-class procedure TWiRLDebug.LogMessage(const AMessage: string);
-var
-  LFileName: string;
-begin
-  LFileName := TPath.Combine(TPath.GetTempPath, 'WiRLLog.txt');
-  TFile.AppendAllText(LFileName, DateTimeToStr(Now) + ' ' + AMessage + sLineBreak);
 end;
 
 end.

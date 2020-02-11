@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
 
   WiRL.Core.Singleton,
+  WiRL.http.Core,
   WiRL.http.Response,
   WiRL.Core.Resource,
   WiRL.http.Accept.MediaType,
@@ -38,7 +39,7 @@ type
     ///   Write a type to an HTTP message (body)
     /// </summary>
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
   end;
 
   TIsWritableFunction = reference to function(AType: TRttiType;
@@ -121,6 +122,9 @@ type
         TClass; const AGetAffinity: TGetAffinityFunction); overload;
 
     procedure RegisterWriter<T: class>(const AWriterClass: TClass; AAffinity: Integer = 0); overload;
+
+    procedure RegisterWriter(const AWriterClass: TClass; ASubjectIntf:
+        TGUID; const AGetAffinity: TGetAffinityFunction); overload;
 
     function UnregisterWriter(const AWriterClass: TClass): Integer; overload;
     function UnregisterWriter(const AQualifiedClassName: string): Integer; overload;
@@ -281,7 +285,10 @@ begin
   else if AAccept.Empty or AAccept.IsWildCard then
     Result := AProduces.CloneList
   else
-    Result := AProduces.IntersectionList(AAccept);
+    Result := AAccept.IntersectionList(AProduces);
+
+  if Result.Empty and AAccept.HasWildCard then
+    Result := AProduces.CloneList;
 
   { TODO -opaolo -c : This have to be configuration-related 02/06/2017 18:00:25 }
   if Result.Empty then
@@ -426,6 +433,19 @@ begin
       Result := LIndex;
       Break;
     end;
+end;
+
+procedure TMessageBodyWriterRegistry.RegisterWriter(const AWriterClass: TClass;
+  ASubjectIntf: TGUID; const AGetAffinity: TGetAffinityFunction);
+begin
+  RegisterWriter(
+    AWriterClass,
+    function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsInterfaceOfType(AType, ASubjectIntf);
+    end,
+    AGetAffinity
+  );
 end;
 
 end.

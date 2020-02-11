@@ -15,7 +15,8 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
-  WiRL.Persistence.Types,
+  Neon.Core.Types,
+  WiRL.Configuration.Neon,
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
@@ -63,7 +64,8 @@ begin
     .AddApplication('/app')
       .SetResources('*')
       .SetFilters('*')
-      .ConfigureSerializer
+
+      .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase);
 

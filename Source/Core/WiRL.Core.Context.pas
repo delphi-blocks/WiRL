@@ -50,24 +50,29 @@ type
   private
     FServer: TObject;
     FEngine: TObject;
+    FApplication: TObject;
+    FResource: TObject;
     FRequest: TWiRLRequest;
     FResponse: TWiRLResponse;
-    FURL: TWiRLURL;
-    FApplication: TObject;
+    FRequestURL: TWiRLURL;
     FAuthContext: TWiRLAuthContext;
     FCustomContext: TWiRLCustomContext;
-    function GetURL: TWiRLURL;
+    FResourceURL: TWiRLURL;
+    function GetRequestURL: TWiRLURL;
     function GetCustomContext: TWiRLCustomContext;
+    function GetResourceURL: TWiRLURL;
   public
     destructor Destroy; override;
 
     property Server: TObject read FServer write FServer;
     property Engine: TObject read FEngine write FEngine;
     property Application: TObject read FApplication write FApplication;
+    property Resource: TObject read FResource write FResource;
     property Request: TWiRLRequest read FRequest write FRequest;
     property Response: TWiRLResponse read FResponse write FResponse;
     property AuthContext: TWiRLAuthContext read FAuthContext write FAuthContext;
-    property URL: TWiRLURL read GetURL write FURL;
+    property RequestURL: TWiRLURL read GetRequestURL write FRequestURL;
+    property ResourceURL: TWiRLURL read GetResourceURL write FResourceURL;
     property CustomContext: TWiRLCustomContext read GetCustomContext;
   end;
 
@@ -78,7 +83,7 @@ uses
 
 destructor TWiRLContext.Destroy;
 begin
-  FURL.Free;
+  FRequestURL.Free;
   FCustomContext.Free;
   inherited;
 end;
@@ -90,11 +95,18 @@ begin
   Result := FCustomContext;
 end;
 
-function TWiRLContext.GetURL: TWiRLURL;
+function TWiRLContext.GetRequestURL: TWiRLURL;
 begin
-  if not Assigned(FURL) then
-    FURL := TWiRLURL.Create(FRequest);
-  Result := FURL;
+  if not Assigned(FRequestURL) then
+    FRequestURL := TWiRLURL.Create(FRequest);
+  Result := FRequestURL;
+end;
+
+function TWiRLContext.GetResourceURL: TWiRLURL;
+begin
+  if not Assigned(FResourceURL) then
+    FResourceURL := TWiRLURL.Create(FRequest);
+  Result := FResourceURL;
 end;
 
 { TWiRLCustomContext }

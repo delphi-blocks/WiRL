@@ -16,6 +16,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
+  WiRL.Configuration.Core,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyReader,
@@ -24,49 +25,31 @@ uses
   WiRL.Core.Context,
   WiRL.Core.Auth.Context,
   WiRL.http.Filters,
-  WiRL.Core.Injection,
-  WiRL.Persistence.Core;
+  WiRL.Core.Injection;
 
 type
-  TAuthChallenge = (Basic, Digest, Bearer, Form);
-
-  TAuthChallengeHelper = record helper for TAuthChallenge
-    function ToString: string;
-  end;
-
-  TAuthTokenLocation = (Bearer, Cookie, Header);
-  TSecretGenerator = reference to function(): TBytes;
-
-  TWiRLApplication = class(TComponent)
-  private
-    //256bit encoding key
-    const SCRT_SGN = 'd2lybC5zdXBlcnNlY3JldC5zZWVkLmZvci5zaWduaW5n';
+  TWiRLApplication = class(TComponent, IWiRLApplication)
   private
     class var FRttiContext: TRttiContext;
   private
-    FSecret: TBytes;
     FResourceRegistry: TWiRLResourceRegistry;
     FFilterRegistry: TWiRLFilterRegistry;
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
+    FConfigRegistry: TWiRLConfigRegistry;
+
+    FAppConfigurator: TAppConfigurator;
     FBasePath: string;
     FAppName: string;
-    FClaimClass: TWiRLSubjectClass;
     FSystemApp: Boolean;
-    FAuthChallenge: TAuthChallenge;
-    FRealmChallenge: string;
-    FTokenLocation: TAuthTokenLocation;
-    FTokenCustomHeader: string;
-    FSerializerConfig: INeonConfiguration;
     FEngine: TComponent;
     FUseUTCDate: Boolean;
+    FErrorMediaType: string;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
     function AddWriter(const AWriter: string): Boolean;
     function AddReader(const AReader: string): Boolean;
-    function GetSecret: TBytes;
-    function GetAuthChallengeHeader: string;
-    function GetSerializerConfig: INeonConfiguration;
+
     procedure SetEngine(const Value: TComponent);
     function GetPath: string;
     procedure ReadFilters(Reader: TReader);
@@ -80,6 +63,7 @@ type
   protected
     procedure SetParentComponent(AParent: TComponent); override;
     procedure DefineProperties(Filer: TFiler); override;
+    function GetAppConfigurator: TAppConfigurator;
   public
     class procedure InitializeRtti;
 
@@ -90,26 +74,27 @@ type
     procedure Shutdown;
 
     // Fluent-like configuration methods
-    function SetResources(const AResources: TArray<string>): TWiRLApplication; overload;
-    function SetResources(const AResources: string): TWiRLApplication; overload;
-    function SetFilters(const AFilters: TArray<string>): TWiRLApplication; overload;
-    function SetFilters(const AFilters: string): TWiRLApplication; overload;
-    function SetWriters(const AWriters: TArray<string>): TWiRLApplication; overload;
-    function SetWriters(const AWriters: string): TWiRLApplication; overload;
-    function SetReaders(const AReaders: TArray<string>): TWiRLApplication; overload;
-    function SetReaders(const AReaders: string): TWiRLApplication; overload;
-    function SetSecret(const ASecret: TBytes): TWiRLApplication; overload;
-    function SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication; overload;
-    function SetBasePath(const ABasePath: string): TWiRLApplication;
-    function SetAuthChallenge(AChallenge: TAuthChallenge; const ARealm: string): TWiRLApplication;
-    function SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
-    function SetTokenCustomHeader(const ACustomHeader: string): TWiRLApplication;
-    function SetAppName(const AAppName: string): TWiRLApplication;
-    function SetUseUTCDate(AValue: Boolean): TWiRLApplication;
-    function SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
-    function SetSystemApp(ASystem: Boolean): TWiRLApplication;
+    function SetResources(const AResources: TArray<string>): IWiRLApplication; overload;
+    function SetResources(const AResources: string): IWiRLApplication; overload;
+    function SetFilters(const AFilters: TArray<string>): IWiRLApplication; overload;
+    function SetFilters(const AFilters: string): IWiRLApplication; overload;
+    function SetWriters(const AWriters: TArray<string>): IWiRLApplication; overload;
+    function SetWriters(const AWriters: string): IWiRLApplication; overload;
+    function SetReaders(const AReaders: TArray<string>): IWiRLApplication; overload;
+    function SetReaders(const AReaders: string): IWiRLApplication; overload;
+    function SetBasePath(const ABasePath: string): IWiRLApplication;
+    function SetAppName(const AAppName: string): IWiRLApplication;
+    function SetUseUTCDate(AValue: Boolean): IWiRLApplication;
+    function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
+    function SetSystemApp(ASystem: Boolean): IWiRLApplication;
+    function AddApplication(const ABasePath: string): IWiRLApplication;
 
-    function ConfigureSerializer: INeonConfiguration;
+    function Configure<T: IInterface>: T;
+    function GetConfiguration<T: TWiRLConfigurationNRef>: T;
+
+    function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
+    function GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
+
     function GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
 
     // Handles the parent/child relationship for the designer
@@ -117,13 +102,9 @@ type
     function HasParent: Boolean; override;
 
     property SystemApp: Boolean read FSystemApp;
-    property ClaimClass: TWiRLSubjectClass read FClaimClass;
     property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property WriterRegistry: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property ReaderRegistry: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
-    property Secret: TBytes read GetSecret;
-    property AuthChallengeHeader: string read GetAuthChallengeHeader;
-    property SerializerConfig: INeonConfiguration read GetSerializerConfig;
     property Engine: TComponent read FEngine write SetEngine;
 
     class property RttiContext: TRttiContext read FRttiContext;
@@ -132,14 +113,24 @@ type
     property AppName: string read FAppName write FAppName;
     property BasePath: string read FBasePath write FBasePath;
     property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
-    property TokenLocation: TAuthTokenLocation read FTokenLocation write FTokenLocation;
-    property TokenCustomHeader: string read FTokenCustomHeader write FTokenCustomHeader;
+    property ErrorMediaType: string read FErrorMediaType write FErrorMediaType;
 
     // Fake property to display the right property editors
     property Resources: TWiRLResourceRegistry read FResourceRegistry write FResourceRegistry;
     property Filters: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
     property Writers: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property Readers: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
+    property Configs: TWiRLConfigRegistry read FConfigRegistry write FConfigRegistry;
+  end;
+
+  TAppConfiguratorImpl = class(TAppConfigurator)
+  private
+    FApplication: TWiRLApplication;
+  protected
+    function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface; override;
+  public
+    property Application: TWiRLApplication read FApplication;
+    constructor Create(AApplication: TWiRLApplication);
   end;
 
 implementation
@@ -150,12 +141,9 @@ uses
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
   WiRL.http.URL,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Attributes,
   WiRL.Core.Engine;
-
-const
-  //SRegLineSeparator = #$0A;
-  SRegLineSeparator = ',';
 
 function ExtractToken(const AString: string; const ATokenIndex: Integer; const ADelimiter: Char = '/'): string;
 var
@@ -172,6 +160,12 @@ begin
 end;
 
 { TWiRLApplication }
+
+function TWiRLApplication.AddApplication(
+  const ABasePath: string): IWiRLApplication;
+begin
+  Result := (FEngine as TWiRLEngine).AddApplication(ABasePath);
+end;
 
 function TWiRLApplication.AddFilter(const AFilter: string): Boolean;
 var
@@ -327,21 +321,13 @@ begin
   end;
 end;
 
-function TWiRLApplication.SetAuthChallenge(AChallenge: TAuthChallenge;
-  const ARealm: string): TWiRLApplication;
-begin
-  FAuthChallenge := AChallenge;
-  FRealmChallenge := ARealm;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetBasePath(const ABasePath: string): TWiRLApplication;
+function TWiRLApplication.SetBasePath(const ABasePath: string): IWiRLApplication;
 begin
   FBasePath := ABasePath;
   Result := Self;
 end;
 
-function TWiRLApplication.SetAppName(const AAppName: string): TWiRLApplication;
+function TWiRLApplication.SetAppName(const AAppName: string): IWiRLApplication;
 begin
   FAppName := AAppName;
   Result := Self;
@@ -359,7 +345,14 @@ begin
   end;
 end;
 
-function TWiRLApplication.SetReaders(const AReaders: TArray<string>): TWiRLApplication;
+function TWiRLApplication.SetErrorMediaType(
+  const AMediaType: string): IWiRLApplication;
+begin
+  FErrorMediaType := AMediaType;
+  Result := Self;
+end;
+
+function TWiRLApplication.SetReaders(const AReaders: TArray<string>): IWiRLApplication;
 var
   LReader: string;
 begin
@@ -368,23 +361,17 @@ begin
     Self.AddReader(LReader);
 end;
 
-function TWiRLApplication.SetReaders(const AReaders: string): TWiRLApplication;
+function TWiRLApplication.SetReaders(const AReaders: string): IWiRLApplication;
 begin
   Result := SetReaders(AReaders.Split([',']));
 end;
 
-function TWiRLApplication.SetResources(const AResources: string): TWiRLApplication;
+function TWiRLApplication.SetResources(const AResources: string): IWiRLApplication;
 begin
   Result := SetResources(AResources.Split([',']));
 end;
 
-function TWiRLApplication.SetClaimsClass(AClaimClass: TWiRLSubjectClass): TWiRLApplication;
-begin
-  FClaimClass := AClaimClass;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetFilters(const AFilters: string): TWiRLApplication;
+function TWiRLApplication.SetFilters(const AFilters: string): IWiRLApplication;
 begin
   Result := SetFilters(AFilters.Split([',']));
 end;
@@ -396,7 +383,7 @@ begin
     Engine := AParent as TWiRLEngine;
 end;
 
-function TWiRLApplication.SetWriters(const AWriters: TArray<string>): TWiRLApplication;
+function TWiRLApplication.SetWriters(const AWriters: TArray<string>): IWiRLApplication;
 var
   LWriter: string;
 begin
@@ -405,7 +392,7 @@ begin
     Self.AddWriter(LWriter);
 end;
 
-function TWiRLApplication.SetWriters(const AWriters: string): TWiRLApplication;
+function TWiRLApplication.SetWriters(const AWriters: string): IWiRLApplication;
 begin
   Result := SetWriters(AWriters.Split([',']));
 end;
@@ -422,9 +409,6 @@ begin
 
   if FReaderRegistry.Count = 0 then
     FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
-
-  if not Assigned(FSerializerConfig) then
-    FSerializerConfig := TNeonConfiguration.Default;
 end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
@@ -467,7 +451,7 @@ begin
   Writer.WriteListEnd;
 end;
 
-function TWiRLApplication.SetFilters(const AFilters: TArray<string>): TWiRLApplication;
+function TWiRLApplication.SetFilters(const AFilters: TArray<string>): IWiRLApplication;
 var
   LFilter: string;
 begin
@@ -476,7 +460,7 @@ begin
     Self.AddFilter(LFilter);
 end;
 
-function TWiRLApplication.SetResources(const AResources: TArray<string>): TWiRLApplication;
+function TWiRLApplication.SetResources(const AResources: TArray<string>): IWiRLApplication;
 var
   LResource: string;
 begin
@@ -485,11 +469,37 @@ begin
     Self.AddResource(LResource);
 end;
 
-function TWiRLApplication.ConfigureSerializer: INeonConfiguration;
+function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
 begin
-  if not Assigned(FSerializerConfig) then
-    FSerializerConfig := TNeonConfiguration.Create;
-  Result := FSerializerConfig;
+  if not FConfigRegistry.TryGetValue(AClass, Result) then
+  begin
+    Result := TRttiHelper.CreateInstance(AClass) as TWiRLConfigurationNRef;
+    Result.Application := Self;
+    FConfigRegistry.Add(AClass, Result);
+  end;
+end;
+
+function TWiRLApplication.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
+var
+  LConfig: TWiRLConfigurationNRef;
+  LConfigClass: TWiRLConfigurationNRefClass;
+begin
+  LConfigClass := TWiRLConfigClassRegistry.Instance.GetImplementationOf(AInterfaceRef);
+  LConfig := GetConfigByClassRef(LConfigClass);
+
+  if not Supports(LConfig, AInterfaceRef, Result) then
+    raise EWiRLException.Create('Invalid config');
+end;
+
+function TWiRLApplication.Configure<T>: T;
+var
+  LInterfaceRef: TGUID;
+  LInterface: IInterface;
+begin
+  LInterfaceRef := GetTypeData(TypeInfo(T))^.GUID;
+  LInterface := GetConfigByInterfaceRef(LInterfaceRef);
+  if not Supports(LInterface, LInterfaceRef, Result) then
+    raise EWiRLException.Create('Invalid config');
 end;
 
 constructor TWiRLApplication.Create(AOwner: TComponent);
@@ -500,8 +510,11 @@ begin
   FFilterRegistry.OwnsObjects := False;
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
-  FSecret := TEncoding.ANSI.GetBytes(SCRT_SGN);
+  FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
 
+  FAppConfigurator := TAppConfiguratorImpl.Create(Self);
+
+  FErrorMediaType := TMediaType.APPLICATION_JSON;
   if csDesigning in ComponentState then
   begin
     AddResource('*');
@@ -525,15 +538,20 @@ begin
   FWriterRegistry.Free;
   FFilterRegistry.Free;
   FResourceRegistry.Free;
+  FConfigRegistry.Free;
+  FAppConfigurator.Free;
+
   inherited;
 end;
 
-function TWiRLApplication.GetAuthChallengeHeader: string;
+function TWiRLApplication.GetAppConfigurator: TAppConfigurator;
 begin
-  if FRealmChallenge.IsEmpty then
-    Result := FAuthChallenge.ToString
-  else
-    Result := Format('%s realm="%s"', [FAuthChallenge.ToString, FRealmChallenge])
+  Result := FAppConfigurator;
+end;
+
+function TWiRLApplication.GetConfiguration<T>: T;
+begin
+  Result := GetConfigByClassRef(TWiRLConfigurationNRefClass(T)) as T;
 end;
 
 function TWiRLApplication.GetParentComponent: TComponent;
@@ -552,18 +570,6 @@ end;
 function TWiRLApplication.GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
 begin
   FResourceRegistry.TryGetValue(AResourceName, Result);
-end;
-
-function TWiRLApplication.GetSecret: TBytes;
-begin
-  Result := FSecret;
-end;
-
-function TWiRLApplication.GetSerializerConfig: INeonConfiguration;
-begin
-  if not Assigned(FSerializerConfig) then
-    FSerializerConfig := TNeonConfiguration.Default;
-  Result := FSerializerConfig;
 end;
 
 function TWiRLApplication.HasParent: Boolean;
@@ -614,53 +620,30 @@ begin
   Reader.ReadListEnd;
 end;
 
-function TWiRLApplication.SetSecret(ASecretGen: TSecretGenerator): TWiRLApplication;
-begin
-  if Assigned(ASecretGen) then
-    FSecret := ASecretGen;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetSecret(const ASecret: TBytes): TWiRLApplication;
-begin
-  FSecret := ASecret;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetSystemApp(ASystem: Boolean): TWiRLApplication;
+function TWiRLApplication.SetSystemApp(ASystem: Boolean): IWiRLApplication;
 begin
   FSystemApp := ASystem;
   Result := Self;
 end;
 
-function TWiRLApplication.SetTokenCustomHeader(const ACustomHeader: string): TWiRLApplication;
-begin
-  FTokenCustomHeader := ACustomHeader;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetTokenLocation(ALocation: TAuthTokenLocation): TWiRLApplication;
-begin
-  FTokenLocation := ALocation;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetUseUTCDate(AValue: Boolean): TWiRLApplication;
+function TWiRLApplication.SetUseUTCDate(AValue: Boolean): IWiRLApplication;
 begin
   FUseUTCDate := AValue;
   Result := Self;
 end;
 
-{ TAuthChallengeHelper }
+{ TAppConfiguratorImpl }
 
-function TAuthChallengeHelper.ToString: string;
+constructor TAppConfiguratorImpl.Create(AApplication: TWiRLApplication);
 begin
-  case Self of
-    TAuthChallenge.Basic:  Result := 'Basic';
-    TAuthChallenge.Digest: Result := 'Digest';
-    TAuthChallenge.Bearer: Result := 'Bearer';
-    TAuthChallenge.Form:   Result := 'Form';
-  end;
+  inherited Create;
+  FApplication := AApplication;
+end;
+
+function TAppConfiguratorImpl.GetConfigByInterfaceRef(
+  AInterfaceRef: TGUID): IInterface;
+begin
+  Result := FApplication.GetConfigByInterfaceRef(AInterfaceRef);
 end;
 
 initialization

@@ -24,7 +24,9 @@ type
     class var FContext: TRttiContext;
   public
     // TRttiObject helpers functions
-    class function FindAttribute<T: TCustomAttribute>(AType: TRttiObject): T; static;
+    class function FindAttribute<T: TCustomAttribute>(AClass: TClass): T; overload; static;
+
+    class function FindAttribute<T: TCustomAttribute>(AType: TRttiObject): T; overload; static;
 
     class function HasAttribute<T: TCustomAttribute>(
       AClass: TClass): Boolean; overload; static;
@@ -58,6 +60,9 @@ type
       const AAllowInherithance: Boolean = True): Boolean; overload; static;
 
     class function IsObjectOfType(ARttiType: TRttiType; const AClass: TClass;
+      const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
+    class function IsInterfaceOfType(ARttiType: TRttiType; const IID: TGUID;
       const AAllowInherithance: Boolean = True): Boolean; overload; static;
 
     // Create new value data
@@ -307,6 +312,11 @@ begin
     end;
 end;
 
+class function TRttiHelper.FindAttribute<T>(AClass: TClass): T;
+begin
+  Result := FindAttribute<T>(Context.GetType(AClass));
+end;
+
 class function TRttiHelper.ForEachAttribute<T>(AInstance: TObject;
   const ADoSomething: TProc<T>): Integer;
 var
@@ -532,6 +542,23 @@ class function TRttiHelper.IsDynamicArrayOf<T>(ARttiType: TRttiType;
   const AAllowInherithance: Boolean): Boolean;
 begin
   Result := TRttiHelper.IsDynamicArrayOf(ARttiType, TClass(T), AAllowInherithance);
+end;
+
+class function TRttiHelper.IsInterfaceOfType(ARttiType: TRttiType;
+  const IID: TGUID; const AAllowInherithance: Boolean): Boolean;
+var
+  LInterfaceType: TRttiInterfaceType;
+begin
+  Result := False;
+  if ARttiType is TRttiInterfaceType then
+  begin
+    LInterfaceType := TRttiInterfaceType(ARttiType);
+    repeat
+      if LInterfaceType.GUID = IID then
+        Exit(True);
+      LInterfaceType := LInterfaceType.BaseType;
+    until (LInterfaceType = nil) or (not AAllowInherithance);
+  end;
 end;
 
 class function TRttiHelper.IsObjectOfType(ARttiType: TRttiType;

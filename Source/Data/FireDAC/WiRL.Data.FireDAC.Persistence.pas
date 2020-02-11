@@ -189,8 +189,7 @@ begin
   {$ENDIF}
 end;
 
-class procedure TFireDACJSONPersistor.DataSetsToJSON(ASource: TFireDACDataSets;
-  ADestination: TJSONObject);
+class procedure TFireDACJSONPersistor.DataSetsToJSON(ASource: TFireDACDataSets; ADestination: TJSONObject);
 var
   LPair: TFireDACDataSetPair;
   LActive: Boolean;
@@ -238,8 +237,7 @@ begin
   end;
 end;
 
-class procedure TFireDACJSONPersistor.JSONToDataSet(ASource: TJSONObject;
-  ADestination: TFDCustomMemTable);
+class procedure TFireDACJSONPersistor.JSONToDataSet(ASource: TJSONObject; ADestination: TFDCustomMemTable);
 var
   LStrStream: TStringStream;
   LBinStream: TMemoryStream;
@@ -258,8 +256,7 @@ begin
   end;
 end;
 
-class procedure TFireDACJSONPersistor.JSONToDataSets(ASource: TJSONObject;
-  ADestination: TFireDACDataSets);
+class procedure TFireDACJSONPersistor.JSONToDataSets(ASource: TJSONObject; ADestination: TFireDACDataSets);
 var
   LJSONPair: TJSONPair;
   LJSONData: TJSONObject;

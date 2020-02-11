@@ -20,12 +20,13 @@ uses
   WiRL.Core.Application,
   WiRL.Core.Declarations,
   WiRL.Core.Attributes,
-  WiRL.Persistence.Core,
-  WiRL.Persistence.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Auth.Context,
-  WiRL.http.URL;
+  WiRL.http.URL,
+
+  Neon.Core.Persistence,
+  Neon.Core.Attributes;
 
 type
   TWiRLAuthResponse = record
@@ -117,6 +118,7 @@ implementation
 uses
   System.DateUtils,
   JOSE.Encoding.Base64,
+  WiRL.Configuration.JWT,
   WiRL.Core.Exceptions;
 
 { TWiRLAuthResource }
@@ -142,7 +144,7 @@ begin
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
 
-  FAuthContext.Generate(FApplication.Secret);
+  FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
   Result := GetGeneratedToken;
 end;
 
@@ -174,7 +176,7 @@ begin
       );
   end;
 
-  FAuthContext.Generate(FApplication.Secret);
+  FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
   Result := GetGeneratedToken;
 end;
 
@@ -207,7 +209,7 @@ begin
   if not LAuthOperation.Success then
     raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
 
-  FAuthContext.Generate(FApplication.Secret);
+  FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
   Result := GetGeneratedToken;
 end;
 

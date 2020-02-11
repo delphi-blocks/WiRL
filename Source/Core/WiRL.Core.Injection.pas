@@ -24,8 +24,7 @@ uses
 type
   IContextFactory = interface
   ['{43596462-9B26-4B84-BD5C-0225900F6C93}']
-    function CreateContext(const AObject: TRttiObject;
-      AContext: TWiRLContext): TValue;
+    function CreateContext(const AObject: TRttiObject; AContext: TWiRLContext): TValue;
   end;
 
   TWiRLContextInjectionRegistry = class
@@ -62,6 +61,7 @@ implementation
 uses
   WiRL.Core.Engine,
   WiRL.Core.Application,
+  WiRL.Configuration.Core,
   WiRL.http.URL,
   WiRL.http.Server,
   WiRL.http.Request,
@@ -160,13 +160,15 @@ begin
     AValue := AContext.Response
   // URL info
   else if (LType.InheritsFrom(TWiRLURL)) then
-    AValue := AContext.URL
+    AValue := AContext.RequestURL
   // Engine
   else if (LType.InheritsFrom(TWiRLEngine)) then
     AValue := AContext.Engine as TWiRLEngine
   // Application
   else if (LType.InheritsFrom(TWiRLApplication)) then
     AValue := AContext.Application
+  else if (LType.InheritsFrom(TWiRLConfigurationNRef)) then
+    AValue := (AContext.Application as TWiRLApplication).GetConfigByClassRef(TWiRLConfigurationNRefClass(LType))
   else if CustomContextInjectionByType(AObject, AContext, AValue) then
     //
   else

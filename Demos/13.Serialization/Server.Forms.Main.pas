@@ -24,10 +24,11 @@ uses
   WiRL.Core.Application,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
+  WiRL.Configuration.Neon,
 
-  WiRL.Persistence.Types,
-  WiRL.Persistence.Core,
-  WiRL.Persistence.JSON,
+  Neon.Core.Persistence,
+  Neon.Core.Types,
+  Neon.Core.Persistence.JSON,
 
   Server.Resources;
 
@@ -182,7 +183,7 @@ function TMainForm.GetStringFromValue(const AValue: TValue): string;
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ValueToJSON(AValue, BuildSerializerConfig);
+  LJSON := TNeon.ValueToJSON(AValue, BuildSerializerConfig);
   try
     Result := TJSONHelper.ToJSON(LJSON);
   finally
@@ -264,7 +265,7 @@ procedure TMainForm.btnSerImageClick(Sender: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ObjectToJSON(imgSample, BuildSerializerConfig);
+  LJSON := TNeon.ObjectToJSON(imgSample, BuildSerializerConfig);
   try
     Log('Image', TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -530,9 +531,9 @@ begin
 
   // Member type settings
   if rbMemberFields.Checked then
-    Result.SetMembers(TNeonMembers.Fields);
+    Result.SetMembers([TNeonMembers.Fields]);
   if rbMemberProperties.Checked then
-    Result.SetMembers(TNeonMembers.Properties);
+    Result.SetMembers([TNeonMembers.Properties]);
 
   // F Prefix setting
   if chkIgnorePrefix.Checked then
@@ -566,7 +567,7 @@ procedure TMainForm.SerializeObject(AObject: TObject);
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeonMapperJSON.ObjectToJSON(AObject, BuildSerializerConfig);
+  LJSON := TNeon.ObjectToJSON(AObject, BuildSerializerConfig);
   try
     Log(TJSONHelper.PrettyPrint(LJSON));
   finally
@@ -580,12 +581,12 @@ var
 begin
   LJSON := TJSONObject.ParseJSONValue(memoSerialize.Lines.Text);
   try
-    TNeonMapperJSON.JSONToObject(AObject, LJSON, BuildSerializerConfig);
+    TNeon.JSONToObject(AObject, LJSON, BuildSerializerConfig);
   finally
     LJSON.Free;
   end;
 
-  LJSON := TNeonMapperJSON.ObjectToJSON(AObject, BuildSerializerConfig);
+  LJSON := TNeon.ObjectToJSON(AObject, BuildSerializerConfig);
   try
     memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
   finally
@@ -634,8 +635,9 @@ begin
     .AddApplication('/app')
       .SetAppName('Content App')
       .SetResources('Server.Resources.TEntityResource')
-      .ConfigureSerializer
-        .SetMembers(TNeonMembers.Standard)
+
+      .Plugin.Configure<IWiRLConfigurationNeon>
+        .SetMembers([TNeonMembers.Standard])
         .SetVisibility([mvPublic, mvPublished])
         .SetMemberCase(TNeonCase.SnakeCase)
   ;
@@ -688,7 +690,7 @@ begin
   LRec.One := 'Paolo';
   LRec.Two := 47;
 
-  LJSON := TNeonMapperJSON.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
+  LJSON := TNeon.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
   try
     Log(TJSONHelper.PrettyPrint(LJSON));
   finally

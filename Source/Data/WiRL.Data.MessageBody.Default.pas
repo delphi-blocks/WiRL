@@ -14,50 +14,55 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
   WiRL.Core.Attributes,
+  WiRL.http.Core,
   WiRL.http.Response,
   WiRL.Core.Declarations,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBody.Classes,
   WiRL.Core.MessageBodyReader,
-  WiRL.Core.MessageBodyWriter;
+  WiRL.Core.MessageBodyWriter,
+  WiRL.Configuration.Neon;
 
 type
   [Produces(TMediaType.APPLICATION_JSON)]
   TArrayDataSetWriter = class(TMessageBodyWriter)
+  private
+    [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
+  public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
 
   [Produces(TMediaType.APPLICATION_XML)]
   TDataSetWriterXML = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
 
   [Produces(TMediaType.TEXT_CSV)]
   TDataSetWriterCSV = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse); override;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
 
 implementation
 
 uses
   Data.DB, Datasnap.DBClient,
-  WiRL.Persistence.Core,
-  WiRL.Persistence.JSON,
+  Neon.Core.Persistence,
+  Neon.Core.Persistence.JSON,
   WiRL.Core.JSON,
   WiRL.Data.Utils,
   WiRL.Rtti.Utils;
 
 { TDataSetWriterXML }
 
-procedure TDataSetWriterXML.WriteTo(const AValue: TValue; const AAttributes:
-    TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
+procedure TDataSetWriterXML.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
 begin
-  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
+  LStreamWriter := TStreamWriter.Create(AContentStream);
   try
     if AValue.AsObject is TClientDataSet then // CDS
       LStreamWriter.Write(TClientDataSet(AValue.AsObject).XMLData)
@@ -70,22 +75,22 @@ end;
 
 { TArrayDataSetWriter }
 
-procedure TArrayDataSetWriter.WriteTo(const AValue: TValue; const AAttributes:
-    TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
+procedure TArrayDataSetWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
   LResult: TJSONObject;
   LData: TArray<TDataSet>;
   LCurrent: TDataSet;
 begin
-  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
+  LStreamWriter := TStreamWriter.Create(AContentStream);
   try
     LData := AValue.AsType<TArray<TDataSet>>;
     LResult := TJSONObject.Create;
     try
       { TODO -opaolo -c : LCurrent.Name can be empty and producing an JSON error 30/05/2017 16:26:09 }
       for LCurrent in LData do
-        LResult.AddPair(LCurrent.Name, TNeonMapperJSON.ObjectToJSON(LCurrent));
+        LResult.AddPair(LCurrent.Name, TNeon.ObjectToJSON(LCurrent, WiRLConfigurationNeon.GetNeonConfig));
 
       LStreamWriter.Write(TJSONHelper.ToJSON(LResult));
     finally
@@ -98,12 +103,12 @@ end;
 
 { TDataSetWriterCSV }
 
-procedure TDataSetWriterCSV.WriteTo(const AValue: TValue; const AAttributes:
-    TAttributeArray; AMediaType: TMediaType; AResponse: TWiRLResponse);
+procedure TDataSetWriterCSV.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
 begin
-  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
+  LStreamWriter := TStreamWriter.Create(AContentStream);
   try
     LStreamWriter.Write(TDataUtils.DataSetToCSV(Avalue.AsObject as TDataSet));
   finally

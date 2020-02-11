@@ -72,7 +72,7 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
-    function GetUnknownResponseCode: string; override;
+    function IsUnknownResponseCode: Boolean; override;
   public
     procedure SendHeaders; override;
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
@@ -104,6 +104,12 @@ type
     destructor Destroy; override;
   end;
 
+  TWiRLIdHttpServer = class(TIdHTTPServer)
+  protected
+    procedure DoneWithPostStream(ASender: TIdContext;
+      ARequestInfo: TIdHTTPRequestInfo); override;
+  end;
+
 implementation
 
 uses
@@ -115,7 +121,7 @@ uses
 constructor TWiRLhttpServerIndy.Create;
 begin
   inherited;
-  FHttpServer := TIdHTTPServer.Create(nil);
+  FHttpServer := TWiRLIdHttpServer.Create(nil);
   FHttpServer.ParseParams := False;
   FHttpServer.OnCommandGet := DoCommandGet;
   FHttpServer.OnCommandOther := DoCommandOther;
@@ -247,6 +253,8 @@ end;
 
 destructor TWiRLHttpRequestIndy.Destroy;
 begin
+  FRequestInfo.PostStream.Free;
+  FRequestInfo.PostStream := nil;
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
@@ -412,9 +420,9 @@ begin
   Result := FResponseInfo.ResponseNo;
 end;
 
-function TWiRLHttpResponseIndy.GetUnknownResponseCode: string;
+function TWiRLHttpResponseIndy.IsUnknownResponseCode: Boolean;
 begin
-  Result := RSHTTPUnknownResponseCode;
+  Result := ReasonString = RSHTTPUnknownResponseCode;
 end;
 
 procedure TWiRLHttpResponseIndy.SendCookies;
@@ -504,6 +512,16 @@ procedure TWiRLHttpResponseIndy.SetStatusCode(const Value: Integer);
 begin
   inherited;
   FResponseInfo.ResponseNo := Value;
+end;
+
+{ TWiRLIdHttpServer }
+
+procedure TWiRLIdHttpServer.DoneWithPostStream(ASender: TIdContext;
+  ARequestInfo: TIdHTTPRequestInfo);
+begin
+  // Avoid that indy Free the PostStream and put the variable to nil
+  // too early. The problem is that indy, when the PostStream is
+  // x-www-form-urlencoded, parses the data and frees the stream.
 end;
 
 initialization

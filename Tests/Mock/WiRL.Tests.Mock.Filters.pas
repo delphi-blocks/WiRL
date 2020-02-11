@@ -26,6 +26,9 @@ type
   [NameBinding]
   RequestBindingTestAttribute = class(TCustomAttribute);
 
+  [NameBinding]
+  Change401To400Attribute = class(TCustomAttribute);
+
   [PreMatching]
   TPreFilterTest = class(TInterfacedObject, IWiRLContainerRequestFilter)
   public
@@ -52,6 +55,12 @@ type
   TRequestBindingFilterTest = class(TInterfacedObject, IWiRLContainerRequestFilter)
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
+  end;
+
+  [Change401To400]
+  TResponseChangeFilterTest = class(TInterfacedObject, IWiRLContainerResponseFilter)
+  public
+    procedure Filter(AResponseContext: TWiRLContainerResponseContext);
   end;
 
 implementation
@@ -91,11 +100,21 @@ begin
   ARequestContext.Request.HeaderFields['x-request-binded-filter'] := 'true';
 end;
 
+{ TResponseChangeFilterTest }
+
+procedure TResponseChangeFilterTest.Filter(
+  AResponseContext: TWiRLContainerResponseContext);
+begin
+  if AResponseContext.Response.StatusCode = 401 then
+    AResponseContext.Response.StatusCode := 400;
+end;
+
 initialization
   TWiRLFilterRegistry.Instance.RegisterFilter<TResponseFilterTest>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TPreFilterTest>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestFilterTest>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TResponseBindingFilterTest>;
   TWiRLFilterRegistry.Instance.RegisterFilter<TRequestBindingFilterTest>;
+  TWiRLFilterRegistry.Instance.RegisterFilter<TResponseChangeFilterTest>;
 
 end.

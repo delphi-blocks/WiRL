@@ -14,9 +14,9 @@ interface
 uses
   System.SysUtils, System.Classes,
 
+  WiRL.Core.JSON,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.JSON,
   WiRL.http.Filters.Compression,
 
   Server.Filters.Attributes;

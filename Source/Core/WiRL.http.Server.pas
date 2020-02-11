@@ -30,8 +30,7 @@ type
     procedure FindDefaultServer;
   protected
     FEngineName: string;
-    procedure Notification(AComponent: TComponent; Operation: TOperation);
-      override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); overload; override;
     constructor Create(ABasePath: string); reintroduce; overload;
@@ -86,6 +85,7 @@ type
     DefaultPort = 8080;
     DefaultThreadPoolSize = 50;
   private
+    FCurrentEngine: TWiRLCustomEngine;
     FHttpServer: IWiRLServer;
     FActive: Boolean;
     FServerVendor: string;
@@ -110,7 +110,8 @@ type
     function AddEngines(AEngines: TArray<TWiRLCustomEngine>; AOwnsObjects: Boolean = True) :TWiRLServer;
     procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
     procedure RemoveEngine(const ABasePath: string); overload;
-    function GetEngine(const Url: string): TWiRLCustomEngine;
+    function GetEngine(const AURL: string): TWiRLCustomEngine;
+    function CurrentEngine<T: constructor, TWiRLCustomEngine>: T;
     function SetPort(APort: Integer): TWiRLServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLServer;
 
@@ -145,7 +146,7 @@ begin
   LEngineInfo := TWiRLEngineInfo.Create(AEngine, AOwnsObjects);
   FEngines.Add(LEngineInfo);
   if AEngine.Server <> Self then
-    AEngine.Server := Self;
+    AEngine.FServer := Self;
 end;
 
 function TWiRLServer.AddEngine<T>(const ABasePath: string; AOwnsObjects: Boolean): T;
@@ -153,6 +154,7 @@ begin
   Result := TRttiHelper.CreateInstance(TClass(T), [nil]) as T;
   TWiRLCustomEngine(Result).BasePath := ABasePath;
   AddEngine(ABasePath, Result, AOwnsObjects);
+  FCurrentEngine := Result;
 end;
 
 function TWiRLServer.AddEngines(
@@ -175,6 +177,11 @@ begin
   FActive := False;
   Port := DefaultPort;
   ThreadPoolSize := DefaultThreadPoolSize;
+end;
+
+function TWiRLServer.CurrentEngine<T>: T;
+begin
+  Result := FCurrentEngine as T;
 end;
 
 destructor TWiRLServer.Destroy;
@@ -202,13 +209,13 @@ begin
   Result := FActive;
 end;
 
-function TWiRLServer.GetEngine(const Url: string): TWiRLCustomEngine;
+function TWiRLServer.GetEngine(const AURL: string): TWiRLCustomEngine;
 var
   LUrlTokens: TArray<string>;
   LBaseUrl: string;
 begin
   Result := nil;
-  LUrlTokens := Url.Split(['/']);
+  LUrlTokens := AURL.Split(['/']);
   if Length(LUrlTokens) > 1 then
     LBaseUrl := LUrlTokens[1]
   else
@@ -220,11 +227,11 @@ begin
   if FEngines.TryGetValue('/', Result) then
     Exit;
 
-  if Url.Equals('/favicon.ico') then
+  if AURL.Equals('/favicon.ico') then
     Abort;
 
   if not Assigned(Result) then
-    raise EWiRLNotFoundException.CreateFmt('Engine not found for URL [%s]', [Url]);
+    raise EWiRLNotFoundException.Create(Format('Engine not found for URL [%s]', [AURL]));
 end;
 
 procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
@@ -239,17 +246,20 @@ begin
     LContext.Request := ARequest;
     LContext.Response := AResponse;
     try
-      if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
-      begin
-        LEngine := GetEngine(ARequest.PathInfo);
-        LContext.Engine := LEngine;
-        LEngine.HandleRequest(LContext);
+      try
+        if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
+        begin
+          LEngine := GetEngine(ARequest.PathInfo);
+          LContext.Engine := LEngine;
+          LEngine.HandleRequest(LContext);
+        end;
+        TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
+      except
+        on E: Exception do
+          EWiRLWebApplicationException.HandleException(LContext, E);
       end;
-      TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
+    finally
       AResponse.SendHeaders;
-    except
-      on E: Exception do
-        EWiRLWebApplicationException.HandleException(LContext, E);
     end;
   finally
     LContext.Free;
@@ -447,6 +457,7 @@ end;
 
 procedure TWiRLCustomEngine.Shutdown;
 begin
+
 end;
 
 procedure TWiRLCustomEngine.Startup;
