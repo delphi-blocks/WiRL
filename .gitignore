@@ -66,7 +66,3 @@ __recovery/
 # TestInsight config
 /Tests/Framework/Win32/TestInsight
 *.o
-
-# STC files and directories
-ClearDCU.bat
-.svn/
