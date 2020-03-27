@@ -816,7 +816,7 @@ begin
   if LValue.IsEmpty then
     Result := 0
   else
-    Result := StrToFloat(LValue);
+    Result := StrToFloat(LValue, TFormatSettings.Invariant);
 end;
 
 function TWiRLApplicationWorker.TParamReader.AsBoolean(AAttr: TCustomAttribute): Boolean;
