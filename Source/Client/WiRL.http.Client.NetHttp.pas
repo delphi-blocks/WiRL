@@ -152,6 +152,9 @@ end;
 
 destructor TWiRLClientNetHttp.Destroy;
 begin
+  FRequest.Free;
+  FResponse.Free;
+
   FHttpClient.Free;
   inherited;
 end;
