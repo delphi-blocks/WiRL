@@ -13,7 +13,7 @@ program WiRL.Tests.Framework;
 {$APPTYPE CONSOLE}
 {$ENDIF}{$STRONGLINKTYPES ON}
 uses
-  FastMM4,
+//  FastMM4,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
@@ -32,7 +32,8 @@ uses
   WiRL.Tests.Framework.Serialization in 'Source\WiRL.Tests.Framework.Serialization.pas',
   WiRL.Tests.Framework.HeaderParser in 'Source\WiRL.Tests.Framework.HeaderParser.pas',
   WiRL.Tests.Framework.ContentNegotiation in 'Source\WiRL.Tests.Framework.ContentNegotiation.pas',
-  WiRL.Tests.Mock.MessageBodyXML in '..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas';
+  WiRL.Tests.Mock.MessageBodyXML in '..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas',
+  WiRL.Tests.Framework.Types in 'Source\WiRL.Tests.Framework.Types.pas';
 
 var
   runner : ITestRunner;
