@@ -116,7 +116,7 @@
         <DCCReference Include="Source\WiRL.Tests.Framework.HeaderParser.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.ContentNegotiation.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas"/>
-        <DCCReference Include="Source\WiRL.Tests.Framework.Types.pas"/>
+        <DCCReference Include="Source\WiRL.Tests.Framework.Converter.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

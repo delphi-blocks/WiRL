@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Tests.Framework.Types;
+unit WiRL.Tests.Framework.Converter;
 
 interface
 
@@ -15,7 +15,7 @@ uses
   System.SysUtils,
   DUnitX.TestFramework,
 
-  WiRL.Core.Types;
+  WiRL.Core.Converter;
 
 type
   Assert = class(DUnitX.TestFramework.Assert)

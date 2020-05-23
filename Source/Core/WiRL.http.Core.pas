@@ -14,7 +14,7 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  System.SysUtils, System.Classes, WiRL.Core.Types;
+  System.SysUtils, System.Classes, WiRL.Core.Converter;
 
 type
   TWiRLHttpMethod = (GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE, CONNECT);
