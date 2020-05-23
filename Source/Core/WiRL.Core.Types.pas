@@ -20,20 +20,44 @@ type
   EWiRLConvertError = class(Exception);
 
   TWiRLFormatSetting = record
-    // ISO, UNIX, DMY, MDY
-    DateFormat: string;
-    // ISO, UNIX, DMY, MDY
-    DateTimeFormat: string;
+  private
+  const
+    KIND_INDEX = 0;
+    DECIMAL_SEPARATOR_INDEX = 1;
+    THOUSAND_SEPARATOR_INDEX = 2;
+    DIGITS_INDEX = 3;
+  private
+    FParams: TArray<string>;
+    procedure SetParam(const Index: Integer; const Value: string);
+    function GetParam(const Index: Integer): string;
+    function GetKind: string;
+    procedure SetKind(const Value: string);
+    function GetDecimalSeparator: Char;
+    procedure SetDecimalSeparator(const Value: Char);
+    function GetThousandSeparator: Char;
+    procedure SetThousandSeparator(const Value: Char);
+    function GetDigits: Integer;
+    procedure SetDigits(const Value: Integer);
+  public
+  const
+    DEFAULT = 'DEFAULT';
+    UNIX = 'UNIX';
+    MDY = 'MDY';
+    DMY = 'DMY';
+    DOT_SEPARATOR = 'DEFAULT|.';
+    COMMA_SEPARATOR = 'DEFAULT|,';
+  public
+    property Kind: string read GetKind write SetKind;
+    property DecimalSeparator: Char read GetDecimalSeparator write SetDecimalSeparator;
+    property ThousandSeparator: Char read GetThousandSeparator write SetThousandSeparator;
+    property Digits: Integer read GetDigits write SetDigits;
 
-    // Decimal separator: ,.
-    FloatFormat: string;
+    function IsDefault: Boolean;
 
-    // Empty
-    IntFormat: string;
+    property Params[const Index: Integer]: string read GetParam write SetParam;
 
-    class function WithDateFormat(const ADateFormat: string): TWiRLFormatSetting; static;
-    class function WithDateTimeFormat(const ADateTimeFormat: string): TWiRLFormatSetting; static;
-    class function WithFloatFormat(const AFloatFormat: string): TWiRLFormatSetting; static;
+    class operator Implicit(const AValue: string): TWiRLFormatSetting;
+    class operator Implicit(const AValue: TWiRLFormatSetting): string;
   end;
 
   TWiRLConverter = class
@@ -64,43 +88,19 @@ type
   public
     constructor Create; virtual;
     function RegisterConverter(AConverterClass: TWiRLConverterClass; const ACheckConverter: TWiRLCheckConverter): TWiRLConverterInfo;
-    function GetConverter(const ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): TWiRLConverter;
+    function GetConverter(const ARttiType: TRttiType; const AFormat: string): TWiRLConverter;
 
     class property Instance: TWiRLConverterRegistry read GetInstance;
     destructor Destroy; override;
   end;
 
   TWiRLConvert = class
-  private
-    class function Convert<T>(const AValue: string; AFormat: TWiRLFormatSetting): T;
-    class function ToString<T>(const AValue: T; AFormat: TWiRLFormatSetting): string; reintroduce;
   public
     // String to type
-    class function ToDate(const AValue: string; AFormat: TWiRLFormatSetting): TDate; overload;
-    class function ToDate(const AValue: string): TDate; overload;
-
-    class function ToDateTime(const AValue: string; AFormat: TWiRLFormatSetting): TDateTime; overload;
-    class function ToDateTime(const AValue: string): TDateTime; overload;
-
-    class function ToFloat(const AValue: string; AFormat: TWiRLFormatSetting): Double; overload;
-    class function ToFloat(const AValue: string): Double; overload;
-
-    class function ToInteger(const AValue: string; AFormat: TWiRLFormatSetting): Integer; overload;
-    class function ToInteger(const AValue: string): Integer; overload;
+    class function AsType<T>(const AValue: string; const AFormat: string = TWiRLFormatSetting.DEFAULT): T;
 
     // Type to string
-    class function fromDateTime(const AValue: TDateTime; AFormat: TWiRLFormatSetting): string; overload;
-    class function fromDateTime(const AValue: TDateTime): string; overload;
-
-    class function fromDate(const AValue: TDate; AFormat: TWiRLFormatSetting): string; overload;
-    class function fromDate(const AValue: TDate): string; overload;
-
-    class function FromFloat(const AValue: Double; AFormat: TWiRLFormatSetting): string; overload;
-    class function FromFloat(const AValue: Double): string; overload;
-
-    class function fromInteger(const AValue: Integer; AFormat: TWiRLFormatSetting): string; overload;
-    class function fromInteger(const AValue: Integer): string; overload;
-
+    class function From<T>(const AValue: T; const AFormat: string = TWiRLFormatSetting.DEFAULT): string; reintroduce;
   end;
 
   TISODateConverter = class(TWiRLConverter)
@@ -145,8 +145,11 @@ type
     function ValueToString(const AValue: TValue): string; override;
   end;
 
-var
-  DefaultFormatSetting: TWiRLFormatSetting;
+  TDefaultCurrencyConverter = class(TWiRLConverter)
+  public
+    function ValueFromString(const AValue: string): TValue; override;
+    function ValueToString(const AValue: TValue): string; override;
+  end;
 
 implementation
 
@@ -159,13 +162,7 @@ const
   UseUTCDate = False;
   SecsInADay = 24 * 60 * 60;
 
-class function TWiRLConvert.ToDateTime(const AValue: string;
-  AFormat: TWiRLFormatSetting): TDateTime;
-begin
-  Result := Convert<TDateTime>(AValue, AFormat);
-end;
-
-class function TWiRLConvert.Convert<T>(const AValue: string; AFormat: TWiRLFormatSetting): T;
+class function TWiRLConvert.AsType<T>(const AValue: string; const AFormat: string): T;
 var
   LConverter: TWiRLConverter;
   LRttiType: TRttiType;
@@ -179,90 +176,8 @@ begin
   end;
 end;
 
-class function TWiRLConvert.fromDate(const AValue: TDate;
-  AFormat: TWiRLFormatSetting): string;
-begin
-  Result := ToString<TDate>(AValue, AFormat);
-end;
-
-class function TWiRLConvert.fromDate(const AValue: TDate): string;
-begin
-  Result := fromDate(AValue, DefaultFormatSetting);
-end;
-
-class function TWiRLConvert.fromDateTime(const AValue: TDateTime;
-  AFormat: TWiRLFormatSetting): string;
-begin
-  Result := ToString<TDateTime>(AValue, AFormat);
-end;
-
-class function TWiRLConvert.fromDateTime(const AValue: TDateTime): string;
-begin
-  Result := fromDateTime(AValue, DefaultFormatSetting);
-end;
-
-class function TWiRLConvert.FromFloat(const AValue: Double): string;
-begin
-  Result := FromFloat(AValue, DefaultFormatSetting);
-end;
-
-class function TWiRLConvert.fromInteger(const AValue: Integer): string;
-begin
-  Result := fromInteger(AValue, DefaultFormatSetting);
-end;
-
-class function TWiRLConvert.fromInteger(const AValue: Integer;
-  AFormat: TWiRLFormatSetting): string;
-begin
-  Result := ToString<Integer>(AValue, AFormat);
-end;
-
-class function TWiRLConvert.FromFloat(const AValue: Double;
-  AFormat: TWiRLFormatSetting): string;
-begin
-  Result := ToString<Double>(AValue, AFormat);
-end;
-
-class function TWiRLConvert.ToDate(const AValue: string): TDate;
-begin
-  Result := ToDate(AValue, DefaultFormatSetting);
-end;
-
-class function TWiRLConvert.ToDate(const AValue: string;
-  AFormat: TWiRLFormatSetting): TDate;
-begin
-  Result := Convert<TDate>(AValue, AFormat);
-end;
-
-class function TWiRLConvert.ToDateTime(const AValue: string): TDateTime;
-begin
-  Result := ToDateTime(AValue, DefaultFormatSetting);
-end;
-
-class function TWiRLConvert.ToFloat(const AValue: string): Double;
-begin
-  Result := ToFloat(AValue, DefaultFormatSetting);
-end;
-
-class function TWiRLConvert.ToInteger(const AValue: string): Integer;
-begin
-  Result := ToInteger(AValue, DefaultFormatSetting);
-end;
-
-class function TWiRLConvert.ToInteger(const AValue: string;
-  AFormat: TWiRLFormatSetting): Integer;
-begin
-  Result := Convert<Integer>(AValue, AFormat);
-end;
-
-class function TWiRLConvert.ToFloat(const AValue: string;
-  AFormat: TWiRLFormatSetting): Double;
-begin
-  Result := Convert<Double>(AValue, AFormat);
-end;
-
-class function TWiRLConvert.ToString<T>(const AValue: T;
-  AFormat: TWiRLFormatSetting): string;
+class function TWiRLConvert.From<T>(const AValue: T;
+  const AFormat: string): string;
 var
   LConverter: TWiRLConverter;
   LRttiType: TRttiType;
@@ -290,19 +205,21 @@ begin
 end;
 
 function TWiRLConverterRegistry.GetConverter(const ARttiType: TRttiType;
-  const AFormat: TWiRLFormatSetting): TWiRLConverter;
+  const AFormat: string): TWiRLConverter;
 var
   LConverterInfo: TWiRLConverterInfo;
+  LFormatSetting: TWiRLFormatSetting;
 begin
+  LFormatSetting := TWiRLFormatSetting(AFormat);
   for LConverterInfo in FRegistry do
   begin
-    if LConverterInfo.CheckConverter(ARttiType, AFormat) then
+    if LConverterInfo.CheckConverter(ARttiType, LFormatSetting) then
     begin
-      Exit(LConverterInfo.ConverterClass.Create(AFormat));
+      Exit(LConverterInfo.ConverterClass.Create(LFormatSetting));
     end;
   end;
 
-  raise EWiRLConvertError.CreateFmt('Converter non found for [%s]', [ARttiType.QualifiedName]);
+  raise EWiRLConvertError.CreateFmt('Converter not found for type [%s] with format [%s]', [ARttiType.QualifiedName, AFormat]);
 end;
 
 class function TWiRLConverterRegistry.GetInstance: TWiRLConverterRegistry;
@@ -357,14 +274,40 @@ begin
   Result := DateToISO8601(AValue.AsExtended, True);
 end;
 
+
+function IsDate(ARttiType: TRttiType): Boolean;
+begin
+  Result := (ARttiType.TypeKind = tkFloat) and (ARttiType.Handle = TypeInfo(TDate));
+end;
+
+function IsDateTime(ARttiType: TRttiType): Boolean;
+begin
+  Result := (ARttiType.TypeKind = tkFloat) and (ARttiType.Handle = TypeInfo(TDateTime));
+end;
+
+function IsFloat(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind = tkFloat) and
+    (ARttiType.Handle <> TypeInfo(TDate)) and
+    (ARttiType.Handle <> TypeInfo(TDateTime)) and
+    (ARttiType.Handle <> TypeInfo(Currency));
+end;
+
+function IsCurrency(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind = tkFloat) and
+    (ARttiType.Handle = TypeInfo(Currency));
+end;
+
 procedure RegisterDefaultConverters;
 begin
   TWiRLConverterRegistry.Instance.RegisterConverter(TISODateConverter,
     function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
-      if (AFormat.DateFormat = 'ISO') and (ARttiType.TypeKind = tkFloat) and
-         (ARttiType.Handle = TypeInfo(TDate)) then
+      if AFormat.IsDefault and IsDate(ARttiType) then
         Exit(True);
     end
   );
@@ -373,8 +316,7 @@ begin
     function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
-      if (AFormat.DateFormat = 'ISO') and (ARttiType.TypeKind = tkFloat) and
-         (ARttiType.Handle = TypeInfo(TDateTime)) then
+      if AFormat.IsDefault and IsDateTime(ARttiType) then
         Exit(True);
     end
   );
@@ -383,8 +325,7 @@ begin
     function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
-      if (AFormat.DateTimeFormat = 'UNIX') and (ARttiType.TypeKind = tkFloat) and
-         (ARttiType.Handle = TypeInfo(TDateTime)) then
+      if (AFormat = TWiRLFormatSetting.UNIX) and IsDateTime(ARttiType) then
         Exit(True);
     end
   );
@@ -393,8 +334,7 @@ begin
     function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
-      if (AFormat.DateFormat = 'UNIX') and (ARttiType.TypeKind = tkFloat) and
-         (ARttiType.Handle = TypeInfo(TDate)) then
+      if (AFormat = TWiRLFormatSetting.UNIX) and IsDate(ARttiType) then
         Exit(True);
     end
   );
@@ -403,8 +343,7 @@ begin
     function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
-      if ( (AFormat.DateFormat = 'MDY') or (AFormat.DateFormat = 'DMY') ) and
-         (ARttiType.TypeKind = tkFloat) and (ARttiType.Handle = TypeInfo(TDate)) then
+      if ( (AFormat.Kind = TWiRLFormatSetting.MDY) or (AFormat.Kind = TWiRLFormatSetting.DMY) ) and IsDate(ARttiType) then
         Exit(True);
     end
   );
@@ -413,11 +352,8 @@ begin
     function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
-      if (ARttiType.TypeKind = tkFloat) and (ARttiType.Handle <> TypeInfo(TDate)) and (Length(AFormat.FloatFormat) = 1) then
-      begin
-        if (CharInSet(AFormat.FloatFormat[1], [',', '.', #0])) then
-          Exit(True);
-      end;
+      if AFormat.IsDefault and IsFloat(ARttiType) then
+        Exit(True);
     end
   );
 
@@ -425,7 +361,16 @@ begin
     function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
-      if (ARttiType.TypeKind = tkInteger) and (AFormat.IntFormat = '') then
+      if (ARttiType.TypeKind = tkInteger) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultCurrencyConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if IsCurrency(ARttiType) and AFormat.IsDefault then
         Exit(True);
     end
   );
@@ -470,12 +415,12 @@ var
   FS: TFormatSettings;
 begin
   FS.DateSeparator := '/';
-  if FFormat.DateFormat = 'MDY' then
+  if FFormat = 'MDY' then
     FS.ShortDateFormat := 'mm/dd/yyyy'
-  else if FFormat.DateFormat = 'MDY' then
+  else if FFormat = 'MDY' then
     FS.ShortDateFormat := 'dd/mm/yyyy'
   else
-    raise EWiRLConvertError.CreateFmt('Date format not supported [%s]', [FFormat.DateFormat]);
+    raise EWiRLConvertError.CreateFmt('Date format not supported [%s]', [string(FFormat)]);
   Result := StrToDate(AValue, FS);
 end;
 
@@ -484,33 +429,13 @@ var
   FS: TFormatSettings;
 begin
   FS.DateSeparator := '/';
-  if FFormat.DateFormat = 'MDY' then
+  if FFormat = 'MDY' then
     FS.ShortDateFormat := 'mm/dd/yyyy'
-  else if FFormat.DateFormat = 'MDY' then
+  else if FFormat = 'MDY' then
     FS.ShortDateFormat := 'dd/mm/yyyy'
   else
-    raise EWiRLConvertError.CreateFmt('Date format not supported [%s]', [FFormat.DateFormat]);
+    raise EWiRLConvertError.CreateFmt('Date format not supported [%s]', [string(FFormat)]);
   Result := DateToStr(AValue.AsExtended, FS);
-end;
-
-{ TWiRLFormatSetting }
-
-class function TWiRLFormatSetting.WithDateFormat(
-  const ADateFormat: string): TWiRLFormatSetting;
-begin
-  Result.DateFormat := ADateFormat;
-end;
-
-class function TWiRLFormatSetting.WithDateTimeFormat(
-  const ADateTimeFormat: string): TWiRLFormatSetting;
-begin
-  Result.DateTimeFormat := ADateTimeFormat;
-end;
-
-class function TWiRLFormatSetting.WithFloatFormat(
-  const AFloatFormat: string): TWiRLFormatSetting;
-begin
-  Result.FloatFormat := AFloatFormat;
 end;
 
 { TDefaultFloatConverter }
@@ -520,10 +445,7 @@ function TDefaultFloatConverter.ValueFromString(
 var
   FS: TFormatSettings;
 begin
-  if Length(FFormat.FloatFormat) <> 1 then
-    raise EWiRLConvertError.CreateFmt('Invalid format for float: [%s]', [FFormat.FloatFormat]);
-
-  FS.DecimalSeparator := FFormat.FloatFormat[1];
+  FS.DecimalSeparator := FFormat.DecimalSeparator;
   FS.ThousandSeparator := #0;
 
   Result := StrToFloat(AValue, FS);
@@ -533,10 +455,7 @@ function TDefaultFloatConverter.ValueToString(const AValue: TValue): string;
 var
   FS: TFormatSettings;
 begin
-  if Length(FFormat.FloatFormat) <> 1 then
-    raise EWiRLConvertError.CreateFmt('Invalid format for float: [%s]', [FFormat.FloatFormat]);
-
-  FS.DecimalSeparator := FFormat.FloatFormat[1];
+  FS.DecimalSeparator := FFormat.DecimalSeparator;
   FS.ThousandSeparator := #0;
 
   Result := FloatToStr(AValue.AsExtended, FS);
@@ -554,11 +473,115 @@ begin
   Result := IntToStr(AValue.AsInteger);
 end;
 
-initialization
-  DefaultFormatSetting.DateFormat := 'ISO';
-  DefaultFormatSetting.DateTimeFormat := 'ISO';
-  DefaultFormatSetting.FloatFormat := '.';
-  DefaultFormatSetting.IntFormat := '';
+{ TWiRLFormatSetting }
 
+class operator TWiRLFormatSetting.Implicit(
+  const AValue: string): TWiRLFormatSetting;
+begin
+  Result.FParams := AValue.Split(['|']);
+end;
+
+function TWiRLFormatSetting.GetDecimalSeparator: Char;
+begin
+  if Params[DECIMAL_SEPARATOR_INDEX] = '' then
+    Result := '.'
+  else
+    Result := Params[DECIMAL_SEPARATOR_INDEX][1];
+end;
+
+function TWiRLFormatSetting.GetDigits: Integer;
+begin
+  if Params[DIGITS_INDEX] = '' then
+    Result := 2
+  else
+    Result := StrToIntDef(Params[DIGITS_INDEX], 2);
+end;
+
+function TWiRLFormatSetting.GetKind: string;
+begin
+  Result := Params[KIND_INDEX];
+end;
+
+function TWiRLFormatSetting.GetParam(const Index: Integer): string;
+begin
+  if Index < Length(FParams) then
+    Result := FParams[Index];
+end;
+
+function TWiRLFormatSetting.GetThousandSeparator: Char;
+begin
+  if Params[THOUSAND_SEPARATOR_INDEX] = '' then
+    Result := ','
+  else
+    Result := Params[THOUSAND_SEPARATOR_INDEX][1];
+end;
+
+class operator TWiRLFormatSetting.Implicit(
+  const AValue: TWiRLFormatSetting): string;
+begin
+  Result := String.Join('|', AValue.FParams);
+end;
+
+function TWiRLFormatSetting.IsDefault: Boolean;
+begin
+  Result := Kind = DEFAULT;
+end;
+
+procedure TWiRLFormatSetting.SetDecimalSeparator(const Value: Char);
+begin
+  Params[DECIMAL_SEPARATOR_INDEX] := Value;
+end;
+
+procedure TWiRLFormatSetting.SetDigits(const Value: Integer);
+begin
+  Params[THOUSAND_SEPARATOR_INDEX] := IntToStr(Value);
+end;
+
+procedure TWiRLFormatSetting.SetKind(const Value: string);
+begin
+  Params[KIND_INDEX] := Value;
+end;
+
+procedure TWiRLFormatSetting.SetParam(const Index: Integer;
+  const Value: string);
+begin
+  if Index >= Length(FParams) then
+    SetLength(FParams, Index + 1);
+  FParams[Index] := Value;
+end;
+
+procedure TWiRLFormatSetting.SetThousandSeparator(const Value: Char);
+begin
+  Params[THOUSAND_SEPARATOR_INDEX] := Value;
+end;
+
+{ TDefaultCurrencyConverter }
+
+function TDefaultCurrencyConverter.ValueFromString(
+  const AValue: string): TValue;
+var
+  FS: TFormatSettings;
+begin
+  FS.DecimalSeparator := FFormat.DecimalSeparator;
+  FS.ThousandSeparator := FFormat.ThousandSeparator;
+
+  Result := StrToCurr(StringReplace(AValue, FFormat.ThousandSeparator, '', [rfReplaceAll]), FS);
+end;
+
+function TDefaultCurrencyConverter.ValueToString(const AValue: TValue): string;
+var
+  FS: TFormatSettings;
+  FloatFormat: TFloatFormat;
+begin
+  FS.DecimalSeparator := FFormat.DecimalSeparator;
+  FS.ThousandSeparator := FFormat.ThousandSeparator;
+  FS.CurrencyDecimals := FFormat.Digits;
+  FloatFormat := ffCurrency;
+
+  Result := StringReplace(CurrToStrF(AValue.AsExtended, FloatFormat, FFormat.Digits, FS), ' ', '', [rfReplaceAll]);
+end;
+
+initialization
   RegisterDefaultConverters;
+
 end.

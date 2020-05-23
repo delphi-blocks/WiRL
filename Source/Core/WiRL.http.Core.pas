@@ -14,7 +14,7 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  System.SysUtils, System.Classes;
+  System.SysUtils, System.Classes, WiRL.Core.Types;
 
 type
   TWiRLHttpMethod = (GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE, CONNECT);
@@ -137,10 +137,13 @@ type
 
   TWiRLParam = class(TStringList)
   private
-    function GetValue(const Name: string): string;
-    procedure SetValue(const Name, Value: string);
+    function GetValue(const AName: string): string;
+    procedure SetValue(const AName, AValue: string);
   public
-    property Values[const Name: string]: string read GetValue write SetValue; default;
+    function AsType<T>(const AName: string; const AFormat: string = TWiRLFormatSetting.DEFAULT): T;
+    procedure From<T>(const AName: string; const AValue: T; const AFormat: string = TWiRLFormatSetting.DEFAULT);
+
+    property Values[const AName: string]: string read GetValue write SetValue; default;
   end;
 
   TWiRLStreamWrapper = class(TStream)
@@ -304,14 +307,24 @@ end;
 
 { TWiRLParam }
 
-function TWiRLParam.GetValue(const Name: string): string;
+function TWiRLParam.AsType<T>(const AName: string; const AFormat: string): T;
 begin
-  Result := inherited Values[Name];
+  Result := TWiRLConvert.AsType<T>(Values[AName], AFormat);
 end;
 
-procedure TWiRLParam.SetValue(const Name, Value: string);
+procedure TWiRLParam.From<T>(const AName: string; const AValue: T; const AFormat: string);
 begin
-  inherited Values[Name] := Value;
+  Values[AName] := TWiRLConvert.From(AValue, AFormat);
+end;
+
+function TWiRLParam.GetValue(const AName: string): string;
+begin
+  Result := inherited Values[AName];
+end;
+
+procedure TWiRLParam.SetValue(const AName, AValue: string);
+begin
+  inherited Values[AName] := AValue;
 end;
 
 { TWiRLHttpMethodHelper }

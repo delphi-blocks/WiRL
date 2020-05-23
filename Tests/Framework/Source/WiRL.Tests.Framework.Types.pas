@@ -106,8 +106,8 @@ type
 
     [Test]
     [TestCase('Basic', '0,0')]
-    [TestCase('DotOne', '0x1,0.1')]
-    [TestCase('BigNumber', '1000000x00012,1000000.00012')]
+    [TestCase('DotOne', '0,1;0.1')]
+    [TestCase('BigNumber', '1000000,00012;1000000.00012', ';')]
     procedure Test_FromFloatDefaultComma(const AStringFloat: string; AFloat: Double);
 
     [Test]
@@ -118,8 +118,8 @@ type
 
     [Test]
     [TestCase('Basic', '0,0')]
-    [TestCase('DotOne', '0x1,0.1')]
-    [TestCase('BigNumber', '1000000x00012,1000000.00012')]
+    [TestCase('DotOne', '0,1;0.1')]
+    [TestCase('BigNumber', '1000000,00012;1000000.00012', ';')]
     procedure Test_ToFloatDefaultComma(const AStringFloat: string; AFloat: Double);
 
     [Test]
@@ -128,6 +128,20 @@ type
     [TestCase('BigNumber', '1234567890,1234567890')]
     [TestCase('Negative', '-1234567890,-1234567890')]
     procedure Test_ToInteger(const AStringInteger: string; ANumber: Integer);
+
+    [Test]
+    [TestCase('Basic', '0,0')]
+    [TestCase('DotOne', '0.1,0.1')]
+    [TestCase('BigNumber', '1000000.00012,1000000.00012')]
+    [TestCase('BigNumberWithSeparator', '1,000,000.00012;1000000.00012', ';')]
+    procedure Test_ToCurrencyDefault(const AStringCurrency: string; ACurrency: Currency);
+
+    [Test]
+    [TestCase('Basic', '0.00,0')]
+    [TestCase('DotOne', '0.10,0.1')]
+    [TestCase('BigNumber', '1,000,000.12;1000000.12', ';')]
+    [TestCase('BigNumberWithSeparator', '1,000,000.12;1000000.12', ';')]
+    procedure Test_FromCurrencyDefault(const AStringCurrency: string; ACurrency: Currency);
 
   end;
 
@@ -148,54 +162,66 @@ begin
 
 end;
 
+procedure TTestConvert.Test_FromCurrencyDefault(const AStringCurrency: string;
+  ACurrency: Currency);
+begin
+  Assert.AreEqual(AStringCurrency, TWiRLConvert.From<Currency>(ACurrency));
+end;
+
 procedure TTestConvert.Test_FromDateISO(const AStringDate: string; AYear,
   AMonth, ADay: Integer);
 begin
-  Assert.AreEqual(AStringDate, TWiRLConvert.fromDate(EncodeDate(AYear, AMonth, ADay)));
+  Assert.AreEqual(AStringDate, TWiRLConvert.From<TDate>(EncodeDate(AYear, AMonth, ADay)));
 end;
 
 procedure TTestConvert.Test_FromDateTimeISO(const AStringDate: string; AYear,
   AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
 begin
-  Assert.AreEqual(AStringDate, TWiRLConvert.fromDateTime(EncodeDate(AYear, AMonth, ADay) + EncodeTime(AHour, AMin, ASec, AMSec)));
+  Assert.AreEqual(AStringDate, TWiRLConvert.From<TDateTime>(EncodeDate(AYear, AMonth, ADay) + EncodeTime(AHour, AMin, ASec, AMSec)));
 end;
 
 procedure TTestConvert.Test_FromDateTimeUnix(const AStringDate: string; AYear,
   AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
 begin
   Assert.AreEqual(AStringDate,
-    TWiRLConvert.fromDateTime(EncodeDate(AYear, AMonth, ADay) + EncodeTime(AHour, AMin, ASec, AMSec), TWiRLFormatSetting.WithDateTimeFormat('UNIX')));
+    TWiRLConvert.From<TDateTime>(EncodeDate(AYear, AMonth, ADay) + EncodeTime(AHour, AMin, ASec, AMSec), TWiRLFormatSetting.UNIX));
 end;
 
 procedure TTestConvert.Test_FromDateUnix(const AStringDate: string; AYear,
   AMonth, ADay: Integer);
 begin
   Assert.AreEqual(AStringDate,
-    TWiRLConvert.fromDate(EncodeDate(AYear, AMonth, ADay), TWiRLFormatSetting.WithDateFormat('UNIX')));
+    TWiRLConvert.From<TDate>(EncodeDate(AYear, AMonth, ADay), TWiRLFormatSetting.UNIX));
 end;
 
 procedure TTestConvert.Test_FromDateUS(const AStringDate: string; AYear, AMonth,
   ADay: Integer);
 begin
   Assert.AreEqual(AStringDate,
-    TWiRLConvert.fromDate(EncodeDate(AYear, AMonth, ADay), TWiRLFormatSetting.WithDateFormat('MDY')));
+    TWiRLConvert.From<TDate>(EncodeDate(AYear, AMonth, ADay), TWiRLFormatSetting.MDY));
 end;
 
 procedure TTestConvert.Test_FromFloatDefault(const AStringFloat: string;
   AFloat: Double);
 begin
-  Assert.AreEqual(AStringFloat, TWiRLConvert.FromFloat(AFloat));
+  Assert.AreEqual(AStringFloat, TWiRLConvert.From<Double>(AFloat));
 end;
 
 procedure TTestConvert.Test_FromFloatDefaultComma(const AStringFloat: string;
   AFloat: Double);
 begin
-  Assert.AreEqual(StringReplace(AStringFloat, 'x', ',', [rfReplaceAll]), TWiRLConvert.FromFloat(AFloat, TWiRLFormatSetting.WithFloatFormat(',')));
+  Assert.AreEqual(AStringFloat, TWiRLConvert.From<Double>(AFloat, TWiRLFormatSetting.COMMA_SEPARATOR));
+end;
+
+procedure TTestConvert.Test_ToCurrencyDefault(const AStringCurrency: string;
+  ACurrency: Currency);
+begin
+  Assert.AreEqual(ACurrency, TWiRLConvert.AsType<Currency>(AStringCurrency));
 end;
 
 procedure TTestConvert.Test_ToDateISO(const AStringDate: string; AYear, AMonth, ADay: Integer);
 begin
-  Assert.AreEqual(EncodeDate(AYear, AMonth, ADay), TWiRLConvert.ToDate(AStringDate));
+  Assert.AreEqual(EncodeDate(AYear, AMonth, ADay), TWiRLConvert.AsType<TDate>(AStringDate));
 end;
 
 procedure TTestConvert.Test_ToDateTimeISO(const AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
@@ -203,7 +229,7 @@ var
   Expected: TDateTime;
 begin
   Expected := EncodeDate(AYear, AMonth, ADay) + EncodeTime(AHour, AMin, ASec, AMSec);
-  Assert.EqualDateTime(Expected, TWiRLConvert.ToDateTime(AStringDate));
+  Assert.EqualDateTime(Expected, TWiRLConvert.AsType<TDateTime>(AStringDate));
 end;
 
 procedure TTestConvert.Test_ToDateTimeUnix(const AStringDate: string; AYear,
@@ -215,7 +241,7 @@ begin
 
   Assert.EqualDateTime(
     Expected,
-    TWiRLConvert.ToDateTime(AStringDate, TWiRLFormatSetting.WithDateTimeFormat('UNIX')));
+    TWiRLConvert.AsType<TDateTime>(AStringDate, TWiRLFormatSetting.UNIX));
 end;
 
 procedure TTestConvert.Test_ToDateUnix(const AStringDate: string; AYear, AMonth,
@@ -223,7 +249,7 @@ procedure TTestConvert.Test_ToDateUnix(const AStringDate: string; AYear, AMonth,
 begin
   Assert.AreEqual(
     EncodeDate(AYear, AMonth, ADay),
-    TWiRLConvert.ToDate(AStringDate, TWiRLFormatSetting.WithDateFormat('UNIX')));
+    TWiRLConvert.AsType<TDate>(AStringDate, TWiRLFormatSetting.UNIX));
 end;
 
 procedure TTestConvert.Test_ToDateUS(const AStringDate: string; AYear, AMonth,
@@ -231,25 +257,25 @@ procedure TTestConvert.Test_ToDateUS(const AStringDate: string; AYear, AMonth,
 begin
   Assert.AreEqual(
     EncodeDate(AYear, AMonth, ADay),
-    TWiRLConvert.ToDate(AStringDate, TWiRLFormatSetting.WithDateFormat('MDY')));
+    TWiRLConvert.AsType<TDate>(AStringDate, TWiRLFormatSetting.MDY));
 end;
 
 procedure TTestConvert.Test_ToFloatDefault(const AStringFloat: string;
   AFloat: Double);
 begin
-  Assert.AreEqual(AFloat, TWiRLConvert.ToFloat(AStringFloat));
+  Assert.AreEqual(AFloat, TWiRLConvert.AsType<Double>(AStringFloat));
 end;
 
 procedure TTestConvert.Test_ToFloatDefaultComma(const AStringFloat: string;
   AFloat: Double);
 begin
-  Assert.AreEqual(AFloat, TWiRLConvert.ToFloat(StringReplace(AStringFloat, 'x', ',', []), TWiRLFormatSetting.WithFloatFormat(',')));
+  Assert.AreEqual(AFloat, TWiRLConvert.AsType<Double>(AStringFloat, TWiRLFormatSetting.COMMA_SEPARATOR));
 end;
 
 procedure TTestConvert.Test_ToInteger(const AStringInteger: string;
   ANumber: Integer);
 begin
-  Assert.AreEqual(ANumber, TWiRLConvert.ToInteger(AStringInteger));
+  Assert.AreEqual(ANumber, TWiRLConvert.AsType<Integer>(AStringInteger));
 end;
 
 { Assert }

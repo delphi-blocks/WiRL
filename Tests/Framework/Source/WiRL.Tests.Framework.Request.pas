@@ -54,6 +54,13 @@ type
     procedure TestHost;
     [Test]
     procedure TestQueryFields;
+    [Test]
+    [TestCase('One', '1')]
+    [TestCase('OneTwoThree', '123')]
+    [TestCase('Negative', '-3')]
+    procedure TestQueryFieldsInteger(const AValue: string);
+    [Test]
+    procedure TestQueryFieldsIntegerEmpty;
     //[Test]
     procedure TestContentFields;
     [Test]
@@ -467,6 +474,22 @@ begin
   FRequest.Url := 'http://localhost/test?a=first&b=second';
   Assert.AreEqual('first', FRequest.QueryFields['a']);
   Assert.AreEqual('second', FRequest.QueryFields['b']);
+end;
+
+procedure TTestRequest.TestQueryFieldsInteger(const AValue: string);
+begin
+  FRequest.Url := 'http://localhost/test?value=' + AValue;
+  Assert.AreEqual(StrToInt(AValue), FRequest.QueryFields.AsType<Integer>('value'));
+end;
+
+procedure TTestRequest.TestQueryFieldsIntegerEmpty;
+begin
+  FRequest.Url := 'http://localhost/test?value=';
+  Assert.WillRaise(
+    procedure ()
+    begin
+      FRequest.QueryFields.AsType<Integer>('value');
+    end, EConvertError);
 end;
 
 procedure TTestRequest.TestRawContent;
