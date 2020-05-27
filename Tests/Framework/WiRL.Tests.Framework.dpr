@@ -23,7 +23,7 @@ uses
   WiRL.Tests.Framework.Core in 'Source\WiRL.Tests.Framework.Core.pas',
   WiRL.Tests.Mock.Server in '..\Mock\WiRL.Tests.Mock.Server.pas',
   WiRL.Tests.Framework.Resources in 'Source\WiRL.Tests.Framework.Resources.pas',
-  WiRL.Tests.Mock.Resources in '..\Mock\WiRL.Tests.Mock.Resources.pas',
+  WiRL.Tests.Mock.Resources.Core in '..\Mock\WiRL.Tests.Mock.Resources.Core.pas',
   WiRL.Tests.Framework.Request in 'Source\WiRL.Tests.Framework.Request.pas',
   WiRL.Tests.Framework.Response in 'Source\WiRL.Tests.Framework.Response.pas',
   WiRL.Tests.Mock.Filters in '..\Mock\WiRL.Tests.Mock.Filters.pas',
@@ -31,14 +31,19 @@ uses
   WiRL.Tests.Framework.Serialization in 'Source\WiRL.Tests.Framework.Serialization.pas',
   WiRL.Tests.Framework.HeaderParser in 'Source\WiRL.Tests.Framework.HeaderParser.pas',
   WiRL.Tests.Framework.ContentNegotiation in 'Source\WiRL.Tests.Framework.ContentNegotiation.pas',
-  WiRL.Tests.Mock.MessageBodyXML in '..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas',
+  WiRL.Tests.Mock.MessageBody.XML in '..\Mock\WiRL.Tests.Mock.MessageBody.XML.pas',
   WiRL.Tests.Framework.Converter in 'Source\WiRL.Tests.Framework.Converter.pas',
   WiRL.Tests.Framework.Validators in 'Source\WiRL.Tests.Framework.Validators.pas',
   WiRL.Tests.Mock.Validators in '..\Mock\WiRL.Tests.Mock.Validators.pas',
   WiRL.Tests.Framework.MessageBody in 'Source\WiRL.Tests.Framework.MessageBody.pas',
   WiRL.Tests.Mock.Classes in '..\Mock\WiRL.Tests.Mock.Classes.pas',
-  WiRL.Tests.Mock.MessageBodyPersonObject in '..\Mock\WiRL.Tests.Mock.MessageBodyPersonObject.pas',
-  WiRL.Tests.Mock.MessageBodyPersonRecord in '..\Mock\WiRL.Tests.Mock.MessageBodyPersonRecord.pas';
+  WiRL.Tests.Mock.MessageBody.PersonObject in '..\Mock\WiRL.Tests.Mock.MessageBody.PersonObject.pas',
+  WiRL.Tests.Mock.MessageBody.PersonRecord in '..\Mock\WiRL.Tests.Mock.MessageBody.PersonRecord.pas',
+  WiRL.Tests.Framework.ExceptionMapper in 'Source\WiRL.Tests.Framework.ExceptionMapper.pas',
+  WiRL.Tests.Mock.ExceptionMapper in '..\Mock\WiRL.Tests.Mock.ExceptionMapper.pas',
+  WiRL.Tests.Mock.Resources.Validators in '..\Mock\WiRL.Tests.Mock.Resources.Validators.pas',
+  WiRL.Tests.Mock.Resources.MessageBody in '..\Mock\WiRL.Tests.Mock.Resources.MessageBody.pas',
+  WiRL.Tests.Mock.Resources.Exception in '..\Mock\WiRL.Tests.Mock.Resources.Exception.pas';
 
 var
   runner : ITestRunner;

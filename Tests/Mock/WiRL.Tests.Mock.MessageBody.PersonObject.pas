@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Tests.Mock.MessageBodyPersonRecord;
+unit WiRL.Tests.Mock.MessageBody.PersonObject;
 
 interface
 
@@ -30,7 +30,7 @@ uses
 type
   [Consumes(TestPersonMediaType)]
   [Produces(TestPersonMediaType)]
-  TWiRLTestPersonRecordProvider = class(TMessageBodyProvider)
+  TWiRLTestPersonObjectProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
@@ -41,39 +41,47 @@ type
 
 implementation
 
-{ TWiRLTestPersonRecordProvider }
+{ TWiRLTestPersonObjectProvider }
 
-function TWiRLTestPersonRecordProvider.ReadFrom(AParam: TRttiParameter;
+function TWiRLTestPersonObjectProvider.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList;
   AContentStream: TStream): TValue;
 var
   LContent: string;
-  LTestPerson: TTestPersonRecord;
+  LTestPerson: TTestPersonObject;
   LStringList: TStringList;
 begin
-  LContent := ContentStreamToString(AMediaType.Charset, AContentStream);
-  LStringList := TStringList.Create;
+  LTestPerson := TTestPersonObject.Create;
   try
-    LStringList.Text := LContent;
-    LTestPerson.Name := LStringList.Values['Name'];
-    LTestPerson.Age := StrToIntDef(LStringList.Values['Age'], 0);
-  finally
-    LStringList.Free;
+    LContent := ContentStreamToString(AMediaType.Charset, AContentStream);
+    LStringList := TStringList.Create;
+    try
+      LStringList.Text := LContent;
+      LTestPerson.Name := LStringList.Values['Name'];
+      LTestPerson.Age := StrToIntDef(LStringList.Values['Age'], 0);
+    finally
+      LStringList.Free;
+    end;
+  except
+    LTestPerson.Free;
+    raise;
   end;
-
-  Result := TValue.From<TTestPersonRecord>(LTestPerson);
+  Result := LTestPerson;
 end;
 
-procedure TWiRLTestPersonRecordProvider.WriteTo(const AValue: TValue;
+procedure TWiRLTestPersonObjectProvider.WriteTo(const AValue: TValue;
   const AAttributes: TAttributeArray; AMediaType: TMediaType;
   AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LContent: TBytes;
   LStringList: TStringList;
-  LTestPerson: TTestPersonRecord;
+  LTestPerson: TTestPersonObject;
 begin
   inherited;
-  LTestPerson := AValue.AsType<TTestPersonRecord>();
+  if (not AValue.IsObject) or (not (AValue.AsObject is TTestPersonObject)) then
+    raise Exception.Create('Object not supported');
+
+  LTestPerson := TTestPersonObject(AValue.AsObject);
 
   LStringList := TStringList.Create;
   try
@@ -89,23 +97,13 @@ end;
 
 procedure RegisterMessageBodyProvider;
 begin
-  TMessageBodyReaderRegistry.Instance.RegisterReader(
-    TWiRLTestPersonRecordProvider,
-    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
-    begin
-      Result := AType.TypeKind = tkRecord;
-    end,
-    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
-    begin
-      Result := TMessageBodyWriterRegistry.AFFINITY_LOW;
-    end
-  );
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TTestPersonObject>(TWiRLTestPersonObjectProvider);
 
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TWiRLTestPersonRecordProvider,
+    TWiRLTestPersonObjectProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
-      Result := AType.TypeKind = tkRecord;
+      Result := Assigned(AType) and AType.IsInstance;
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
@@ -115,8 +113,9 @@ begin
 
 end;
 
+
 initialization
 
-RegisterMessageBodyProvider;
+  RegisterMessageBodyProvider;
 
 end.

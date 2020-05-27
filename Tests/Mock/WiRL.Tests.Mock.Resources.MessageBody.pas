@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Tests.Mock.Resources;
+unit WiRL.Tests.Mock.Resources.MessageBody;
 
 interface
 
@@ -24,80 +24,7 @@ uses
   WiRL.Core.Validators,
   WiRL.Tests.Mock.Filters, WiRL.Tests.Mock.Validators, WiRL.Tests.Mock.Classes;
 
-
 type
-  [Path('/helloworld')]
-  THelloWorldResource = class
-  public
-    [GET, Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
-    function HelloWorld(): string;
-
-    [ResponseBindingTest, RequestBindingTest]
-    [GET, Path('/bindingfilter'), Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
-    function BindingFilter(): string;
-
-    [GET, Path('/echostring/{AString}')]
-    [Produces(TMediaType.TEXT_PLAIN)]
-    function EchoString([PathParam] AString: string): string;
-
-    [GET, Path('/reversestring/{AString}')]
-    [Produces(TMediaType.TEXT_PLAIN)]
-    function ReverseString([PathParam] AString: string): string;
-
-    [GET, Path('/params/{AOne}/{ATwo}')]
-    [Produces(TMediaType.TEXT_PLAIN)]
-    function Params([PathParam] AOne: string; [PathParam] ATwo: string): string;
-
-    [GET, Path('/sum/{AOne}/{ATwo}')]
-    [Produces(TMediaType.TEXT_PLAIN)]
-    function Sum(
-      [PathParam] AOne: Integer;
-      [PathParam] ATwo: Integer): Integer;
-
-    [GET, Path('/sumwithqueryparam?AOne={AOne}&ATwo={ATwo}')]
-    [Produces(TMediaType.TEXT_PLAIN)]
-    function SumWithQueryParam(
-      [QueryParam] AOne: Integer;
-      [QueryParam] ATwo: Integer): Integer;
-
-
-    [GET, Path('/exception'), Produces(TMediaType.APPLICATION_JSON)]
-    function TestException: string;
-
-    [GET, Path('/exception401'), Produces(TMediaType.APPLICATION_JSON)]
-    [Change401To400]
-    function TestException401: string;
-
-    [POST, Path('/postecho'), Produces(TMediaType.TEXT_PLAIN)]
-    function PostEcho([BodyParam] AContent: string): string;
-
-    [POST, Path('/postjson'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_JSON)]
-    function PostJSONExample([BodyParam] AContent: TJSONObject): string;
-
-    [POST, Path('/postbinary'), Produces(TMediaType.APPLICATION_OCTET_STREAM), Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
-    function PostBinary([BodyParam] AContent: TStream): TStream;
-  end;
-
-  [Path('/validator')]
-  TValidatorResource = class
-  public
-    [GET, Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
-    function HelloWorld(): string;
-
-    [GET, Path('/echostring/')]
-    [Produces(TMediaType.TEXT_PLAIN)]
-    function EchoString([NotNull][QueryParam('value')] const AValue: string): string;
-
-    [GET, Path('/double/{AValue}'), Produces(TMediaType.TEXT_PLAIN)]
-    function Double([PathParam][Max(50), Min(1, 'Too small')] AValue: Integer): Integer;
-
-    [GET, Path('/buildemail?s1={s1}&s2={s2}'), Produces(TMediaType.TEXT_PLAIN)]
-    function Concat([QueryParam('email'), Pattern('.+@.+\..+', 'E-Mail is not valid')] EMail: string; [QueryParam('name'), NotNull('Name required')] Name: string): string;
-
-    [POST, Path('/json'), Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.TEXT_PLAIN)]
-    function TestJson([BodyParam][NotNull, HasName] Json: TJSONObject): string;
-  end;
-
   [Path('/messagebody')]
   TMessageBodyResource = class
   public
@@ -166,97 +93,6 @@ type
   end;
 
 implementation
-
-{ THelloWorldResource }
-
-function THelloWorldResource.BindingFilter: string;
-begin
-  Result := 'Binding filter';
-end;
-
-function THelloWorldResource.EchoString(AString: string): string;
-begin
-  Result := AString;
-end;
-
-function THelloWorldResource.HelloWorld: string;
-begin
-  Result := 'Hello, world!';
-end;
-
-function THelloWorldResource.Params(AOne, ATwo: string): string;
-begin
-  Result := AOne + ATwo;
-end;
-
-function THelloWorldResource.PostBinary(AContent: TStream): TStream;
-begin
-  Result := TMemoryStream.Create;
-  Result.CopyFrom(AContent, AContent.Size);
-  Result.Position := 0;
-end;
-
-function THelloWorldResource.PostEcho(AContent: string): string;
-begin
-  Result := AContent;
-end;
-
-function THelloWorldResource.PostJSONExample(AContent: TJSONObject): string;
-begin
-  Result := AContent.GetValue<string>('name');
-end;
-
-function THelloWorldResource.ReverseString(AString: string): string;
-begin
-  Result := System.StrUtils.ReverseString(AString);
-end;
-
-function THelloWorldResource.Sum(AOne, ATwo: Integer): Integer;
-begin
-  Result := AOne + ATwo;
-end;
-
-function THelloWorldResource.SumWithQueryParam(AOne, ATwo: Integer): Integer;
-begin
-  Result := AOne + ATwo;
-end;
-
-function THelloWorldResource.TestException: string;
-begin
-  raise Exception.Create('User Error Message');
-end;
-
-function THelloWorldResource.TestException401: string;
-begin
-  raise EWiRLNotAuthorizedException.Create('NotAuthorizedException');
-end;
-
-{ TValidatorResource }
-
-function TValidatorResource.Concat(EMail, Name: string): string;
-begin
-  Result := Name + ' <' + EMail + '>';
-end;
-
-function TValidatorResource.Double(AValue: Integer): Integer;
-begin
-  Result := AValue * 2;
-end;
-
-function TValidatorResource.EchoString(const AValue: string): string;
-begin
-  Result := AValue;
-end;
-
-function TValidatorResource.HelloWorld: string;
-begin
-  Result := 'Hello, world!';
-end;
-
-function TValidatorResource.TestJson(Json: TJSONObject): string;
-begin
-  Result := Json.GetValue<string>('name');
-end;
 
 { TMessageBodyResource }
 
@@ -331,8 +167,6 @@ begin
 end;
 
 initialization
-  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
-  TWiRLResourceRegistry.Instance.RegisterResource<TValidatorResource>;
   TWiRLResourceRegistry.Instance.RegisterResource<TMessageBodyResource>;
 
 end.

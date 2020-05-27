@@ -107,7 +107,7 @@
         <DCCReference Include="Source\WiRL.Tests.Framework.Core.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Server.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.Resources.pas"/>
-        <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.Core.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.Request.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.Response.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Filters.pas"/>
@@ -115,14 +115,19 @@
         <DCCReference Include="Source\WiRL.Tests.Framework.Serialization.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.HeaderParser.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.ContentNegotiation.pas"/>
-        <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBody.XML.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.Converter.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.Validators.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Validators.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.MessageBody.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Classes.pas"/>
-        <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBodyPersonObject.pas"/>
-        <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBodyPersonRecord.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBody.PersonObject.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBody.PersonRecord.pas"/>
+        <DCCReference Include="Source\WiRL.Tests.Framework.ExceptionMapper.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.ExceptionMapper.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.Validators.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.MessageBody.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.Exception.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

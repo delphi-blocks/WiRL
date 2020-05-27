@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Tests.Mock.MessageBodyXML;
+unit WiRL.Tests.Mock.MessageBody.XML;
 
 interface
 

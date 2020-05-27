@@ -3,7 +3,7 @@ unit WiRL.Tests.Mock.Classes;
 interface
 
 uses
-  System.Classes;
+  System.SysUtils, System.Classes;
 
 type
   TTestPersonObject = class
@@ -20,9 +20,25 @@ type
     Age: Integer;
   end;
 
+  EMyNotFoundException = class(Exception)
+  private
+    FErrorCode: Integer;
+  public
+    property ErrorCode: Integer read FErrorCode;
+    constructor Create(AErrorCode: Integer; const Msg: string);
+  end;
+
 const
   TestPersonMediaType = 'application/vnd-wirl-person';
 
 implementation
+
+{ EMyNotFoundException }
+
+constructor EMyNotFoundException.Create(AErrorCode: Integer; const Msg: string);
+begin
+  inherited Create(Msg);
+  FErrorCode := AErrorCode;
+end;
 
 end.

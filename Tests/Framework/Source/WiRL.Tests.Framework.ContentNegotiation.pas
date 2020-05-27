@@ -17,7 +17,7 @@ uses
   WiRL.http.Request,
   WiRL.http.Accept.MediaType,
 
-  WiRL.Tests.Mock.MessageBodyXML,
+  WiRL.Tests.Mock.MessageBody.XML,
   WiRL.Tests.Mock.Server;
 
 type
