@@ -32,7 +32,13 @@ uses
   WiRL.Tests.Framework.HeaderParser in 'Source\WiRL.Tests.Framework.HeaderParser.pas',
   WiRL.Tests.Framework.ContentNegotiation in 'Source\WiRL.Tests.Framework.ContentNegotiation.pas',
   WiRL.Tests.Mock.MessageBodyXML in '..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas',
-  WiRL.Tests.Framework.Converter in 'Source\WiRL.Tests.Framework.Converter.pas';
+  WiRL.Tests.Framework.Converter in 'Source\WiRL.Tests.Framework.Converter.pas',
+  WiRL.Tests.Framework.Validators in 'Source\WiRL.Tests.Framework.Validators.pas',
+  WiRL.Tests.Mock.Validators in '..\Mock\WiRL.Tests.Mock.Validators.pas',
+  WiRL.Tests.Framework.MessageBody in 'Source\WiRL.Tests.Framework.MessageBody.pas',
+  WiRL.Tests.Mock.Classes in '..\Mock\WiRL.Tests.Mock.Classes.pas',
+  WiRL.Tests.Mock.MessageBodyPersonObject in '..\Mock\WiRL.Tests.Mock.MessageBodyPersonObject.pas',
+  WiRL.Tests.Mock.MessageBodyPersonRecord in '..\Mock\WiRL.Tests.Mock.MessageBodyPersonRecord.pas';
 
 var
   runner : ITestRunner;
@@ -40,6 +46,7 @@ var
   logger : ITestLogger;
   nunitLogger : ITestLogger;
 begin
+  ReportMemoryLeaksOnShutdown := True;
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
   exit;

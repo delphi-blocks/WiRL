@@ -117,6 +117,12 @@
         <DCCReference Include="Source\WiRL.Tests.Framework.ContentNegotiation.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.Converter.pas"/>
+        <DCCReference Include="Source\WiRL.Tests.Framework.Validators.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.Validators.pas"/>
+        <DCCReference Include="Source\WiRL.Tests.Framework.MessageBody.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.Classes.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBodyPersonObject.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.MessageBodyPersonRecord.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

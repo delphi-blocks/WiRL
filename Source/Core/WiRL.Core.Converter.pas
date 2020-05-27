@@ -12,7 +12,8 @@ unit WiRL.Core.Converter;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections, System.Rtti,
+  System.SysUtils, System.Classes, System.Generics.Collections, System.TypInfo,
+  System.Rtti,
 
   WiRL.Core.Singleton, WiRL.Rtti.Utils;
 
@@ -97,10 +98,12 @@ type
   TWiRLConvert = class
   public
     // String to type
-    class function AsType<T>(const AValue: string; const AFormat: string = TWiRLFormatSetting.DEFAULT): T;
+    class function AsType<T>(const AValue: string; const AFormat: string = TWiRLFormatSetting.DEFAULT): T; overload;
+    class function AsType(const AValue: string; ATypeInfo: PTypeInfo; const AFormat: string = TWiRLFormatSetting.DEFAULT): TValue; overload;
 
     // Type to string
-    class function From<T>(const AValue: T; const AFormat: string = TWiRLFormatSetting.DEFAULT): string; reintroduce;
+    class function From<T>(const AValue: T; const AFormat: string = TWiRLFormatSetting.DEFAULT): string; overload;
+    class function From(const AValue: TValue; ATypeInfo: PTypeInfo; const AFormat: string = TWiRLFormatSetting.DEFAULT): string; overload;
   end;
 
   TISODateConverter = class(TWiRLConverter)
@@ -151,6 +154,18 @@ type
     function ValueToString(const AValue: TValue): string; override;
   end;
 
+  TDefaultBooleanConverter = class(TWiRLConverter)
+  public
+    function ValueFromString(const AValue: string): TValue; override;
+    function ValueToString(const AValue: TValue): string; override;
+  end;
+
+  TDefaultStringConverter = class(TWiRLConverter)
+  public
+    function ValueFromString(const AValue: string): TValue; override;
+    function ValueToString(const AValue: TValue): string; override;
+  end;
+
 implementation
 
 uses
@@ -162,15 +177,36 @@ const
   UseUTCDate = False;
   SecsInADay = 24 * 60 * 60;
 
-class function TWiRLConvert.AsType<T>(const AValue: string; const AFormat: string): T;
+class function TWiRLConvert.AsType(const AValue: string; ATypeInfo: PTypeInfo;
+  const AFormat: string): TValue;
 var
   LConverter: TWiRLConverter;
   LRttiType: TRttiType;
 begin
-  LRttiType := TRttiHelper.Context.GetType(TypeInfo(T));
+  LRttiType := TRttiHelper.Context.GetType(ATypeInfo);
   LConverter := TWiRLConverterRegistry.Instance.GetConverter(LRttiType, AFormat);
   try
-    Result := LConverter.ValueFromString(AValue).AsType<T>();
+    Result := LConverter.ValueFromString(AValue);
+  finally
+    LConverter.Free;
+  end;
+end;
+
+class function TWiRLConvert.AsType<T>(const AValue: string; const AFormat: string): T;
+begin
+  Result := AsType(AValue, TypeInfo(T), AFormat).AsType<T>();
+end;
+
+class function TWiRLConvert.From(const AValue: TValue; ATypeInfo: PTypeInfo;
+  const AFormat: string): string;
+var
+  LConverter: TWiRLConverter;
+  LRttiType: TRttiType;
+begin
+  LRttiType := TRttiHelper.Context.GetType(ATypeInfo);
+  LConverter := TWiRLConverterRegistry.Instance.GetConverter(LRttiType, AFormat);
+  try
+    Result := LConverter.ValueToString(AValue);
   finally
     LConverter.Free;
   end;
@@ -178,17 +214,8 @@ end;
 
 class function TWiRLConvert.From<T>(const AValue: T;
   const AFormat: string): string;
-var
-  LConverter: TWiRLConverter;
-  LRttiType: TRttiType;
 begin
-  LRttiType := TRttiHelper.Context.GetType(TypeInfo(T));
-  LConverter := TWiRLConverterRegistry.Instance.GetConverter(LRttiType, AFormat);
-  try
-    Result := LConverter.ValueToString(TValue.From(AValue));
-  finally
-    LConverter.Free;
-  end;
+  Result := From(TValue.From(AValue), TypeInfo(T), AFormat);
 end;
 
 { TWiRLConverterRegistry }
@@ -301,6 +328,19 @@ begin
     (ARttiType.Handle = TypeInfo(Currency));
 end;
 
+function IsBoolean(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind = tkEnumeration) and
+    (ARttiType.Handle = TypeInfo(Boolean));
+end;
+
+function IsString(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind in [tkLString, tkUString, tkWString, tkString]);
+end;
+
 procedure RegisterDefaultConverters;
 begin
   TWiRLConverterRegistry.Instance.RegisterConverter(TISODateConverter,
@@ -371,6 +411,24 @@ begin
     begin
       Result := False;
       if IsCurrency(ARttiType) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultBooleanConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if IsBoolean(ARttiType) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultStringConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if IsString(ARttiType) and AFormat.IsDefault then
         Exit(True);
     end
   );
@@ -579,6 +637,33 @@ begin
   FloatFormat := ffCurrency;
 
   Result := StringReplace(CurrToStrF(AValue.AsExtended, FloatFormat, FFormat.Digits, FS), ' ', '', [rfReplaceAll]);
+end;
+
+{ TDefaultBooleanConverter }
+
+function TDefaultBooleanConverter.ValueFromString(const AValue: string): TValue;
+begin
+  if AValue.IsEmpty then
+    Result := False
+  else
+    Result := StrToBool(AValue);
+end;
+
+function TDefaultBooleanConverter.ValueToString(const AValue: TValue): string;
+begin
+  Result := BoolToStr(AValue.AsType<Boolean>, True);
+end;
+
+{ TDefaultStringConverter }
+
+function TDefaultStringConverter.ValueFromString(const AValue: string): TValue;
+begin
+  Result := AValue;
+end;
+
+function TDefaultStringConverter.ValueToString(const AValue: TValue): string;
+begin
+  Result := AValue.AsString;
 end;
 
 initialization

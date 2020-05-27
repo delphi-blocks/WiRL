@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Tests.Mock.MessageBodyXML;
+unit WiRL.Tests.Mock.MessageBodyPersonRecord;
 
 interface
 
@@ -28,9 +28,9 @@ uses
   WiRL.http.Accept.MediaType, WiRL.Tests.Mock.Classes;
 
 type
-  [Consumes(TMediaType.APPLICATION_XML)]
-  [Produces(TMediaType.APPLICATION_XML)]
-  TWiRLXmlObjectProvider = class(TMessageBodyProvider)
+  [Consumes(TestPersonMediaType)]
+  [Produces(TestPersonMediaType)]
+  TWiRLTestPersonRecordProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
@@ -41,35 +41,71 @@ type
 
 implementation
 
-{ TWiRLXmlObjectProvider }
+{ TWiRLTestPersonRecordProvider }
 
-function TWiRLXmlObjectProvider.ReadFrom(AParam: TRttiParameter;
+function TWiRLTestPersonRecordProvider.ReadFrom(AParam: TRttiParameter;
   AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList;
   AContentStream: TStream): TValue;
+var
+  LContent: string;
+  LTestPerson: TTestPersonRecord;
+  LStringList: TStringList;
 begin
-  raise Exception.Create('Not yet supported');
+  LContent := ContentStreamToString(AMediaType.Charset, AContentStream);
+  LStringList := TStringList.Create;
+  try
+    LStringList.Text := LContent;
+    LTestPerson.Name := LStringList.Values['Name'];
+    LTestPerson.Age := StrToIntDef(LStringList.Values['Age'], 0);
+  finally
+    LStringList.Free;
+  end;
+
+  Result := TValue.From<TTestPersonRecord>(LTestPerson);
 end;
 
-procedure TWiRLXmlObjectProvider.WriteTo(const AValue: TValue;
+procedure TWiRLTestPersonRecordProvider.WriteTo(const AValue: TValue;
   const AAttributes: TAttributeArray; AMediaType: TMediaType;
   AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
-const
-  TestXml: UTF8String = '<xml>TEST</xml>';
+var
+  LContent: TBytes;
+  LStringList: TStringList;
+  LTestPerson: TTestPersonRecord;
 begin
   inherited;
-  AContentStream.Write(TestXml[1], Length(TestXml));
+  LTestPerson := AValue.AsType<TTestPersonRecord>();
+
+  LStringList := TStringList.Create;
+  try
+    LStringList.Values['Name'] := LTestPerson.Name;
+    LStringList.Values['Age'] := IntToStr(LTestPerson.Age);
+    LContent := TEncoding.UTF8.GetBytes(LStringList.Text);
+  finally
+    LStringList.Free;
+  end;
+
+  AContentStream.Write(LContent[0], Length(LContent));
 end;
 
 procedure RegisterMessageBodyProvider;
 begin
-  // TWiRLXmlObjectProvider
+  TMessageBodyReaderRegistry.Instance.RegisterReader(
+    TWiRLTestPersonRecordProvider,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := AType.TypeKind = tkRecord;
+    end,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_LOW;
+    end
+  );
 
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TObject>(TWiRLXmlObjectProvider);
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TWiRLXmlObjectProvider,
+    TWiRLTestPersonRecordProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
-      Result := Assigned(AType) and AType.IsInstance;
+      Result := AType.TypeKind = tkRecord;
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin

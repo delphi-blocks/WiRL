@@ -143,6 +143,17 @@ type
     [TestCase('BigNumberWithSeparator', '1,000,000.12;1000000.12', ';')]
     procedure Test_FromCurrencyDefault(const AStringCurrency: string; ACurrency: Currency);
 
+    [Test]
+    [TestCase('True', 'True,True')]
+    [TestCase('False', 'False,False')]
+    procedure Test_FromBooleanDefault(const AStringBoolean: string; ABoolean: Boolean);
+
+    [Test]
+    [TestCase('True', 'True,True')]
+    [TestCase('False', 'False,False')]
+    [TestCase('Empty', ',False')]
+    procedure Test_ToBooleanDefault(const AStringBoolean: string; ABoolean: Boolean);
+
   end;
 
 implementation
@@ -160,6 +171,12 @@ end;
 procedure TTestConvert.TearDown;
 begin
 
+end;
+
+procedure TTestConvert.Test_FromBooleanDefault(const AStringBoolean: string;
+  ABoolean: Boolean);
+begin
+  Assert.AreEqual(AStringBoolean, TWiRLConvert.From<Boolean>(ABoolean));
 end;
 
 procedure TTestConvert.Test_FromCurrencyDefault(const AStringCurrency: string;
@@ -211,6 +228,12 @@ procedure TTestConvert.Test_FromFloatDefaultComma(const AStringFloat: string;
   AFloat: Double);
 begin
   Assert.AreEqual(AStringFloat, TWiRLConvert.From<Double>(AFloat, TWiRLFormatSetting.COMMA_SEPARATOR));
+end;
+
+procedure TTestConvert.Test_ToBooleanDefault(const AStringBoolean: string;
+  ABoolean: Boolean);
+begin
+  Assert.AreEqual(ABoolean, TWiRLConvert.AsType<Boolean>(AStringBoolean));
 end;
 
 procedure TTestConvert.Test_ToCurrencyDefault(const AStringCurrency: string;
