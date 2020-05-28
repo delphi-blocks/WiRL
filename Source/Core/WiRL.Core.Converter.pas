@@ -475,7 +475,7 @@ begin
   FS.DateSeparator := '/';
   if FFormat = 'MDY' then
     FS.ShortDateFormat := 'mm/dd/yyyy'
-  else if FFormat = 'MDY' then
+  else if FFormat = 'DMY' then
     FS.ShortDateFormat := 'dd/mm/yyyy'
   else
     raise EWiRLConvertError.CreateFmt('Date format not supported [%s]', [string(FFormat)]);
@@ -489,7 +489,7 @@ begin
   FS.DateSeparator := '/';
   if FFormat = 'MDY' then
     FS.ShortDateFormat := 'mm/dd/yyyy'
-  else if FFormat = 'MDY' then
+  else if FFormat = 'DMY' then
     FS.ShortDateFormat := 'dd/mm/yyyy'
   else
     raise EWiRLConvertError.CreateFmt('Date format not supported [%s]', [string(FFormat)]);

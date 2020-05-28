@@ -14,7 +14,8 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
+  System.SysUtils, System.Classes, System.Rtti, System.TypInfo,
+  System.Generics.Collections,
 
   WiRL.Configuration.Core,
   WiRL.Core.Declarations,
@@ -28,6 +29,11 @@ uses
   WiRL.Core.Injection;
 
 type
+  TWiRLFomatSettingDictionary = class(TDictionary<Pointer,string>)
+  public
+    procedure AddFormat(ATypeInfo: PTypeInfo; const AFormat: string);
+  end;
+
   TWiRLApplication = class(TComponent, IWiRLApplication)
   private
     class var FRttiContext: TRttiContext;
@@ -38,7 +44,10 @@ type
     FReaderRegistry: TWiRLReaderRegistry;
     FConfigRegistry: TWiRLConfigRegistry;
 
+    FFomatSettingDictionary: TWiRLFomatSettingDictionary;
+
     FAppConfigurator: TAppConfigurator;
+    FFormatSettingConfig: TWiRLFormatSettingConfig;
     FBasePath: string;
     FAppName: string;
     FSystemApp: Boolean;
@@ -88,6 +97,7 @@ type
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function AddApplication(const ABasePath: string): IWiRLApplication;
+    function FormatSetting: TWiRLFormatSettingConfig;
 
     function Configure<T: IInterface>: T;
     function GetConfiguration<T: TWiRLConfigurationNRef>: T;
@@ -100,6 +110,9 @@ type
     // Handles the parent/child relationship for the designer
     function GetParentComponent: TComponent; override;
     function HasParent: Boolean; override;
+
+    procedure AddFormat(ATypeInfo: PTypeInfo; const AFormat: string);
+    function GetFormatSettingFor(ATypeInfo: PTypeInfo): string;
 
     property SystemApp: Boolean read FSystemApp;
     property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
@@ -136,14 +149,15 @@ type
 implementation
 
 uses
-  System.StrUtils, System.TypInfo,
+  System.StrUtils,
   WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
   WiRL.http.URL,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Attributes,
-  WiRL.Core.Engine;
+  WiRL.Core.Engine,
+  WiRL.Core.Converter;
 
 function ExtractToken(const AString: string; const ATokenIndex: Integer; const ADelimiter: Char = '/'): string;
 var
@@ -200,6 +214,12 @@ begin
       Result := True;
     end;
   end;
+end;
+
+procedure TWiRLApplication.AddFormat(ATypeInfo: PTypeInfo;
+  const AFormat: string);
+begin
+  FFomatSettingDictionary.AddFormat(ATypeInfo, AFormat);
 end;
 
 function TWiRLApplication.AddReader(const AReader: string): Boolean;
@@ -409,6 +429,8 @@ begin
 
   if FReaderRegistry.Count = 0 then
     FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
+
+  FreeAndNil(FFormatSettingConfig);
 end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
@@ -512,6 +534,8 @@ begin
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
 
+  FFomatSettingDictionary := TWiRLFomatSettingDictionary.Create;
+
   FAppConfigurator := TAppConfiguratorImpl.Create(Self);
 
   FErrorMediaType := TMediaType.APPLICATION_JSON;
@@ -540,8 +564,17 @@ begin
   FResourceRegistry.Free;
   FConfigRegistry.Free;
   FAppConfigurator.Free;
+  FFormatSettingConfig.Free;
+  FFomatSettingDictionary.Free;
 
   inherited;
+end;
+
+function TWiRLApplication.FormatSetting: TWiRLFormatSettingConfig;
+begin
+  if not Assigned(FFormatSettingConfig) then
+    FFormatSettingConfig := TWiRLFormatSettingConfig.Create(Self);
+  Result := FFormatSettingConfig;
 end;
 
 function TWiRLApplication.GetAppConfigurator: TAppConfigurator;
@@ -552,6 +585,12 @@ end;
 function TWiRLApplication.GetConfiguration<T>: T;
 begin
   Result := GetConfigByClassRef(TWiRLConfigurationNRefClass(T)) as T;
+end;
+
+function TWiRLApplication.GetFormatSettingFor(ATypeInfo: PTypeInfo): string;
+begin
+  if not FFomatSettingDictionary.TryGetValue(ATypeInfo, Result) then
+    Result := TWiRLFormatSetting.DEFAULT;
 end;
 
 function TWiRLApplication.GetParentComponent: TComponent;
@@ -644,6 +683,14 @@ function TAppConfiguratorImpl.GetConfigByInterfaceRef(
   AInterfaceRef: TGUID): IInterface;
 begin
   Result := FApplication.GetConfigByInterfaceRef(AInterfaceRef);
+end;
+
+{ TWiRLFomatSettingDictionary }
+
+procedure TWiRLFomatSettingDictionary.AddFormat(ATypeInfo: PTypeInfo;
+  const AFormat: string);
+begin
+  Add(ATypeInfo, AFormat);
 end;
 
 initialization

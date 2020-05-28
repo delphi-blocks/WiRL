@@ -278,9 +278,7 @@ begin
     tkClass:
     begin
       if (AValue.AsObject <> nil) then
-        if (not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType)) and
-           // Context arguments will be released by TWiRLContext if needed
-           (not TRttiHelper.HasAttribute<ContextAttribute>(AValue.AsObject.ClassType)) then
+        if not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType) then
           AValue.AsObject.Free;
     end;
 
@@ -326,14 +324,24 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLMethodParam; ARe
       Result := TRttiHelper.CreateNewValue(AParam.ParamType);
   end;
 
+  function GetSimpleParam(AParam: TRttiParameter; AParamValue: TRequestParam) :TValue;
+  var
+    LFormat: string;
+  begin
+    LFormat := FAppConfig.GetFormatSettingFor(AParam.ParamType.Handle);
+    Result := TWiRLConvert.AsType(AParamValue.AsString, AParam.ParamType.Handle, LFormat);
+  end;
+
 var
   LParam: TRttiParameter;
   LAttr: TCustomAttribute;
   LDefaultValue: TValue;
   LParamAttr: TCustomAttribute;
+  LIsContextParam: Boolean;
 
   LParamValue: TRequestParam;
 begin
+  LIsContextParam := False;
   LParam := AParam.RttiParam;
 
   LDefaultValue := TRequestParam.GetDefaultValue(LParam);
@@ -355,6 +363,7 @@ begin
   // In case of context injection find the right object and exit
   if LParamAttr is ContextAttribute then
   begin
+    LIsContextParam := True;
     if (not AParam.RttiParam.ParamType.IsInstance) or (not ContextInjectionByType(AParam.RttiParam, Result)) then
       raise Exception.Create('Context injection failure');
     Exit;
@@ -370,14 +379,15 @@ begin
       if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord] then
         Result := GetObjectFromParam(LParam, LParamValue)
       else
-        Result := TWiRLConvert.AsType(LParamValue.AsString, LParam.ParamType.Handle);
+        Result := GetSimpleParam(LParam, LParamValue);
 
       ValidateMethodParam(AParam.Attributes, Result, False);
     finally
       LParamValue.Free;
     end;
   except
-    CollectGarbage(Result);
+    if not LIsContextParam then
+      CollectGarbage(Result);
     raise;
   end;
 end;
@@ -506,6 +516,7 @@ begin
       ContextInjection(LWriter as TObject);
 
     try
+      FContext.Request.Application := FAppConfig;
       // Set the Response Status Code before the method invocation so, inside the method,
       // we can override: HTTP response code, reason and location
       FContext.Response.FromWiRLStatus(FResource.Method.Status);
@@ -534,11 +545,16 @@ procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject;
   var
     LArgument: TValue;
     LParameters: TArray<TRttiParameter>;
+    LArgIndex: Integer;
   begin
     LParameters := FResource.Method.RttiObject.GetParameters;
+    LArgIndex := 0;
     for LArgument in AArgumentArray do
     begin
-      CollectGarbage(LArgument);
+      // Context arguments will be released by TWiRLContext if needed
+      if not TRttiHelper.HasAttribute<ContextAttribute>(LParameters[LArgIndex]) then
+        CollectGarbage(LArgument);
+      Inc(LArgIndex);
     end;
   end;
 
@@ -636,8 +652,6 @@ begin
     end;
   end;
 end;
-
-{ TParamHelper }
 
 { TRequestParam }
 

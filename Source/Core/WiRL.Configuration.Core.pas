@@ -29,6 +29,18 @@ type
     function Configure<T: IInterface>: T;
   end;
 
+  IWiRLApplication = interface;
+
+  TWiRLFormatSettingConfig = class(TObject)
+  private
+    FApplication: IWiRLApplication;
+  public
+    constructor Create(AApplication: IWiRLApplication);
+
+    function Add<T>(const AFormat: string): TWiRLFormatSettingConfig;
+    function BackToApp: IWiRLApplication;
+  end;
+
   IWiRLApplication = interface
     ['{1F764F15-45D9-40E1-9F79-216748466BF7}']
     function SetResources(const AResources: TArray<string>): IWiRLApplication; overload;
@@ -46,6 +58,8 @@ type
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function GetAppConfigurator: TAppConfigurator;
     function AddApplication(const ABasePath: string): IWiRLApplication;
+    function FormatSetting: TWiRLFormatSettingConfig;
+    procedure AddFormat(ATypeInfo: PTypeInfo; const AFormat: string);
 
     property Plugin: TAppConfigurator read GetAppConfigurator;
   end;
@@ -238,6 +252,25 @@ begin
       raise EWiRLException.CreateFmt('%s (%s)', [E.Message, GetTypeName(TypeInfo(T))]);
     end;
   end;
+end;
+
+{ TWiRLFormatSettingConfig }
+
+function TWiRLFormatSettingConfig.Add<T>(
+  const AFormat: string): TWiRLFormatSettingConfig;
+begin
+  FApplication.AddFormat(TypeInfo(T), AFormat);
+end;
+
+function TWiRLFormatSettingConfig.BackToApp: IWiRLApplication;
+begin
+  Result := FApplication;
+end;
+
+constructor TWiRLFormatSettingConfig.Create(AApplication: IWiRLApplication);
+begin
+  inherited Create;
+  FApplication := AApplication;
 end;
 
 end.

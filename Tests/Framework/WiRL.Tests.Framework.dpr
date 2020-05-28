@@ -43,7 +43,9 @@ uses
   WiRL.Tests.Mock.ExceptionMapper in '..\Mock\WiRL.Tests.Mock.ExceptionMapper.pas',
   WiRL.Tests.Mock.Resources.Validators in '..\Mock\WiRL.Tests.Mock.Resources.Validators.pas',
   WiRL.Tests.Mock.Resources.MessageBody in '..\Mock\WiRL.Tests.Mock.Resources.MessageBody.pas',
-  WiRL.Tests.Mock.Resources.Exception in '..\Mock\WiRL.Tests.Mock.Resources.Exception.pas';
+  WiRL.Tests.Mock.Resources.Exception in '..\Mock\WiRL.Tests.Mock.Resources.Exception.pas',
+  WiRL.Tests.Framework.ConvertRequest in 'Source\WiRL.Tests.Framework.ConvertRequest.pas',
+  WiRL.Tests.Mock.Resources.Convert in '..\Mock\WiRL.Tests.Mock.Resources.Convert.pas';
 
 var
   runner : ITestRunner;
