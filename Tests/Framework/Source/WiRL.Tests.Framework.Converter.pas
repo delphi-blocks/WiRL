@@ -307,10 +307,7 @@ class procedure Assert.EqualDateTime(const expected, actual: TDateTime; const me
 const
   DateTimeFormat = 'yyyy-mm-dd hh:nn:ss.zzz';
 begin
-  DoAssert;
-  if expected <> actual then
-    FailFmt(SNotEqualErrorStr, [FormatDateTime(DateTimeFormat, expected), FormatDateTime(DateTimeFormat, actual), message])
-
+  AreEqual(FormatDateTime(DateTimeFormat, expected), FormatDateTime(DateTimeFormat, actual), message);
 end;
 
 initialization

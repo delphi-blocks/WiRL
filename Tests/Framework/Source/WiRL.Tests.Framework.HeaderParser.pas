@@ -41,8 +41,7 @@ begin
   AcceptCharset := TAcceptCharset.Create('Test; q=1; p=2');
   try
     Assert.AreEqual('Test', AcceptCharset.AcceptItemOnly);
-    Assert.AreEqual(Double(1), AcceptCharset.QFactor);
-    //Assert.AreEqual(2, AcceptCharset.PFactor);
+    Assert.AreEqual<Double>(1.0, AcceptCharset.QFactor);
   finally
     AcceptCharset.Free;
   end;
