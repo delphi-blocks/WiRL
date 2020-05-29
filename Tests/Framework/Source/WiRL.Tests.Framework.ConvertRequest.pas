@@ -57,6 +57,18 @@ type
     procedure TestDouble(const AFormat, ADoubleParam, AExpectedValue: string);
 
     [Test]
+    [TestCase('DEFAULT', 'DEFAULT:123.12:123120', ':')]
+    [TestCase('DOT', 'DEFAULT|.:123.12:123120', ':')]
+    [TestCase('COMMA', 'DEFAULT|,:123,12:123120', ':')]
+    procedure TestDoublePathParam(const AFormat, ADoubleParam, AExpectedValue: string);
+
+    [Test]
+    [TestCase('DEFAULT', 'DEFAULT:1234:1234', ':')]
+    [TestCase('ZERO', 'DEFAULT:0:0', ':')]
+    [TestCase('NEGATIVE', 'DEFAULT:-123:-123', ':')]
+    procedure TestInteger(const AFormat, AIntegerParam, AExpectedValue: string);
+
+    [Test]
     [TestCase('TRUE', 'DEFAULT:true:1', ':')]
     [TestCase('FALSE', 'DEFAULT:false:0', ':')]
     procedure TestBoolean(const AFormat, ABooleanParam, AExpectedValue: string);
@@ -66,6 +78,18 @@ type
     [TestCase('DATE_DMY', 'DMY,28/05/2020,2020*5*28')]
     [TestCase('DATE_MDY', 'MDY,05/28/2020,2020*5*28')]
     procedure TestRequest(const AFormat, ADateParam, AExpectedValue: string);
+
+    [Test]
+    [TestCase('DEFAULT', 'DEFAULT:123', ':')]
+    [TestCase('ZERO', 'DEFAULT:123', ':')]
+    [TestCase('NEGATIVE', 'DEFAULT:123', ':')]
+    procedure TestReturnInteger(const AFormat, AExpectedValue: string);
+
+    [Test]
+    [TestCase('DEFAULT', 'DEFAULT:123.45', ':')]
+    [TestCase('DOT', 'DEFAULT|.:123.45', ':')]
+    [TestCase('COMMA', 'DEFAULT|,:123,45', ':')]
+    procedure TestReturnDouble(const AFormat, AExpectedValue: string);
   end;
 
 implementation
@@ -129,6 +153,16 @@ begin
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
+procedure TTestConvertRequest.TestDoublePathParam(const AFormat, ADoubleParam,
+  AExpectedValue: string);
+begin
+  FApplication.FormatSetting.Add<Double>(AFormat);
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/convert/doublepath/' + ADoubleParam;
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(AExpectedValue, FResponse.Content);
+end;
+
 procedure TTestConvertRequest.TestHelloWorld;
 begin
   FRequest.Method := 'GET';
@@ -137,12 +171,41 @@ begin
   Assert.AreEqual('Hello, convert!', FResponse.Content);
 end;
 
+procedure TTestConvertRequest.TestInteger(const AFormat, AIntegerParam,
+  AExpectedValue: string);
+begin
+  FApplication.FormatSetting.Add<Integer>(AFormat);
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/convert/intpath/' + AIntegerParam;
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(AExpectedValue, FResponse.Content);
+end;
+
 procedure TTestConvertRequest.TestRequest(const AFormat, ADateParam,
   AExpectedValue: string);
 begin
   FApplication.FormatSetting.Add<TDate>(AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/request?date=' + ADateParam;
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(AExpectedValue, FResponse.Content);
+end;
+
+procedure TTestConvertRequest.TestReturnDouble(const AFormat,
+  AExpectedValue: string);
+begin
+  FApplication.FormatSetting.Add<Double>(AFormat);
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/convert/returndouble';
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(AExpectedValue, FResponse.Content);
+end;
+
+procedure TTestConvertRequest.TestReturnInteger(const AFormat, AExpectedValue: string);
+begin
+  FApplication.FormatSetting.Add<Integer>(AFormat);
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/convert/returnint';
   FServer.HandleRequest(FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;

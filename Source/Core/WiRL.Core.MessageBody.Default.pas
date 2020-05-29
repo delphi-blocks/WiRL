@@ -115,7 +115,7 @@ type
   /// <summary>
   ///   This is the standard TStream MessageBodyReader/Writer using the Delphi TStream methods
   /// </summary>
-  [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
+  [Consumes(TMediaType.APPLICATION_OCTET_STREAM), Consumes(TMediaType.WILDCARD)]
   [Produces(TMediaType.APPLICATION_OCTET_STREAM), Produces(TMediaType.WILDCARD)]
   TWiRLStreamProvider = class(TMessageBodyProvider)
   public
@@ -131,6 +131,7 @@ implementation
 uses
   System.TypInfo,
   WiRL.Core.Utils,
+  WiRL.Core.Converter,
   WiRL.Rtti.Utils,
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON;
@@ -194,39 +195,19 @@ end;
 procedure TWiRLSimpleTypesWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
-  LStreamWriter: TStreamWriter;
+  LFormatSetting: string;
   LEncoding: TEncoding;
+  LStringValue: string;
+  LBytes: TBytes;
 begin
+  LFormatSetting := WiRLApplication.GetFormatSettingFor(AValue.TypeInfo);
+
   LEncoding := AMediaType.GetDelphiEncoding;
-
-  LStreamWriter := TStreamWriter.Create(AContentStream, LEncoding);
   try
-    case AValue.Kind of
-      tkUnknown: LStreamWriter.Write(AValue.AsType<string>);
-
-      tkVariant: LStreamWriter.Write(AValue.ToString);
-
-      tkInteger: LStreamWriter.Write(AValue.AsType<Integer>);
-
-      tkInt64: LStreamWriter.Write(AValue.AsType<Int64>);
-
-      tkEnumeration: LStreamWriter.Write(AValue.ToString);
-
-      tkFloat:
-      begin
-        if (AValue.TypeInfo = System.TypeInfo(TDateTime)) or
-           (AValue.TypeInfo = System.TypeInfo(TDate)) or
-           (AValue.TypeInfo = System.TypeInfo(TTime)) then
-          LStreamWriter.Write(TJSONHelper.DateToJSON(AValue.AsType<TDateTime>))
-        else
-          LStreamWriter.Write(AValue.AsType<Currency>);
-      end;
-
-      tkSet: LStreamWriter.Write(AValue.ToString);
-    end;
-
+    LStringValue := TWiRLConvert.From(AValue, AValue.TypeInfo, LFormatSetting);
+    LBytes := LEncoding.GetBytes(LStringValue);
+    AContentStream.Write(LBytes[0], Length(LBytes));
   finally
-    LStreamWriter.Free;
     LEncoding.Free;
   end;
 end;

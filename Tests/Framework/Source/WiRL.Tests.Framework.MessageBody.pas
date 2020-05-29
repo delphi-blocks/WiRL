@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2019 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Tests.Framework.MessageBody;
 
 interface
@@ -48,6 +57,9 @@ type
     procedure TestCustomMessageBodyReaderObject;
 
     [Test]
+    procedure TestCustomMessageBodyReaderObjectWrongMediaType;
+
+    [Test]
     procedure TestCustomMessageBodyWriterObject;
 
     [Test]
@@ -55,6 +67,15 @@ type
 
     [Test]
     procedure TestCustomMessageBodyWriterRecord;
+
+    [Test]
+    procedure TestQueryParamJsonObject;
+
+    [Test]
+    procedure TestReadStream;
+
+    [Test]
+    procedure TestReadStreamImage;
   end;
 
 implementation
@@ -101,6 +122,16 @@ begin
   Assert.AreEqual('TTestPersonObject/luca/25', FResponse.Content);
 end;
 
+procedure TTestMessageBody.TestCustomMessageBodyReaderObjectWrongMediaType;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/messagebody/testobject';
+  FRequest.ContentType := TMediaType.IMAGE_PNG;
+  FRequest.Content := 'Name=luca' + sLineBreak + 'Age=25';
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(404, FResponse.StatusCode);
+end;
+
 procedure TTestMessageBody.TestCustomMessageBodyReaderRecord;
 begin
   FRequest.Method := 'POST';
@@ -145,6 +176,14 @@ begin
   Assert.AreEqual('luca', FResponse.Content);
 end;
 
+procedure TTestMessageBody.TestQueryParamJsonObject;
+begin
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/messagebody/testobjectinurl?person={"Name":"luca","Age":25}';
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual('TTestPersonObject/luca/25', FResponse.Content);
+end;
+
 procedure TTestMessageBody.TestReadJsonObject;
 begin
   FRequest.Method := 'GET';
@@ -161,6 +200,26 @@ begin
   FServer.HandleRequest(FRequest, FResponse);
   Assert.AreEqual(TMediaType.APPLICATION_JSON, FResponse.ContentType);
   Assert.AreEqual('{"Name":"luca","Age":25}', FResponse.Content);
+end;
+
+procedure TTestMessageBody.TestReadStream;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/messagebody/readstream';
+  FRequest.ContentType := TMediaType.APPLICATION_OCTET_STREAM;
+  FRequest.Content := '1234567890';
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual('10', FResponse.Content);
+end;
+
+procedure TTestMessageBody.TestReadStreamImage;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/messagebody/readstream';
+  FRequest.ContentType := TMediaType.IMAGE_PNG;
+  FRequest.Content := '1234567890';
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual('10', FResponse.Content);
 end;
 
 procedure TTestMessageBody.TestSendJsonObject;

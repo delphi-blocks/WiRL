@@ -94,6 +94,9 @@ type
     FMediaType: TMediaType;
     FStringValue: string;
     FStreamValue: TStream;
+    FOwnMediaType: Boolean;
+
+    procedure AssingMediaType(const AContentType: string);
   public
     class function ParamNameToParamIndex(AContext: TWiRLContext; const AParamName: string): Integer;
     class function GetDefaultValue(LParam: TRttiParameter): TValue;
@@ -322,6 +325,10 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLMethodParam; ARe
       Result := TRttiHelper.CreateInstance(AParam.ParamType, AParamValue.AsString)
     else
       Result := TRttiHelper.CreateNewValue(AParam.ParamType);
+
+    if Result.IsEmpty then
+      raise EWiRLServerException.Create(Format('Unsupported media type [%s] for param [%s]', [FContext.Request.ContentMediaType.AcceptItemOnly, AParam.Name]), Self.ClassName);
+
   end;
 
   function GetSimpleParam(AParam: TRttiParameter; AParamValue: TRequestParam) :TValue;
@@ -337,11 +344,8 @@ var
   LAttr: TCustomAttribute;
   LDefaultValue: TValue;
   LParamAttr: TCustomAttribute;
-  LIsContextParam: Boolean;
-
   LParamValue: TRequestParam;
 begin
-  LIsContextParam := False;
   LParam := AParam.RttiParam;
 
   LDefaultValue := TRequestParam.GetDefaultValue(LParam);
@@ -363,7 +367,6 @@ begin
   // In case of context injection find the right object and exit
   if LParamAttr is ContextAttribute then
   begin
-    LIsContextParam := True;
     if (not AParam.RttiParam.ParamType.IsInstance) or (not ContextInjectionByType(AParam.RttiParam, Result)) then
       raise Exception.Create('Context injection failure');
     Exit;
@@ -386,8 +389,7 @@ begin
       LParamValue.Free;
     end;
   except
-    if not LIsContextParam then
-      CollectGarbage(Result);
+    CollectGarbage(Result);
     raise;
   end;
 end;
@@ -655,6 +657,12 @@ end;
 
 { TRequestParam }
 
+procedure TRequestParam.AssingMediaType(const AContentType: string);
+begin
+  FMediaType := TMediaType.Create(AContentType);
+  FOwnMediaType := True;
+end;
+
 function TRequestParam.AsStream: TStream;
 begin
   if Assigned(StreamValue) then
@@ -681,6 +689,7 @@ var
   LParamIndex: Integer;
   //LAttrArray: TArray<TCustomAttribute>;
   LResource: TWiRLResource;
+  LConsumesAttribute: ConsumesAttribute;
 begin
   FHeaders := nil;
   FMediaType := nil;
@@ -693,6 +702,13 @@ begin
     FParamName := AParam.Name;
 
   LResource := TWiRLResource(AContext.Resource);
+
+  if AAttr is MethodParamAttribute then
+  begin
+    LConsumesAttribute := TRttiHelper.FindAttribute<ConsumesAttribute>(AParam.RttiParam);
+    if Assigned(LConsumesAttribute) then
+      AssingMediaType(LConsumesAttribute.Value);
+  end;
 
   if AAttr is PathParamAttribute then
   begin
@@ -730,15 +746,16 @@ begin
   else
     raise EWiRLServerException.Create('Unsupported method attribute');
 
-//  if Result.IsEmpty then
-//    Result := ADefaultValue;
+  if not Assigned(FMediaType) then
+    AssingMediaType('');
 
-  //////////FWorker.ValidateMethodParam(LAttrArray, Result, True);
 end;
 
 destructor TRequestParam.Destroy;
 begin
   FreeAndNil(FContentStream);
+  if FOwnMediaType then
+    FreeAndNil(FMediaType);
   inherited;
 end;
 

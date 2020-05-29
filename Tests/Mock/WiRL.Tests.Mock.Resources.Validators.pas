@@ -36,7 +36,7 @@ type
     function EchoString([NotNull][QueryParam('value')] const AValue: string): string;
 
     [GET, Path('/double/{AValue}'), Produces(TMediaType.TEXT_PLAIN)]
-    function Double([PathParam][Max(50), Min(1, 'Too small')] AValue: Integer): Integer;
+    function DoubleValue([PathParam][Max(50), Min(1, 'Too small')] AValue: Integer): Integer;
 
     [GET, Path('/buildemail?s1={s1}&s2={s2}'), Produces(TMediaType.TEXT_PLAIN)]
     function Concat([QueryParam('email'), Pattern('.+@.+\..+', 'E-Mail is not valid')] EMail: string; [QueryParam('name'), NotNull('Name required')] Name: string): string;
@@ -54,7 +54,7 @@ begin
   Result := Name + ' <' + EMail + '>';
 end;
 
-function TValidatorResource.Double(AValue: Integer): Integer;
+function TValidatorResource.DoubleValue(AValue: Integer): Integer;
 begin
   Result := AValue * 2;
 end;

@@ -90,6 +90,18 @@ type
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
     function ParseTestRecord([BodyParam] TestRecord: TTestPersonRecord): string;
 
+    [GET]
+    [Path('/testobjectinurl')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function ParseTestObjectInUrl([Consumes(TMediaType.APPLICATION_JSON)][QueryParam('person')] TestObject: TTestPersonObject): string;
+
+    [POST]
+    [Path('/readstream')]
+    [Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
+    [Consumes(TMediaType.IMAGE_PNG)]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function ReadStream([BodyParam] AStream: TStream): string;
+
   end;
 
 implementation
@@ -161,9 +173,20 @@ begin
   Result := Format('%s/%s/%d', [TestObject.ClassName, TestObject.Name, TestObject.Age]);
 end;
 
+function TMessageBodyResource.ParseTestObjectInUrl(
+  TestObject: TTestPersonObject): string;
+begin
+  Result := Format('%s/%s/%d', [TestObject.ClassName, TestObject.Name, TestObject.Age]);
+end;
+
 function TMessageBodyResource.ParseTestRecord(TestRecord: TTestPersonRecord): string;
 begin
   Result := Format('%s/%s/%d', ['TTestPersonRecord', TestRecord.Name, TestRecord.Age]);
+end;
+
+function TMessageBodyResource.ReadStream(AStream: TStream): string;
+begin
+  Result := AStream.Size.ToString;
 end;
 
 initialization

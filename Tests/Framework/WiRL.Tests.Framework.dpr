@@ -45,7 +45,10 @@ uses
   WiRL.Tests.Mock.Resources.MessageBody in '..\Mock\WiRL.Tests.Mock.Resources.MessageBody.pas',
   WiRL.Tests.Mock.Resources.Exception in '..\Mock\WiRL.Tests.Mock.Resources.Exception.pas',
   WiRL.Tests.Framework.ConvertRequest in 'Source\WiRL.Tests.Framework.ConvertRequest.pas',
-  WiRL.Tests.Mock.Resources.Convert in '..\Mock\WiRL.Tests.Mock.Resources.Convert.pas';
+  WiRL.Tests.Mock.Resources.Convert in '..\Mock\WiRL.Tests.Mock.Resources.Convert.pas',
+  WiRL.Tests.Framework.ContextInjection in 'Source\WiRL.Tests.Framework.ContextInjection.pas',
+  WiRL.Tests.Mock.Resources.ContextInjection in '..\Mock\WiRL.Tests.Mock.Resources.ContextInjection.pas',
+  WiRL.Tests.Mock.InjectionFactories in '..\Mock\WiRL.Tests.Mock.InjectionFactories.pas';
 
 var
   runner : ITestRunner;

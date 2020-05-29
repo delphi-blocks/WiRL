@@ -191,7 +191,7 @@ begin
 
   for LEntry in FRegistry do
   begin
-    if LEntry.Consumes.Contains(AMediaType) and
+    if (LEntry.Consumes.Contains(AMediaType) or LEntry.Consumes.Contains(TMediaType.WILDCARD)) and
        LEntry.IsReadable(AParam, AParam.GetAttributes, AMediaType) then
     begin
       {$IFDEF HAS_NEW_ARRAY}

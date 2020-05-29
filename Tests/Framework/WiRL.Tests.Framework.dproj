@@ -130,6 +130,9 @@
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.Exception.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.ConvertRequest.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.Convert.pas"/>
+        <DCCReference Include="Source\WiRL.Tests.Framework.ContextInjection.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.ContextInjection.pas"/>
+        <DCCReference Include="..\Mock\WiRL.Tests.Mock.InjectionFactories.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

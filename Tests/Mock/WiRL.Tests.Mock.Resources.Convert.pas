@@ -39,6 +39,26 @@ type
     function GetDouble([QueryParam('value')] ADouble: Double): string;
 
     [GET]
+    [Path('doublepath/{ADouble}')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function GetDoublePath([PathParam('ADouble')] ADouble: Double): string;
+
+    [GET]
+    [Path('intpath/{AInt}')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function GetIntPath([PathParam('AInt')] AInt: Integer): string;
+
+    [GET]
+    [Path('returnint')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function ReturnInt(): Integer;
+
+    [GET]
+    [Path('returndouble')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function ReturnDouble(): Double;
+
+    [GET]
     [Path('boolean')]
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
     function GetBoolean([QueryParam('value')] ABoolean: Boolean): string;
@@ -71,6 +91,16 @@ begin
   Result := IntToStr(Trunc(ADouble * 1000));
 end;
 
+function TConvertResource.GetDoublePath(ADouble: Double): string;
+begin
+  Result := IntToStr(Trunc(ADouble * 1000));
+end;
+
+function TConvertResource.GetIntPath(AInt: Integer): string;
+begin
+  Result := IntToStr(AInt);
+end;
+
 function TConvertResource.GetRequest(ARequest: TWiRLRequest): string;
 var
   LDate: TDate;
@@ -84,6 +114,16 @@ end;
 function TConvertResource.HelloWorld: string;
 begin
   Result := 'Hello, convert!';
+end;
+
+function TConvertResource.ReturnDouble: Double;
+begin
+  Result := 123.45;
+end;
+
+function TConvertResource.ReturnInt: Integer;
+begin
+  Result := 123;
 end;
 
 initialization
