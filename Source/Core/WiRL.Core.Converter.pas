@@ -27,6 +27,8 @@ type
     DECIMAL_SEPARATOR_INDEX = 1;
     THOUSAND_SEPARATOR_INDEX = 2;
     DIGITS_INDEX = 3;
+
+    USE_UTC_DATE_INDEX = 1;
   private
     FParams: TArray<string>;
     procedure SetParam(const Index: Integer; const Value: string);
@@ -39,8 +41,12 @@ type
     procedure SetThousandSeparator(const Value: Char);
     function GetDigits: Integer;
     procedure SetDigits(const Value: Integer);
+    function GetUseUTCDate: Boolean;
+    procedure SetUseUTCDate(const Value: Boolean);
   public
   const
+    ISODATE_UTF = 'DEFAULT|UTF';
+    ISODATE_NOUTF = 'DEFAULT|NOUTF';
     DEFAULT = 'DEFAULT';
     UNIX = 'UNIX';
     MDY = 'MDY';
@@ -52,6 +58,8 @@ type
     property DecimalSeparator: Char read GetDecimalSeparator write SetDecimalSeparator;
     property ThousandSeparator: Char read GetThousandSeparator write SetThousandSeparator;
     property Digits: Integer read GetDigits write SetDigits;
+
+    property UseUTCDate: Boolean read GetUseUTCDate write SetUseUTCDate;
 
     function IsDefault: Boolean;
 
@@ -174,7 +182,6 @@ uses
 { TWiRLConvert }
 
 const
-  UseUTCDate = False;
   SecsInADay = 24 * 60 * 60;
 
 class function TWiRLConvert.AsType(const AValue: string; ATypeInfo: PTypeInfo;
@@ -293,12 +300,12 @@ end;
 
 function TISODateTimeConverter.ValueFromString(const AValue: string): TValue;
 begin
-  Result := ISO8601ToDate(AValue, True);
+  Result := ISO8601ToDate(AValue, FFormat.UseUTCDate);
 end;
 
 function TISODateTimeConverter.ValueToString(const AValue: TValue): string;
 begin
-  Result := DateToISO8601(AValue.AsExtended, True);
+  Result := DateToISO8601(AValue.AsExtended, FFormat.UseUTCDate);
 end;
 
 
@@ -574,6 +581,11 @@ begin
     Result := Params[THOUSAND_SEPARATOR_INDEX][1];
 end;
 
+function TWiRLFormatSetting.GetUseUTCDate: Boolean;
+begin
+  Result := Params[USE_UTC_DATE_INDEX] <> 'NOUTF';
+end;
+
 class operator TWiRLFormatSetting.Implicit(
   const AValue: TWiRLFormatSetting): string;
 begin
@@ -611,6 +623,14 @@ end;
 procedure TWiRLFormatSetting.SetThousandSeparator(const Value: Char);
 begin
   Params[THOUSAND_SEPARATOR_INDEX] := Value;
+end;
+
+procedure TWiRLFormatSetting.SetUseUTCDate(const Value: Boolean);
+begin
+  if Value then
+    Params[USE_UTC_DATE_INDEX] := 'UTF'
+  else
+    Params[USE_UTC_DATE_INDEX] := 'NOUTF';
 end;
 
 { TDefaultCurrencyConverter }

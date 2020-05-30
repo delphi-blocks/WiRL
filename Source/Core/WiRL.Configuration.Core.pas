@@ -53,7 +53,6 @@ type
     function SetReaders(const AReaders: string): IWiRLApplication; overload;
     function SetBasePath(const ABasePath: string): IWiRLApplication;
     function SetAppName(const AAppName: string): IWiRLApplication;
-    function SetUseUTCDate(AValue: Boolean): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function GetAppConfigurator: TAppConfigurator;

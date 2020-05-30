@@ -52,7 +52,6 @@ type
     FAppName: string;
     FSystemApp: Boolean;
     FEngine: TComponent;
-    FUseUTCDate: Boolean;
     FErrorMediaType: string;
     function AddResource(const AResource: string): Boolean;
     function AddFilter(const AFilter: string): Boolean;
@@ -93,7 +92,6 @@ type
     function SetReaders(const AReaders: string): IWiRLApplication; overload;
     function SetBasePath(const ABasePath: string): IWiRLApplication;
     function SetAppName(const AAppName: string): IWiRLApplication;
-    function SetUseUTCDate(AValue: Boolean): IWiRLApplication;
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function AddApplication(const ABasePath: string): IWiRLApplication;
@@ -125,7 +123,6 @@ type
     property Path: string read GetPath;
     property AppName: string read FAppName write FAppName;
     property BasePath: string read FBasePath write FBasePath;
-    property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
     property ErrorMediaType: string read FErrorMediaType write FErrorMediaType;
 
     // Fake property to display the right property editors
@@ -662,12 +659,6 @@ end;
 function TWiRLApplication.SetSystemApp(ASystem: Boolean): IWiRLApplication;
 begin
   FSystemApp := ASystem;
-  Result := Self;
-end;
-
-function TWiRLApplication.SetUseUTCDate(AValue: Boolean): IWiRLApplication;
-begin
-  FUseUTCDate := AValue;
   Result := Self;
 end;
 

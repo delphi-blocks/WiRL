@@ -13,6 +13,7 @@ interface
 
 uses
   System.SysUtils,
+  System.DateUtils,
   DUnitX.TestFramework,
 
   WiRL.Core.Converter;
@@ -50,11 +51,24 @@ type
     procedure Test_ToDateUS(const AStringDate: string; AYear, AMonth, ADay: Integer);
 
     [Test]
-    [TestCase('Basic', '2020-01-01T01:01:01,2020,1,1,1,1,1,0')]
-    [TestCase('Midnight', '2020-01-01T00:00:00,2020,1,1,0,0,0,0')]
-    [TestCase('Twelve', '2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
-    [TestCase('TwelveFiftyNine', '2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
-    procedure Test_ToDateTimeISO(const AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
+    [TestCase('Basic', 'DEFAULT,2020-01-01T01:01:01,2020,1,1,1,1,1,0')]
+    [TestCase('Midnight', 'DEFAULT,2020-01-01T00:00:00,2020,1,1,0,0,0,0')]
+    [TestCase('Twelve', 'DEFAULT,2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
+    [TestCase('TwelveFiftyNine', 'DEFAULT,2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
+
+    [TestCase('Basic_UTF', 'DEFAULT|UTF,2020-01-01T01:01:01,2020,1,1,1,1,1,0')]
+    [TestCase('Midnight_UTF', 'DEFAULT|UTF,2020-01-01T00:00:00,2020,1,1,0,0,0,0')]
+    [TestCase('Twelve_UTF', 'DEFAULT|UTF,2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
+    [TestCase('TwelveFiftyNine_UTF', 'DEFAULT|UTF,2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
+
+    procedure Test_ToDateTimeISO(const AFormat, AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
+
+    [TestCase('Basic_NOUTF', 'DEFAULT|NOUTF,2020-01-01T01:01:01,2020,1,1,1,1,1,0')]
+    [TestCase('Midnight_NOUTF', 'DEFAULT|NOUTF,2020-01-01T00:00:00,2020,1,1,0,0,0,0')]
+    [TestCase('Twelve_NOUTF', 'DEFAULT|NOUTF,2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
+    [TestCase('TwelveFiftyNine_NOUTF', 'DEFAULT|NOUTF,2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
+    procedure Test_ToDateTimeISO_NOUTC(const AFormat, AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
+
 
     [Test]
     [TestCase('Epoc', '0,1970,1,1,0,0,0,0')]
@@ -247,12 +261,28 @@ begin
   Assert.AreEqual(EncodeDate(AYear, AMonth, ADay), TWiRLConvert.AsType<TDate>(AStringDate));
 end;
 
-procedure TTestConvert.Test_ToDateTimeISO(const AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
+procedure TTestConvert.Test_ToDateTimeISO(const AFormat, AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
 var
   Expected: TDateTime;
 begin
   Expected := EncodeDate(AYear, AMonth, ADay) + EncodeTime(AHour, AMin, ASec, AMSec);
-  Assert.EqualDateTime(Expected, TWiRLConvert.AsType<TDateTime>(AStringDate));
+  Assert.EqualDateTime(Expected, TWiRLConvert.AsType<TDateTime>(AStringDate, AFormat));
+end;
+
+procedure TTestConvert.Test_ToDateTimeISO_NOUTC(const AFormat,
+  AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
+var
+  Expected: TDateTime;
+  Bias: Integer;
+  TimeZone: TTimeZone;
+begin
+  Expected := EncodeDate(AYear, AMonth, ADay) + EncodeTime(AHour, AMin, ASec, AMSec);
+
+  TimeZone := TTimeZone.Local;
+  Bias := Trunc(TimeZone.GetUTCOffset(Expected).Negate.TotalMinutes);
+  Expected := IncMinute(Expected, -Bias);
+
+  Assert.EqualDateTime(Expected, TWiRLConvert.AsType<TDateTime>(AStringDate, AFormat));
 end;
 
 procedure TTestConvert.Test_ToDateTimeUnix(const AStringDate: string; AYear,
