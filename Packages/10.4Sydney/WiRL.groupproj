@@ -3,10 +3,10 @@
         <ProjectGuid>{B222A65C-EBD4-4637-B7EC-118B79F66EC4}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="..\..\Libs\JWT\Packages\10.1Berlin\JOSE.dproj">
+        <Projects Include="..\..\Libs\JWT\Packages\10.4Sydney\JOSE.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\..\Libs\Neon\Packages\10.1Berlin\NeonRunTime.dproj">
+        <Projects Include="..\..\Libs\Neon\Packages\10.4Sydney\NeonRunTime.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="WiRLRunTime.dproj">
@@ -24,22 +24,22 @@
         </BorlandProject>
     </ProjectExtensions>
     <Target Name="JOSE">
-        <MSBuild Projects="..\..\Libs\JWT\Packages\10.1Berlin\JOSE.dproj"/>
+        <MSBuild Projects="..\..\Libs\JWT\Packages\10.4Sydney\JOSE.dproj"/>
     </Target>
     <Target Name="JOSE:Clean">
-        <MSBuild Projects="..\..\Libs\JWT\Packages\10.1Berlin\JOSE.dproj" Targets="Clean"/>
+        <MSBuild Projects="..\..\Libs\JWT\Packages\10.4Sydney\JOSE.dproj" Targets="Clean"/>
     </Target>
     <Target Name="JOSE:Make">
-        <MSBuild Projects="..\..\Libs\JWT\Packages\10.1Berlin\JOSE.dproj" Targets="Make"/>
+        <MSBuild Projects="..\..\Libs\JWT\Packages\10.4Sydney\JOSE.dproj" Targets="Make"/>
     </Target>
     <Target Name="NeonRunTime">
-        <MSBuild Projects="..\..\Libs\Neon\Packages\10.1Berlin\NeonRunTime.dproj"/>
+        <MSBuild Projects="..\..\Libs\Neon\Packages\10.4Sydney\NeonRunTime.dproj"/>
     </Target>
     <Target Name="NeonRunTime:Clean">
-        <MSBuild Projects="..\..\Libs\Neon\Packages\10.1Berlin\NeonRunTime.dproj" Targets="Clean"/>
+        <MSBuild Projects="..\..\Libs\Neon\Packages\10.4Sydney\NeonRunTime.dproj" Targets="Clean"/>
     </Target>
     <Target Name="NeonRunTime:Make">
-        <MSBuild Projects="..\..\Libs\Neon\Packages\10.1Berlin\NeonRunTime.dproj" Targets="Make"/>
+        <MSBuild Projects="..\..\Libs\Neon\Packages\10.4Sydney\NeonRunTime.dproj" Targets="Make"/>
     </Target>
     <Target Name="WiRLRunTime">
         <MSBuild Projects="WiRLRunTime.dproj"/>
