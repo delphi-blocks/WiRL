@@ -259,6 +259,7 @@ function TWiRLFormatSettingConfig.Add<T>(
   const AFormat: string): TWiRLFormatSettingConfig;
 begin
   FApplication.AddFormat(TypeInfo(T), AFormat);
+  Result := Self;
 end;
 
 function TWiRLFormatSettingConfig.BackToApp: IWiRLApplication;
