@@ -229,6 +229,7 @@ uses
   System.TypInfo,
   WiRL.Configuration.Auth,
   WiRL.http.Accept.MediaType,
+  WiRL.Core.Engine,
   WiRL.Core.Application;
 
 { Pair }
@@ -460,11 +461,14 @@ class procedure EWiRLWebApplicationException.HandleException(AContext: TWiRLCont
 var
   LAuthChallengeHeader: string;
   LErrorMediaType: string;
+  LApplication: TWiRLApplication;
 begin
+  LApplication := nil;
   if Assigned(AContext.Application) and (AContext.Application is TWiRLApplication) then
   begin
-    LAuthChallengeHeader := TWiRLApplication(AContext.Application).GetConfiguration<TWiRLConfigurationAuth>.AuthChallengeHeader;
-    LErrorMediaType := TWiRLApplication(AContext.Application).ErrorMediaType;
+    LApplication := TWiRLApplication(AContext.Application);
+    LAuthChallengeHeader := LApplication.GetConfiguration<TWiRLConfigurationAuth>.AuthChallengeHeader;
+    LErrorMediaType := LApplication.ErrorMediaType;
   end
   else
     LAuthChallengeHeader := '';
@@ -484,6 +488,11 @@ begin
   if (AContext.Response.StatusCode = 401) and (LAuthChallengeHeader <> '') then
     AContext.Response.HeaderFields['WWW-Authenticate'] := LAuthChallengeHeader;
 
+  if Assigned(LApplication) then
+  begin
+    if Assigned(AContext.Engine) then
+      TWiRLEngine(AContext.Engine).HandleException(AContext, E);
+  end;
 end;
 
 procedure EWiRLWebApplicationException.SetStatus(const Value: Integer);

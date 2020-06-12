@@ -118,7 +118,8 @@ contains
   WiRL.Configuration.Auth in '..\..\Source\Core\WiRL.Configuration.Auth.pas',
   WiRL.Configuration.Core in '..\..\Source\Core\WiRL.Configuration.Core.pas',
   WiRL.Configuration.JWT in '..\..\Source\Core\WiRL.Configuration.JWT.pas',
-  WiRL.Configuration.Neon in '..\..\Source\Core\WiRL.Configuration.Neon.pas';
+  WiRL.Configuration.Neon in '..\..\Source\Core\WiRL.Configuration.Neon.pas',
+  WiRL.Core.Converter in '..\..\Source\Core\WiRL.Core.Converter.pas';
 
 end.
 

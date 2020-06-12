@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Tests.Mock.Resources;
+unit WiRL.Tests.Mock.Resources.Core;
 
 interface
 
@@ -21,8 +21,8 @@ uses
   WiRL.http.Response,
   WiRL.Core.Registry,
   WiRL.Core.Exceptions,
-  WiRL.Tests.Mock.Filters;
-
+  WiRL.Core.Validators,
+  WiRL.Tests.Mock.Filters, WiRL.Tests.Mock.Validators, WiRL.Tests.Mock.Classes;
 
 type
   [Path('/helloworld')]

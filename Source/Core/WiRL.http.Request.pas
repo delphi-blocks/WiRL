@@ -34,6 +34,7 @@ type
     FAcceptableLanguages: TAcceptLanguageList;
     FAcceptableMediaTypes: TMediaTypeList;
     FMultiPartFormData: TWiRLFormDataMultiPart;
+    FApplication: TObject;
     function GetAcceptableMediaTypes: TMediaTypeList;
     function GetContent: string;
     procedure SetContent(const Value: string);
@@ -76,6 +77,7 @@ type
     procedure SetRange(const Value: string);
     procedure SetReferer(const Value: string);
     function GetMultiPartFormData: TWiRLFormDataMultiPart;
+    procedure SetApplication(const Value: TObject);
   protected
     FMethod: string;
     function GetHttpQuery: string; virtual; abstract;
@@ -123,6 +125,7 @@ type
     property AcceptableLanguages: TAcceptLanguageList read GetAcceptableLanguages;
     property ContentMediaType: TMediaType read GetContentMediaType;
     property MultiPartFormData: TWiRLFormDataMultiPart read GetMultiPartFormData;
+    property Application: TObject read FApplication write SetApplication;
   end;
 
 implementation
@@ -335,6 +338,13 @@ end;
 procedure TWiRLRequest.SetAcceptLanguage(const Value: string);
 begin
   HeaderFields.Values['Accept-Language'] := Value;
+end;
+
+procedure TWiRLRequest.SetApplication(const Value: TObject);
+begin
+  FApplication := Value;
+  QueryFields.Application := Value;
+  ContentFields.Application := Value;
 end;
 
 procedure TWiRLRequest.SetAuthorization(const Value: string);

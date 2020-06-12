@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Tests.Mock.MessageBodyXML;
+unit WiRL.Tests.Mock.MessageBody.XML;
 
 interface
 
@@ -25,7 +25,7 @@ uses
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
-  WiRL.http.Accept.MediaType;
+  WiRL.http.Accept.MediaType, WiRL.Tests.Mock.Classes;
 
 type
   [Consumes(TMediaType.APPLICATION_XML)]
@@ -60,7 +60,9 @@ begin
   AContentStream.Write(TestXml[1], Length(TestXml));
 end;
 
-initialization
+procedure RegisterMessageBodyProvider;
+begin
+  // TWiRLXmlObjectProvider
 
   TMessageBodyReaderRegistry.Instance.RegisterReader<TObject>(TWiRLXmlObjectProvider);
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
@@ -71,8 +73,14 @@ initialization
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
-      Result := TMessageBodyWriterRegistry.AFFINITY_VERY_LOW;
+      Result := TMessageBodyWriterRegistry.AFFINITY_LOW;
     end
   );
+
+end;
+
+initialization
+
+RegisterMessageBodyProvider;
 
 end.

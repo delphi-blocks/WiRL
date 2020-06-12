@@ -13,7 +13,6 @@ program WiRL.Tests.Framework;
 {$APPTYPE CONSOLE}
 {$ENDIF}{$STRONGLINKTYPES ON}
 uses
-  FastMM4,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
@@ -24,7 +23,7 @@ uses
   WiRL.Tests.Framework.Core in 'Source\WiRL.Tests.Framework.Core.pas',
   WiRL.Tests.Mock.Server in '..\Mock\WiRL.Tests.Mock.Server.pas',
   WiRL.Tests.Framework.Resources in 'Source\WiRL.Tests.Framework.Resources.pas',
-  WiRL.Tests.Mock.Resources in '..\Mock\WiRL.Tests.Mock.Resources.pas',
+  WiRL.Tests.Mock.Resources.Core in '..\Mock\WiRL.Tests.Mock.Resources.Core.pas',
   WiRL.Tests.Framework.Request in 'Source\WiRL.Tests.Framework.Request.pas',
   WiRL.Tests.Framework.Response in 'Source\WiRL.Tests.Framework.Response.pas',
   WiRL.Tests.Mock.Filters in '..\Mock\WiRL.Tests.Mock.Filters.pas',
@@ -32,7 +31,24 @@ uses
   WiRL.Tests.Framework.Serialization in 'Source\WiRL.Tests.Framework.Serialization.pas',
   WiRL.Tests.Framework.HeaderParser in 'Source\WiRL.Tests.Framework.HeaderParser.pas',
   WiRL.Tests.Framework.ContentNegotiation in 'Source\WiRL.Tests.Framework.ContentNegotiation.pas',
-  WiRL.Tests.Mock.MessageBodyXML in '..\Mock\WiRL.Tests.Mock.MessageBodyXML.pas';
+  WiRL.Tests.Mock.MessageBody.XML in '..\Mock\WiRL.Tests.Mock.MessageBody.XML.pas',
+  WiRL.Tests.Framework.Converter in 'Source\WiRL.Tests.Framework.Converter.pas',
+  WiRL.Tests.Framework.Validators in 'Source\WiRL.Tests.Framework.Validators.pas',
+  WiRL.Tests.Mock.Validators in '..\Mock\WiRL.Tests.Mock.Validators.pas',
+  WiRL.Tests.Framework.MessageBody in 'Source\WiRL.Tests.Framework.MessageBody.pas',
+  WiRL.Tests.Mock.Classes in '..\Mock\WiRL.Tests.Mock.Classes.pas',
+  WiRL.Tests.Mock.MessageBody.PersonObject in '..\Mock\WiRL.Tests.Mock.MessageBody.PersonObject.pas',
+  WiRL.Tests.Mock.MessageBody.PersonRecord in '..\Mock\WiRL.Tests.Mock.MessageBody.PersonRecord.pas',
+  WiRL.Tests.Framework.ExceptionMapper in 'Source\WiRL.Tests.Framework.ExceptionMapper.pas',
+  WiRL.Tests.Mock.ExceptionMapper in '..\Mock\WiRL.Tests.Mock.ExceptionMapper.pas',
+  WiRL.Tests.Mock.Resources.Validators in '..\Mock\WiRL.Tests.Mock.Resources.Validators.pas',
+  WiRL.Tests.Mock.Resources.MessageBody in '..\Mock\WiRL.Tests.Mock.Resources.MessageBody.pas',
+  WiRL.Tests.Mock.Resources.Exception in '..\Mock\WiRL.Tests.Mock.Resources.Exception.pas',
+  WiRL.Tests.Framework.ConvertRequest in 'Source\WiRL.Tests.Framework.ConvertRequest.pas',
+  WiRL.Tests.Mock.Resources.Convert in '..\Mock\WiRL.Tests.Mock.Resources.Convert.pas',
+  WiRL.Tests.Framework.ContextInjection in 'Source\WiRL.Tests.Framework.ContextInjection.pas',
+  WiRL.Tests.Mock.Resources.ContextInjection in '..\Mock\WiRL.Tests.Mock.Resources.ContextInjection.pas',
+  WiRL.Tests.Mock.InjectionFactories in '..\Mock\WiRL.Tests.Mock.InjectionFactories.pas';
 
 var
   runner : ITestRunner;
@@ -40,6 +56,7 @@ var
   logger : ITestLogger;
   nunitLogger : ITestLogger;
 begin
+  ReportMemoryLeaksOnShutdown := True;
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
   exit;

@@ -113,6 +113,7 @@ type
     procedure Shutdown; override;
 
     procedure HandleRequest(AContext: TWiRLContext); override;
+    procedure HandleException(AContext: TWiRLContext; E: Exception);
 
     function AddApplication(const ABasePath: string): IWiRLApplication; overload; virtual;
     function AddApplication(const AName, ABasePath: string; const AResources: TArray<string>): IWiRLApplication; overload; virtual; deprecated;
@@ -283,6 +284,12 @@ begin
   end;
 end;
 
+procedure TWiRLEngine.HandleException(AContext: TWiRLContext; E: Exception);
+begin
+  if Assigned(AContext.Application) then
+    DoHandleException(AContext, AContext.Application as TWiRLApplication, E);
+end;
+
 procedure TWiRLEngine.HandleRequest(AContext: TWiRLContext);
 var
   LApplication: TWiRLApplication;
@@ -339,7 +346,6 @@ begin
   except
     on E: Exception do
     begin
-      DoHandleException(AContext, LApplication, E);
       EWiRLWebApplicationException.HandleException(AContext, E);
     end;
   end;
