@@ -40,17 +40,18 @@ type
   /// </summary>
   TCompressionFilter = class(TInterfacedObject)
   protected
+    const ENC_BROTLI = 'br';
     const ENC_GZIP = 'gzip';
     const ENC_DEFLATE = 'deflate';
     const ENC_IDENTITY = 'identity';
   end;
 
   /// <summary>
-  ///   HTTP Request filter. If the request has the "deflate" ContentEncoding then the
-  ///   filter decompress the body.
+  ///   HTTP Request filter. If the request has the "gzip" or "deflate"
+  ///   ContentEncoding then the filter decompress the body.
   /// </summary>
   /// <remarks>
-  ///   Only the "deflate" ContentEncoding is supported
+  ///   Brotli ContentEncoding (br) is not currently supported
   /// </remarks>
   [ContentDecoding, Compression]
   TRequestDecodingFilter = class(TCompressionFilter, IWiRLContainerRequestFilter)
@@ -59,11 +60,11 @@ type
   end;
 
   /// <summary>
-  ///   HTTP Response filter. If the request has the "deflate" encoding in the Accept-Encoding header
-  ///   this filter compresses the body stream
+  ///   HTTP Response filter. If the request has the "gzip" or "deflate" encoding
+  ///   in the Accept-Encoding header this filter compresses the body stream
   /// </summary>
   /// <remarks>
-  ///   Only the "deflate" ContentEncoding is supported
+  ///   Brotli ContentEncoding (br) is not currently supported
   /// </remarks>
   [ContentEncoding, Compression]
   TResponseEncodingFilter = class(TCompressionFilter, IWiRLContainerResponseFilter)
@@ -95,13 +96,19 @@ var
   LStrStream: TStringStream;
   LMemStream: TMemoryStream;
 
-  procedure DoDecompress(ASource, ADestination: TStream);
+  procedure DoDecompress(ASource, ADestination: TStream;
+    const AContentEncoding: string);
   var
+    LWindowBits: Integer;
     LDecompressor: TZDecompressionStream;
   begin
+    LWindowBits := 15;
+    if AContentEncoding = ENC_GZIP
+      then Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
+
     ASource.Seek(0, TSeekOrigin.soBeginning);
 
-    LDecompressor := TZDecompressionStream.Create(ASource);
+    LDecompressor := TZDecompressionStream.Create(ASource, LWindowBits);
     try
       ADestination.Seek(0, TSeekOrigin.soBeginning);
       ADestination.CopyFrom(LDecompressor, 0);
@@ -111,13 +118,15 @@ var
   end;
 
 begin
-  if ARequestContext.Request.ContentEncoding = ENC_DEFLATE then
+  if (ARequestContext.Request.ContentEncoding = ENC_GZIP)  or
+    (ARequestContext.Request.ContentEncoding = ENC_DEFLATE) then
   begin
     if Assigned(ARequestContext.Request.ContentStream) then
     begin
       LMemStream := TMemoryStream.Create;
       try
-        DoDecompress(ARequestContext.Request.ContentStream, LMemStream);
+        DoDecompress(ARequestContext.Request.ContentStream, LMemStream,
+          ARequestContext.Request.ContentEncoding);
         LMemStream.Position := soFromBeginning;
         ARequestContext.Request.ContentStream := LMemStream;
       except
@@ -132,7 +141,8 @@ begin
       try
         LMemStream := TMemoryStream.Create;
         try
-          DoDecompress(LStrStream, LMemStream);
+          DoDecompress(LStrStream, LMemStream,
+            ARequestContext.Request.ContentEncoding);
           LMemStream.Position := soFromBeginning;
           ARequestContext.Request.Content := '';
           ARequestContext.Request.ContentStream := LMemStream;
@@ -153,14 +163,20 @@ procedure TResponseEncodingFilter.Filter(AResponseContext: TWiRLContainerRespons
 var
   LStrStream: TStringStream;
   LMemStream: TMemoryStream;
+  LContentEncoding: string;
 
-  procedure DoCompress(ASource, ADestination: TStream);
+  procedure DoCompress(ASource, ADestination: TStream;
+    const AContentEncoding: string);
   var
+    LWindowBits: Integer;
     LCompressor: TZCompressionStream;
   begin
-    ASource.Seek(0, TSeekOrigin.soBeginning);
+    LWindowBits := 15;
+    if AContentEncoding = ENC_GZIP
+      then Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
 
-    LCompressor := TZCompressionStream.Create(clDefault, ADestination);
+    ASource.Seek(0, TSeekOrigin.soBeginning);
+    LCompressor := TZCompressionStream.Create(ADestination, zcDefault, LWindowBits);
     try
       LCompressor.CopyFrom(ASource, ASource.Size);
     finally
@@ -169,19 +185,26 @@ var
   end;
 
 begin
-  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE) then
+  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_GZIP)
+    then LContentEncoding := ENC_GZIP
+    else
+  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE)
+    then LContentEncoding := ENC_DEFLATE
+    else LContentEncoding := ENC_IDENTITY;
+
+  if LContentEncoding <> ENC_IDENTITY then
   begin
     if Assigned(AResponseContext.Response.ContentStream) then
     begin
       LMemStream := TMemoryStream.Create;
       try
-        DoCompress(AResponseContext.Response.ContentStream, LMemStream);
+        DoCompress(AResponseContext.Response.ContentStream, LMemStream, LContentEncoding);
         LMemStream.Position := soFromBeginning;
         AResponseContext.Response.ContentStream := LMemStream;
       except
         LMemStream.Free;
       end;
-      AResponseContext.Response.ContentEncoding := ENC_DEFLATE;
+      AResponseContext.Response.ContentEncoding := LContentEncoding;
     end
     else if AResponseContext.Response.Content <> '' then
     begin
@@ -190,7 +213,7 @@ begin
       try
         LMemStream := TMemoryStream.Create;
         try
-          DoCompress(LStrStream, LMemStream);
+          DoCompress(LStrStream, LMemStream, LContentEncoding);
           LMemStream.Position := soFromBeginning;
           AResponseContext.Response.Content := '';
           AResponseContext.Response.ContentStream := LMemStream;
@@ -200,7 +223,7 @@ begin
       finally
         LStrStream.Free;
       end;
-      AResponseContext.Response.ContentEncoding := ENC_DEFLATE;
+      AResponseContext.Response.ContentEncoding := LContentEncoding;
     end;
   end;
 end;
@@ -211,14 +234,20 @@ procedure TResponseEncodingFilterDebug.Filter(AResponseContext: TWiRLContainerRe
 var
   LStrStream: TStringStream;
   LMemStream: TFileStream;
+  LContentEncoding: string;
 
-  procedure DoCompress(ASource, ADestination: TStream);
+  procedure DoCompress(ASource, ADestination: TStream;
+    const AContentEncoding: string);
   var
+    LWindowBits: Integer;
     LCompressor: TZCompressionStream;
   begin
-    ASource.Seek(0, TSeekOrigin.soBeginning);
+    LWindowBits := 15;
+    if AContentEncoding = ENC_GZIP
+      then Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
 
-    LCompressor := TZCompressionStream.Create(clDefault, ADestination);
+    ASource.Seek(0, TSeekOrigin.soBeginning);
+    LCompressor := TZCompressionStream.Create(ADestination, zcDefault, LWindowBits);
     try
       LCompressor.CopyFrom(ASource, ASource.Size);
     finally
@@ -227,28 +256,35 @@ var
   end;
 
 begin
-  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE) then
+  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_GZIP)
+    then LContentEncoding := ENC_GZIP
+    else
+  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE)
+    then LContentEncoding := ENC_DEFLATE
+    else LContentEncoding := ENC_IDENTITY;
+
+  if LContentEncoding <> ENC_IDENTITY then
   begin
     if Assigned(AResponseContext.Response.ContentStream) then
     begin
-      LMemStream := TFileStream.Create(TPath.Combine(TPath.GetDocumentsPath, 'sample.' + ENC_DEFLATE), fmCreate);
+      LMemStream := TFileStream.Create(TPath.Combine(TPath.GetDocumentsPath, 'sample.' + LContentEncoding), fmCreate);
       try
-        DoCompress(AResponseContext.Response.ContentStream, LMemStream);
+        DoCompress(AResponseContext.Response.ContentStream, LMemStream, LContentEncoding);
         LMemStream.Position := soFromBeginning;
         AResponseContext.Response.ContentStream := LMemStream;
       except
         LMemStream.Free;
       end;
-      AResponseContext.Response.ContentEncoding := ENC_DEFLATE;
+      AResponseContext.Response.ContentEncoding := LContentEncoding;
     end
     else if AResponseContext.Response.Content <> '' then
     begin
       LStrStream := TStringStream.Create(AResponseContext.Response.Content);
       LStrStream.Position := soFromBeginning;
       try
-        LMemStream := TFileStream.Create(TPath.Combine(TPath.GetDocumentsPath, 'sample.' + ENC_DEFLATE), fmCreate);
+        LMemStream := TFileStream.Create(TPath.Combine(TPath.GetDocumentsPath, 'sample.' + LContentEncoding), fmCreate);
         try
-          DoCompress(LStrStream, LMemStream);
+          DoCompress(LStrStream, LMemStream, LContentEncoding);
           LMemStream.Position := soFromBeginning;
           AResponseContext.Response.Content := '';
           AResponseContext.Response.ContentStream := LMemStream;
@@ -258,7 +294,7 @@ begin
       finally
         LStrStream.Free;
       end;
-      AResponseContext.Response.ContentEncoding := ENC_DEFLATE;
+      AResponseContext.Response.ContentEncoding := LContentEncoding;
     end;
   end;
 end;
