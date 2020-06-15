@@ -99,7 +99,7 @@ type
     procedure AssingMediaType(const AContentType: string);
   public
     class function ParamNameToParamIndex(AContext: TWiRLContext; const AParamName: string): Integer;
-    class function GetDefaultValue(LParam: TRttiParameter): TValue;
+    class function GetDefaultValue(LParam: TRttiParameter): string;
   public
     property ParamName: string read FParamName;
     property TypeKind: TTypeKind read FTypeKind;
@@ -111,7 +111,7 @@ type
     function AsStream: TStream;
     function AsString: string;
 
-    constructor Create(AContext: TWiRLContext; AParam: TWiRLMethodParam; AAttr: TCustomAttribute);
+    constructor Create(AContext: TWiRLContext; AParam: TWiRLMethodParam; AAttr: TCustomAttribute; const ADefault: string);
     destructor Destroy; override;
   end;
 
@@ -342,7 +342,7 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLMethodParam; ARe
 var
   LParam: TRttiParameter;
   LAttr: TCustomAttribute;
-  LDefaultValue: TValue;
+  LDefaultValue: string;
   LParamAttr: TCustomAttribute;
   LParamValue: TRequestParam;
 begin
@@ -373,7 +373,7 @@ begin
   end;
 
   try
-    LParamValue := TRequestParam.Create(FContext, AParam, LParamAttr);
+    LParamValue := TRequestParam.Create(FContext, AParam, LParamAttr, LDefaultValue);
     try
       if HasRowConstraints(AParam.Attributes) then
         // TODO: this code forces a conversion to string (probably not a good idea)
@@ -684,7 +684,7 @@ begin
 end;
 
 constructor TRequestParam.Create(AContext: TWiRLContext;
-  AParam: TWiRLMethodParam; AAttr: TCustomAttribute);
+  AParam: TWiRLMethodParam; AAttr: TCustomAttribute; const ADefault: string);
 var
   LParamIndex: Integer;
   //LAttrArray: TArray<TCustomAttribute>;
@@ -749,6 +749,9 @@ begin
   if not Assigned(FMediaType) then
     AssingMediaType('');
 
+  if (not Assigned(FStreamValue)) and (FStringValue = '') then
+    FStringValue := ADefault;
+
 end;
 
 destructor TRequestParam.Destroy;
@@ -759,7 +762,7 @@ begin
   inherited;
 end;
 
-class function TRequestParam.GetDefaultValue(LParam: TRttiParameter): TValue;
+class function TRequestParam.GetDefaultValue(LParam: TRttiParameter): string;
 var
   LDefaultValue: string;
 begin

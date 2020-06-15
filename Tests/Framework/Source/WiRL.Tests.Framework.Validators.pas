@@ -65,6 +65,21 @@ type
 
     [Test]
     procedure TestJsonBodyNoName;
+
+    [Test]
+    [TestCase('Empty', ',test')]
+    [TestCase('Value', 'ciao,ciao')]
+    procedure TestDefaultString(const Value, ResponseString: string);
+
+    [Test]
+    [TestCase('Empty', ',10')]
+    [TestCase('Value', '123,123')]
+    procedure TestDefaultInteger(const Value: string; ResponseString: Integer);
+
+    [Test]
+    [TestCase('Empty', ',y:2020 m:1 d:1')]
+    [TestCase('Value', '2020-02-20,y:2020 m:2 d:20')]
+    procedure TestDefaultDate(const Value, ResponseString: string);
   end;
 
 
@@ -99,6 +114,30 @@ begin
   FRequest.Free;
   FResponse.Free;
   FJson.Free;
+end;
+
+procedure TTestValidators.TestDefaultDate(const Value, ResponseString: string);
+begin
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/validator/defaultdate?value=' + Value;
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(ResponseString, FResponse.Content);
+end;
+
+procedure TTestValidators.TestDefaultInteger(const Value: string; ResponseString: Integer);
+begin
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/validator/defaultinteger?value=' + Value;
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(IntToStr(ResponseString), FResponse.Content);
+end;
+
+procedure TTestValidators.TestDefaultString(const Value, ResponseString: string);
+begin
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/validator/defaultstring?value=' + Value;
+  FServer.HandleRequest(FRequest, FResponse);
+  Assert.AreEqual(ResponseString, FResponse.Content);
 end;
 
 procedure TTestValidators.TestDouble;

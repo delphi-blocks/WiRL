@@ -43,6 +43,21 @@ type
 
     [POST, Path('/json'), Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.TEXT_PLAIN)]
     function TestJson([BodyParam][NotNull, HasName] Json: TJSONObject): string;
+
+    [GET]
+    [Path('defaultstring')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function DefaultString([DefaultValue('test')][QueryParam('value')] const AValue: string): string;
+
+    [GET]
+    [Path('defaultinteger')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function DefaultInteger([DefaultValue('10')][QueryParam('value')] AValue: Integer): Integer;
+
+    [GET]
+    [Path('defaultdate')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function DefaultDate([DefaultValue('2020-01-01')][QueryParam('value')] AValue: TDate): string;
   end;
 
 implementation
@@ -52,6 +67,24 @@ implementation
 function TValidatorResource.Concat(EMail, Name: string): string;
 begin
   Result := Name + ' <' + EMail + '>';
+end;
+
+function TValidatorResource.DefaultDate(AValue: TDate): string;
+var
+  Year, Month, Day: Word;
+begin
+  DecodeDate(AValue, Year, Month, Day);
+  Result := Format('y:%d m:%d d:%d', [Year, Month, Day]);
+end;
+
+function TValidatorResource.DefaultInteger(AValue: Integer): Integer;
+begin
+  Result := AValue;
+end;
+
+function TValidatorResource.DefaultString(const AValue: string): string;
+begin
+  Result := AValue;
 end;
 
 function TValidatorResource.DoubleValue(AValue: Integer): Integer;
