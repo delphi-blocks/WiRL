@@ -175,11 +175,7 @@ begin
         try
           FVerified := LJWT.Verified;
           if FVerified then
-          begin
-            if (LJWT.Claims.HasExpiration)and(LJWT.Claims.Expiration < Now)
-              then raise EWiRLNotAuthorizedException.Create('Expiration time passed', 'TWiRLAuthContext', 'Verify');
             TJSONHelper.JSONCopyFrom(LJWT.Claims.JSON, FSubject.JSON);
-          end;
         finally
           LJWT.Free;
         end;
