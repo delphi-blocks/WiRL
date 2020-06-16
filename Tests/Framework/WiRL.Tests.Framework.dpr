@@ -9,13 +9,19 @@
 {******************************************************************************}
 program WiRL.Tests.Framework;
 
+{$IFNDEF DEBUG}
 {$IFNDEF TESTINSIGHT}
 {$APPTYPE CONSOLE}
-{$ENDIF}{$STRONGLINKTYPES ON}
+{$ENDIF}
+{$ENDIF}
+{$STRONGLINKTYPES ON}
 uses
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
+  {$ENDIF }
+  {$IFDEF DEBUG}
+  DUnitX.Loggers.GUI.VCL,
   {$ENDIF }
   DUnitX.Loggers.Console,
   DUnitX.Loggers.Xml.NUnit,
@@ -59,7 +65,11 @@ begin
   ReportMemoryLeaksOnShutdown := True;
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
-  exit;
+  Exit;
+{$ENDIF}
+{$IFDEF DEBUG}
+  DUnitX.Loggers.GUI.VCL.Run;
+  Exit;
 {$ENDIF}
   try
     //Check command line options, will exit if invalid

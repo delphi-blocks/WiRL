@@ -119,6 +119,7 @@ end;
 
 procedure TTestConvertRequest.TearDown;
 begin
+  FApplication := nil;
   FServer.Free;
   FRequest.Free;
   FResponse.Free;
