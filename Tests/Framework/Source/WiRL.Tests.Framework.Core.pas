@@ -16,6 +16,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.Core.Classes,
+  WiRL.http.URL,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
 
@@ -56,6 +57,33 @@ type
     [TestCase('Complex', 'èò€,6')]
     procedure TestUnicodeBEEncodingNoBOM_GetByteCount(AString: string; ASize: Integer);
 
+  end;
+
+
+  [TestFixture]
+  TTestUrl = class(TObject)
+  public
+    [Test]
+    procedure TestResource;
+
+    [Test]
+    procedure TestQueryParams;
+
+    [Test]
+    procedure TestSubResourcesToString;
+
+    [Test]
+    procedure TestPathParamsToString;
+
+    [Test]
+    procedure TestPathTokens;
+
+    [Test]
+    [TestCase('Basic', 'first,second,third,/first/second/third/')]
+    [TestCase('SomeSlash', 'first/,/second,/third,/first/second/third/')]
+    [TestCase('SomeMoreSlash', '/first/,/second/,/third/,/first/second/third/')]
+    [TestCase('SomeDoubleSlash', '//first/,//second/,/third///,/first/second/third/')]
+    procedure TestCombinePath(const Path1, Path2, Path3, ResultPath: string);
   end;
 
 
@@ -117,8 +145,89 @@ begin
   end;
 end;
 
+{ TTestUrl }
+
+// Remove?
+procedure TTestUrl.TestSubResourcesToString;
+var
+  LUrl: TWiRLURL;
+begin
+  LUrl := TWiRLURL.Create('http://localhost:1234/app/resource/subresource');
+  try
+    Assert.AreEqual('/resource/subresource', LUrl.SubResources.ToString);
+  finally
+    LUrl.Free;
+  end;
+end;
+
+// Remove?
+procedure TTestUrl.TestPathTokens;
+var
+  LUrl: TWiRLURL;
+begin
+  LUrl := TWiRLURL.Create('http://localhost:1234/app/resource/subresource/path1/path2/path3');
+  try
+    Assert.AreEqual('app', LUrl.PathTokens[0]);
+    Assert.AreEqual('resource', LUrl.PathTokens[1]);
+    Assert.AreEqual('subresource', LUrl.PathTokens[2]);
+    Assert.AreEqual('path1', LUrl.PathTokens[3]);
+    Assert.AreEqual('path2', LUrl.PathTokens[4]);
+    Assert.AreEqual('path3', LUrl.PathTokens[5]);
+  finally
+    LUrl.Free;
+  end;
+end;
+
+procedure TTestUrl.TestCombinePath(const Path1, Path2, Path3,
+  ResultPath: string);
+begin
+  Assert.AreEqual(ResultPath, TWiRLURL.CombinePath([Path1, Path2, Path3], True, True));
+end;
+
+procedure TTestUrl.TestPathParamsToString;
+var
+  LUrl: TWiRLURL;
+begin
+  LUrl := TWiRLURL.Create('http://localhost:1234/app/first/{v1}/{v2}/{v3}');
+  try
+    //LUrl.BasePath := '/app/first/second/{v1}/{v2}/{v3}';
+    Assert.AreEqual('/second/third', LUrl.PathParams.ToString);
+  finally
+    LUrl.Free;
+  end;
+end;
+
+procedure TTestUrl.TestQueryParams;
+var
+  LUrl: TWiRLURL;
+begin
+  LUrl := TWiRLURL.Create('http://localhost:1234/first?value1=123&value2=4321');
+  try
+    Assert.AreEqual('value1=123&value2=4321', LUrl.Query);
+  finally
+    LUrl.Free;
+  end;
+end;
+
+procedure TTestUrl.TestResource;
+var
+  LUrl: TWiRLURL;
+begin
+  LUrl := TWiRLURL.Create('http://localhost:1234/first/second/1/2/3');
+  try
+    Assert.AreEqual('http', LUrl.Protocol);
+    Assert.AreEqual('localhost', LUrl.HostName);
+    Assert.AreEqual(1234, LUrl.PortNumber);
+    Assert.AreEqual('/first/second/1/2/3', LUrl.Path);
+    Assert.AreEqual('first', LUrl.Resource);
+  finally
+    LUrl.Free;
+  end;
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TTestMediaType);
   TDUnitX.RegisterTestFixture(TTestEncoding);
+  TDUnitX.RegisterTestFixture(TTestUrl);
 
 end.

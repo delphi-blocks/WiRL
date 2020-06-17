@@ -433,7 +433,7 @@ begin
     + 'Query: %s' + sLineBreak
     + 'QueryTokens count: %d' + sLineBreak
     + 'Resource: %s' + sLineBreak
-    + 'SubResources count: %d'
+    + 'SubResources count: %d' + sLineBreak
     + 'PathParams count: %d'
   , [
     FURL
