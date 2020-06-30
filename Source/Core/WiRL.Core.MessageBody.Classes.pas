@@ -40,7 +40,7 @@ type
     [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
   public
-    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
   end;
 
@@ -49,7 +49,7 @@ type
     [Context] FRequest: TWiRLRequest;
     [Context] WiRLApplication: TWiRLApplication;
   public
-    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;

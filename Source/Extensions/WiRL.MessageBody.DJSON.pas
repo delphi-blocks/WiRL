@@ -44,8 +44,7 @@ type
   [Consumes(TMediaType.APPLICATION_JSON)]
   TObjectReaderDJSON = class(TMessageBodyDJSON, IMessageBodyReader)
   public
-    function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
   [Produces(TMediaType.APPLICATION_JSON)]
@@ -85,13 +84,9 @@ end;
 
 { TObjectReaderDJSON }
 
-function TObjectReaderDJSON.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
-var
-  LType: TRttiType;
+function TObjectReaderDJSON.ReadFrom(AType: TRttiType; AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 begin
-  LType := AParam.ParamType;
-  Result := dj.FromJSON(ARequest.Content).Params(GetDJSONParams).&ToValue(LType.Handle);
+  Result := dj.FromJSON(ARequest.Content).Params(GetDJSONParams).&ToValue(AType.Handle);
 end;
 
 { TObjectWriterDJSON }

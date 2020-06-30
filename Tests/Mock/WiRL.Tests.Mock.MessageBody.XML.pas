@@ -32,7 +32,7 @@ type
   [Produces(TMediaType.APPLICATION_XML)]
   TWiRLXmlObjectProvider = class(TMessageBodyProvider)
   public
-    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -43,9 +43,8 @@ implementation
 
 { TWiRLXmlObjectProvider }
 
-function TWiRLXmlObjectProvider.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList;
-  AContentStream: TStream): TValue;
+function TWiRLXmlObjectProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 begin
   raise Exception.Create('Not yet supported');
 end;

@@ -12,7 +12,7 @@ unit Server.Resources;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.JSON, System.NetEncoding,
+  System.Classes, System.SysUtils, System.JSON, System.NetEncoding, System.Generics.Collections, 
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.Core.Registry,
@@ -22,7 +22,9 @@ uses
   WiRL.Core.MessageBody.Default,
   WiRL.Core.Auth.Context,
   WiRL.http.Request,
-  WiRL.http.Response;
+  WiRL.http.Response,
+  
+  Demo.Entities;
 
 type
   [Path('/helloworld')]
@@ -63,19 +65,29 @@ type
     [GET, Path('/exception'), Produces(TMediaType.APPLICATION_JSON)]
     function TestException: string;
 
-    [POST, Path('/postexample'), Produces(TMediaType.TEXT_PLAIN)]
-    function PostExample([BodyParam] AContent: string): string;
+    [GET, Path('/person'), Produces(TMediaType.APPLICATION_JSON)]
+    function GetPerson: TPerson;
 
-    [POST, Path('/postjsonexample'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_JSON)]
-    function PostJSONExample([BodyParam] AContent: TJSONObject): string;
+    [POST, Path('/order'), Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
+    function PostOrder([BodyParam] AOrderProposal: TOrderProposal): TOrder;
 
-    [POST, Path('/postjsonarray'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_JSON)]
-    function PostJSONArrayExample([BodyParam] AContent: TJSONArray): string;
+    /// <summary>
+    ///   This method wants to show how to get the body as string, it is not
+    ///   the preferred example on how to get data from a post.
+    /// </summary>
+    [POST, Path('/poststring'), Consumes(TMediaType.TEXT_PLAIN), Produces(TMediaType.TEXT_PLAIN)]
+    function PostString([BodyParam] const AContent: string): string;
 
-    [POST, Path('/poststream'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
+    [POST, Path('/postobj'), Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.TEXT_PLAIN)]
+    function PostObj([BodyParam] APerson: TPerson): string;
+
+    [POST, Path('/postlist'), Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.TEXT_PLAIN)]
+    function PostList([BodyParam] AList: TPersonList): string;
+
+    [POST, Path('/poststream'), Consumes(TMediaType.APPLICATION_OCTET_STREAM), Produces(TMediaType.TEXT_PLAIN)]
     function PostStreamExample([BodyParam] AContent: TStream): string;
 
-    [POST, Path('/multipart'), Produces(TMediaType.APPLICATION_JSON), Consumes(TMediaType.MULTIPART_FORM_DATA)]
+    [POST, Path('/multipart'), Consumes(TMediaType.MULTIPART_FORM_DATA), Produces(TMediaType.APPLICATION_JSON)]
     function PostMultiPartExample(
       [FormParam] AValue: string;
       [FormParam] AContent: TStream;
@@ -121,6 +133,13 @@ begin
   Result := TJSONHelper.ToJSON(AuthContext.Subject.JSON);
 end;
 
+function THelloWorldResource.GetPerson: TPerson;
+begin
+  Result := TPerson.Create;
+  Result.Name := 'Paolo Rossi';
+  Result.Age := 50;
+end;
+
 function THelloWorldResource.HelloWorld(): string;
 var
   LLang: TAcceptLanguage;
@@ -141,34 +160,30 @@ begin
   Result := 'One: ' + AOne + sLineBreak + 'Two: ' + ATwo;
 end;
 
-function THelloWorldResource.PostExample(AContent: string): string;
-var
-  LArray: TJSONArray;
-  LElement: TJSONValue;
+function THelloWorldResource.PostString(const AContent: string): string;
 begin
-  Result := 'PostExample:';
-  LArray := TJSONObject.ParseJSONValue(AContent) as TJSONArray;
-  try
-    for LElement in LArray do
-    begin
-      if Result <> '' then
-        Result := Result + sLineBreak;
-
-      Result := Result + 'Element: ' + TJSONHelper.ToJSON(LElement);
-    end;
-  finally
-    LArray.Free;
-  end;
+  Result := 'PostString: ' + AContent;
 end;
 
-function THelloWorldResource.PostJSONArrayExample(AContent: TJSONArray): string;
+function THelloWorldResource.PostList(AList: TPersonList): string;
 begin
-  Result := 'Array len: ' + IntToStr(AContent.Count);
+  Result := 'List Count: ' + AList.Count.ToString;
 end;
 
-function THelloWorldResource.PostJSONExample(AContent: TJSONObject): string;
+function THelloWorldResource.PostObj(APerson: TPerson): string;
 begin
-  Result := 'Name=' + AContent.GetValue<string>('name');
+  Result := Format('Name: %s, Age: %d', [APerson.Name, APerson.Age]);
+end;
+
+function THelloWorldResource.PostOrder(AOrderProposal: TOrderProposal): TOrder;
+begin
+  Result := TOrder.Create;
+
+  Result.ID := Random(1000);
+  Result.Description := AOrderProposal.Description;
+  Result.Article := AOrderProposal.Article;
+  Result.Quantity := AOrderProposal.Quantity;
+
 end;
 
 function THelloWorldResource.PostMultiPartExample(

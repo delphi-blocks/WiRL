@@ -13,7 +13,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
-  Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
+  Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, System.TypInfo,
 
   Neon.Core.Types,
   WiRL.Configuration.Neon,
@@ -67,7 +67,8 @@ begin
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
-        .SetMemberCase(TNeonCase.SnakeCase);
+        .SetVisibility([mvPublic, mvPublished])
+        .SetMemberCase(TNeonCase.PascalCase);
 
   StartServerAction.Execute;
 end;

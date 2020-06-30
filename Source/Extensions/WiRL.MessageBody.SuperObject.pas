@@ -34,7 +34,7 @@ type
   [Produces(TMediaType.APPLICATION_JSON)]
   TWiRLSuperObjectProvider = class(TMessageBodyProvider)
   public
-    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -45,7 +45,7 @@ implementation
 
 { TWiRLSuperObjectProvider }
 
-function TWiRLSuperObjectProvider.ReadFrom(AParam: TRttiParameter;
+function TWiRLSuperObjectProvider.ReadFrom(AType: TRttiType;
   AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 begin
   Result := TValue.From<ISuperObject>(TSuperObject.ParseStream(AContentStream, True));
