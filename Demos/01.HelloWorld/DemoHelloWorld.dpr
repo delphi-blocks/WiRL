@@ -13,7 +13,8 @@ uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
   Server.Resources in 'Server.Resources.pas',
-  WiRL.Schemas.Swagger in '..\..\Source\Extensions\WiRL.Schemas.Swagger.pas';
+  WiRL.Schemas.Swagger in '..\..\Source\Extensions\WiRL.Schemas.Swagger.pas',
+  Demo.Entities in 'Demo.Entities.pas';
 
 {$R *.res}
 

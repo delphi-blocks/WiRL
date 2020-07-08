@@ -319,7 +319,7 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLMethodParam; ARe
     if Assigned(LReader) then
     begin
       ContextInjection(LReader as TObject);
-      Result := LReader.ReadFrom(AParam, AParamValue.MediaType, AParamValue.Headers, AParamValue.AsStream);
+      Result := LReader.ReadFrom(AParam.ParamType, AParamValue.MediaType, AParamValue.Headers, AParamValue.AsStream);
     end
     else if AParam.ParamType.IsInstance then
       Result := TRttiHelper.CreateInstance(AParam.ParamType, AParamValue.AsString)

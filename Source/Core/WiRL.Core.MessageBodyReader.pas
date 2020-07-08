@@ -38,8 +38,8 @@ type
     /// <summary>
     ///   Read a type from the HTTP Request stream
     /// </summary>
-    function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+    function ReadFrom(AType: TRttitype; AMediaType: TMediaType; 
+	  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
   end;
 
   TIsReadableFunction = reference to function(AType: TRttiType;
@@ -94,7 +94,7 @@ type
     function AddReaderName(const AReaderName: string): TReaderInfo;
     procedure Assign(ARegistry: TWiRLReaderRegistry);
     procedure Enumerate(const AProc: TProc<TReaderInfo>);
-    function FindReader(AParam: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
+    function FindReader(AType: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
 
     class function GetDefaultClassAffinityFunc<T: class>: TGetAffinityFunction;
 
@@ -180,7 +180,7 @@ begin
 
 end;
 
-function TWiRLReaderRegistry.FindReader(AParam: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
+function TWiRLReaderRegistry.FindReader(AType: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
 var
   LEntry: TReaderInfo;
   LCompatibleEntries: TArray<TReaderInfo>;
@@ -192,7 +192,7 @@ begin
   for LEntry in FRegistry do
   begin
     if (LEntry.Consumes.Contains(AMediaType) or LEntry.Consumes.Contains(TMediaType.WILDCARD)) and
-       LEntry.IsReadable(AParam, AParam.GetAttributes, AMediaType) then
+       LEntry.IsReadable(AType, AType.GetAttributes, AMediaType) then
     begin
       {$IFDEF HAS_NEW_ARRAY}
       LCompatibleEntries := LCompatibleEntries + [LEntry];
@@ -209,11 +209,11 @@ begin
   else
     begin
       LCandidate := LCompatibleEntries[0];
-      LCandidateAffinity := LCandidate.GetAffinity(AParam, AParam.GetAttributes, AMediaType);
+      LCandidateAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType);
 
       for LEntry in LCompatibleEntries do
       begin
-        LCurrentAffinity := LCandidate.GetAffinity(AParam, AParam.GetAttributes, AMediaType);
+        LCurrentAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType);
 
         if LCurrentAffinity >= LCandidateAffinity then
         begin

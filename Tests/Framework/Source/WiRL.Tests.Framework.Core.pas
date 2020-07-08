@@ -178,8 +178,7 @@ begin
   end;
 end;
 
-procedure TTestUrl.TestCombinePath(const Path1, Path2, Path3,
-  ResultPath: string);
+procedure TTestUrl.TestCombinePath(const Path1, Path2, Path3, ResultPath: string);
 begin
   Assert.AreEqual(ResultPath, TWiRLURL.CombinePath([Path1, Path2, Path3], True, True));
 end;

@@ -44,7 +44,7 @@ type
   private
     function GetStorageFormat(AMediaType: TMediaType): TFDStorageFormat;
   public
-    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+    function ReadFrom(AType: TRttitype; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -63,7 +63,7 @@ type
   [Produces(TMediaType.APPLICATION_JSON)]
   TWiRLFireDACDataSetArrayProvider = class(TMessageBodyProvider)
   public
-    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+    function ReadFrom(AType: TRttitype; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -81,7 +81,7 @@ type
   [Produces(TMediaType.APPLICATION_JSON)]
   TWiRLFireDACDataSetsProvider = class(TMessageBodyProvider)
   public
-    function ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+    function ReadFrom(AType: TRttitype; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -100,7 +100,7 @@ uses
 
 { TWiRLFireDACDataSetArrayProvider }
 
-function TWiRLFireDACDataSetArrayProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+function TWiRLFireDACDataSetArrayProvider.ReadFrom(AType: TRttitype; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 var
   LJSON: TJSONObject;
@@ -174,7 +174,7 @@ end;
 
 { TWiRLFireDACDataSetsProvider }
 
-function TWiRLFireDACDataSetsProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+function TWiRLFireDACDataSetsProvider.ReadFrom(AType: TRttitype; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 var
   LJSON: TJSONObject;
@@ -237,7 +237,7 @@ begin
     );
 end;
 
-function TWiRLFireDACAdaptedDataSetProvider.ReadFrom(AParam: TRttiParameter; AMediaType: TMediaType;
+function TWiRLFireDACAdaptedDataSetProvider.ReadFrom(AType: TRttitype; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 var
   LDataSet: TFDMemTable;

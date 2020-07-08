@@ -10,6 +10,28 @@
 			"item": [
 				{
 					"name": "Hello World",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a7b8ca0f-5d0d-4e73-b3c1-87522969bf96",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Contents is Hello, world!\", function () {\r",
+									"    pm.response.to.have.body(\"Hello World!\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is UTF-8\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\", \"text/plain; charset=utf-8\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -223,21 +245,26 @@
 					"response": []
 				},
 				{
-					"name": "Post",
+					"name": "Post String",
 					"request": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json"
+								"value": "text/plain"
+							},
+							{
+								"key": "Accept",
+								"value": "text/plain",
+								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "[\n  {\n  \t\"nome\": \"Paolo\",\n  \t\"Eta\": 47\n  },\n  {\n  \t\"nome\": \"Luca\",\n  \t\"Eta\": 40\n  }\n]"
+							"raw": "Sample Data (as string)"
 						},
 						"url": {
-							"raw": "localhost:8080/rest/app/helloworld/postexample",
+							"raw": "localhost:8080/rest/app/helloworld/poststring",
 							"host": [
 								"localhost"
 							],
@@ -246,19 +273,93 @@
 								"rest",
 								"app",
 								"helloworld",
-								"postexample"
+								"poststring"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Post Object",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "text/plain",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Name\": \"Paolo\",\n  \"Age\": 47\n}"
+						},
+						"url": {
+							"raw": "localhost:8080/rest/app/helloworld/postobj",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"helloworld",
+								"postobj"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Person",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"Name\": \"Paolo\",\n    \"Age\": 50\n  },\n  {\n    \"Name\": \"Luca\",\n    \"Age\": 43\n  }\n]"
+						},
+						"url": {
+							"raw": "localhost:8080/rest/app/helloworld/person",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"helloworld",
+								"person"
 							]
 						}
 					},
 					"response": []
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "02.ContentType",
 			"item": [
 				{
-					"name": "Sample Resource (text)",
+					"name": "Content (text)",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -268,7 +369,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:8080/rest/app/sample",
+							"raw": "localhost:8080/rest/app/content",
 							"host": [
 								"localhost"
 							],
@@ -276,14 +377,14 @@
 							"path": [
 								"rest",
 								"app",
-								"sample"
+								"content"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Sample Resource (html)",
+					"name": "Content (html)",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -293,7 +394,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:8080/rest/app/sample",
+							"raw": "localhost:8080/rest/app/content",
 							"host": [
 								"localhost"
 							],
@@ -301,14 +402,14 @@
 							"path": [
 								"rest",
 								"app",
-								"sample"
+								"content"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Sample Resource (json)",
+					"name": "Content (json)",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -318,7 +419,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:8080/rest/app/sample",
+							"raw": "localhost:8080/rest/app/content",
 							"host": [
 								"localhost"
 							],
@@ -326,13 +427,276 @@
 							"path": [
 								"rest",
 								"app",
-								"sample"
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Content (xml)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/xml"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/content",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Content (jpeg)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "image/jpeg"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/content",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Content (pdf)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/pdf"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/content",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Custom Content (text)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/plain"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "Ciao a tutti"
+						},
+						"url": {
+							"raw": "localhost:8080/rest/app/content",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Custom Content (html)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/html"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "Ciao a tutti"
+						},
+						"url": {
+							"raw": "localhost:8080/rest/app/content",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Entity (json)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/content",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TDataset (json)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/content/dataset",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content",
+								"dataset"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TFDMemTable (json)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/content/fddataset",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content",
+								"fddataset"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Array of TDataset (json)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/content/datasets",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content",
+								"datasets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Array of Integer (json)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/content/array",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"content",
+								"array"
 							]
 						}
 					},
 					"response": []
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "03.Authorization",
@@ -536,7 +900,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "04.WebServer",
@@ -563,7 +928,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "07.MessageBody",
@@ -633,7 +999,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "10.Filters",
@@ -688,7 +1055,325 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "17.Parameters",
+			"item": [
+				{
+					"name": "String",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/plain",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/str/Paolo Rossi",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"str",
+								"Paolo Rossi"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Integer",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/plain",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/int/4242",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"int",
+								"4242"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Float",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/float/42.42",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"float",
+								"42.42"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Boolean",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/bool/true",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"bool",
+								"true"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Enum (First, Second)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/enum/First",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"enum",
+								"First"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Date",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/date/2019-08-25",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"date",
+								"2019-08-25"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Time",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/time/12:48:44",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"time",
+								"12:48:44"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DateTime",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/datetime/2019-08-25T11:54:12.234",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"datetime",
+								"2019-08-25T11:54:12.234"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{    \r\n  \"Name\": \"Paolo\",\r\n  \"City\": \"Piacenza\",\r\n  \"Age\": 50,\r\n  \"Enum\": \"First\"\r\n}  "
+						},
+						"url": {
+							"raw": "localhost:8080/rest/app/params/record",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"record"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Array (Query)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/rest/app/params/array/[1,32,45,66]",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"array",
+								"[1,32,45,66]"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Array (Body)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n  \t\"nome\": \"Paolo\",\n  \t\"Eta\": 47\n  },\n  {\n  \t\"nome\": \"Luca\",\n  \t\"Eta\": 40\n  }\n]"
+						},
+						"url": {
+							"raw": "localhost:8080/rest/app/params/array",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"app",
+								"params",
+								"array"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
 		}
-	]
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "0ae91059-9cce-4f5c-9951-1850c23e0aa4",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "9efeab07-fb2c-46ec-a94d-5c7db09f18e3",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "daba55c6-d183-460e-bfcc-9aedde144034",
+			"key": "host",
+			"value": "localhost"
+		},
+		{
+			"id": "1f589c8f-b8dc-4c8e-9c95-f3fa362b5858",
+			"key": "port",
+			"value": "8080"
+		}
+	],
+	"protocolProfileBehavior": {}
 }

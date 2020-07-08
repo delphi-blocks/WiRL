@@ -29,22 +29,16 @@ uses
   Server.Entities;
 
 type
-  [Path('sample')]
+  [Path('content')]
   TSampleResource = class
   private
     const XML_AND_JSON = TMediaType.APPLICATION_XML + ',' + TMediaType.APPLICATION_JSON;
   public
-    [GET, Produces(TMediaType.TEXT_HTML)]
-    function HelloWorld_HTML: string;
-
-    [PUT, Consumes(TMediaType.TEXT_PLAIN), Produces(TMediaType.TEXT_PLAIN)]
-    function CustomizedHelloWorld_TEXT([BodyParam] const AText: string): string;
-
-    [PUT, Consumes(TMediaType.TEXT_PLAIN), Produces(TMediaType.TEXT_HTML)]
-    function CustomizedHelloWorld_HTML([BodyParam] const AText: string): string;
-
     [GET, Produces(TMediaType.TEXT_PLAIN)]
     function HelloWorld_TEXT: string;
+
+    [GET, Produces(TMediaType.TEXT_HTML)]
+    function HelloWorld_HTML: string;
 
     [GET, Produces(TMediaType.APPLICATION_JSON)]
     function HelloWorld_JSON: TJSONObject;
@@ -52,31 +46,37 @@ type
     [GET, Produces(TMediaType.APPLICATION_XML)]
     function HelloWorld_XML: string;
 
-    [GET, Path('/entity')]
-    [Produces(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JAVASCRIPT)]
-    function GetEntityJSON: TArray<TSimpleClass>;
-
     [GET, Produces(TMediaType.IMAGE_JPEG)]
     function JpegImage: TStream;
 
     [GET, Produces(TMediaType.APPLICATION_PDF)]
     function PdfDocument: TStream;
 
-    [GET, Path('/dataset1')]
-    [Produces(XML_AND_JSON)]
-    function DataSet1: TDataSet;
+    [PUT, Consumes(TMediaType.TEXT_PLAIN), Produces(TMediaType.TEXT_PLAIN)]
+    function CustomizedHelloWorld_TEXT([BodyParam] const AText: string): string;
 
-    [GET, Path('/dataset2')]
-    function DataSet2: TFDMemTable;
+    [PUT, Consumes(TMediaType.TEXT_PLAIN), Produces(TMediaType.TEXT_HTML)]
+    function CustomizedHelloWorld_HTML([BodyParam] const AText: string): string;
 
-    [GET, Path('/datasets'), Produces(TMediaType.APPLICATION_JSON)]
-    function DataSets: TArray<TDataset>;
+    [GET, Path('/entity')]
+    [Produces(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JAVASCRIPT)]
+    function GetEntityJSON: TArray<TSimpleClass>;
 
     [GET, Path('/array')]
     function SimpleArray: TArray<Integer>;
 
     [GET, Path('/int')]
     function GetInteger: Integer;
+
+    [GET, Path('/dataset')]
+    [Produces(XML_AND_JSON)]
+    function DataSet1: TDataSet;
+
+    [GET, Path('/datasets'), Produces(TMediaType.APPLICATION_JSON)]
+    function DataSets: TArray<TDataset>;
+
+    [GET, Path('/fddataset')]
+    function DataSet2: TFDMemTable;
   end;
 
 implementation
@@ -183,8 +183,15 @@ begin
 end;
 
 function TSampleResource.PdfDocument: TStream;
+var
+  LFileName: string;
 begin
-  Result := TFileStream.Create('document.pdf', fmOpenRead or fmShareDenyWrite);
+  LFileName := IncludeTrailingPathDelimiter(
+    TDirectory.GetParent(
+      TDirectory.GetParent(
+        TDirectory.GetParent(TWiRLEngine.ServerDirectory)))) +
+    'wirl-doc.pdf';
+  Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
 
 function TSampleResource.SimpleArray: TArray<Integer>;

@@ -34,8 +34,7 @@ type
   private
     procedure Deserialize(const ADocument: string; AObject: TObject);
   public
-    function ReadFrom(AParam: TRttiParameter;
-      AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
   end;
 
   [Produces(TMediaType.APPLICATION_XML)]
@@ -71,12 +70,11 @@ begin
   end;
 end;
 
-function TObjectReaderOXML.ReadFrom(AParam: TRttiParameter;
-  AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+function TObjectReaderOXML.ReadFrom(AType: TRttiType; AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
 var
   LObj: TObject;
 begin
-  LObj := TRttiHelper.CreateInstance(AParam.ParamType);
+  LObj := TRttiHelper.CreateInstance(AType);
   Deserialize(ARequest.Content, LObj);
 end;
 
