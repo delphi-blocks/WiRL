@@ -497,11 +497,12 @@ end;
 
 function TWiRLURLDictionary.ToString: string;
 var
-  LPair: TPair<Integer, string>;
+  i: Integer;
 begin
   Result := '';
-  for LPair in Self.ToArray do
-    Result := Result + '/' + LPair.Value;
+  //DONE: for..in access wouldn't work in proper order
+  for  i := 1 to Self.Count
+    do Result := Result + '/' + Self[i];
 end;
 
 end.

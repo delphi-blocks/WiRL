@@ -86,7 +86,8 @@ type
 implementation
 
 uses
-  System.DateUtils;
+  System.DateUtils,
+  WiRL.Core.Exceptions;
 
 { TWiRLAuthContext }
 
