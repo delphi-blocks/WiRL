@@ -38,7 +38,7 @@ type
   TConfigurator = reference to procedure(AJWTConf: IWiRLConfigurationJWT);
 
   [Implements(IWiRLConfigurationJWT)]
-  TWiRLConfigurationJWT = class sealed(TWiRLConfigurationNRef, IWiRLConfigurationJWT)
+  TWiRLConfigurationJWT = class sealed(TWiRLConfiguration, IWiRLConfigurationJWT)
   private
     const SCRT_SGN = 'd2lybC5zdXBlcnNlY3JldC5zZWVkLmZvci5zaWduaW5n';
   private

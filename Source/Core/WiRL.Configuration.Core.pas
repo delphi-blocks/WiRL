@@ -13,7 +13,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.TypInfo, System.Generics.Collections,
-  System.JSON,
+  System.Generics.Defaults, System.JSON,
 
   WiRL.Core.JSON,
   WiRL.Core.Singleton,
@@ -71,16 +71,12 @@ type
   /// <summary>
   ///   A non-reference counted IInterface implementation
   /// </summary>
-  TWiRLConfigurationNRef = class(TPersistent, IWiRLConfiguration)
+  TWiRLConfiguration = class(TSingletonImplementation, IWiRLConfiguration)
   private
     FNeonConfig: TNeonConfiguration;
     FApplication: IWiRLApplication;
     function GetAsJSON: TJSONObject;
     function GetAsString: string;
-  protected
-    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
   public
     constructor Create;
     destructor Destroy; override;
@@ -96,7 +92,7 @@ type
     function BackToApp: IWiRLApplication;
   end;
 
-  TWiRLConfigurationNRefClass = class of TWiRLConfigurationNRef;
+  TWiRLConfigurationClass = class of TWiRLConfiguration;
 
   ImplementsAttribute = class(TCustomAttribute)
   private
@@ -106,18 +102,17 @@ type
     constructor Create(AInterfaceRef: TGUID);
   end;
 
-  TWiRLConfigRegistry = class(TObjectDictionary<TWiRLConfigurationNRefClass, TWiRLConfigurationNRef>)
-  end;
+  TWiRLConfigRegistry = class(TObjectDictionary<TWiRLConfigurationClass, TWiRLConfiguration>);
 
-  TWiRLConfigClassRegistry = class(TDictionary<TGUID, TWiRLConfigurationNRefClass>)
+  TWiRLConfigClassRegistry = class(TDictionary<TGUID, TWiRLConfigurationClass>)
   private type
     TWiRLConfigClassRegistrySingleton = TWiRLSingleton<TWiRLConfigClassRegistry>;
   protected
     class function GetInstance: TWiRLConfigClassRegistry; static; inline;
   public
     constructor Create; virtual;
-    function GetImplementationOf(AInterfaceRef: TGUID): TWiRLConfigurationNRefClass;
-    procedure RegisterConfigClass(AConfigurationClass: TWiRLConfigurationNRefClass);
+    function GetImplementationOf(AInterfaceRef: TGUID): TWiRLConfigurationClass;
+    procedure RegisterConfigClass(AConfigurationClass: TWiRLConfigurationClass);
 
     class property Instance: TWiRLConfigClassRegistry read GetInstance;
   end;
@@ -127,37 +122,37 @@ implementation
 uses
   WiRL.Rtti.Utils;
 
-{ TWiRLConfigurationNRef }
+{ TWiRLConfiguration }
 
-function TWiRLConfigurationNRef.BackToApp: IWiRLApplication;
+function TWiRLConfiguration.BackToApp: IWiRLApplication;
 begin
   Result := FApplication;
 end;
 
-constructor TWiRLConfigurationNRef.Create;
+constructor TWiRLConfiguration.Create;
 begin
   FNeonConfig := TNeonConfiguration.Create;
   FNeonConfig.SetVisibility([mvPublished]);
   FNeonConfig.SetPrettyPrint(False);
 end;
 
-destructor TWiRLConfigurationNRef.Destroy;
+destructor TWiRLConfiguration.Destroy;
 begin
   FNeonConfig := nil;
   inherited;
 end;
 
-function TWiRLConfigurationNRef.GetAsJSON: TJSONObject;
+function TWiRLConfiguration.GetAsJSON: TJSONObject;
 begin
   Result := TNeon.ObjectToJSON(Self, FNeonConfig) as TJSONObject;
 end;
 
-function TWiRLConfigurationNRef.GetAsString: string;
+function TWiRLConfiguration.GetAsString: string;
 begin
   Result := TNeon.ObjectToJSONString(Self, FNeonConfig);
 end;
 
-procedure TWiRLConfigurationNRef.SaveToFile(const AFileName: string);
+procedure TWiRLConfiguration.SaveToFile(const AFileName: string);
 var
   LStream: TFileStream;
 begin
@@ -169,32 +164,14 @@ begin
   end;
 end;
 
-procedure TWiRLConfigurationNRef.SaveToJSONObject(const AName: string; AJSON: TJSONObject);
+procedure TWiRLConfiguration.SaveToJSONObject(const AName: string; AJSON: TJSONObject);
 begin
   AJSON.AddPair(AName, GetAsJSON);
 end;
 
-procedure TWiRLConfigurationNRef.SaveToStream(AStream: TStream);
+procedure TWiRLConfiguration.SaveToStream(AStream: TStream);
 begin
   TNeon.PrintToStream(GetAsJSON, AStream, True);
-end;
-
-function TWiRLConfigurationNRef.QueryInterface(const IID: TGUID; out Obj): HResult;
-begin
-  if GetInterface(IID, Obj) then
-    Result := S_OK
-  else
-    Result := E_NOINTERFACE;
-end;
-
-function TWiRLConfigurationNRef._AddRef: Integer;
-begin
-  Result := -1;
-end;
-
-function TWiRLConfigurationNRef._Release: Integer;
-begin
-  Result := -1;
 end;
 
 { ImplementsAttribute }
@@ -211,7 +188,7 @@ begin
   inherited Create();
 end;
 
-function TWiRLConfigClassRegistry.GetImplementationOf(AInterfaceRef: TGUID): TWiRLConfigurationNRefClass;
+function TWiRLConfigClassRegistry.GetImplementationOf(AInterfaceRef: TGUID): TWiRLConfigurationClass;
 begin
   if not TryGetValue(AInterfaceRef, Result) then
     raise EWiRLException.Create('Implementation class not found');
@@ -222,7 +199,7 @@ begin
   Result := TWiRLConfigClassRegistrySingleton.Instance;
 end;
 
-procedure TWiRLConfigClassRegistry.RegisterConfigClass(AConfigurationClass: TWiRLConfigurationNRefClass);
+procedure TWiRLConfigClassRegistry.RegisterConfigClass(AConfigurationClass: TWiRLConfigurationClass);
 var
   LImplementsAttribute: ImplementsAttribute;
 begin

@@ -98,10 +98,10 @@ type
     function FormatSetting: TWiRLFormatSettingConfig;
 
     function Configure<T: IInterface>: T;
-    function GetConfiguration<T: TWiRLConfigurationNRef>: T;
+    function GetConfiguration<T: TWiRLConfiguration>: T;
 
     function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
-    function GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
+    function GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
 
     function GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
 
@@ -488,11 +488,11 @@ begin
     Self.AddResource(LResource);
 end;
 
-function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
+function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
 begin
   if not FConfigRegistry.TryGetValue(AClass, Result) then
   begin
-    Result := TRttiHelper.CreateInstance(AClass) as TWiRLConfigurationNRef;
+    Result := TRttiHelper.CreateInstance(AClass) as TWiRLConfiguration;
     Result.Application := Self;
     FConfigRegistry.Add(AClass, Result);
   end;
@@ -500,8 +500,8 @@ end;
 
 function TWiRLApplication.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
 var
-  LConfig: TWiRLConfigurationNRef;
-  LConfigClass: TWiRLConfigurationNRefClass;
+  LConfig: TWiRLConfiguration;
+  LConfigClass: TWiRLConfigurationClass;
 begin
   LConfigClass := TWiRLConfigClassRegistry.Instance.GetImplementationOf(AInterfaceRef);
   LConfig := GetConfigByClassRef(LConfigClass);
@@ -581,7 +581,7 @@ end;
 
 function TWiRLApplication.GetConfiguration<T>: T;
 begin
-  Result := GetConfigByClassRef(TWiRLConfigurationNRefClass(T)) as T;
+  Result := GetConfigByClassRef(TWiRLConfigurationClass(T)) as T;
 end;
 
 function TWiRLApplication.GetFormatSettingFor(ATypeInfo: PTypeInfo): string;

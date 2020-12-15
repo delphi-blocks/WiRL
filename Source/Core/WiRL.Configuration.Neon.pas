@@ -36,7 +36,7 @@ type
   end;
 
   [Implements(IWiRLConfigurationNeon)]
-  TWiRLConfigurationNeon = class(TWiRLConfigurationNRef, IWiRLConfigurationNeon)
+  TWiRLConfigurationNeon = class(TWiRLConfiguration, IWiRLConfigurationNeon)
   private
     FPrettyPrint: Boolean;
     FIgnoreFieldPrefix: Boolean;
@@ -76,6 +76,7 @@ type
     property Visibility: TNeonVisibility read FVisibility write FVisibility;
     property IgnoreFieldPrefix: Boolean read FIgnoreFieldPrefix write FIgnoreFieldPrefix;
     property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
+ public
     property Serializers: TNeonSerializerRegistry read FSerializers write FSerializers;
   end;
 

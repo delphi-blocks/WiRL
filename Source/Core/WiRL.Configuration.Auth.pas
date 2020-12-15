@@ -39,7 +39,7 @@ type
   end;
 
   [Implements(IWiRLConfigurationAuth)]
-  TWiRLConfigurationAuth = class sealed(TWiRLConfigurationNRef, IWiRLConfigurationAuth)
+  TWiRLConfigurationAuth = class sealed(TWiRLConfiguration, IWiRLConfigurationAuth)
   public
     function Configure: IWiRLConfigurationAuth;
     function SetAuthChallenge(AChallenge: TAuthChallenge; const ARealm: string): IWiRLConfigurationAuth;
