@@ -17,7 +17,7 @@ uses
 
   WiRL.Configuration.Core,
   WiRL.Core.Classes,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Rtti.Utils,
   WiRL.Core.Exceptions,
   WiRL.Core.Registry,

@@ -99,13 +99,12 @@
         </DelphiCompile>
         <DCCReference Include="FMXClient.Forms.Main.pas">
             <Form>MainForm</Form>
-            <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="FMXClient.DataModules.Main.pas">
             <Form>MainDataModule</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="Demo.Entities.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -14,9 +14,14 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.StrUtils,
 
-  WiRL.Core.Classes, WiRL.http.Request, WiRL.http.Response,
-  WiRL.http.Server.Interfaces, WiRL.Core.Exceptions,
-  WiRL.Core.Utils, WiRL.Rtti.Utils, WiRL.Core.Context;
+  WiRL.Core.Classes,
+  WiRL.http.Request,
+  WiRL.http.Response,
+  WiRL.http.Server.Interfaces,
+  WiRL.Core.Exceptions,
+  WiRL.Core.Utils,
+  WiRL.Rtti.Utils,
+  WiRL.Core.Context.Server;
 
 type
   TWiRLServer = class;

@@ -47,7 +47,7 @@ type
     FMemberCase: TNeonCase;
     FMembers: TNeonMembersSet;
   public
-    constructor Create;
+    constructor Create; override;
     destructor Destroy; override;
 
     class function Default: IWiRLConfigurationNeon; static;

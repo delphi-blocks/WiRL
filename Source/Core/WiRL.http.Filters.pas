@@ -15,10 +15,11 @@ uses
   System.SysUtils, System.Generics.Collections, System.Generics.Defaults,
   System.Classes, System.Rtti,
 
+  WiRL.Core.Classes,
   WiRL.Core.Singleton,
   WiRL.Core.Exceptions,
   WiRL.Core.Attributes,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.Core.Resource,

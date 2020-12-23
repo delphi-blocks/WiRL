@@ -26,7 +26,8 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBody.Classes,
   WiRL.Core.Exceptions,
-  WiRL.Configuration.Neon;
+  WiRL.Configuration.Neon,
+  WiRL.Configuration.Converter;
 
 type
   /// <summary>
@@ -45,6 +46,8 @@ type
   /// </summary>
   [Produces(TMediaType.TEXT_PLAIN)]
   TWiRLSimpleTypesWriter = class(TMessageBodyWriter)
+  private
+    [Context] FFormatSettingConfig: TWiRLFormatSettingConfig;
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
@@ -55,6 +58,9 @@ type
   ///   the JSON or JSONP to the stream
   /// </summary>
   TWiRLJSONProvider = class(TMessageBodyProvider)
+  private
+    [Context] FRequest: TWiRLRequest;
+    [Context] FConfigurationNeon: TWiRLConfigurationNeon;
   protected
     procedure WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
     procedure WriteJSONPToStream(AJSON: TJSONValue; AStream: TStream);
@@ -200,7 +206,7 @@ var
   LStringValue: string;
   LBytes: TBytes;
 begin
-  LFormatSetting := WiRLApplication.GetFormatSettingFor(AValue.TypeInfo);
+  LFormatSetting := FFormatSettingConfig.GetFormatSettingFor(AValue.TypeInfo);
 
   LEncoding := AMediaType.GetDelphiEncoding;
   try
@@ -411,7 +417,7 @@ begin
   LBytes := TEncoding.UTF8.GetBytes(LCallback + '(');
   AStream.Write(LBytes[0], Length(LBytes));
 
-  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.GetConfiguration<TWiRLConfigurationNeon>.GetNeonConfig.GetPrettyPrint);
+  TNeon.PrintToStream(AJSON, AStream, FConfigurationNeon.GetNeonConfig.GetPrettyPrint);
 
   LBytes := TEncoding.UTF8.GetBytes(');');
   AStream.Write(LBytes[0], Length(LBytes));
@@ -419,7 +425,7 @@ end;
 
 procedure TWiRLJSONProvider.WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
 begin
-  TNeon.PrintToStream(AJSON, AStream, WiRLApplication.GetConfiguration<TWiRLConfigurationNeon>.GetNeonConfig.GetPrettyPrint);
+  TNeon.PrintToStream(AJSON, AStream, FConfigurationNeon.GetNeonConfig.GetPrettyPrint);
 end;
 
 initialization

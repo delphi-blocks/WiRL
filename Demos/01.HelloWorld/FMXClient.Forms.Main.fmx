@@ -19,7 +19,7 @@ object MainForm: TMainForm
     Size.Width = 640.000000000000000000
     Size.Height = 440.000000000000000000
     Size.PlatformDefault = False
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 1
     TabPosition = PlatformDefault
     Sizes = (
@@ -31,7 +31,7 @@ object MainForm: TMainForm
       CustomIcon = <
         item
         end>
-      IsSelected = True
+      IsSelected = False
       Size.Width = 122.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -69,7 +69,7 @@ object MainForm: TMainForm
       CustomIcon = <
         item
         end>
-      IsSelected = False
+      IsSelected = True
       Size.Width = 131.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -191,6 +191,20 @@ object MainForm: TMainForm
         TabOrder = 2
         Text = 'Post'
         OnClick = btnPostClick
+      end
+      object Button1: TButton
+        Position.X = 240.000000000000000000
+        Position.Y = 230.000000000000000000
+        TabOrder = 3
+        Text = 'Button1'
+        OnClick = Button1Click
+      end
+      object Button2: TButton
+        Position.X = 240.000000000000000000
+        Position.Y = 278.000000000000000000
+        TabOrder = 4
+        Text = 'Button2'
+        OnClick = Button2Click
       end
     end
   end

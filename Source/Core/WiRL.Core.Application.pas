@@ -29,11 +29,6 @@ uses
   WiRL.Core.Injection;
 
 type
-  TWiRLFomatSettingDictionary = class(TDictionary<Pointer,string>)
-  public
-    procedure AddFormat(ATypeInfo: PTypeInfo; const AFormat: string);
-  end;
-
   TWiRLApplication = class(TComponent, IWiRLApplication)
   private
     class var FRttiContext: TRttiContext;
@@ -44,10 +39,9 @@ type
     FReaderRegistry: TWiRLReaderRegistry;
     FConfigRegistry: TWiRLConfigRegistry;
 
-    FFomatSettingDictionary: TWiRLFomatSettingDictionary;
+    //FFomatSettingDictionary: TWiRLFomatSettingDictionary;
 
     FAppConfigurator: TAppConfigurator;
-    FFormatSettingConfig: TWiRLFormatSettingConfig;
     FBasePath: string;
     FAppName: string;
     FSystemApp: Boolean;
@@ -95,7 +89,7 @@ type
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function AddApplication(const ABasePath: string): IWiRLApplication;
-    function FormatSetting: TWiRLFormatSettingConfig;
+    function AddConfiguration(const AConfiguration: TWiRLConfiguration): IWiRLApplication;
 
     function Configure<T: IInterface>: T;
     function GetConfiguration<T: TWiRLConfiguration>: T;
@@ -109,7 +103,7 @@ type
     function GetParentComponent: TComponent; override;
     function HasParent: Boolean; override;
 
-    procedure AddFormat(ATypeInfo: PTypeInfo; const AFormat: string);
+    // Remove???
     function GetFormatSettingFor(ATypeInfo: PTypeInfo): string;
 
     property SystemApp: Boolean read FSystemApp;
@@ -147,6 +141,7 @@ implementation
 
 uses
   System.StrUtils,
+  WiRL.Configuration.Converter,
   WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
@@ -176,6 +171,13 @@ function TWiRLApplication.AddApplication(
   const ABasePath: string): IWiRLApplication;
 begin
   Result := (FEngine as TWiRLEngine).AddApplication(ABasePath);
+end;
+
+function TWiRLApplication.AddConfiguration(
+  const AConfiguration: TWiRLConfiguration): IWiRLApplication;
+begin
+  FConfigRegistry.Add(AConfiguration);
+  Result := Self;
 end;
 
 function TWiRLApplication.AddFilter(const AFilter: string): Boolean;
@@ -211,12 +213,6 @@ begin
       Result := True;
     end;
   end;
-end;
-
-procedure TWiRLApplication.AddFormat(ATypeInfo: PTypeInfo;
-  const AFormat: string);
-begin
-  FFomatSettingDictionary.AddFormat(ATypeInfo, AFormat);
 end;
 
 function TWiRLApplication.AddReader(const AReader: string): Boolean;
@@ -427,7 +423,6 @@ begin
   if FReaderRegistry.Count = 0 then
     FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
 
-  FreeAndNil(FFormatSettingConfig);
 end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
@@ -490,12 +485,7 @@ end;
 
 function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
 begin
-  if not FConfigRegistry.TryGetValue(AClass, Result) then
-  begin
-    Result := TRttiHelper.CreateInstance(AClass) as TWiRLConfiguration;
-    Result.Application := Self;
-    FConfigRegistry.Add(AClass, Result);
-  end;
+  Result := FConfigRegistry.GetApplicationConfig(AClass, Self);
 end;
 
 function TWiRLApplication.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
@@ -531,8 +521,6 @@ begin
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
 
-  FFomatSettingDictionary := TWiRLFomatSettingDictionary.Create;
-
   FAppConfigurator := TAppConfiguratorImpl.Create(Self);
 
   FErrorMediaType := TMediaType.APPLICATION_JSON;
@@ -561,17 +549,7 @@ begin
   FResourceRegistry.Free;
   FConfigRegistry.Free;
   FAppConfigurator.Free;
-  FFormatSettingConfig.Free;
-  FFomatSettingDictionary.Free;
-
   inherited;
-end;
-
-function TWiRLApplication.FormatSetting: TWiRLFormatSettingConfig;
-begin
-  if not Assigned(FFormatSettingConfig) then
-    FFormatSettingConfig := TWiRLFormatSettingConfig.Create(Self);
-  Result := FFormatSettingConfig;
 end;
 
 function TWiRLApplication.GetAppConfigurator: TAppConfigurator;
@@ -586,8 +564,7 @@ end;
 
 function TWiRLApplication.GetFormatSettingFor(ATypeInfo: PTypeInfo): string;
 begin
-  if not FFomatSettingDictionary.TryGetValue(ATypeInfo, Result) then
-    Result := TWiRLFormatSetting.DEFAULT;
+  Result := GetConfiguration<TWiRLFormatSettingConfig>.GetFormatSettingFor(ATypeInfo);
 end;
 
 function TWiRLApplication.GetParentComponent: TComponent;
@@ -674,14 +651,6 @@ function TAppConfiguratorImpl.GetConfigByInterfaceRef(
   AInterfaceRef: TGUID): IInterface;
 begin
   Result := FApplication.GetConfigByInterfaceRef(AInterfaceRef);
-end;
-
-{ TWiRLFomatSettingDictionary }
-
-procedure TWiRLFomatSettingDictionary.AddFormat(ATypeInfo: PTypeInfo;
-  const AFormat: string);
-begin
-  Add(ATypeInfo, AFormat);
 end;
 
 initialization

@@ -12,9 +12,10 @@ unit WiRL.Configuration.Core;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.TypInfo, System.Generics.Collections,
+  System.Classes, System.SysUtils, System.TypInfo, System.Rtti, System.Generics.Collections,
   System.Generics.Defaults, System.JSON,
 
+  WiRL.Core.Classes,
   WiRL.Core.JSON,
   WiRL.Core.Singleton,
   WiRL.Core.Exceptions,
@@ -31,15 +32,9 @@ type
 
   IWiRLApplication = interface;
 
-  TWiRLFormatSettingConfig = class(TObject)
-  private
-    FApplication: IWiRLApplication;
-  public
-    constructor Create(AApplication: IWiRLApplication);
+  TWiRLConfiguration = class;
 
-    function Add<T>(const AFormat: string): TWiRLFormatSettingConfig;
-    function BackToApp: IWiRLApplication;
-  end;
+  TWiRLConfigurationClass = class of TWiRLConfiguration;
 
   IWiRLApplication = interface
     ['{1F764F15-45D9-40E1-9F79-216748466BF7}']
@@ -57,8 +52,8 @@ type
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function GetAppConfigurator: TAppConfigurator;
     function AddApplication(const ABasePath: string): IWiRLApplication;
-    function FormatSetting: TWiRLFormatSettingConfig;
-    procedure AddFormat(ATypeInfo: PTypeInfo; const AFormat: string);
+    function AddConfiguration(const AConfiguration: TWiRLConfiguration): IWiRLApplication;
+    function GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
 
     property Plugin: TAppConfigurator read GetAppConfigurator;
   end;
@@ -71,6 +66,7 @@ type
   /// <summary>
   ///   A non-reference counted IInterface implementation
   /// </summary>
+  {$M+}
   TWiRLConfiguration = class(TSingletonImplementation, IWiRLConfiguration)
   private
     FNeonConfig: TNeonConfiguration;
@@ -78,7 +74,7 @@ type
     function GetAsJSON: TJSONObject;
     function GetAsString: string;
   public
-    constructor Create;
+    constructor Create; virtual;
     destructor Destroy; override;
 
     procedure SaveToFile(const AFileName: string);
@@ -91,8 +87,7 @@ type
 
     function BackToApp: IWiRLApplication;
   end;
-
-  TWiRLConfigurationClass = class of TWiRLConfiguration;
+  {$M-}
 
   ImplementsAttribute = class(TCustomAttribute)
   private
@@ -102,7 +97,11 @@ type
     constructor Create(AInterfaceRef: TGUID);
   end;
 
-  TWiRLConfigRegistry = class(TObjectDictionary<TWiRLConfigurationClass, TWiRLConfiguration>);
+  TWiRLConfigRegistry = class(TObjectDictionary<TWiRLConfigurationClass, TWiRLConfiguration>)
+  public
+    procedure Add(AConfiguration: TWiRLConfiguration); overload;
+    function GetApplicationConfig(AClass: TWiRLConfigurationClass; AApp: IWiRLApplication): TWiRLConfiguration;
+  end;
 
   TWiRLConfigClassRegistry = class(TDictionary<TGUID, TWiRLConfigurationClass>)
   private type
@@ -230,24 +229,28 @@ begin
   end;
 end;
 
-{ TWiRLFormatSettingConfig }
+{ TWiRLConfigRegistry }
 
-function TWiRLFormatSettingConfig.Add<T>(
-  const AFormat: string): TWiRLFormatSettingConfig;
+procedure TWiRLConfigRegistry.Add(AConfiguration: TWiRLConfiguration);
 begin
-  FApplication.AddFormat(TypeInfo(T), AFormat);
-  Result := Self;
+  Add(TWiRLConfigurationClass(AConfiguration.ClassType), AConfiguration);
 end;
 
-function TWiRLFormatSettingConfig.BackToApp: IWiRLApplication;
+function TWiRLConfigRegistry.GetApplicationConfig(
+  AClass: TWiRLConfigurationClass; AApp: IWiRLApplication): TWiRLConfiguration;
 begin
-  Result := FApplication;
-end;
+  if not TryGetValue(AClass, Result) then
+  begin
+    Result := TRttiHelper.CreateInstance(AClass) as TWiRLConfiguration;
+    try
+      Result.Application := AApp;
+      Add(Result);
+    except
+      Result.Free;
+      raise;
+    end;
+  end;
 
-constructor TWiRLFormatSettingConfig.Create(AApplication: IWiRLApplication);
-begin
-  inherited Create;
-  FApplication := AApplication;
 end;
 
 end.

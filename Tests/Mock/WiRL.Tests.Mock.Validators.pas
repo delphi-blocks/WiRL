@@ -14,6 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.JSON,
   WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Validators;
 
 type

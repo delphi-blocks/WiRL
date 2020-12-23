@@ -20,25 +20,19 @@ uses
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.Core.Attributes,
-  WiRL.Core.Application,
+//  WiRL.Core.Application,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyReader;
 
 type
   TMessageBodyWriter = class(TInterfacedObject, IMessageBodyWriter)
-  protected
-    [Context] FRequest: TWiRLRequest;
-    [Context] WiRLApplication: TWiRLApplication;
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); virtual; abstract;
   end;
 
   TMessageBodyReader = class(TInterfacedObject, IMessageBodyReader)
-  protected
-    [Context] FRequest: TWiRLRequest;
-    [Context] WiRLApplication: TWiRLApplication;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
@@ -46,8 +40,6 @@ type
 
   TMessageBodyProvider = class(TInterfacedObject, IMessageBodyReader, IMessageBodyWriter)
   protected
-    [Context] FRequest: TWiRLRequest;
-    [Context] WiRLApplication: TWiRLApplication;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;

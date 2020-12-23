@@ -20,7 +20,7 @@ uses
   WiRL.Configuration.Neon,
   WiRL.Core.Application,
   WiRL.Core.Engine,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,

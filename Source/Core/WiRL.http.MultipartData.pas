@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, System.NetEncoding,
   System.Generics.Collections, System.Generics.Defaults,
 
+  WiRL.Core.Classes,
   WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.http.Accept.Parser;

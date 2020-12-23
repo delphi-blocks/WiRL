@@ -16,6 +16,8 @@ uses
   WiRL.Core.Declarations;
 
 type
+  EWiRLException = class(Exception);
+
   TNonInterfacedObject = class(TObject, IInterface)
   protected
     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;

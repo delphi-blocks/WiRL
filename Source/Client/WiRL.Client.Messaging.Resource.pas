@@ -15,6 +15,7 @@ interface
 
 uses
   System.SysUtils, System.Classes,
+  System.JSON,
   WiRL.Core.JSON,
 
 {$IFDEF HAS_SYSTEM_THREADING}

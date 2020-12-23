@@ -20,7 +20,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Exceptions,
   WiRL.Core.Declarations,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Registry;
 
 type

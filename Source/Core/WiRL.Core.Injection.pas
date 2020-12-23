@@ -22,36 +22,40 @@ uses
   WiRL.Rtti.Utils;
 
 type
-  IContextFactory = interface
+  // https://stackoverflow.com/questions/27820171/delphi-using-records-as-key-in-tdictionary
+
+
+  IContextObjectFactory = interface
   ['{43596462-9B26-4B84-BD5C-0225900F6C93}']
-    function CreateContext(const AObject: TRttiObject; AContext: TWiRLContext): TValue;
+    function CreateContextObject(const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
   end;
 
   TWiRLContextInjectionRegistry = class
   private
     type
       TWiRLContextInjectionRegistrySingleton = TWiRLSingleton<TWiRLContextInjectionRegistry>;
+
       TEntryInfo = record
         ContextClass: TClass;
         FactoryClass: TClass;
-        ConstructorFunc: TFunc<IContextFactory>
+        ConstructorFunc: TFunc<IContextObjectFactory>
       end;
   private
     FRegistry: TList<TEntryInfo>;
     class function GetInstance: TWiRLContextInjectionRegistry; static; inline;
     function CustomContextInjectionByType(const AObject: TRttiObject;
-      AContext: TWiRLContext; out AValue: TValue): Boolean;
+      AContext: TWiRLContextBase; out AValue: TValue): Boolean;
     function IsSigleton(const AObject: TRttiObject): Boolean;
   public
     constructor Create; virtual;
     destructor Destroy; override;
 
     procedure RegisterFactory<T: class>(const AFactoryClass: TClass); overload;
-    procedure RegisterFactory<T: class>(const AFactoryClass: TClass; const AConstructorFunc: TFunc<IContextFactory>); overload;
+    procedure RegisterFactory<T: class>(const AFactoryClass: TClass; const AConstructorFunc: TFunc<IContextObjectFactory>); overload;
 
-    procedure ContextInjection(AInstance: TObject; AContext: TWiRLContext);
+    procedure ContextInjection(AInstance: TObject; AContext: TWiRLContextBase);
     function ContextInjectionByType(const AObject: TRttiObject;
-      AContext: TWiRLContext; out AValue: TValue): Boolean;
+      AContext: TWiRLContextBase; out AValue: TValue): Boolean;
 
     class property Instance: TWiRLContextInjectionRegistry read GetInstance;
   end;
@@ -59,14 +63,14 @@ type
 implementation
 
 uses
-  WiRL.Core.Engine,
-  WiRL.Core.Application,
+//  WiRL.Core.Engine,
+//  WiRL.Core.Application,
   WiRL.Configuration.Core,
   WiRL.http.URL,
-  WiRL.http.Server,
+//  WiRL.http.Server,
   WiRL.http.Request,
-  WiRL.http.Response,
-  WiRL.Core.Auth.Context;
+  WiRL.http.Response;
+//  WiRL.Core.Auth.Context;
 
 { TWiRLContextInjectionRegistry }
 
@@ -77,25 +81,26 @@ begin
 end;
 
 function TWiRLContextInjectionRegistry.CustomContextInjectionByType(
-  const AObject: TRttiObject; AContext: TWiRLContext; out AValue: TValue): Boolean;
+  const AObject: TRttiObject; AContext: TWiRLContextBase; out AValue: TValue): Boolean;
 var
   LType: TClass;
   LEntry: TEntryInfo;
-  LContextFactory: IContextFactory;
+  LContextFactory: IContextObjectFactory;
   LContextOwned: Boolean;
 begin
   Result := False;
   LType := TRttiHelper.GetType(AObject).AsInstance.MetaclassType;
+
   for LEntry in FRegistry do
   begin
-    if LEntry.ContextClass = LType then
+    if LType.InheritsFrom(LEntry.ContextClass) then
     begin
       LContextFactory := LEntry.ConstructorFunc();
-      AValue := LContextFactory.CreateContext(AObject, AContext);
+      AValue := LContextFactory.CreateContextObject(AObject, AContext);
       if AValue.IsObject then  // Only object should be released
       begin
         LContextOwned := not IsSigleton(AObject); // Singleton should'n be released
-        AContext.CustomContext.Add(AValue.AsObject, LContextOwned);
+        AContext.Containers.Add(AValue.AsObject, LContextOwned);
       end;
       Exit(True);
     end;
@@ -125,24 +130,26 @@ procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(
   const AFactoryClass: TClass);
 begin
   Self.RegisterFactory<T>(AFactoryClass,
-    function :IContextFactory
+    function: IContextObjectFactory
     var
       LInstance: TObject;
     begin
       LInstance := (TRttiHelper.CreateInstance(AFactoryClass));
-      if not Supports(LInstance, IContextFactory, Result) then
-        raise Exception.Create('Interface IContextFactory not implemented');
+      if not Supports(LInstance, IContextObjectFactory, Result) then
+        raise Exception.Create('Interface IContextObjectFactory not implemented');
     end);
 end;
 
 function TWiRLContextInjectionRegistry.ContextInjectionByType(const AObject: TRttiObject;
-  AContext: TWiRLContext; out AValue: TValue): Boolean;
+  AContext: TWiRLContextBase; out AValue: TValue): Boolean;
 var
   LType: TClass;
 begin
-  Result := True;
+  //Result := True;
   LType := TRttiHelper.GetType(AObject).AsInstance.MetaclassType;
 
+
+  {
   // AuthContext
   if (LType.InheritsFrom(TWiRLAuthContext)) then
     AValue := AContext.AuthContext
@@ -167,16 +174,23 @@ begin
   // Application
   else if (LType.InheritsFrom(TWiRLApplication)) then
     AValue := AContext.Application
-  else if (LType.InheritsFrom(TWiRLConfiguration)) then
-    AValue := (AContext.Application as TWiRLApplication).GetConfigByClassRef(TWiRLConfigurationClass(LType))
-  else if CustomContextInjectionByType(AObject, AContext, AValue) then
-    //
-  else
-    Result := False;
+  }
+
+//  if LType.InheritsFrom(TWiRLConfiguration) then
+//  begin
+//    AValue := AContext.GetContainerAs<TWiRLApplication>.GetConfigByClassRef(TWiRLConfigurationClass(LType));
+//    Exit(not AValue.IsEmpty);
+//  end;
+
+  AValue := AContext.FindContainerAs(LType);
+  if not AValue.IsEmpty then
+    Exit(True);
+
+  Result := CustomContextInjectionByType(AObject, AContext, AValue);
 end;
 
 procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(
-  const AFactoryClass: TClass; const AConstructorFunc: TFunc<IContextFactory>);
+  const AFactoryClass: TClass; const AConstructorFunc: TFunc<IContextObjectFactory>);
 var
   LEntryInfo: TEntryInfo;
 begin
@@ -187,7 +201,7 @@ begin
 end;
 
 // Must be thread safe
-procedure TWiRLContextInjectionRegistry.ContextInjection(AInstance: TObject; AContext: TWiRLContext);
+procedure TWiRLContextInjectionRegistry.ContextInjection(AInstance: TObject; AContext: TWiRLContextBase);
 var
   LType: TRttiType;
   LFieldClassType: TClass;

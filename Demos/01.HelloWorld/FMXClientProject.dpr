@@ -10,10 +10,12 @@
 program FMXClientProject;
 
 uses
+  FastMM4,
   System.StartUpCopy,
   FMX.Forms,
   FMXClient.Forms.Main in 'FMXClient.Forms.Main.pas' {MainForm},
-  FMXClient.DataModules.Main in 'FMXClient.DataModules.Main.pas' {MainDataModule: TDataModule};
+  FMXClient.DataModules.Main in 'FMXClient.DataModules.Main.pas' {MainDataModule: TDataModule},
+  Demo.Entities in 'Demo.Entities.pas';
 
 {$R *.res}
 

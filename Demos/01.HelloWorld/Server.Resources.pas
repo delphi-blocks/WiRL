@@ -66,7 +66,7 @@ type
     function TestException: string;
 
     [GET, Path('/person'), Produces(TMediaType.APPLICATION_JSON)]
-    function GetPerson: TPerson;
+    function GetPerson([QueryParam] Id: Integer): TPerson;
 
     [POST, Path('/order'), Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
     function PostOrder([BodyParam] AOrderProposal: TOrderProposal): TOrder;
@@ -133,11 +133,19 @@ begin
   Result := TJSONHelper.ToJSON(AuthContext.Subject.JSON);
 end;
 
-function THelloWorldResource.GetPerson: TPerson;
+function THelloWorldResource.GetPerson(Id: Integer): TPerson;
+var
+  Header: string;
 begin
   Result := TPerson.Create;
   Result.Name := 'Paolo Rossi';
-  Result.Age := 50;
+  Result.Age := Id;
+  Result.Detail := '';
+
+  for Header in Request.HeaderFields do
+  begin
+    Result.Detail := Result.Detail + Header + sLineBreak;
+  end;
 end;
 
 function THelloWorldResource.HelloWorld(): string;
@@ -183,6 +191,7 @@ begin
   Result.Description := AOrderProposal.Description;
   Result.Article := AOrderProposal.Article;
   Result.Quantity := AOrderProposal.Quantity;
+  Result.DueDate := AOrderProposal.DueDate;
 
 end;
 

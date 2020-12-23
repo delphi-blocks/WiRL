@@ -24,7 +24,7 @@ uses
   WiRL.Core.Registry,
   WiRL.http.Core,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Auth.Context,
   WiRL.Core.Validators,
   WiRL.http.Filters,
@@ -72,6 +72,7 @@ implementation
 uses
   System.StrUtils, System.TypInfo, System.DateUtils,
   WiRL.Configuration.JWT,
+  WiRL.Configuration.Converter,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.http.MultipartData,
@@ -379,7 +380,8 @@ begin
         // TODO: this code forces a conversion to string (probably not a good idea)
         ValidateMethodParam(AParam.Attributes, LParamValue.AsString, True);
 
-      if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord] then
+      // TODO: Modify, try first GetObjectFromParam (to rename!) and then GetSimpleParam
+      if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
         Result := GetObjectFromParam(LParam, LParamValue)
       else
         Result := GetSimpleParam(LParam, LParamValue);
@@ -455,8 +457,9 @@ begin
       ApplyResponseFilters;
     end;
   finally
+    FContext.RemoveContainer(FAuthContext);
     FreeAndNil(FAuthContext);
-    FContext.AuthContext := nil;
+    //FContext.AuthContext := nil;
   end;
 end;
 

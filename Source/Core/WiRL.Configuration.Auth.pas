@@ -57,7 +57,7 @@ type
   public
     class function Default: TWiRLConfigurationAuth; static;
   public
-    constructor Create;
+    constructor Create; override;
   published
     property Realm: string read FRealm write FRealm;
     property AuthChallenge: TAuthChallenge read FAuthChallenge write FAuthChallenge;

@@ -16,9 +16,10 @@ uses
   System.Rtti,
   System.Generics.Collections,
   WiRL.Rtti.Utils,
+  WiRL.Core.Classes,
   WiRL.Core.Singleton,
   WiRL.Core.JSON,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.http.Request,
   WiRL.http.Response;
 
@@ -45,8 +46,6 @@ type
     class function MakeValueArray(APair1, APair2, APair3: Pair): TExceptionValues; overload; static;
     class function AddValuePair(APairArray: TExceptionValues; APair: Pair): TExceptionValues;
   end;
-
-  EWiRLException = class(Exception);
 
   /// <summary>
   ///   This exception may be thrown by a resource method if a specific HTTP error response needs to be produced.

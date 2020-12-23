@@ -50,7 +50,7 @@ type
     class function SHA256(const ASecret: TBytes): IWiRLConfigurationJWT; static;
     class function RSA256(const APublicKey, APrivateKey: TBytes): IWiRLConfigurationJWT; static;
   public
-    constructor Create;
+    constructor Create; override;
     destructor Destroy; override;
 
     // Interface IWiRLConfigurationJWT implementation

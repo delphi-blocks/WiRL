@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Generics.Collections,
 
   WiRL.Rtti.Utils,
+  WiRL.Core.Classes,
   WiRL.Core.Exceptions,
   WiRL.Core.Singleton,
   WiRL.http.Request,
@@ -32,6 +33,14 @@ type
     constructor Create(const AStatusCode: Integer; const AMessage: string); reintroduce; virtual;
     property StatusCode: Integer read FStatusCode write FStatusCode;
   end;
+
+  TWiRLHeader = record
+    Name: string;
+    Value: string;
+    constructor Create(const AName, AValue: string);
+  end;
+
+  TWiRLHeaders = TArray<TWiRLHeader>;
 
   TWiRLProxyConnectionInfo = class(TPersistent)
   private
@@ -66,13 +75,13 @@ type
     function GetClientImplementation: TObject;
 
     // Http methods
-    procedure Delete(const AURL: string; AResponseContent: TStream);
-    procedure Get(const AURL: string; AResponseContent: TStream);
-    procedure Options(const AURL: string; AResponseContent: TStream);
-    procedure Head(const AURL: string);
-    procedure Patch(const AURL: string; AContent, AResponse: TStream);
-    procedure Post(const AURL: string; AContent, AResponse: TStream);
-    procedure Put(const AURL: string; AContent, AResponse: TStream);
+    procedure Delete(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
+    procedure Get(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
+    procedure Options(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
+    procedure Head(const AURL: string; const AHeaders: TWiRLHeaders);
+    procedure Patch(const AURL: string; AContent, AResponse: TStream; const AHeaders: TWiRLHeaders);
+    procedure Post(const AURL: string; AContent, AResponse: TStream; const AHeaders: TWiRLHeaders);
+    procedure Put(const AURL: string; AContent, AResponse: TStream; const AHeaders: TWiRLHeaders);
 
     // Http properties
     property Request: TWiRLRequest read GetRequest;
@@ -187,6 +196,14 @@ constructor EWiRLClientProtocolException.Create(const AStatusCode: Integer;
   const AMessage: string);
 begin
   inherited Create(AMessage);
+end;
+
+{ TWiRLHeader }
+
+constructor TWiRLHeader.Create(const AName, AValue: string);
+begin
+  Name := AName;
+  Value := AValue;
 end;
 
 end.

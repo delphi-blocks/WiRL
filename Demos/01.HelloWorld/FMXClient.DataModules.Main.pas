@@ -12,12 +12,16 @@ unit FMXClient.DataModules.Main;
 interface
 
 uses
-  System.SysUtils, System.Classes, WiRL.Client.CustomResource,
+  System.SysUtils, System.Classes, System.TypInfo,
+  WiRL.Client.CustomResource,
   WiRL.Client.Resource, WiRL.Client.Resource.JSON, WiRL.Client.Application,
   WiRL.http.Client, WiRL.Client.SubResource,
   WiRL.Client.SubResource.JSON, WiRL.Client.Messaging.Resource,
   WiRL.http.Request, WiRL.http.Response,
-  System.JSON, System.Net.HttpClient.Win;
+  System.JSON, System.Net.HttpClient.Win,
+  Demo.Entities, System.Net.URLClient, System.Net.HttpClient,
+  System.Net.HttpClientComponent, FMX.Types, IdBaseComponent, IdComponent,
+  IdTCPConnection, IdTCPClient, IdHTTP;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -29,13 +33,21 @@ type
     EchoStringResource: TWiRLClientSubResource;
     ReverseStringResource: TWiRLClientSubResource;
     PostExampleResource: TWiRLClientSubResourceJSON;
+    PersonResource: TWiRLClientSubResource;
+    WiRLClientResource1: TWiRLClientResource;
+    NetHTTPClient1: TNetHTTPClient;
+    Timer1: TTimer;
+    IdHTTP1: TIdHTTP;
     procedure WiRLClient1BeforeCommand(ASender: TObject; ARequest: TWiRLRequest);
+    procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
   public
     function ExecuteHelloWorld: string;
     function EchoString(AString: string): string;
     function ReverseString(AString: string): string;
+    function GetPerson(Id: Integer): TPerson;
+    function PostOrder(AOrderProposal: TOrderProposal): TOrder;
   end;
 
 var
@@ -54,12 +66,29 @@ uses
   WiRL.http.Client.Indy,
   {$ENDIF}
 
+  WiRL.Configuration.Neon,
   WiRL.Rtti.Utils,
-  WiRL.Core.JSON;
+  WiRL.Core.JSON,
+  WiRL.Core.MessageBody.Default,
+
+  Neon.Core.Types;
 
 {$R *.dfm}
 
 { TMainDataModule }
+
+procedure TMainDataModule.DataModuleCreate(Sender: TObject);
+begin
+  WiRLClientApplication1.SetReaders('*.*');
+  WiRLClientApplication1.SetWriters('*.*');
+
+//  WiRLClientApplication1
+//    .Plugin.Configure<IWiRLConfigurationNeon>
+//      .SetUseUTCDate(True)
+//      .SetVisibility([mvPublic, mvPublished])
+//      .SetMemberCase(TNeonCase.PascalCase);
+
+end;
 
 function TMainDataModule.EchoString(AString: string): string;
 begin
@@ -70,6 +99,34 @@ end;
 function TMainDataModule.ExecuteHelloWorld: string;
 begin
   Result := HelloWorldResource.GETAsString();
+end;
+
+function TMainDataModule.GetPerson(Id: Integer): TPerson;
+begin
+  Result := WiRLClientApplication1
+    .Resource('helloworld/person')
+    .Accept('application/json')
+    .AcceptLanguage('it_IT')
+//    .AcceptEncoding('application/json')
+//    .Cookie('name', 'value')
+    .Header('x-author', 'Luca')
+//    .QueryParam('start', 'now - 5 minutes')
+    .QueryParam('Id', Id.ToString)
+    .Get<TPerson>;
+end;
+
+function TMainDataModule.PostOrder(AOrderProposal: TOrderProposal): TOrder;
+begin
+  Result := WiRLClientApplication1
+    .Resource('helloworld/order')
+    .Accept('application/json')
+    .ContentType('application/json')
+//    .AcceptEncoding('application/json')
+//    .Cookie('name', 'value')
+    .Header('x-author', 'Luca')
+//    .QueryParam('start', 'now - 5 minutes')
+//    .QueryParam('Id', Id.ToString)
+    .Post<TOrderProposal, TOrder>(AOrderProposal);
 end;
 
 function TMainDataModule.ReverseString(AString: string): string;

@@ -14,8 +14,9 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.RegularExpressions,
   System.Generics.Collections, System.Generics.Defaults, System.TypInfo,
+  WiRL.Core.Classes,
   WiRL.Core.Singleton,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Exceptions,
   WiRL.Rtti.Utils;
 

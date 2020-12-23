@@ -85,20 +85,20 @@ type
     procedure SetMaxRedirects(const Value: Integer);
     function GetClientImplementation: TObject;
 
-    procedure BuildRequestObject;
+    procedure BuildRequestObject(const AHeaders: TWiRLHeaders);
     procedure BuildResponseObject;
   public
     constructor Create; virtual;
     destructor Destroy; override;
 
     // Http methods
-    procedure Get(const AURL: string; AResponseContent: TStream);
-    procedure Post(const AURL: string; ARequestContent, AResponseContent: TStream);
-    procedure Put(const AURL: string; ARequestContent, AResponseContent: TStream);
-    procedure Delete(const AURL: string; AResponseContent: TStream);
-    procedure Options(const AURL: string; AResponseContent: TStream);
-    procedure Head(const AURL: string);
-    procedure Patch(const AURL: string; ARequestContent, AResponseContent: TStream);
+    procedure Get(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
+    procedure Post(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders);
+    procedure Put(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders);
+    procedure Delete(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
+    procedure Options(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
+    procedure Head(const AURL: string; const AHeaders: TWiRLHeaders);
+    procedure Patch(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders);
   end;
 
 implementation
@@ -132,9 +132,9 @@ begin
   FResponse := TWiRLClientResponseIndy.Create(FHttpClient.Response);
 end;
 
-procedure TWiRLClientIndy.Delete(const AURL: string; AResponseContent: TStream);
+procedure TWiRLClientIndy.Delete(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
 begin
-  BuildRequestObject;
+  BuildRequestObject(AHeaders);
   try
     FResponse.ContentStream := AResponseContent;
     FHttpClient.Delete(AURL, AResponseContent);
@@ -153,9 +153,9 @@ begin
   inherited;
 end;
 
-procedure TWiRLClientIndy.Get(const AURL: string; AResponseContent: TStream);
+procedure TWiRLClientIndy.Get(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
 begin
-  BuildRequestObject;
+  BuildRequestObject(AHeaders);
   try
     FResponse.ContentStream := AResponseContent;
     FHttpClient.Get(AURL, AResponseContent);
@@ -201,9 +201,9 @@ begin
   Result := FResponse;
 end;
 
-procedure TWiRLClientIndy.Head(const AURL: string);
+procedure TWiRLClientIndy.Head(const AURL: string; const AHeaders: TWiRLHeaders);
 begin
-  BuildRequestObject;
+  BuildRequestObject(AHeaders);
   try
     FHttpClient.Head(AURL);
   except
@@ -213,9 +213,10 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.BuildRequestObject;
+procedure TWiRLClientIndy.BuildRequestObject(const AHeaders: TWiRLHeaders);
 var
   LIndex: Integer;
+  LHeader: TWiRLHeader;
 begin
   // Copy custom headers
   FHttpClient.Request.CustomHeaders.Clear;
@@ -224,6 +225,13 @@ begin
     FHttpClient.Request.CustomHeaders.AddValue(
       FRequest.FHeaderFields.Names[LIndex],
       FRequest.FHeaderFields.ValueFromIndex[LIndex]
+    );
+  end;
+  for LHeader in AHeaders do
+  begin
+    FHttpClient.Request.CustomHeaders.AddValue(
+      LHeader.Name,
+      LHeader.Value
     );
   end;
 
@@ -252,9 +260,9 @@ begin
   end;
 end;
 
-procedure TWiRLClientIndy.Options(const AURL: string; AResponseContent: TStream);
+procedure TWiRLClientIndy.Options(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders);
 begin
-  BuildRequestObject;
+  BuildRequestObject(AHeaders);
   try
     FResponse.ContentStream := AResponseContent;
     FHttpClient.Options(AURL, AResponseContent);
@@ -265,9 +273,9 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.Patch(const AURL: string; ARequestContent, AResponseContent: TStream);
+procedure TWiRLClientIndy.Patch(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders);
 begin
-  BuildRequestObject;
+  BuildRequestObject(AHeaders);
   try
     FRequest.ContentStream := ARequestContent;
     FResponse.ContentStream := AResponseContent;
@@ -279,9 +287,9 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.Post(const AURL: string; ARequestContent, AResponseContent: TStream);
+procedure TWiRLClientIndy.Post(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders);
 begin
-  BuildRequestObject;
+  BuildRequestObject(AHeaders);
   try
     FRequest.ContentStream := ARequestContent;
     FResponse.ContentStream := AResponseContent;
@@ -293,9 +301,9 @@ begin
   BuildResponseObject;
 end;
 
-procedure TWiRLClientIndy.Put(const AURL: string; ARequestContent, AResponseContent: TStream);
+procedure TWiRLClientIndy.Put(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders);
 begin
-  BuildRequestObject;
+  BuildRequestObject(AHeaders);
   try
     FRequest.ContentStream := ARequestContent;
     FResponse.ContentStream := AResponseContent;

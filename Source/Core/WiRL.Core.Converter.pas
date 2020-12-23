@@ -15,7 +15,8 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.TypInfo,
   System.Rtti,
 
-  WiRL.Core.Singleton, WiRL.Rtti.Utils;
+  WiRL.Core.Singleton,
+  WiRL.Rtti.Utils;
 
 type
   EWiRLConvertError = class(Exception);

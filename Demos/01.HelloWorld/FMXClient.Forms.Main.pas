@@ -40,10 +40,14 @@ type
     Edit4: TEdit;
     Label4: TLabel;
     btnPost: TButton;
+    Button1: TButton;
+    Button2: TButton;
     procedure btnExecuteClick(Sender: TObject);
     procedure btnEchoClick(Sender: TObject);
     procedure btnReverseClick(Sender: TObject);
     procedure btnPostClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -62,7 +66,7 @@ uses
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
   WiRL.Client.Utils,
-  WiRL.Core.JSON;
+  WiRL.Core.JSON, Demo.Entities;
 
 procedure TMainForm.btnEchoClick(Sender: TObject);
 begin
@@ -72,6 +76,50 @@ end;
 procedure TMainForm.btnReverseClick(Sender: TObject);
 begin
   Edit4.Text := MainDataModule.ReverseString(Edit3.Text);
+end;
+
+procedure TMainForm.Button1Click(Sender: TObject);
+var
+  LPerson: TPerson;
+begin
+  LPerson := MainDataModule.GetPerson(12);
+  try
+    ShowMessage(
+      'Name: ' + LPerson.Name + sLineBreak +
+      'Age: ' + LPerson.Age.ToString + sLineBreak +
+      'Detail: ' + LPerson.Detail
+    );
+  finally
+    LPerson.Free;
+  end;
+end;
+
+procedure TMainForm.Button2Click(Sender: TObject);
+var
+  LOrderProposal: TOrderProposal;
+  LOrder: TOrder;
+begin
+  LOrderProposal := TOrderProposal.Create;
+  try
+    LOrderProposal.Article := 'WiRL';
+    LOrderProposal.Description := 'Delphi RESTful Library';
+    LOrderProposal.DueDate := Now;
+    LOrderProposal.Quantity := 42;
+
+    LOrder := MainDataModule.PostOrder(LOrderProposal);
+    try
+      ShowMessage(
+        'Id: ' + LOrder.ID.ToString + sLineBreak +
+        'Article: ' + LOrder.Article + sLineBreak +
+        'Description: ' + LOrder.Description + sLineBreak +
+        'DueDate: ' + DateTimeToStr(LOrder.DueDate)
+      );
+    finally
+      LOrder.Free;
+    end;
+  finally
+    LOrderProposal.Free;
+  end;
 end;
 
 procedure TMainForm.btnPostClick(Sender: TObject);
