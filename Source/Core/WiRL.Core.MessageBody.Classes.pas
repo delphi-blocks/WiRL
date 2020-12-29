@@ -35,19 +35,41 @@ type
   TMessageBodyReader = class(TInterfacedObject, IMessageBodyReader)
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; overload; virtual; abstract;
+
+    procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
+	    AHeaderFields: TWiRLHeaderList; AContentStream: TStream); overload; virtual;
   end;
 
   TMessageBodyProvider = class(TInterfacedObject, IMessageBodyReader, IMessageBodyWriter)
   protected
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; virtual; abstract;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; overload; virtual; abstract;
+
+    procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
+	    AHeaderFields: TWiRLHeaderList; AContentStream: TStream); overload; virtual;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); virtual; abstract;
   end;
 
 implementation
+
+{ TMessageBodyProvider }
+
+procedure TMessageBodyProvider.ReadFrom(AObject: TObject; AType: TRttitype;
+  AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+begin
+  raise EWiRLException.Create('ReadFrom on TObject not implemented');
+end;
+
+{ TMessageBodyReader }
+
+procedure TMessageBodyReader.ReadFrom(AObject: TObject; AType: TRttitype;
+  AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+begin
+  raise EWiRLException.Create('ReadFrom on TObject not implemented');
+end;
 
 end.

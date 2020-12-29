@@ -35,11 +35,22 @@ type
   /// </remarks>
   IMessageBodyReader = interface
   ['{472A6C22-F4AF-4E77-B6BB-B1085A63504D}']
+
     /// <summary>
     ///   Read a type from the HTTP Request stream
     /// </summary>
-    function ReadFrom(AType: TRttitype; AMediaType: TMediaType; 
-	  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+    function ReadFrom(AType: TRttitype; AMediaType: TMediaType;
+  	  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; overload;
+
+    /// <summary>
+    ///   Read a type from the HTTP Request stream.
+    /// </summary>
+    /// <remarks>
+    ///   Use this overloaded methods when the object to be deserialized
+    ///   already exists!
+    /// </remarks>
+    procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
+	    AHeaderFields: TWiRLHeaderList; AContentStream: TStream); overload;
   end;
 
   TIsReadableFunction = reference to function(AType: TRttiType;

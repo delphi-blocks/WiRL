@@ -35,6 +35,7 @@ type
   /// </remarks>
   IMessageBodyWriter = interface
   ['{C22068E1-3085-482D-9EAB-4829C7AE87C0}']
+
     /// <summary>
     ///   Write a type to an HTTP message (body)
     /// </summary>

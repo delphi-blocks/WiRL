@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.SyncObjs,
   IdContext, IdCookie, IdCustomHTTPServer, IdHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
   IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI, IdResourceStringsProtocols,
+
   WiRL.Core.Classes,
   WiRL.http.Core,
   WiRL.http.Cookie,
@@ -189,8 +190,7 @@ begin
 end;
 
 procedure TWiRLhttpServerIndy.ParseAuthorizationHeader(AContext: TIdContext;
-    const AAuthType, AAuthData: string; var VUsername, VPassword: string; var
-    VHandled: Boolean);
+  const AAuthType, AAuthData: string; var VUsername, VPassword: string; var VHandled: Boolean);
 begin
   VHandled := True;
 end;
@@ -264,8 +264,8 @@ end;
 
 procedure TWiRLHttpRequestIndy.ParseParams(Params :TStrings; const AValue: String);
 var
-  i, j : Integer;
-  s: string;
+  LIndex, LStrIndex : Integer;
+  LTempStr: string;
   LEncoding: IIdTextEncoding;
 begin
   Params.BeginUpdate;
@@ -276,18 +276,18 @@ begin
       LEncoding := CharsetToEncoding(FRequestInfo.CharSet)
     else
       LEncoding := IndyTextEncoding_UTF8;
-    i := 1;
-    while i <= Length(AValue) do
+    LIndex := 1;
+    while LIndex <= Length(AValue) do
     begin
-      j := i;
-      while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
+      LStrIndex := LIndex;
+      while (LStrIndex <= Length(AValue)) and (AValue[LStrIndex] <> '&') do {do not localize}
       begin
-        Inc(j);
+        Inc(LStrIndex);
       end;
-      s := Copy(AValue, i, j-i);
-      s := StringReplace(s, '+', ' ', [rfReplaceAll]);
-      Params.Add(TIdURI.URLDecode(s, LEncoding));
-      i := j + 1;
+      LTempStr := Copy(AValue, LIndex, LStrIndex-LIndex);
+      LTempStr := StringReplace(LTempStr, '+', ' ', [rfReplaceAll]);
+      Params.Add(TIdURI.URLDecode(LTempStr, LEncoding));
+      LIndex := LStrIndex + 1;
     end;
   finally
     Params.EndUpdate;
@@ -319,14 +319,14 @@ end;
 
 function TWiRLHttpRequestIndy.GetCookieFields: TWiRLCookies;
 var
-  i :Integer;
+  LIndex :Integer;
 begin
   if not Assigned(FCookieFields) then
   begin
     FCookieFields := TWiRLCookies.Create;
-    for i := 0 to FRequestInfo.Cookies.Count - 1 do
+    for LIndex := 0 to FRequestInfo.Cookies.Count - 1 do
     begin
-      CookieFields.AddClientCookie(FRequestInfo.Cookies[i].ClientCookie);
+      CookieFields.AddClientCookie(FRequestInfo.Cookies[LIndex].ClientCookie);
     end;
   end;
   Result := FCookieFields;
@@ -525,7 +525,6 @@ begin
 end;
 
 initialization
-
   TWiRLServerRegistry.Instance.RegisterServer<TWiRLhttpServerIndy>('TIdHttpServer (Indy)');
 
 
