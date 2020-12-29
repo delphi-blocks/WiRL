@@ -104,7 +104,10 @@ type
     [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; overload; override;
+
+    procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
+	    AHeaderFields: TWiRLHeaderList; AContentStream: TStream); overload; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
@@ -133,8 +136,6 @@ type
   [Consumes(TMediaType.APPLICATION_OCTET_STREAM), Consumes(TMediaType.WILDCARD)]
   [Produces(TMediaType.APPLICATION_OCTET_STREAM), Produces(TMediaType.WILDCARD)]
   TWiRLStreamProvider = class(TMessageBodyProvider)
-//  private
-//    [Context] WiRLApplication: IWiRLApplication;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
@@ -330,6 +331,12 @@ function TWiRLObjectProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 begin
   Result := TNeon.JSONToObject(AType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
+end;
+
+procedure TWiRLObjectProvider.ReadFrom(AObject: TObject; AType: TRttitype;
+  AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+begin
+  TNeon.JSONToObject(AObject, AType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
