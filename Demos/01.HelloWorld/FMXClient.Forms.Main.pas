@@ -16,7 +16,12 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.TabControl,
   FMX.StdCtrls, FMX.Layouts, FMX.ListBox, FMX.MultiView, FMX.Memo,
   FMX.Controls.Presentation, FMX.Edit, FMX.ScrollBox,
-  Generics.Collections;
+  Generics.Collections, System.Rtti, FMX.Grid.Style, FireDAC.Stan.Intf,
+  FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
+  FireDAC.Phys.Intf, FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet,
+  FireDAC.Comp.Client, FMX.Grid, FireDAC.Stan.StorageJSON, Data.Bind.EngExt,
+  Fmx.Bind.DBEngExt, Fmx.Bind.Grid, System.Bindings.Outputs, Fmx.Bind.Editors,
+  Data.Bind.Components, Data.Bind.Grid, Data.Bind.DBScope;
 
 type
   TMainForm = class(TForm)
@@ -42,12 +47,22 @@ type
     btnPost: TButton;
     Button1: TButton;
     Button2: TButton;
+    Button3: TButton;
+    StringGrid1: TStringGrid;
+    FDMemTable1: TFDMemTable;
+    FDStanStorageJSONLink1: TFDStanStorageJSONLink;
+    BindSourceDB1: TBindSourceDB;
+    BindingsList1: TBindingsList;
+    LinkGridToDataSourceBindSourceDB1: TLinkGridToDataSource;
+    Button4: TButton;
     procedure btnExecuteClick(Sender: TObject);
     procedure btnEchoClick(Sender: TObject);
     procedure btnReverseClick(Sender: TObject);
     procedure btnPostClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -120,6 +135,26 @@ begin
   finally
     LOrderProposal.Free;
   end;
+end;
+
+procedure TMainForm.Button3Click(Sender: TObject);
+begin
+  MainDataModule.GetDBData(FDMemTable1);
+end;
+
+procedure TMainForm.Button4Click(Sender: TObject);
+var
+  LNewId: Integer;
+begin
+  FDMemTable1.Append;
+  FDMemTable1.FieldByName('id').AsInteger := 3;
+  FDMemTable1.FieldByName('value').AsString := 'Test';
+//  FDMemTable1.AppendRecord([3, 'Test']);
+//  FDMemTable1.AppendRecord([4, 'Test1']);
+  FDMemTable1.Post;
+  LNewId := MainDataModule.PostDBData(FDMemTable1);
+
+  ShowMessage(LNewId.ToString);
 end;
 
 procedure TMainForm.btnPostClick(Sender: TObject);

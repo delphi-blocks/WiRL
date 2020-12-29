@@ -3,29 +3,29 @@ object MainForm: TMainForm
   Top = 0
   Caption = 'Hello World Client'
   ClientHeight = 480
-  ClientWidth = 640
+  ClientWidth = 779
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
   object ToolBar1: TToolBar
-    Size.Width = 640.000000000000000000
+    Size.Width = 779.000000000000000000
     Size.Height = 40.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
   end
   object MainTabControl: TTabControl
     Align = Client
-    Size.Width = 640.000000000000000000
+    Size.Width = 779.000000000000000000
     Size.Height = 440.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 1
     TabOrder = 1
     TabPosition = PlatformDefault
     Sizes = (
-      640s
+      779s
       414s
-      640s
+      779s
       414s)
     object HelloWorldTabItem: TTabItem
       CustomIcon = <
@@ -44,16 +44,16 @@ object MainForm: TMainForm
         Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
         DataDetectorTypes = []
         Align = Client
-        Size.Width = 640.000000000000000000
+        Size.Width = 779.000000000000000000
         Size.Height = 364.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        Viewport.Width = 636.000000000000000000
+        Viewport.Width = 775.000000000000000000
         Viewport.Height = 360.000000000000000000
       end
       object Layout1: TLayout
         Align = Top
-        Size.Width = 640.000000000000000000
+        Size.Width = 779.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
@@ -80,7 +80,7 @@ object MainForm: TMainForm
       ExplicitSize.cy = 24.000000000000000000
       object Layout2: TLayout
         Align = Top
-        Size.Width = 640.000000000000000000
+        Size.Width = 779.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
@@ -134,7 +134,7 @@ object MainForm: TMainForm
       object Layout3: TLayout
         Align = Top
         Position.Y = 50.000000000000000000
-        Size.Width = 640.000000000000000000
+        Size.Width = 779.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
@@ -193,19 +193,78 @@ object MainForm: TMainForm
         OnClick = btnPostClick
       end
       object Button1: TButton
-        Position.X = 240.000000000000000000
-        Position.Y = 230.000000000000000000
+        Position.X = 56.000000000000000000
+        Position.Y = 174.000000000000000000
         TabOrder = 3
         Text = 'Button1'
         OnClick = Button1Click
       end
       object Button2: TButton
-        Position.X = 240.000000000000000000
-        Position.Y = 278.000000000000000000
+        Position.X = 152.000000000000000000
+        Position.Y = 174.000000000000000000
         TabOrder = 4
         Text = 'Button2'
         OnClick = Button2Click
       end
+      object Button3: TButton
+        Position.X = 264.000000000000000000
+        Position.Y = 174.000000000000000000
+        TabOrder = 5
+        Text = 'DB GET'
+        OnClick = Button3Click
+      end
+      object StringGrid1: TStringGrid
+        CanFocus = True
+        ClipChildren = True
+        Position.X = 56.000000000000000000
+        Position.Y = 214.000000000000000000
+        Size.Width = 273.000000000000000000
+        Size.Height = 155.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Viewport.Width = 269.000000000000000000
+        Viewport.Height = 130.000000000000000000
+      end
+      object Button4: TButton
+        Position.X = 360.000000000000000000
+        Position.Y = 238.000000000000000000
+        TabOrder = 7
+        Text = 'DB POST'
+        OnClick = Button4Click
+      end
+    end
+  end
+  object FDMemTable1: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 416
+    Top = 336
+  end
+  object FDStanStorageJSONLink1: TFDStanStorageJSONLink
+    Left = 432
+    Top = 232
+  end
+  object BindSourceDB1: TBindSourceDB
+    DataSet = FDMemTable1
+    ScopeMappings = <>
+    Left = 376
+    Top = 224
+  end
+  object BindingsList1: TBindingsList
+    Methods = <>
+    OutputConverters = <>
+    Left = 20
+    Top = 5
+    object LinkGridToDataSourceBindSourceDB1: TLinkGridToDataSource
+      Category = 'Quick Bindings'
+      DataSource = BindSourceDB1
+      GridControl = StringGrid1
+      Columns = <>
     end
   end
 end

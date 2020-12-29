@@ -12,13 +12,18 @@ unit Server.Resources;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.JSON, System.NetEncoding, System.Generics.Collections, 
+  System.Classes, System.SysUtils, System.JSON, System.NetEncoding, System.Generics.Collections,
+  Data.DB,
+  FireDAC.Comp.Client,
+  FireDAC.Comp.DataSet,
+  FireDAC.Stan.Intf,
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.http.URL,
+  WiRL.Data.FireDAC.MessageBody.Default,
   WiRL.Core.MessageBody.Default,
   WiRL.Core.Auth.Context,
   WiRL.http.Request,
@@ -36,6 +41,15 @@ type
     [GET]
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
     function HelloWorld(): string;
+
+    [GET, Path('db')]
+    [Produces(TMediaType.APPLICATION_JSON)]
+    function GetDBData(): TFDMemTable;
+
+    [POST, Path('db')]
+    [Consumes(TMediaType.APPLICATION_JSON)]
+    [Produces(TMediaType.TEXT_PLAIN)]
+    function PostDBData([BodyParam] APostStream: TStream): Integer;
 
     [GET, Path('/time')]
     [Produces(TMediaType.TEXT_PLAIN)]
@@ -133,6 +147,23 @@ begin
   Result := TJSONHelper.ToJSON(AuthContext.Subject.JSON);
 end;
 
+function THelloWorldResource.GetDBData: TFDMemTable;
+var
+  LMemTable: TFDMemTable;
+begin
+  LMemTable := TFDMemTable.Create(nil);
+  LMemTable.FieldDefs.Add('id', ftInteger);
+  LMemTable.FieldDefs.Add('value', ftString, 100);
+
+  LMemTable.Open;
+
+  LMemTable.AppendRecord([1, 'Luca']);
+  LMemTable.AppendRecord([2, 'Paolo']);
+  LMemTable.MergeChangeLog;
+
+  Result := LMemTable;
+end;
+
 function THelloWorldResource.GetPerson(Id: Integer): TPerson;
 var
   Header: string;
@@ -171,6 +202,19 @@ end;
 function THelloWorldResource.PostString(const AContent: string): string;
 begin
   Result := 'PostString: ' + AContent;
+end;
+
+function THelloWorldResource.PostDBData(APostStream: TStream): Integer;
+var
+  LMemTable: TFDMemTable;
+begin
+  LMemTable := TFDMemTable.Create(nil);
+  try
+    LMemTable.LoadFromStream(APostStream, sfJSON);
+    Result := LMemTable.ChangeCount;
+  finally
+    LMemTable.Free;
+  end;
 end;
 
 function THelloWorldResource.PostList(AList: TPersonList): string;

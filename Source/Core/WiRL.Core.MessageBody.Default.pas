@@ -26,6 +26,7 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBody.Classes,
   WiRL.Core.Exceptions,
+  WiRL.Configuration.Core,
   WiRL.Configuration.Neon,
   WiRL.Configuration.Converter;
 
@@ -34,8 +35,12 @@ type
   ///   This is the <b>default</b> MessageBodyWriter for all Delphi string types.
   /// </summary>
   [Produces(TMediaType.WILDCARD)]
-  TWiRLStringWriter = class(TMessageBodyWriter)
+  [Consumes(TMediaType.WILDCARD)]
+  TWiRLStringProvider = class(TMessageBodyProvider)
   public
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
@@ -45,10 +50,14 @@ type
   ///   double, etc...
   /// </summary>
   [Produces(TMediaType.TEXT_PLAIN)]
-  TWiRLSimpleTypesWriter = class(TMessageBodyWriter)
+  [Consumes(TMediaType.TEXT_PLAIN)]
+  TWiRLSimpleTypesProvider = class(TMessageBodyProvider)
   private
     [Context] FFormatSettingConfig: TWiRLFormatSettingConfig;
   public
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
   end;
@@ -124,6 +133,8 @@ type
   [Consumes(TMediaType.APPLICATION_OCTET_STREAM), Consumes(TMediaType.WILDCARD)]
   [Produces(TMediaType.APPLICATION_OCTET_STREAM), Produces(TMediaType.WILDCARD)]
   TWiRLStreamProvider = class(TMessageBodyProvider)
+//  private
+//    [Context] WiRLApplication: IWiRLApplication;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
@@ -142,9 +153,29 @@ uses
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON;
 
-{ TWiRLStringWriter }
+{ TWiRLStringProvider }
 
-procedure TWiRLStringWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+function TWiRLStringProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+var
+  LStreamReader: TStreamReader;
+  LEncoding: TEncoding;
+begin
+  LEncoding := AMediaType.GetDelphiEncoding;
+  try
+    AContentStream.Position := 0;
+    LStreamReader := TStreamReader.Create(AContentStream, LEncoding);
+    try
+      Result := LStreamReader.ReadToEnd;
+    finally
+      LStreamReader.Free;
+    end;
+  finally
+    LEncoding.Free;
+  end;
+end;
+
+procedure TWiRLStringProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
@@ -196,9 +227,38 @@ begin
   end;
 end;
 
-{ TWiRLSimpleTypesWriter }
+{ TWiRLSimpleTypesProvider }
 
-procedure TWiRLSimpleTypesWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+function TWiRLSimpleTypesProvider.ReadFrom(AType: TRttiType;
+  AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList;
+  AContentStream: TStream): TValue;
+var
+  LStreamReader: TStreamReader;
+  LFormatSetting: string;
+  LEncoding: TEncoding;
+  LStringValue: string;
+begin
+  LFormatSetting := FFormatSettingConfig.GetFormatSettingFor(AType.Handle);
+
+  LEncoding := AMediaType.GetDelphiEncoding;
+  try
+
+    AContentStream.Position := 0;
+    LStreamReader := TStreamReader.Create(AContentStream, LEncoding);
+    try
+      LStringValue := LStreamReader.ReadToEnd;
+    finally
+      LStreamReader.Free;
+    end;
+
+    Result := TWiRLConvert.AsType(LStringValue, AType.Handle, LFormatSetting);
+
+  finally
+    LEncoding.Free;
+  end;
+end;
+
+procedure TWiRLSimpleTypesProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
   LFormatSetting: string;
@@ -293,7 +353,10 @@ end;
 function TWiRLStreamProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
 begin
-  Result := TWiRLStreamWrapper.Create(AContentStream);
+  if AContentStream is TGCMemoryStream then
+    Result := AContentStream
+  else
+   Result := TWiRLStreamWrapper.Create(AContentStream);
 end;
 
 procedure TWiRLStreamProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -313,9 +376,9 @@ end;
 
 procedure RegisterMessageBodyClasses;
 begin
-  // TWiRLStringWriter
+  // TWiRLStringProvider
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TWiRLStringWriter,
+    TWiRLStringProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := False;
@@ -330,9 +393,26 @@ begin
     end
   );
 
-  // TWiRLSimpleTypesWriter
+  TMessageBodyReaderRegistry.Instance.RegisterReader(
+    TWiRLStringProvider,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := False;
+      case AType.TypeKind of
+        tkChar, tkString, tkWChar, tkLString,
+        tkWString, tkUString: Result := True;
+      end;
+    end,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_VERY_LOW;
+    end
+  );
+
+
+  // TWiRLSimpleTypesProvider
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TWiRLSimpleTypesWriter,
+    TWiRLSimpleTypesProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := False;
@@ -342,6 +422,22 @@ begin
       end;
     end,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_VERY_LOW;
+    end
+  );
+
+  TMessageBodyReaderRegistry.Instance.RegisterReader(
+    TWiRLSimpleTypesProvider,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := False;
+      case AType.TypeKind of
+        tkUnknown, tkInteger, tkChar, tkEnumeration,
+        tkFloat, tkSet, tkVariant, tkInt64: Result := True;
+      end;
+    end,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       Result := TMessageBodyWriterRegistry.AFFINITY_VERY_LOW;
     end

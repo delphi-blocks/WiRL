@@ -51,6 +51,7 @@ type
     function CustomHeaders: TWiRLHeaders;
     function StreamToObject<T>(AResponse: TWiRLResponse; AStream: TStream): T;
     procedure ObjectToStream<T>(ARequest: TWiRLRequest; AObject: T; AStream: TStream);
+    function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
   protected
     function GetClient: TWiRLClient; virtual;
     function GetPath: string; virtual;
@@ -154,11 +155,13 @@ uses
   WiRL.Configuration.Core,
   WiRL.Configuration.Neon,
   WiRL.http.Accept.MediaType,
+  WiRL.Core.Classes,
   WiRL.Core.Injection,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Client.Utils,
   WiRL.http.URL,
+  WiRL.Rtti.Utils,
   WiRL.Core.Utils;
 
 { TWiRLClientCustomResource }
@@ -413,27 +416,30 @@ var
 begin
   InitHttpRequest;
 
-  LResponseStream := TMemoryStream.Create;
+  LResponseStream := TGCMemoryStream.Create;
   try
     Client.Delete(URL, LResponseStream, CustomHeaders);
     Result := StreamToObject<T>(Client.Response, LResponseStream);
   finally
-    LResponseStream.Free;
+    if not SameObject(Result, LResponseStream) then
+      LResponseStream.Free;
   end;
 end;
 
 function TWiRLClientCustomResource.GenericGet<T>: T;
 var
-  LResponseStream: TMemoryStream;
+  LResponseStream: TGCMemoryStream;
+  LRttiType: TRttiType;
 begin
   InitHttpRequest;
 
-  LResponseStream := TMemoryStream.Create;
+  LResponseStream := TGCMemoryStream.Create;
   try
     Client.Get(URL, LResponseStream, CustomHeaders);
     Result := StreamToObject<T>(Client.Response, LResponseStream);
   finally
-    LResponseStream.Free;
+    if not SameObject(Result, LResponseStream) then
+      LResponseStream.Free;
   end;
 end;
 
@@ -445,13 +451,14 @@ begin
 
   LRequestStream := TMemoryStream.Create;
   try
-    LResponseStream := TMemoryStream.Create;
+    LResponseStream := TGCMemoryStream.Create;
     try
       ObjectToStream<T>(Client.Request, Value, LRequestStream);
       Client.Patch(URL, LRequestStream, LResponseStream, CustomHeaders);
       Result := StreamToObject<V>(Client.Response, LResponseStream);
     finally
-      LResponseStream.Free;
+      if not SameObject<V>(Result, LResponseStream) then
+        LResponseStream.Free;
     end;
   finally
     LRequestStream.Free;
@@ -466,13 +473,14 @@ begin
 
   LRequestStream := TMemoryStream.Create;
   try
-    LResponseStream := TMemoryStream.Create;
+    LResponseStream := TGCMemoryStream.Create;
     try
       ObjectToStream<T>(Client.Request, Value, LRequestStream);
       Client.Post(URL, LRequestStream, LResponseStream, CustomHeaders);
       Result := StreamToObject<V>(Client.Response, LResponseStream);
     finally
-      LResponseStream.Free;
+      if not SameObject<V>(Result, LResponseStream) then
+        LResponseStream.Free;
     end;
   finally
     LRequestStream.Free;
@@ -487,13 +495,14 @@ begin
 
   LRequestStream := TMemoryStream.Create;
   try
-    LResponseStream := TMemoryStream.Create;
+    LResponseStream := TGCMemoryStream.Create;
     try
       ObjectToStream<T>(Client.Request, Value, LRequestStream);
       Client.Put(URL, LRequestStream, LResponseStream, CustomHeaders);
       Result := StreamToObject<V>(Client.Response, LResponseStream);
     finally
-      LResponseStream.Free;
+      if not SameObject<V>(Result, LResponseStream) then
+        LResponseStream.Free;
     end;
   finally
     LRequestStream.Free;
@@ -823,6 +832,17 @@ begin
   finally
     LContent.Free;
   end;
+end;
+
+function TWiRLClientCustomResource.SameObject<T>(AGeneric: T;
+  AObject: TObject): Boolean;
+var
+  LValue: TValue;
+begin
+  Result := False;
+  LValue := TValue.From<T>(AGeneric);
+  if LValue.IsObject and (LValue.AsObject = AObject) then
+    Result := True;
 end;
 
 procedure TWiRLClientCustomResource.SetPathParamsValues(const Value: TStrings);

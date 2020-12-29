@@ -40,6 +40,9 @@ type
     function GetPreamble: TBytes; override;
   end;
 
+  TGCMemoryStream = class(TMemoryStream)
+  end;
+
 implementation
 
 uses

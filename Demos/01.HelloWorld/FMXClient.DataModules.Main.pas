@@ -21,7 +21,9 @@ uses
   System.JSON, System.Net.HttpClient.Win,
   Demo.Entities, System.Net.URLClient, System.Net.HttpClient,
   System.Net.HttpClientComponent, FMX.Types, IdBaseComponent, IdComponent,
-  IdTCPConnection, IdTCPClient, IdHTTP;
+  IdTCPConnection, IdTCPClient, IdHTTP, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
+  FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -48,6 +50,8 @@ type
     function ReverseString(AString: string): string;
     function GetPerson(Id: Integer): TPerson;
     function PostOrder(AOrderProposal: TOrderProposal): TOrder;
+    procedure GetDBData(AMemTable: TFDMemTable);
+    function PostDBData(AMemTable: TFDMemTable): Integer;
   end;
 
 var
@@ -101,6 +105,24 @@ begin
   Result := HelloWorldResource.GETAsString();
 end;
 
+procedure TMainDataModule.GetDBData(AMemTable: TFDMemTable);
+var
+  LStream: TStream;
+begin
+  LStream := WiRLClientApplication1
+    .Resource('helloworld/db')
+    .Accept('application/json')
+    .Get<TStream>;
+
+  try
+    LStream.Position := 0;
+    AMemTable.LoadFromStream(LStream, sfJSON);
+  finally
+    LStream.Free;
+  end;
+
+end;
+
 function TMainDataModule.GetPerson(Id: Integer): TPerson;
 begin
   Result := WiRLClientApplication1
@@ -113,6 +135,27 @@ begin
 //    .QueryParam('start', 'now - 5 minutes')
     .QueryParam('Id', Id.ToString)
     .Get<TPerson>;
+end;
+
+function TMainDataModule.PostDBData(AMemTable: TFDMemTable): Integer;
+var
+  LStream: TStream;
+begin
+  LStream := TMemoryStream.Create;
+  try
+
+    AMemTable.SaveToStream(LStream, sfJSON);
+    LStream.Position := 0;
+
+    Result := WiRLClientApplication1
+      .Resource('helloworld/db')
+      .Accept('text/plain')
+      .ContentType('application/json')
+      .Post<TStream, Integer>(LStream);
+
+  finally
+    LStream.Free;
+  end;
 end;
 
 function TMainDataModule.PostOrder(AOrderProposal: TOrderProposal): TOrder;
