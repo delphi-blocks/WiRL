@@ -34,13 +34,19 @@ type
     function ContentType(const AContentType: string): TWiRLInvocation;
     function AcceptLanguage(const AAcceptLanguage: string): TWiRLInvocation;
     function Header(const AName, AValue: string): TWiRLInvocation;
+    function Authorization(const AValue: string): TWiRLInvocation;
     function QueryParam(const AName, AValue: string): TWiRLInvocation;
 
-    function Get<T>: T;
-    function Post<T, V>(const Value: T): V;
-    function Put<T, V>(const Value: T): V;
-    function Delete<T>: T;
-    function Patch<T, V>(const Value: T): V;
+    function Get<T>: T; overload;
+    procedure Get(AResponseEntity: TObject); overload;
+    function Post<T, V>(const ARequestEntity: T): V; overload;
+    procedure Post<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
+    function Put<T, V>(const ARequestEntity: T): V; overload;
+    procedure Put<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
+    function Delete<T>: T; overload;
+    procedure Delete(AResponseEntity: TObject); overload;
+    function Patch<T, V>(const ARequestEntity: T): V; overload;
+    procedure Patch<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
 
     constructor Create(AApplication: TWiRLClientApplication);
   end;
@@ -402,6 +408,12 @@ begin
   Result := Self;
 end;
 
+function TWiRLInvocation.Authorization(const AValue: string): TWiRLInvocation;
+begin
+  Header('Authorization', AValue);
+  Result := Self;
+end;
+
 function TWiRLInvocation.ContentType(
   const AContentType: string): TWiRLInvocation;
 begin
@@ -414,9 +426,19 @@ begin
   FWiRLInvocation := TWiRLResourceWrapper.Create(AApplication);
 end;
 
+procedure TWiRLInvocation.Delete(AResponseEntity: TObject);
+begin
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericDelete(AResponseEntity);
+end;
+
 function TWiRLInvocation.Delete<T>: T;
 begin
   Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericDelete<T>;
+end;
+
+procedure TWiRLInvocation.Get(AResponseEntity: TObject);
+begin
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericGet(AResponseEntity);
 end;
 
 function TWiRLInvocation.Get<T>: T;
@@ -430,19 +452,34 @@ begin
   Result := Self;
 end;
 
-function TWiRLInvocation.Patch<T, V>(const Value: T): V;
+function TWiRLInvocation.Patch<T, V>(const ARequestEntity: T): V;
 begin
-  Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPatch<T,V>(Value);
+  Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPatch<T,V>(ARequestEntity);
 end;
 
-function TWiRLInvocation.Post<T, V>(const Value: T): V;
+procedure TWiRLInvocation.Patch<T>(const ARequestEntity: T; AResponseEntity: TObject);
 begin
-  Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPost<T,V>(Value);
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPatch(ARequestEntity, AResponseEntity);
 end;
 
-function TWiRLInvocation.Put<T, V>(const Value: T): V;
+function TWiRLInvocation.Post<T, V>(const ARequestEntity: T): V;
 begin
-  Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPut<T,V>(Value);
+  Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPost<T,V>(ARequestEntity);
+end;
+
+procedure TWiRLInvocation.Post<T>(const ARequestEntity: T; AResponseEntity: TObject);
+begin
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPost(ARequestEntity, AResponseEntity);
+end;
+
+function TWiRLInvocation.Put<T, V>(const ARequestEntity: T): V;
+begin
+  Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPut<T,V>(ARequestEntity);
+end;
+
+procedure TWiRLInvocation.Put<T>(const ARequestEntity: T; AResponseEntity: TObject);
+begin
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPut(ARequestEntity, AResponseEntity);
 end;
 
 function TWiRLInvocation.QueryParam(const AName,

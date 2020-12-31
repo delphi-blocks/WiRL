@@ -336,7 +336,7 @@ end;
 procedure TWiRLObjectProvider.ReadFrom(AObject: TObject; AType: TRttitype;
   AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 begin
-  TNeon.JSONToObject(AObject, AType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
+  TNeon.JSONToObject(AObject, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;

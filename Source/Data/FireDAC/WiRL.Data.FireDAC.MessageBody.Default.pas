@@ -45,7 +45,10 @@ type
     function GetStorageFormat(AMediaType: TMediaType): TFDStorageFormat;
   public
     function ReadFrom(AType: TRttitype; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; overload; override;
+
+    procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
+	    AHeaderFields: TWiRLHeaderList; AContentStream: TStream); overload; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
@@ -253,6 +256,21 @@ begin
   end;
 end;
 
+procedure TWiRLFireDACAdaptedDataSetProvider.ReadFrom(AObject: TObject; AType: TRttitype;
+      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+var
+  LDataSet: TFDMemTable;
+  LStorageFormat: TFDStorageFormat;
+begin
+  if not (AObject is TFDMemTable) then
+    raise EWiRLWebApplicationException.Create('Deserialization only to TFDMemTable', 501);
+
+  LDataSet := AObject as TFDMemTable;
+  LStorageFormat := GetStorageFormat(AMediaType);
+  AContentStream.Position := 0;
+  LDataSet.LoadFromStream(AContentStream, LStorageFormat);
+end;
+
 procedure TWiRLFireDACAdaptedDataSetProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
 var
@@ -307,3 +325,4 @@ initialization
   RegisterMessageBodyClasses;
 
 end.
+

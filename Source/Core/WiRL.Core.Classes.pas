@@ -12,7 +12,7 @@ unit WiRL.Core.Classes;
 interface
 
 uses
-  System.SysUtils, System.Generics.Collections, System.Classes,
+  System.SysUtils, System.Generics.Collections, System.Classes, System.NetEncoding,
   WiRL.Core.Declarations;
 
 type
@@ -41,6 +41,27 @@ type
   end;
 
   TGCMemoryStream = class(TMemoryStream)
+  end;
+
+  // Basic authentication helper
+  TBasicAuth = record
+  private
+    FUser: string;
+    FPassword: string;
+  public
+    constructor Create(const AUser, APassword: string);
+
+    class operator Implicit(AAuth: TBasicAuth): string;
+  end;
+
+  // Bearer authentication helper
+  TBearerAuth = record
+  private
+    FToken: string;
+  public
+    constructor Create(const AToken: string);
+
+    class operator Implicit(AAuth: TBearerAuth): string;
   end;
 
 implementation
@@ -87,6 +108,31 @@ end;
 function TUnicodeBEEncodingNoBOM.GetPreamble: TBytes;
 begin
   SetLength(Result, 0);
+end;
+
+{ TBasicAuth }
+
+constructor TBasicAuth.Create(const AUser, APassword: string);
+begin
+  FUser := AUser;
+  FPassword := APassword;
+end;
+
+class operator TBasicAuth.Implicit(AAuth: TBasicAuth): string;
+begin
+  Result := 'Basic ' + TNetEncoding.Base64.Encode(AAuth.FUser + ':' + AAuth.FPassword);
+end;
+
+{ TBearerAuth }
+
+constructor TBearerAuth.Create(const AToken: string);
+begin
+  FToken := AToken;
+end;
+
+class operator TBearerAuth.Implicit(AAuth: TBearerAuth): string;
+begin
+  Result := 'Bearer ' + AAuth.FToken;
 end;
 
 end.

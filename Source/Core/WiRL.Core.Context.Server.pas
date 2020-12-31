@@ -116,6 +116,7 @@ end;
 procedure TWiRLContextServer.SetAuthContext(const Value: TWiRLAuthContext);
 begin
   AddContainerOnce(Value, False);
+  AddContainerOnce(Value.Subject, False);
 end;
 
 procedure TWiRLContextServer.SetEngine(const Value: TObject);

@@ -49,7 +49,8 @@ type
 
     procedure ContextInjection(AInstance: TObject);
     function CustomHeaders: TWiRLHeaders;
-    function StreamToObject<T>(AResponse: TWiRLResponse; AStream: TStream): T;
+    function StreamToObject<T>(AResponse: TWiRLResponse; AStream: TStream): T; overload;
+    procedure StreamToObject(AObject: TObject; AResponse: TWiRLResponse; AStream: TStream); overload;
     procedure ObjectToStream<T>(ARequest: TWiRLRequest; AObject: T; AStream: TStream);
     function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
   protected
@@ -87,10 +88,15 @@ type
     destructor Destroy; override;
 
     function GenericGet<T>: T; overload;
-    function GenericPost<T, V>(const Value: T): V; overload;
-    function GenericPut<T, V>(const Value: T): V;
-    function GenericDelete<T>: T;
-    function GenericPatch<T, V>(const Value: T): V;
+    procedure GenericGet(AResponseEntity: TObject); overload;
+    function GenericPost<T, V>(const ARequestEntity: T): V; overload;
+    procedure GenericPost<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
+    function GenericPut<T, V>(const ARequestEntity: T): V; overload;
+    procedure GenericPut<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
+    function GenericDelete<T>: T; overload;
+    procedure GenericDelete(AResponseEntity: TObject); overload;
+    function GenericPatch<T, V>(const ARequestEntity: T): V; overload;
+    procedure GenericPatch<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
 
     // http verbs
     procedure GET(const ABeforeExecute: TWiRLClientProc = nil;
@@ -335,13 +341,12 @@ var
   LPair: TPair<TWiRLConfigurationClass, TWiRLConfiguration>;
 begin
   // Fill the context
-
-  for LPair in FApplication.Configs do
-    FContext.AddContainerOnce(LPair.Value, False);
-
   FContext.AddContainerOnce(Client.Request, False);
   FContext.AddContainerOnce(Client.Response, False);
   FContext.AddContainerOnce(FApplication, False);
+
+  for LPair in FApplication.Configs do
+    FContext.AddContainerOnce(LPair.Value, False);
 end;
 
 
@@ -410,10 +415,26 @@ begin
   end;
 end;
 
+procedure TWiRLClientCustomResource.GenericDelete(AResponseEntity: TObject);
+var
+  LResponseStream: TMemoryStream;
+begin
+  InitHttpRequest;
+
+  LResponseStream := TMemoryStream.Create;
+  try
+    Client.Delete(URL, LResponseStream, CustomHeaders);
+    StreamToObject(AResponseEntity, Client.Response, LResponseStream);
+  finally
+    LResponseStream.Free;
+  end;
+end;
+
 function TWiRLClientCustomResource.GenericDelete<T>: T;
 var
   LResponseStream: TMemoryStream;
 begin
+  Result := default(T);
   InitHttpRequest;
 
   LResponseStream := TGCMemoryStream.Create;
@@ -426,11 +447,27 @@ begin
   end;
 end;
 
+procedure TWiRLClientCustomResource.GenericGet(AResponseEntity: TObject);
+var
+  LResponseStream: TMemoryStream;
+begin
+  InitHttpRequest;
+
+  LResponseStream := TMemoryStream.Create;
+  try
+    Client.Get(URL, LResponseStream, CustomHeaders);
+    StreamToObject(AResponseEntity, Client.Response, LResponseStream);
+  finally
+    LResponseStream.Free;
+  end;
+end;
+
 function TWiRLClientCustomResource.GenericGet<T>: T;
 var
   LResponseStream: TGCMemoryStream;
   LRttiType: TRttiType;
 begin
+  Result := default(T);
   InitHttpRequest;
 
   LResponseStream := TGCMemoryStream.Create;
@@ -443,17 +480,18 @@ begin
   end;
 end;
 
-function TWiRLClientCustomResource.GenericPatch<T, V>(const Value: T): V;
+function TWiRLClientCustomResource.GenericPatch<T, V>(const ARequestEntity: T): V;
 var
   LRequestStream, LResponseStream: TMemoryStream;
 begin
+  Result := default(V);
   InitHttpRequest;
 
   LRequestStream := TMemoryStream.Create;
   try
     LResponseStream := TGCMemoryStream.Create;
     try
-      ObjectToStream<T>(Client.Request, Value, LRequestStream);
+      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
       Client.Patch(URL, LRequestStream, LResponseStream, CustomHeaders);
       Result := StreamToObject<V>(Client.Response, LResponseStream);
     finally
@@ -465,7 +503,8 @@ begin
   end;
 end;
 
-function TWiRLClientCustomResource.GenericPost<T, V>(const Value: T): V;
+procedure TWiRLClientCustomResource.GenericPatch<T>(const ARequestEntity: T;
+  AResponseEntity: TObject);
 var
   LRequestStream, LResponseStream: TMemoryStream;
 begin
@@ -475,7 +514,29 @@ begin
   try
     LResponseStream := TGCMemoryStream.Create;
     try
-      ObjectToStream<T>(Client.Request, Value, LRequestStream);
+      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
+      Client.Patch(URL, LRequestStream, LResponseStream, CustomHeaders);
+      StreamToObject(AResponseEntity, Client.Response, LResponseStream);
+    finally
+      LResponseStream.Free;
+    end;
+  finally
+    LRequestStream.Free;
+  end;
+end;
+
+function TWiRLClientCustomResource.GenericPost<T, V>(const ARequestEntity: T): V;
+var
+  LRequestStream, LResponseStream: TMemoryStream;
+begin
+  Result := default(V);
+  InitHttpRequest;
+
+  LRequestStream := TMemoryStream.Create;
+  try
+    LResponseStream := TGCMemoryStream.Create;
+    try
+      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
       Client.Post(URL, LRequestStream, LResponseStream, CustomHeaders);
       Result := StreamToObject<V>(Client.Response, LResponseStream);
     finally
@@ -487,7 +548,8 @@ begin
   end;
 end;
 
-function TWiRLClientCustomResource.GenericPut<T, V>(const Value: T): V;
+procedure TWiRLClientCustomResource.GenericPost<T>(const ARequestEntity: T;
+  AResponseEntity: TObject);
 var
   LRequestStream, LResponseStream: TMemoryStream;
 begin
@@ -497,12 +559,56 @@ begin
   try
     LResponseStream := TGCMemoryStream.Create;
     try
-      ObjectToStream<T>(Client.Request, Value, LRequestStream);
+      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
+      Client.Post(URL, LRequestStream, LResponseStream, CustomHeaders);
+      StreamToObject(AResponseEntity, Client.Response, LResponseStream);
+    finally
+      LResponseStream.Free;
+    end;
+  finally
+    LRequestStream.Free;
+  end;
+end;
+
+function TWiRLClientCustomResource.GenericPut<T, V>(const ARequestEntity: T): V;
+var
+  LRequestStream, LResponseStream: TMemoryStream;
+begin
+  Result := default(V);
+  InitHttpRequest;
+
+  LRequestStream := TMemoryStream.Create;
+  try
+    LResponseStream := TGCMemoryStream.Create;
+    try
+      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
       Client.Put(URL, LRequestStream, LResponseStream, CustomHeaders);
       Result := StreamToObject<V>(Client.Response, LResponseStream);
     finally
       if not SameObject<V>(Result, LResponseStream) then
         LResponseStream.Free;
+    end;
+  finally
+    LRequestStream.Free;
+  end;
+end;
+
+procedure TWiRLClientCustomResource.GenericPut<T>(const ARequestEntity: T;
+  AResponseEntity: TObject);
+var
+  LRequestStream, LResponseStream: TMemoryStream;
+begin
+  InitHttpRequest;
+
+  LRequestStream := TMemoryStream.Create;
+  try
+    LResponseStream := TGCMemoryStream.Create;
+    try
+      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
+      Client.Put(URL, LRequestStream, LResponseStream, CustomHeaders);
+      StreamToObject(AResponseEntity, Client.Response, LResponseStream);
+    finally
+      LResponseStream.Free;
     end;
   finally
     LRequestStream.Free;
@@ -840,7 +946,13 @@ var
   LValue: TValue;
 begin
   Result := False;
+  if not Assigned(AObject) then
+    Exit;
+
   LValue := TValue.From<T>(AGeneric);
+  if LValue.IsEmpty then
+    Exit;
+
   if LValue.IsObject and (LValue.AsObject = AObject) then
     Result := True;
 end;
@@ -853,6 +965,28 @@ end;
 procedure TWiRLClientCustomResource.SetQueryParams(const Value: TStrings);
 begin
   FQueryParams.Assign(Value);
+end;
+
+procedure TWiRLClientCustomResource.StreamToObject(AObject: TObject;
+  AResponse: TWiRLResponse; AStream: TStream);
+var
+  LType: TRttiType;
+  LContext: TRttiContext;
+  LMediaType: TMediaType;
+  LReader: IMessageBodyReader;
+begin
+  LType := LContext.GetType(AObject.ClassInfo);
+  LMediaType := TMediaType.Create(AResponse.ContentType);
+  try
+    LReader := Application.ReaderRegistry.FindReader(LType, LMediaType);
+    if not Assigned(LReader) then
+      raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
+    ContextInjection(LReader as TObject);
+
+    LReader.ReadFrom(AObject, LType, LMediaType, AResponse.HeaderFields, AResponse.ContentStream);
+  finally
+    LMediaType.Free;
+  end;
 end;
 
 end.

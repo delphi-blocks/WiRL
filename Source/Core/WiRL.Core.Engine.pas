@@ -204,6 +204,7 @@ end;
 
 destructor TWiRLEngine.Destroy;
 begin
+  FCurrentApp := nil;
   FCriticalSection.Free;
   FApplications.Free;
   FSubscribers.Free;
