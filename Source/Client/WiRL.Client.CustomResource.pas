@@ -83,6 +83,7 @@ type
     procedure AfterOPTIONS; virtual;
 
     procedure InitHttpRequest; virtual;
+    procedure InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders); virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -97,6 +98,9 @@ type
     procedure GenericDelete(AResponseEntity: TObject); overload;
     function GenericPatch<T, V>(const ARequestEntity: T): V; overload;
     procedure GenericPatch<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
+
+    function GenericHttpRequest<T, V>(const AHttpMethod: string; const ARequestEntity: T): V; overload;
+    procedure GenericHttpRequest<T>(const AHttpMethod: string; const ARequestEntity: T; AResponseEntity: TObject); overload;
 
     // http verbs
     procedure GET(const ABeforeExecute: TWiRLClientProc = nil;
@@ -169,6 +173,51 @@ uses
   WiRL.http.URL,
   WiRL.Rtti.Utils,
   WiRL.Core.Utils;
+
+type
+  THttpMethodImplementation = reference to procedure (
+    AResource: TWiRLClientCustomResource;
+    ARequestStream, AResponseStream: TStream;
+    ACustomHeaders: TWiRLHeaders);
+
+  THttpMethodImplementations = array [TWiRLHttpMethod] of THttpMethodImplementation;
+
+var
+  HttpMethodImplementations: THttpMethodImplementations;
+
+procedure RegisterHttpMethodImplementations;
+begin
+  HttpMethodImplementations[TWiRLHttpMethod.GET] :=
+    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    begin
+      AResource.Client.Get(AResource.URL, AResponseStream, ACustomHeaders);
+    end;
+
+  HttpMethodImplementations[TWiRLHttpMethod.POST] :=
+    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    begin
+      AResource.Client.Post(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
+    end;
+
+  HttpMethodImplementations[TWiRLHttpMethod.PUT] :=
+    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    begin
+      AResource.Client.Put(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
+    end;
+
+  HttpMethodImplementations[TWiRLHttpMethod.DELETE] :=
+    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    begin
+      AResource.Client.Delete(AResource.URL, AResponseStream, ACustomHeaders);
+    end;
+
+  HttpMethodImplementations[TWiRLHttpMethod.PATCH] :=
+    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    begin
+      AResource.Client.Patch(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
+    end;
+
+end;
 
 { TWiRLClientCustomResource }
 
@@ -350,6 +399,19 @@ begin
 end;
 
 
+procedure TWiRLClientCustomResource.InternalHttpRequest(
+  const AHttpMethod: string; ARequestStream, AResponseStream: TStream;
+  ACustomHeaders: TWiRLHeaders);
+var
+  LHttpMethodImplementation: THttpMethodImplementation;
+begin
+  LHttpMethodImplementation := HttpMethodImplementations[TWiRLHttpMethod.ConvertFromString(AHttpMethod)];
+  if not Assigned(LHttpMethodImplementation) then
+    raise EWiRLClientException.CreateFmt('Implementation not found for method [%s]', [AHttpMethod]);
+
+  LHttpMethodImplementation(Self, ARequestStream, AResponseStream, ACustomHeaders);
+end;
+
 function TWiRLClientCustomResource.CustomHeaders: TWiRLHeaders;
 var
   I: Integer;
@@ -416,203 +478,102 @@ begin
 end;
 
 procedure TWiRLClientCustomResource.GenericDelete(AResponseEntity: TObject);
-var
-  LResponseStream: TMemoryStream;
 begin
-  InitHttpRequest;
-
-  LResponseStream := TMemoryStream.Create;
-  try
-    Client.Delete(URL, LResponseStream, CustomHeaders);
-    StreamToObject(AResponseEntity, Client.Response, LResponseStream);
-  finally
-    LResponseStream.Free;
-  end;
+  GenericHttpRequest<string>('DELETE', '', AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.GenericDelete<T>: T;
-var
-  LResponseStream: TMemoryStream;
 begin
-  Result := default(T);
+  Result := GenericHttpRequest<string, T>('DELETE', '');
+end;
+
+function TWiRLClientCustomResource.GenericHttpRequest<T, V>(
+  const AHttpMethod: string; const ARequestEntity: T): V;
+var
+  LRequestStream, LResponseStream: TMemoryStream;
+begin
+  Result := default(V);
   InitHttpRequest;
 
-  LResponseStream := TGCMemoryStream.Create;
+  LRequestStream := TMemoryStream.Create;
   try
-    Client.Delete(URL, LResponseStream, CustomHeaders);
-    Result := StreamToObject<T>(Client.Response, LResponseStream);
+    LResponseStream := TGCMemoryStream.Create;
+    try
+      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
+      InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream, CustomHeaders);
+      Result := StreamToObject<V>(Client.Response, LResponseStream);
+    finally
+      if not SameObject<V>(Result, LResponseStream) then
+        LResponseStream.Free;
+    end;
   finally
-    if not SameObject(Result, LResponseStream) then
+    LRequestStream.Free;
+  end;
+end;
+
+procedure TWiRLClientCustomResource.GenericHttpRequest<T>(
+  const AHttpMethod: string; const ARequestEntity: T; AResponseEntity: TObject);
+var
+  LRequestStream, LResponseStream: TMemoryStream;
+begin
+  InitHttpRequest;
+
+  LRequestStream := TMemoryStream.Create;
+  try
+    LResponseStream := TGCMemoryStream.Create;
+    try
+      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
+      InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream, CustomHeaders);
+      StreamToObject(AResponseEntity, Client.Response, LResponseStream);
+    finally
       LResponseStream.Free;
+    end;
+  finally
+    LRequestStream.Free;
   end;
 end;
 
 procedure TWiRLClientCustomResource.GenericGet(AResponseEntity: TObject);
-var
-  LResponseStream: TMemoryStream;
 begin
-  InitHttpRequest;
-
-  LResponseStream := TMemoryStream.Create;
-  try
-    Client.Get(URL, LResponseStream, CustomHeaders);
-    StreamToObject(AResponseEntity, Client.Response, LResponseStream);
-  finally
-    LResponseStream.Free;
-  end;
+  GenericHttpRequest<string>('GET', '', AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.GenericGet<T>: T;
-var
-  LResponseStream: TGCMemoryStream;
-  LRttiType: TRttiType;
 begin
-  Result := default(T);
-  InitHttpRequest;
-
-  LResponseStream := TGCMemoryStream.Create;
-  try
-    Client.Get(URL, LResponseStream, CustomHeaders);
-    Result := StreamToObject<T>(Client.Response, LResponseStream);
-  finally
-    if not SameObject(Result, LResponseStream) then
-      LResponseStream.Free;
-  end;
+  Result := GenericHttpRequest<string, T>('GET', '');
 end;
 
 function TWiRLClientCustomResource.GenericPatch<T, V>(const ARequestEntity: T): V;
-var
-  LRequestStream, LResponseStream: TMemoryStream;
 begin
-  Result := default(V);
-  InitHttpRequest;
-
-  LRequestStream := TMemoryStream.Create;
-  try
-    LResponseStream := TGCMemoryStream.Create;
-    try
-      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
-      Client.Patch(URL, LRequestStream, LResponseStream, CustomHeaders);
-      Result := StreamToObject<V>(Client.Response, LResponseStream);
-    finally
-      if not SameObject<V>(Result, LResponseStream) then
-        LResponseStream.Free;
-    end;
-  finally
-    LRequestStream.Free;
-  end;
+  Result := GenericHttpRequest<T, V>('PATCH', ARequestEntity);
 end;
 
 procedure TWiRLClientCustomResource.GenericPatch<T>(const ARequestEntity: T;
   AResponseEntity: TObject);
-var
-  LRequestStream, LResponseStream: TMemoryStream;
 begin
-  InitHttpRequest;
-
-  LRequestStream := TMemoryStream.Create;
-  try
-    LResponseStream := TGCMemoryStream.Create;
-    try
-      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
-      Client.Patch(URL, LRequestStream, LResponseStream, CustomHeaders);
-      StreamToObject(AResponseEntity, Client.Response, LResponseStream);
-    finally
-      LResponseStream.Free;
-    end;
-  finally
-    LRequestStream.Free;
-  end;
+  GenericHttpRequest<T>('PATCH', ARequestEntity, AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.GenericPost<T, V>(const ARequestEntity: T): V;
-var
-  LRequestStream, LResponseStream: TMemoryStream;
 begin
-  Result := default(V);
-  InitHttpRequest;
-
-  LRequestStream := TMemoryStream.Create;
-  try
-    LResponseStream := TGCMemoryStream.Create;
-    try
-      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
-      Client.Post(URL, LRequestStream, LResponseStream, CustomHeaders);
-      Result := StreamToObject<V>(Client.Response, LResponseStream);
-    finally
-      if not SameObject<V>(Result, LResponseStream) then
-        LResponseStream.Free;
-    end;
-  finally
-    LRequestStream.Free;
-  end;
+  Result := GenericHttpRequest<T, V>('POST', ARequestEntity);
 end;
 
 procedure TWiRLClientCustomResource.GenericPost<T>(const ARequestEntity: T;
   AResponseEntity: TObject);
-var
-  LRequestStream, LResponseStream: TMemoryStream;
 begin
-  InitHttpRequest;
-
-  LRequestStream := TMemoryStream.Create;
-  try
-    LResponseStream := TGCMemoryStream.Create;
-    try
-      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
-      Client.Post(URL, LRequestStream, LResponseStream, CustomHeaders);
-      StreamToObject(AResponseEntity, Client.Response, LResponseStream);
-    finally
-      LResponseStream.Free;
-    end;
-  finally
-    LRequestStream.Free;
-  end;
+  GenericHttpRequest<T>('POST', ARequestEntity, AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.GenericPut<T, V>(const ARequestEntity: T): V;
-var
-  LRequestStream, LResponseStream: TMemoryStream;
 begin
-  Result := default(V);
-  InitHttpRequest;
-
-  LRequestStream := TMemoryStream.Create;
-  try
-    LResponseStream := TGCMemoryStream.Create;
-    try
-      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
-      Client.Put(URL, LRequestStream, LResponseStream, CustomHeaders);
-      Result := StreamToObject<V>(Client.Response, LResponseStream);
-    finally
-      if not SameObject<V>(Result, LResponseStream) then
-        LResponseStream.Free;
-    end;
-  finally
-    LRequestStream.Free;
-  end;
+  Result := GenericHttpRequest<T, V>('PUT', ARequestEntity);
 end;
 
 procedure TWiRLClientCustomResource.GenericPut<T>(const ARequestEntity: T;
   AResponseEntity: TObject);
-var
-  LRequestStream, LResponseStream: TMemoryStream;
 begin
-  InitHttpRequest;
-
-  LRequestStream := TMemoryStream.Create;
-  try
-    LResponseStream := TGCMemoryStream.Create;
-    try
-      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
-      Client.Put(URL, LRequestStream, LResponseStream, CustomHeaders);
-      StreamToObject(AResponseEntity, Client.Response, LResponseStream);
-    finally
-      LResponseStream.Free;
-    end;
-  finally
-    LRequestStream.Free;
-  end;
+  GenericHttpRequest<T>('PUT', ARequestEntity, AResponseEntity);
 end;
 
 procedure TWiRLClientCustomResource.OPTIONS(const ABeforeExecute: TWiRLClientProc = nil;
@@ -988,5 +949,9 @@ begin
     LMediaType.Free;
   end;
 end;
+
+initialization
+
+RegisterHttpMethodImplementations;
 
 end.
