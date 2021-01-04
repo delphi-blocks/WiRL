@@ -409,7 +409,14 @@ begin
   if not Assigned(LHttpMethodImplementation) then
     raise EWiRLClientException.CreateFmt('Implementation not found for method [%s]', [AHttpMethod]);
 
-  LHttpMethodImplementation(Self, ARequestStream, AResponseStream, ACustomHeaders);
+  try
+    LHttpMethodImplementation(Self, ARequestStream, AResponseStream, ACustomHeaders);
+  except
+    on E: EWiRLClientProtocolException do
+    begin
+      raise EWiRLClientResourceException.Create(Client.Response);
+    end;
+  end;
 end;
 
 function TWiRLClientCustomResource.CustomHeaders: TWiRLHeaders;

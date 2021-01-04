@@ -32,7 +32,9 @@ type
 
   IWiRLApplication = interface;
 
+  {$M+}
   TWiRLConfiguration = class;
+  {$M-}
 
   TWiRLConfigurationClass = class of TWiRLConfiguration;
 

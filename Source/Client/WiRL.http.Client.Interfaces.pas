@@ -12,7 +12,7 @@ unit WiRL.http.Client.Interfaces;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
+  System.Classes, System.SysUtils, System.JSON, System.Generics.Collections,
 
   WiRL.Rtti.Utils,
   WiRL.Core.Classes,
@@ -32,6 +32,22 @@ type
   public
     constructor Create(const AStatusCode: Integer; const AMessage: string); reintroduce; virtual;
     property StatusCode: Integer read FStatusCode write FStatusCode;
+  end;
+
+  EWiRLClientResourceException = class(EWiRLClientException)
+  private
+    FStatusCode: Integer;
+    FReasonString: string;
+    FJsonResponse: TJSONValue;
+    FServerException: string;
+  public
+    constructor Create(AResponse: TWiRLResponse); reintroduce; virtual;
+    destructor Destroy; override;
+
+    property StatusCode: Integer read FStatusCode write FStatusCode;
+    property ReasonString: string read FReasonString write FReasonString;
+    property JsonResponse: TJSONValue read FJsonResponse write FJsonResponse;
+    property ServerException: string read FServerException write FServerException;
   end;
 
   TWiRLHeader = record
@@ -112,6 +128,9 @@ type
   end;
 
 implementation
+
+uses
+  WiRL.http.Accept.MediaType;
 
 { TWiRLClientRegistry }
 
@@ -204,6 +223,39 @@ constructor TWiRLHeader.Create(const AName, AValue: string);
 begin
   Name := AName;
   Value := AValue;
+end;
+
+{ EWiRLClientResourceException }
+
+constructor EWiRLClientResourceException.Create(AResponse: TWiRLResponse);
+var
+  LMessage: string;
+begin
+  FStatusCode := AResponse.StatusCode;
+  FReasonString := AResponse.ReasonString;
+  FServerException := Exception.ClassName;
+  LMessage := FReasonString;
+
+  if AResponse.ContentType = TMediaType.APPLICATION_JSON then
+  begin
+    FJsonResponse := TJSONObject.ParseJSONValue(AResponse.Content);
+    if Assigned(FJsonResponse) then
+    begin
+      if not FJsonResponse.TryGetValue<string>('message', LMessage) then
+        LMessage := FReasonString;
+
+      if not FJsonResponse.TryGetValue<string>('exception', FServerException) then
+        LMessage := FServerException;
+    end;
+  end;
+
+  inherited Create(LMessage);
+end;
+
+destructor EWiRLClientResourceException.Destroy;
+begin
+  FJsonResponse.Free;
+  inherited;
 end;
 
 end.
