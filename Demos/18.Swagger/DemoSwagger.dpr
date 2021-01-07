@@ -12,8 +12,9 @@ program DemoSwagger;
 uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
-  Server.Resources in 'Server.Resources.pas',
-  Server.Entities in 'Server.Entities.pas';
+  Server.Entities in 'Server.Entities.pas',
+  Server.Resources.Demo in 'Server.Resources.Demo.pas',
+  Server.Resources.Swagger in 'Server.Resources.Swagger.pas';
 
 {$R *.res}
 

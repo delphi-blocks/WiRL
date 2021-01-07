@@ -16,7 +16,6 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
 
-  WiRL.Core.JSON,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
@@ -65,9 +64,19 @@ type
     property Addresses: TAddresses read FAddresses write FAddresses;
   end;
 
+  TDetailsInfo = class
+  private
+    FClaims: TServerClaims;
+    FMessage: string;
+  public
+    constructor Create(const AMessage: string; AClaims: TServerClaims);
+    property Message: string read FMessage write FMessage;
+    property Claims: TServerClaims read FClaims write FClaims;
+  end;
+
   [Path('user')]
   TUserResource = class
-  private
+  protected
     // Injects the auth context into the "Auth" object
     [Context] Auth: TWiRLAuthContext;
 
@@ -78,13 +87,13 @@ type
     [Produces(TMediaType.APPLICATION_JSON)]
     function PublicInfo: TUserInfo;
 
-    [POST, PermitAll]
+    [POST, RolesAllowed('admin,manager')]
     [Produces(TMediaType.APPLICATION_JSON)]
-    function InsertUser([BodyParam] JSON: TJSONObject): TUserInfo;
+    function InsertUser([BodyParam] AUser: TUserInfo): TUserInfo;
 
     [GET, Path('/details'), RolesAllowed('admin,manager')]
     [Produces(TMediaType.APPLICATION_JSON)]
-    function DetailsInfo: TJSONObject;
+    function DetailsInfo: TDetailsInfo;
   end;
 
   // *********************************************************************
@@ -120,27 +129,21 @@ type
 
 implementation
 
-uses
-  REST.Json;
-
 { TUserResource }
 
-function TUserResource.DetailsInfo: TJSONObject;
+function TUserResource.DetailsInfo: TDetailsInfo;
 begin
-  Result := TJSONObject.Create;
-
-  Result.AddPair('custom', TJSONString.Create('Admin-level access informations here!'));
-  Result.AddPair('subject', Auth.Subject.Clone);
+  Result := TDetailsInfo.Create('Admin-level access informations', Subject);
 end;
 
-function TUserResource.InsertUser(JSON: TJSONObject): TUserInfo;
+function TUserResource.InsertUser(AUser: TUserInfo): TUserInfo;
 begin
-  Result := TJson.JsonToObject<TUserInfo>(JSON);
+  Result := TUserInfo.Create;
 
-  Result.FullName := 'Luca Minuti';
-  Result.Age := 40;
-  Result.Language := Subject.Language;
-  Result.Group := 2;
+  Result.FullName := AUser.FullName;
+  Result.Age := AUser.Age;
+  Result.Language := AUser.Language;
+  Result.Group := AUser.Group;
 end;
 
 function TUserResource.PublicInfo: TUserInfo;
@@ -224,12 +227,7 @@ begin
   Result.City := ACity;
   Result.ZipCode := AZip;
 
-  {$IFDEF HAS_NEW_ARRAY}
   FAddresses := FAddresses + [Result];
-  {$ELSE}
-  SetLength(FAddresses, Length(FAddresses) + 1);
-  FAddresses[Length(FAddresses) - 1] := Result;
-  {$ENDIF}
 end;
 
 constructor TUserInfo.Create;
@@ -246,6 +244,14 @@ begin
 
   SetLength(FAddresses, 0);
   inherited;
+end;
+
+{ TDetailsInfo }
+
+constructor TDetailsInfo.Create(const AMessage: string; AClaims: TServerClaims);
+begin
+  FMessage := AMessage;
+  FClaims := AClaims;
 end;
 
 initialization

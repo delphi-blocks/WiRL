@@ -34,17 +34,17 @@ object frmClientMain: TfrmClientMain
     Width = 529
     Height = 408
     ActivePage = tsPublicResource
+    TabHeight = 30
     TabOrder = 1
     object tsPublicResource: TTabSheet
       Caption = 'Public Resource'
-      ExplicitLeft = 0
-      ExplicitTop = 32
-      ExplicitHeight = 264
+      ExplicitTop = 24
+      ExplicitHeight = 380
       object Label2: TLabel
         Left = 3
         Top = 8
         Width = 45
-        Height = 17
+        Height = 13
         Caption = 'Resource'
       end
       object Label3: TLabel
@@ -134,8 +134,8 @@ object frmClientMain: TfrmClientMain
     object tsLogin: TTabSheet
       Caption = 'Login (Basic Auth)'
       ImageIndex = 1
-      ExplicitLeft = 12
-      ExplicitHeight = 264
+      ExplicitTop = 24
+      ExplicitHeight = 380
       object Label1: TLabel
         Left = 3
         Top = 8
@@ -261,8 +261,8 @@ object frmClientMain: TfrmClientMain
     object tsPrivateResource: TTabSheet
       Caption = 'Private Resource'
       ImageIndex = 3
-      ExplicitWidth = 281
-      ExplicitHeight = 165
+      ExplicitTop = 24
+      ExplicitHeight = 380
       object Label5: TLabel
         Left = 3
         Top = 8

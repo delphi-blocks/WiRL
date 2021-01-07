@@ -37,10 +37,13 @@ type
   public
     constructor Create; virtual;
     function AddResourceName(const AResourceName: string): TWiRLConstructorInfo;
+    function RegisterResource(AClass: TClass): TWiRLConstructorInfo; overload;
     function RegisterResource<T: class>: TWiRLConstructorInfo; overload;
     function RegisterResource<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLConstructorInfo; overload;
 
-    function GetResourceClass(const AResource: string; out Value: TClass): Boolean;
+    procedure UnregisterResource(AClass: TClass);
+
+    function GetResourceClass(const AResourceName: string; out Value: TClass): Boolean;
     function GetResourceInstance<T: class>: T;
 
     class property Instance: TWiRLResourceRegistry read GetInstance;
@@ -66,6 +69,12 @@ begin
   Result := RegisterResource<T>(nil);
 end;
 
+function TWiRLResourceRegistry.RegisterResource(AClass: TClass): TWiRLConstructorInfo;
+begin
+  Result := TWiRLConstructorInfo.Create(AClass, nil);
+  Self.Add(AClass.QualifiedClassName, Result);
+end;
+
 function TWiRLResourceRegistry.RegisterResource<T>(
   const AConstructorFunc: TFunc<TObject>): TWiRLConstructorInfo;
 begin
@@ -73,8 +82,12 @@ begin
   Self.Add(T.QualifiedClassName, Result);
 end;
 
-function TWiRLResourceRegistry.AddResourceName(
-  const AResourceName: string): TWiRLConstructorInfo;
+procedure TWiRLResourceRegistry.UnregisterResource(AClass: TClass);
+begin
+  Self.Remove(AClass.QualifiedClassName);
+end;
+
+function TWiRLResourceRegistry.AddResourceName(const AResourceName: string): TWiRLConstructorInfo;
 begin
   Self.Add(AResourceName, nil);
   Result := nil;
@@ -82,8 +95,6 @@ end;
 
 constructor TWiRLResourceRegistry.Create;
 begin
-  // TWiRLResourceRegistrySingleton.CheckInstance(Self);
-
   inherited Create([doOwnsValues]);
 end;
 
@@ -92,13 +103,12 @@ begin
   Result := TWiRLResourceRegistrySingleton.Instance;
 end;
 
-function TWiRLResourceRegistry.GetResourceClass(const AResource: string;
-  out Value: TClass): Boolean;
+function TWiRLResourceRegistry.GetResourceClass(const AResourceName: string; out Value: TClass): Boolean;
 var
   LInfo: TWiRLConstructorInfo;
 begin
   Value := nil;
-  Result := Self.TryGetValue(AResource, LInfo);
+  Result := Self.TryGetValue(AResourceName, LInfo);
   if Result then
     Value := LInfo.TypeTClass;
 end;

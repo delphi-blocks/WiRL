@@ -384,6 +384,15 @@ begin
   Result := SetResources(AResources.Split([',']));
 end;
 
+function TWiRLApplication.SetResources(const AResources: TArray<string>): IWiRLApplication;
+var
+  LResource: string;
+begin
+  Result := Self;
+  for LResource in AResources do
+    Self.AddResource(LResource);
+end;
+
 function TWiRLApplication.SetFilters(const AFilters: string): IWiRLApplication;
 begin
   Result := SetFilters(AFilters.Split([',']));
@@ -472,15 +481,6 @@ begin
   Result := Self;
   for LFilter in AFilters do
     Self.AddFilter(LFilter);
-end;
-
-function TWiRLApplication.SetResources(const AResources: TArray<string>): IWiRLApplication;
-var
-  LResource: string;
-begin
-  Result := Self;
-  for LResource in AResources do
-    Self.AddResource(LResource);
 end;
 
 function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;

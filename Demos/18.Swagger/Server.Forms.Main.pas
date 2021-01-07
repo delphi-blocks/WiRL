@@ -16,6 +16,7 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
   WiRL.Configuration.Neon,
+  WiRL.Configuration.OpenAPI,
   Neon.Core.Types,
   WiRL.Core.Application,
   WiRL.Core.Engine,
@@ -23,11 +24,6 @@ uses
   WiRL.http.Server.Indy;
 
 type
-
-  TExceptionListener = class(TInterfacedObject, IWiRLHandleExceptionListener)
-    procedure HandleException(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; E: Exception);
-  end;
-
   TMainForm = class(TForm)
     TopPanel: TPanel;
     StartButton: TButton;
@@ -37,7 +33,6 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
-    memoLog: TMemo;
     procedure FormDestroy(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
@@ -47,7 +42,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FRESTServer: TWiRLServer;
-    FListener: IWiRLHandleExceptionListener;
   public
     { Public declarations }
   end;
@@ -57,11 +51,13 @@ var
 
 implementation
 
+uses
+  WiRL.Core.OpenAPI.Resource;
+
 {$R *.dfm}
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
-  FListener := nil;
   FRESTServer.Free;
 end;
 
@@ -73,18 +69,27 @@ end;
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   FRESTServer := TWiRLServer.Create(Self);
-  FListener := TExceptionListener.Create;
 
   FRESTServer.AddEngine<TWiRLEngine>('/rest')
     .SetEngineName('RESTEngine')
-    .AddSubscriber(FListener)
+
     .AddApplication('/app')
-      .SetResources('*')
+
+      // Test for namespaces
+      .SetResources('Server.Resources.Demo.*')
+      .SetResources('Server.Resources.Swagger.*')
       .SetFilters('*')
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
-        .SetMemberCase(TNeonCase.SnakeCase);
+        .SetMemberCase(TNeonCase.SnakeCase)
+        .BackToApp
+
+      .Plugin.Configure<IWiRLConfigurationOpenAPI>
+        .SetXMLDocFolder('.\XMLDoc')
+        .SetDocumentationFolder('.\Documentation')
+        .BackToApp
+  ;
 
   StartServerAction.Execute;
 end;
@@ -109,14 +114,6 @@ end;
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
   StopServerAction.Enabled := Assigned(FRESTServer) and FRESTServer.Active;
-end;
-
-{ TExceptionListener }
-
-procedure TExceptionListener.HandleException(const ASender: TWiRLEngine;
-  const AApplication: TWiRLApplication; E: Exception);
-begin
-  MainForm.memoLog.Lines.Add(E.Message);
 end;
 
 end.
