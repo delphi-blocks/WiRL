@@ -38,6 +38,7 @@ type
     procedure Accept(const AAccept: string);
     procedure AcceptLanguage(const AAcceptLanguage: string);
     procedure QueryParam(const AName, AValue: string);
+    procedure PathParam(const AName, AValue: string);
 
     function GetResource: TObject;
 

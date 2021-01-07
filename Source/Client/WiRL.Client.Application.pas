@@ -36,6 +36,7 @@ type
     function Header(const AName, AValue: string): TWiRLInvocation;
     function Authorization(const AValue: string): TWiRLInvocation;
     function QueryParam(const AName, AValue: string): TWiRLInvocation;
+    function PathParam(const AName, AValue: string): TWiRLInvocation;
 
     function Get<T>: T; overload;
     procedure Get(AResponseEntity: TObject); overload;
@@ -143,6 +144,7 @@ type
     procedure Accept(const AAccept: string);
     procedure AcceptLanguage(const AAcceptLanguage: string);
     procedure QueryParam(const AName, AValue: string);
+    procedure PathParam(const AName, AValue: string);
 
     constructor Create(AApplication: TWiRLClientApplication);
     destructor Destroy; override;
@@ -462,6 +464,13 @@ begin
   (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPatch(ARequestEntity, AResponseEntity);
 end;
 
+function TWiRLInvocation.PathParam(const AName,
+  AValue: string): TWiRLInvocation;
+begin
+  FWiRLInvocation.PathParam(AName, AValue);
+  Result := Self;
+end;
+
 function TWiRLInvocation.Post<T, V>(const ARequestEntity: T): V;
 begin
   Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPost<T,V>(ARequestEntity);
@@ -536,6 +545,13 @@ begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
   Result := FResource;
+end;
+
+procedure TWiRLResourceWrapper.PathParam(const AName, AValue: string);
+begin
+  if not Assigned(FResource) then
+    raise EWiRLClientException.Create('Resource not found');
+  FResource.PathParamsValues.Values[AName] := AValue;
 end;
 
 procedure TWiRLResourceWrapper.QueryParam(const AName, AValue: string);

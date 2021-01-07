@@ -457,8 +457,7 @@ begin
     begin
       Result := False;
       case AType.TypeKind of
-        //tkArray, tkDynArray:
-        tkRecord: Result := True;
+        tkArray, tkDynArray, tkRecord: Result := True;
       end;
     end,
     function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer

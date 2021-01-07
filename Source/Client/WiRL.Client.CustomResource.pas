@@ -347,11 +347,19 @@ end;
 
 
 function TWiRLClientCustomResource.GetURL: string;
+var
+  LIndex: Integer;
 begin
-  Result := TWiRLURL.CombinePath([
-    Path,
-    TWiRLURL.CombinePath(TWiRLURL.URLEncode(FPathParamsValues.ToStringArray))
-  ]);
+  Result := Path;
+  for LIndex := 0 to FPathParamsValues.Count - 1 do
+  begin
+    Result := StringReplace(Result, '{' + FPathParamsValues.Names[LIndex] + '}', TWiRLURL.URLEncode(FPathParamsValues.ValueFromIndex[LIndex]), [rfReplaceAll, rfIgnoreCase]);
+  end;
+
+//  Result := TWiRLURL.CombinePath([
+//    Path,
+//    TWiRLURL.CombinePath(TWiRLURL.URLEncode(FPathParamsValues.ToStringArray))
+//  ]);
 
   if FQueryParams.Count > 0 then
     Result := Result + '?' + SmartConcat(TWiRLURL.URLEncode(FQueryParams.ToStringArray), '&');
