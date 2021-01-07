@@ -13,30 +13,22 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.JSON, System.NetEncoding, System.Generics.Collections,
-  Data.DB,
-  FireDAC.Comp.Client,
-  FireDAC.Comp.DataSet,
-  FireDAC.Stan.Intf,
+  Data.DB, FireDAC.Comp.Client, FireDAC.Comp.DataSet, FireDAC.Stan.Intf,
+
+  WiRL.http.URL,
   WiRL.Core.Engine,
-  WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
+  WiRL.Core.Application,
   WiRL.http.Accept.MediaType,
-  WiRL.http.URL,
-  WiRL.Data.FireDAC.MessageBody.Default,
   WiRL.Core.MessageBody.Default,
-  WiRL.Core.Auth.Context,
-  WiRL.http.Request,
-  WiRL.http.Response,
-  
+  WiRL.Data.FireDAC.MessageBody.Default,
+
   Demo.Entities;
 
 type
   [Path('/helloworld')]
   THelloWorldResource = class
-  private
-    [Context] Request: TWiRLRequest;
-    [Context] AuthContext: TWiRLAuthContext;
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
@@ -67,14 +59,9 @@ type
     [Produces(TMediaType.TEXT_PLAIN)]
     function Params([PathParam] AOne: string; [PathParam] ATwo: string): string;
 
-    [GET, Path('/authinfo'), Produces(TMediaType.APPLICATION_JSON)]
-    function GetAuthInfo: string;
-
-    [GET, Path('/sum/{Addendo1}/{Addendo2}')]
+    [GET, Path('/sum/{Qty1}/{Qty2}')]
     [Produces(TMediaType.TEXT_PLAIN)]
-    function Somma(
-      [PathParam] Addendo1: Integer;
-      [PathParam] Addendo2: Integer): Integer;
+    function Sum([PathParam] Qty1: Integer; [PathParam] Qty2: Integer): Integer;
 
     [GET, Path('/exception'), Produces(TMediaType.APPLICATION_JSON)]
     function TestException: string;
@@ -132,7 +119,6 @@ implementation
 
 uses
   System.DateUtils, System.StrUtils, System.IOUtils,
-  WiRL.Core.JSON,
   WiRL.http.Accept.Language;
 
 { THelloWorldResource }
@@ -140,11 +126,6 @@ uses
 function THelloWorldResource.EchoString(AString: string): string;
 begin
   Result := AString;
-end;
-
-function THelloWorldResource.GetAuthInfo: string;
-begin
-  Result := TJSONHelper.ToJSON(AuthContext.Subject.JSON);
 end;
 
 function THelloWorldResource.GetDBData: TFDMemTable;
@@ -165,33 +146,16 @@ begin
 end;
 
 function THelloWorldResource.GetPerson(Id: Integer): TPerson;
-var
-  Header: string;
 begin
   Result := TPerson.Create;
   Result.Name := 'Paolo Rossi';
   Result.Age := Id;
-  Result.Detail := '';
-
-  for Header in Request.HeaderFields do
-  begin
-    Result.Detail := Result.Detail + Header + sLineBreak;
-  end;
+  Result.Detail := 'Person Detail';
 end;
 
 function THelloWorldResource.HelloWorld(): string;
-var
-  LLang: TAcceptLanguage;
 begin
-  LLang := TAcceptLanguage.Create('it');
-  try
-    if Request.AcceptableLanguages.Contains(LLang) then
-      Result := 'Ciao Mondo!'
-    else
-      Result := 'Hello World!';
-  finally
-    LLang.Free;
-  end;
+  Result := 'Hello World!';
 end;
 
 function THelloWorldResource.Params(AOne, ATwo: string): string;
@@ -266,9 +230,9 @@ begin
   Result := System.StrUtils.ReverseString(AString);
 end;
 
-function THelloWorldResource.Somma(Addendo1, Addendo2: Integer): Integer;
+function THelloWorldResource.Sum(Qty1, Qty2: Integer): Integer;
 begin
-  Result := Addendo1 + Addendo2;
+  Result := Qty1 + Qty2;
 end;
 
 function THelloWorldResource.TestException: string;

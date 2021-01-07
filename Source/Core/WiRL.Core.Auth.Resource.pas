@@ -12,23 +12,33 @@ unit WiRL.Core.Auth.Resource;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.JSON,
+  System.Classes, System.SysUtils,
 
-  WiRL.Core.JSON,
-  WiRL.Core.Registry,
   WiRL.Core.Classes,
+  WiRL.Core.Registry,
+  WiRL.Core.Attributes,
   WiRL.Core.Application,
   WiRL.Core.Declarations,
-  WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Auth.Context,
-  WiRL.http.URL,
 
   Neon.Core.Persistence,
   Neon.Core.Attributes;
 
 type
+  TWiRLLoginResponse = class
+  private
+    FSuccess: Boolean;
+    FAccessToken: string;
+  public
+    constructor Create(ASuccess: Boolean; const AToken: string); overload;
+    [NeonProperty('success')]
+    property Success: Boolean read FSuccess write FSuccess;
+    [NeonProperty('access_token')]
+    property AccessToken: string read FAccessToken write FAccessToken;
+  end;
+
   TWiRLAuthResponse = record
     HttpStatus: Integer;
     HttpReason: string;
@@ -64,10 +74,7 @@ type
   protected
     [Context] FAuthContext: TWiRLAuthContext;
     [Context] FApplication: TWiRLApplication;
-
     function Authenticate(const AUserName, APassword: string): TWiRLAuthResult; virtual; abstract;
-  public
-    function GetGeneratedToken: TJSONObject;
   end;
 
   /// <summary>
@@ -82,7 +89,7 @@ type
     function DoLogin(
       [FormParam('username')] const AUserName: string;
       [FormParam('password')] const APassword: string
-    ): TJSONObject;
+    ): TWiRLLoginResponse;
   end;
 
   /// <summary>
@@ -97,7 +104,7 @@ type
     function ExtractData(const AAuth: string): TArray<string>;
   public
     [POST, Produces(TMediaType.APPLICATION_JSON)]
-    function DoLogin([HeaderParam('Authorization')] const AAuth: string): TJSONObject;
+    function DoLogin([HeaderParam('Authorization')] const AAuth: string): TWiRLLoginResponse;
   end;
 
   /// <summary>
@@ -110,7 +117,7 @@ type
   TWiRLAuthBodyResource = class(TWiRLAuthResource)
   public
     [POST, Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
-    function DoLogin([BodyParam] APrincipal: TWiRLAuthPrincipal): TJSONObject;
+    function DoLogin([BodyParam] APrincipal: TWiRLAuthPrincipal): TWiRLLoginResponse;
   end;
 
 implementation
@@ -121,18 +128,9 @@ uses
   WiRL.Configuration.JWT,
   WiRL.Core.Exceptions;
 
-{ TWiRLAuthResource }
-
-function TWiRLAuthResource.GetGeneratedToken: TJSONObject;
-begin
-  Result := TJSONObject.Create;
-  Result.AddPair('success', TJSONTrue.Create);
-  Result.AddPair('access_token', TJSONString.Create(FAuthContext.CompactToken));
-end;
-
 { TWiRLAuthFormResource }
 
-function TWiRLAuthFormResource.DoLogin(const AUserName, APassword: string): TJSONObject;
+function TWiRLAuthFormResource.DoLogin(const AUserName, APassword: string): TWiRLLoginResponse;
 var
   LAuthOperation: TWiRLAuthResult;
 begin
@@ -145,12 +143,13 @@ begin
     raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
 
   FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
-  Result := GetGeneratedToken;
+
+  Result := TWiRLLoginResponse.Create(LAuthOperation.Success, FAuthContext.CompactToken);
 end;
 
 { TWiRLAuthBasicResource }
 
-function TWiRLAuthBasicResource.DoLogin(const AAuth: string): TJSONObject;
+function TWiRLAuthBasicResource.DoLogin(const AAuth: string): TWiRLLoginResponse;
 var
   LAuthOperation: TWiRLAuthResult;
   LAuthData: TArray<string>;
@@ -177,7 +176,8 @@ begin
   end;
 
   FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
-  Result := GetGeneratedToken;
+
+  Result := TWiRLLoginResponse.Create(LAuthOperation.Success, FAuthContext.CompactToken);
 end;
 
 function TWiRLAuthBasicResource.ExtractData(const AAuth: string): TArray<string>;
@@ -200,7 +200,7 @@ end;
 
 { TWiRLAuthBodyResource }
 
-function TWiRLAuthBodyResource.DoLogin(APrincipal: TWiRLAuthPrincipal): TJSONObject;
+function TWiRLAuthBodyResource.DoLogin(APrincipal: TWiRLAuthPrincipal): TWiRLLoginResponse;
 var
   LAuthOperation: TWiRLAuthResult;
 begin
@@ -213,7 +213,8 @@ begin
     raise EWiRLNotAuthorizedException.Create(ERR_AUTH_INVALID, Self.ClassName, 'DoLogin');
 
   FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
-  Result := GetGeneratedToken;
+
+  Result := TWiRLLoginResponse.Create(LAuthOperation.Success, FAuthContext.CompactToken);
 end;
 
 { TWiRLAuthResult }
@@ -234,6 +235,14 @@ begin
   Result := '';
   for LRole in Roles do
     Result := Result + ',' + LRole;
+end;
+
+{ TWiRLLoginResponse }
+
+constructor TWiRLLoginResponse.Create(ASuccess: Boolean; const AToken: string);
+begin
+  FSuccess := ASuccess;
+  FAccessToken := AToken;
 end;
 
 end.

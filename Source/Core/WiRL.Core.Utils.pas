@@ -14,7 +14,7 @@ unit WiRL.Core.Utils;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Rtti, System.SyncObjs,
+  System.SysUtils, System.Classes, System.Rtti, System.SyncObjs, System.JSON,
   {$IFDEF HAS_NET_ENCODING}
   System.NetEncoding,
   {$ELSE}
@@ -33,7 +33,7 @@ type
   function CreateCompactGuidStr: string;
 
   /// <summary>
-  ///   Returns th efile name without the extension
+  ///   Returns the file name without the extension
   /// </summary>
   function ExtractFileNameOnly(const AFileName: string): string;
 
@@ -59,10 +59,33 @@ type
   function IsMask(const AString: string): Boolean;
   function MatchesMask(const AString, AMask: string): Boolean;
 
+  function ExistsInArray(AArray: TJSONArray; const AValue: string): Boolean;
+  function IncludeLeadingSlash(const AValue: string): string;
+
 implementation
 
 uses
   System.TypInfo, System.StrUtils, System.DateUtils, System.Masks;
+
+function ExistsInArray(AArray: TJSONArray; const AValue: string): Boolean;
+var
+  LValue: TJSONValue;
+begin
+  for LValue in AArray do
+  begin
+    if LValue.Value.Equals(AValue) then
+      Exit(True);
+  end;
+  Result := False;
+end;
+
+function IncludeLeadingSlash(const AValue: string): string;
+begin
+  if not AValue.StartsWith('/') then
+    Result := '/' + AValue
+  else
+    Result := AValue;
+end;
 
 function StreamToString(AStream: TStream): string;
 var

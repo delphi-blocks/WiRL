@@ -264,7 +264,7 @@ end;
 
 procedure TWiRLHttpRequestIndy.ParseParams(Params :TStrings; const AValue: String);
 var
-  LIndex, LStrIndex : Integer;
+  LIndex, LStrIndex: Integer;
   LTempStr: string;
   LEncoding: IIdTextEncoding;
 begin
@@ -319,7 +319,7 @@ end;
 
 function TWiRLHttpRequestIndy.GetCookieFields: TWiRLCookies;
 var
-  LIndex :Integer;
+  LIndex: Integer;
 begin
   if not Assigned(FCookieFields) then
   begin

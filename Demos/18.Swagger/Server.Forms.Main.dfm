@@ -56,20 +56,6 @@ object MainForm: TMainForm
       Text = '8080'
     end
   end
-  object memoLog: TMemo
-    Left = 0
-    Top = 73
-    Width = 554
-    Height = 216
-    Align = alClient
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'Consolas'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 1
-  end
   object MainActionList: TActionList
     Left = 104
     Top = 96

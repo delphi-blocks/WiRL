@@ -14,7 +14,6 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Defaults,
 
-  WiRL.Core.Application,
   WiRL.Configuration.Core,
   Neon.Core.Persistence,
   Neon.Core.Types;

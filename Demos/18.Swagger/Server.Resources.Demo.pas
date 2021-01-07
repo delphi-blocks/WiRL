@@ -7,16 +7,18 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit Server.Resources;
+unit Server.Resources.Demo;
 
 interface
 
 uses
   System.Classes, System.SysUtils, System.JSON,
 
+  WiRL.Core.OpenAPI.Resource,
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.Core.Registry,
+  WiRL.Core.Resource,
   WiRL.Core.Attributes,
   WiRL.Core.Application.Worker,
   WiRL.Core.MessageBody.Default,
@@ -25,14 +27,29 @@ uses
   WiRL.http.URL,
   WiRL.http.Request,
   WiRL.http.Response,
-  WiRL.Schemas.Swagger,
 
   Server.Entities;
 
 type
+  /// <summary>
+  ///   This resource serves to test the OpenAPI 2.0 documentation generation
+  /// </summary>
   [Path('/params')]
   TParametersResource = class
   public
+    /// <summary>
+    ///   Method with a sample documentation
+    /// </summary>
+    /// <param name="AParam">
+    ///   The first parameter
+    /// </param>
+    /// <returns>
+    ///   Result is a string representing the input parameter
+    /// </returns>
+    /// <remarks>
+    ///   Here is a sample remarks placeholder.
+    /// </remarks>
+    /// <response code="200">Responde description</response>
     [GET, Path('/str/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
     function ParamStr([PathParam] AParam: string): string;
 
@@ -76,6 +93,7 @@ implementation
 
 uses
   System.DateUtils, System.StrUtils, System.IOUtils,
+
   WiRL.Core.JSON,
   WiRL.http.Accept.Language;
 
@@ -146,4 +164,5 @@ end;
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<TParametersResource>;
   TWiRLResourceRegistry.Instance.RegisterResource<TResponsesResource>;
+
 end.
