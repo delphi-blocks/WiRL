@@ -63,6 +63,7 @@ type
   IWiRLConfiguration = interface
   ['{E53BA2F7-6CC5-4710-AB18-B0F30E909655}']
     function BackToApp: IWiRLApplication;
+    function SaveConfig: IWiRLApplication;
   end;
 
   /// <summary>
@@ -70,7 +71,7 @@ type
   /// </summary>
   {$M+}
   TWiRLConfiguration = class(TSingletonImplementation, IWiRLConfiguration)
-  private
+  protected
     FNeonConfig: TNeonConfiguration;
     FApplication: IWiRLApplication;
     function GetAsJSON: TJSONObject;
@@ -78,6 +79,8 @@ type
   public
     constructor Create; virtual;
     destructor Destroy; override;
+
+    procedure DoAfterCreate; virtual;
 
     procedure SaveToFile(const AFileName: string);
     procedure SaveToStream(AStream: TStream);
@@ -88,6 +91,7 @@ type
     property AsJSON: TJSONObject read GetAsJSON;
 
     function BackToApp: IWiRLApplication;
+    function SaveConfig: IWiRLApplication;
   end;
   {$M-}
 
@@ -143,6 +147,11 @@ begin
   inherited;
 end;
 
+procedure TWiRLConfiguration.DoAfterCreate;
+begin
+  // Do nothing, allow subclasses to operate on FApplication
+end;
+
 function TWiRLConfiguration.GetAsJSON: TJSONObject;
 begin
   Result := TNeon.ObjectToJSON(Self, FNeonConfig) as TJSONObject;
@@ -151,6 +160,11 @@ end;
 function TWiRLConfiguration.GetAsString: string;
 begin
   Result := TNeon.ObjectToJSONString(Self, FNeonConfig);
+end;
+
+function TWiRLConfiguration.SaveConfig: IWiRLApplication;
+begin
+  Result := FApplication;
 end;
 
 procedure TWiRLConfiguration.SaveToFile(const AFileName: string);
@@ -246,6 +260,7 @@ begin
     Result := TRttiHelper.CreateInstance(AClass) as TWiRLConfiguration;
     try
       Result.Application := AApp;
+      Result.DoAfterCreate;
       Add(Result);
     except
       Result.Free;
