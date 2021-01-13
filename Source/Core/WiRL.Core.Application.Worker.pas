@@ -151,7 +151,7 @@ begin
     Exit;
 
   // Run filters
-  FAppConfig.FilterRegistry.FetchRequestFilter(False,
+  FAppConfig.FilterRegistry.FetchRequestFilter(TWiRLFilterType.Normal,
     procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     var
       LRequestContext: TWiRLContainerRequestContext;
@@ -186,7 +186,7 @@ begin
     Exit;
 
   // Run filters
-  FAppConfig.FilterRegistry.FetchResponseFilter(False,
+  FAppConfig.FilterRegistry.FetchResponseFilter(TWiRLFilterType.Normal,
     procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
     var
       LResponseContext: TWiRLContainerResponseContext;

@@ -44,6 +44,9 @@ type
   public
     destructor Destroy; override;
 
+    function GetCurrentEngineFromServer: TObject;
+    function GetCurrentAppFromServer: TObject;
+
     property Server: TObject read GetServer write SetServer;
     property Engine: TObject read GetEngine write SetEngine;
     property Application: TObject read GetApplication write SetApplication;
@@ -67,6 +70,24 @@ destructor TWiRLContextServer.Destroy;
 begin
   FResourceURL.Free;
   inherited;
+end;
+
+function TWiRLContextServer.GetCurrentAppFromServer: TObject;
+var
+  LServer: TWiRLServer;
+  LEngine: TWiRLEngine;
+begin
+  LServer := Server as TWiRLServer;
+  LEngine := LServer.GetEngine(Request.PathInfo) as TWiRLEngine;
+  Result := LEngine.GetApplication(RequestURL);
+end;
+
+function TWiRLContextServer.GetCurrentEngineFromServer: TObject;
+var
+  LServer: TWiRLServer;
+begin
+  LServer := Server as TWiRLServer;
+  Result := LServer.GetEngine(Request.PathInfo) as TWiRLEngine;
 end;
 
 function TWiRLContextServer.GetApplication: TObject;
