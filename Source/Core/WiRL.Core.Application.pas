@@ -398,6 +398,15 @@ begin
   Result := SetFilters(AFilters.Split([',']));
 end;
 
+function TWiRLApplication.SetFilters(const AFilters: TArray<string>): IWiRLApplication;
+var
+  LFilter: string;
+begin
+  Result := Self;
+  for LFilter in AFilters do
+    Self.AddFilter(LFilter);
+end;
+
 procedure TWiRLApplication.SetParentComponent(AParent: TComponent);
 begin
   inherited;
@@ -431,7 +440,6 @@ begin
 
   if FReaderRegistry.Count = 0 then
     FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
-
 end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
@@ -472,15 +480,6 @@ begin
   for LWriterInfo in FWriterRegistry do
     Writer.WriteString(LWriterInfo.WriterName);
   Writer.WriteListEnd;
-end;
-
-function TWiRLApplication.SetFilters(const AFilters: TArray<string>): IWiRLApplication;
-var
-  LFilter: string;
-begin
-  Result := Self;
-  for LFilter in AFilters do
-    Self.AddFilter(LFilter);
 end;
 
 function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
@@ -647,8 +646,7 @@ begin
   FApplication := AApplication;
 end;
 
-function TAppConfiguratorImpl.GetConfigByInterfaceRef(
-  AInterfaceRef: TGUID): IInterface;
+function TAppConfiguratorImpl.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
 begin
   Result := FApplication.GetConfigByInterfaceRef(AInterfaceRef);
 end;

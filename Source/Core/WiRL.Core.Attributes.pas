@@ -274,12 +274,39 @@ type
   /// </summary>
   SingletonAttribute = class(TCustomAttribute);
 
+
+  /// <summary>
+  ///   Used to mark a Resource's Method as async. Not fully implemented in the
+  ///   core
+  /// </summary>
   AsyncResponseAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   Attribute to annotate a Filter that gets called before <b>any</b> REST
+  ///   process in WiRL
+  /// </summary>
   PreMatchingAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   Attribute to annotate a Filter that gets called before the <b>Resource
+  ///   Algorithm</b> selection process, but after the <b>Engine</b> and <b>App</b>
+  ///    selection process.
+  /// </summary>
+  PreMatchingResourceAttribute = class(TCustomAttribute);
+
+  /// <summary>
+  ///   Meta-annotation used to create name binding attributes for filters.
+  /// </summary>
+  /// <remarks>
+  ///   More than one filter or interceptor may be decorated with the same
+  ///   name-binding annotation
+  /// </remarks>
   NameBindingAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   The Priority annotation can be applied to WiRL Filters to indicate in
+  ///   what order they should be used (grouped)
+  /// </summary>
   PriorityAttribute = class(TCustomAttribute)
   private
     FValue: Integer;
@@ -288,6 +315,9 @@ type
     property Value: Integer read FValue write FValue;
   end;
 
+  /// <summary>
+  ///   Attribute to set a default for a given parameter
+  /// </summary>
   DefaultValueAttribute = class(TCustomAttribute)
   private
     FValue: string;
@@ -362,8 +392,8 @@ type
     property ContentType: string read FContentType;
   end;
 
-  RestAttribute = class(TCustomAttribute)
-  end;
+  RESTAttribute = class(TCustomAttribute);
+
 {$ENDREGION}
 
 implementation
