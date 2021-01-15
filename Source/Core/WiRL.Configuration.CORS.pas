@@ -44,7 +44,7 @@ type
 
     // Interface IWiRLConfigurationCORS implementation
     function SetOrigin(const AOrgin: string): IWiRLConfigurationCORS;
-    function SetMethods(const AMethods: string = 'HEAD,GET,PUT,POST,DELETE,OPTIONS'): IWiRLConfigurationCORS;
+    function SetMethods(const AMethods: string): IWiRLConfigurationCORS;
     function SetHeaders(const AHeaders: string): IWiRLConfigurationCORS;
   published
     property Origin: string read FOrigin write FOrigin;
@@ -63,8 +63,8 @@ class function TWiRLConfigurationCORS.Default: IWiRLConfigurationCORS;
 begin
   Result := TWiRLConfigurationCORS.Create
     .SetOrigin('*')
-    .SetMethods()
-    .SetHeaders('')
+    .SetMethods('HEAD, GET, PUT, POST, DELETE, OPTIONS')
+    .SetHeaders('Accept, Content-Type, Content-Encoding')
   ;
 end;
 

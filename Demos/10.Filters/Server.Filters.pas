@@ -24,7 +24,6 @@ uses
   WiRL.http.URL,
   WiRL.Core.Application,
   WiRL.http.Accept.MediaType,
-  WiRL.http.Filters.Compression,
 
   Server.Filters.Attributes,
   Server.Forms.Main;
