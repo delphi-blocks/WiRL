@@ -100,8 +100,6 @@ type
     const ERR_BASIC_MALFORMED = 'Malformed (basic) credentials';
     const ERR_BASIC_HEADER = 'Auhtorization header incorrect';
     const AUTH_BASIC = 'Basic ';
-  protected
-    function ExtractData(const AAuth: string): TArray<string>;
   public
     [POST, Produces(TMediaType.APPLICATION_JSON)]
     function DoLogin([HeaderParam('Authorization')] const AAuth: string): TWiRLLoginResponse;
@@ -152,12 +150,12 @@ end;
 function TWiRLAuthBasicResource.DoLogin(const AAuth: string): TWiRLLoginResponse;
 var
   LAuthOperation: TWiRLAuthResult;
-  LAuthData: TArray<string>;
+  LAuthData: TBasicAuth;
 begin
   FAuthContext.Clear;
 
-  LAuthData := ExtractData(AAuth);
-  LAuthOperation := Authenticate(LAuthData[0], LAuthData[1]);
+  LAuthData := AAuth;
+  LAuthOperation := Authenticate(LAuthData.User, LAuthData.Password);
 
   FAuthContext.Subject.Roles := string.Join(',', LAuthOperation.Roles);
 
@@ -178,24 +176,6 @@ begin
   FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
 
   Result := TWiRLLoginResponse.Create(LAuthOperation.Success, FAuthContext.CompactToken);
-end;
-
-function TWiRLAuthBasicResource.ExtractData(const AAuth: string): TArray<string>;
-var
-  LAuthField: string;
-  LColonIdx: Integer;
-begin
-  if not AAuth.StartsWith(AUTH_BASIC) then
-    raise EWiRLNotAuthorizedException.Create(ERR_BASIC_HEADER, Self.ClassName, 'DoLogin');
-
-  LAuthField := AAuth.Substring(AUTH_BASIC.Length);
-  LAuthField := TBase64.Decode(LAuthField);
-  LColonIdx := LAuthField.IndexOf(':');
-
-  if LColonIdx <= 0 then
-    raise EWiRLNotAuthorizedException.Create(ERR_BASIC_MALFORMED, Self.ClassName, 'DoLogin');
-
-  Result := [LAuthField.Substring(0, LColonIdx), LAuthField.Substring(LColonIdx + 1, MaxInt)];
 end;
 
 { TWiRLAuthBodyResource }

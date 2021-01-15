@@ -18,8 +18,8 @@ uses
   WiRL.Core.Context,
   WiRL.Client.Application,
   WiRL.http.Core,
-  WiRL.http.Response,
-  WiRL.http.Request,
+//  WiRL.http.Response,
+//  WiRL.http.Request,
   WiRL.http.Client.Interfaces,
   WiRL.http.Client;
 
@@ -49,9 +49,12 @@ type
 
     procedure ContextInjection(AInstance: TObject);
     function CustomHeaders: TWiRLHeaders;
-    function StreamToObject<T>(AResponse: TWiRLResponse; AStream: TStream): T; overload;
-    procedure StreamToObject(AObject: TObject; AResponse: TWiRLResponse; AStream: TStream); overload;
-    procedure ObjectToStream<T>(ARequest: TWiRLRequest; AObject: T; AStream: TStream);
+    function StreamToObject<T>(AHeaders: TWiRLHeaderList; AStream: TStream): T; overload;
+    function StreamToObject<T>(AHeaders: TWiRLHeaders; AStream: TStream): T; overload;
+    procedure StreamToObject(AObject: TObject; AHeaders: TWiRLHeaderList; AStream: TStream); overload;
+    procedure StreamToObject(AObject: TObject; AHeaders: TWiRLHeaders; AStream: TStream); overload;
+    procedure ObjectToStream<T>(AHeaders: TWiRLHeaderList; AObject: T; AStream: TStream); overload;
+    procedure ObjectToStream<T>(AHeaders: TWiRLHeaders; AObject: T; AStream: TStream); overload;
     function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
   protected
     function GetClient: TWiRLClient; virtual;
@@ -83,7 +86,7 @@ type
     procedure AfterOPTIONS; virtual;
 
     procedure InitHttpRequest; virtual;
-    procedure InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders); virtual;
+    function InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -175,10 +178,10 @@ uses
   WiRL.Core.Utils;
 
 type
-  THttpMethodImplementation = reference to procedure (
+  THttpMethodImplementation = reference to function (
     AResource: TWiRLClientCustomResource;
     ARequestStream, AResponseStream: TStream;
-    ACustomHeaders: TWiRLHeaders);
+    ACustomHeaders: TWiRLHeaders): IWiRLResponse;
 
   THttpMethodImplementations = array [TWiRLHttpMethod] of THttpMethodImplementation;
 
@@ -188,33 +191,33 @@ var
 procedure RegisterHttpMethodImplementations;
 begin
   HttpMethodImplementations[TWiRLHttpMethod.GET] :=
-    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
     begin
-      AResource.Client.Get(AResource.URL, AResponseStream, ACustomHeaders);
+      Result := AResource.Client.Get(AResource.URL, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.POST] :=
-    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
     begin
-      AResource.Client.Post(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
+      Result := AResource.Client.Post(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.PUT] :=
-    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
     begin
-      AResource.Client.Put(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
+      Result := AResource.Client.Put(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.DELETE] :=
-    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
     begin
-      AResource.Client.Delete(AResource.URL, AResponseStream, ACustomHeaders);
+      Result := AResource.Client.Delete(AResource.URL, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.PATCH] :=
-    procedure (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders)
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
     begin
-      AResource.Client.Patch(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
+      Result := AResource.Client.Patch(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
     end;
 
 end;
@@ -374,9 +377,7 @@ begin
     if Assigned(ABeforeExecute) then
       ABeforeExecute();
 
-    Client.Request.Accept := Accept;
-    Client.Request.ContentType := ContentType;
-    Client.Head(URL);
+    Client.Head(URL, CustomHeaders);
 
     AfterHEAD();
 
@@ -398,18 +399,15 @@ var
   LPair: TPair<TWiRLConfigurationClass, TWiRLConfiguration>;
 begin
   // Fill the context
-  FContext.AddContainerOnce(Client.Request, False);
-  FContext.AddContainerOnce(Client.Response, False);
   FContext.AddContainerOnce(FApplication, False);
 
   for LPair in FApplication.Configs do
     FContext.AddContainerOnce(LPair.Value, False);
 end;
 
-
-procedure TWiRLClientCustomResource.InternalHttpRequest(
+function TWiRLClientCustomResource.InternalHttpRequest(
   const AHttpMethod: string; ARequestStream, AResponseStream: TStream;
-  ACustomHeaders: TWiRLHeaders);
+  ACustomHeaders: TWiRLHeaders): IWiRLResponse;
 var
   LHttpMethodImplementation: THttpMethodImplementation;
 begin
@@ -418,11 +416,11 @@ begin
     raise EWiRLClientException.CreateFmt('Implementation not found for method [%s]', [AHttpMethod]);
 
   try
-    LHttpMethodImplementation(Self, ARequestStream, AResponseStream, ACustomHeaders);
+    Result := LHttpMethodImplementation(Self, ARequestStream, AResponseStream, ACustomHeaders);
   except
     on E: EWiRLClientProtocolException do
     begin
-      raise EWiRLClientResourceException.Create(Client.Response);
+      raise EWiRLClientResourceException.Create(E.Response);
     end;
   end;
 end;
@@ -433,17 +431,39 @@ var
 begin
   Result := [];
   if Accept <> '' then
-    Result := Result + [TWiRLHeader.Create('Accept', Accept)];
+    Result.Accept := Accept;
   if ContentType <> '' then
-    Result := Result + [TWiRLHeader.Create('Content-Type', ContentType)];
+    Result.ContentType := ContentType;
 
   for I := 0 to FHeaderFields.Count - 1 do
   begin
-    Result := Result + [TWiRLHeader.Create(FHeaderFields.Names[I], FHeaderFields.ValueFromIndex[I])];
+    Result.Values[FHeaderFields.Names[I]] := FHeaderFields.ValueFromIndex[I];
   end;
 end;
 
-function TWiRLClientCustomResource.StreamToObject<T>(AResponse: TWiRLResponse; AStream: TStream): T;
+procedure TWiRLClientCustomResource.StreamToObject(AObject: TObject;
+  AHeaders: TWiRLHeaderList; AStream: TStream);
+var
+  LType: TRttiType;
+  LContext: TRttiContext;
+  LMediaType: TMediaType;
+  LReader: IMessageBodyReader;
+begin
+  LType := LContext.GetType(AObject.ClassInfo);
+  LMediaType := TMediaType.Create(AHeaders.Values[TWiRLHeader.CONTENT_TYPE]);
+  try
+    LReader := Application.ReaderRegistry.FindReader(LType, LMediaType);
+    if not Assigned(LReader) then
+      raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
+    ContextInjection(LReader as TObject);
+
+    LReader.ReadFrom(AObject, LType, LMediaType, AHeaders, AStream);
+  finally
+    LMediaType.Free;
+  end;
+end;
+
+function TWiRLClientCustomResource.StreamToObject<T>(AHeaders: TWiRLHeaderList; AStream: TStream): T;
 var
   LType: TRttiType;
   LContext: TRttiContext;
@@ -452,21 +472,21 @@ var
   LValue: TValue;
 begin
   LType := LContext.GetType(TypeInfo(T));
-  LMediaType := TMediaType.Create(AResponse.ContentType);
+  LMediaType := TMediaType.Create(AHeaders['Content-Type']);
   try
     LReader := Application.ReaderRegistry.FindReader(LType, LMediaType);
     if not Assigned(LReader) then
       raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
     ContextInjection(LReader as TObject);
 
-    LValue := LReader.ReadFrom(LType, LMediaType, AResponse.HeaderFields, AResponse.ContentStream);
+    LValue := LReader.ReadFrom(LType, LMediaType, AHeaders, AStream);
     Result := LValue.AsType<T>;
   finally
     LMediaType.Free;
   end;
 end;
 
-procedure TWiRLClientCustomResource.ObjectToStream<T>(ARequest: TWiRLRequest;
+procedure TWiRLClientCustomResource.ObjectToStream<T>(AHeaders: TWiRLHeaderList;
   AObject: T; AStream: TStream);
 var
   LType: TRttiType;
@@ -484,7 +504,7 @@ begin
       raise EWiRLClientException.CreateFmt('Writer not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
 
     ContextInjection(LWriter as TObject);
-    LWriter.WriteTo(LValue, nil, LMediaType, ARequest.HeaderFields, AStream);
+    LWriter.WriteTo(LValue, nil, LMediaType, AHeaders, AStream);
     AStream.Position := soFromBeginning;
 
   finally
@@ -506,6 +526,7 @@ function TWiRLClientCustomResource.GenericHttpRequest<T, V>(
   const AHttpMethod: string; const ARequestEntity: T): V;
 var
   LRequestStream, LResponseStream: TMemoryStream;
+  LResponse: IWiRLResponse;
 begin
   Result := default(V);
   InitHttpRequest;
@@ -514,9 +535,9 @@ begin
   try
     LResponseStream := TGCMemoryStream.Create;
     try
-      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
-      InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream, CustomHeaders);
-      Result := StreamToObject<V>(Client.Response, LResponseStream);
+      ObjectToStream<T>(CustomHeaders, ARequestEntity, LRequestStream);
+      LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream, CustomHeaders);
+      Result := StreamToObject<V>(LResponse.Headers, LResponseStream);
     finally
       if not SameObject<V>(Result, LResponseStream) then
         LResponseStream.Free;
@@ -530,6 +551,7 @@ procedure TWiRLClientCustomResource.GenericHttpRequest<T>(
   const AHttpMethod: string; const ARequestEntity: T; AResponseEntity: TObject);
 var
   LRequestStream, LResponseStream: TMemoryStream;
+  LResponse: IWiRLResponse;
 begin
   InitHttpRequest;
 
@@ -537,9 +559,9 @@ begin
   try
     LResponseStream := TGCMemoryStream.Create;
     try
-      ObjectToStream<T>(Client.Request, ARequestEntity, LRequestStream);
-      InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream, CustomHeaders);
-      StreamToObject(AResponseEntity, Client.Response, LResponseStream);
+      ObjectToStream<T>(CustomHeaders, ARequestEntity, LRequestStream);
+      LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream, CustomHeaders);
+      StreamToObject(AResponseEntity, LResponse.Headers, LResponseStream);
     finally
       LResponseStream.Free;
     end;
@@ -591,6 +613,22 @@ begin
   GenericHttpRequest<T>('PUT', ARequestEntity, AResponseEntity);
 end;
 
+procedure TWiRLClientCustomResource.ObjectToStream<T>(AHeaders: TWiRLHeaders;
+  AObject: T; AStream: TStream);
+var
+  LHeaderList: TWiRLHeaderList;
+  LHeader: TWiRLHeader;
+begin
+  LHeaderList := TWiRLHeaderList.Create;
+  try
+    for LHeader in AHeaders do
+      LHeaderList.Values[LHeader.Name] := LHeader.Value;
+    ObjectToStream<T>(LHeaderList, AObject, AStream);
+  finally
+    LHeaderList.Free;
+  end;
+end;
+
 procedure TWiRLClientCustomResource.OPTIONS(const ABeforeExecute: TWiRLClientProc = nil;
   const AAfterExecute: TWiRLClientResponseProc = nil;
   const AOnException: TWiRLClientExceptionProc = nil);
@@ -605,9 +643,7 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-      Client.Request.Accept := Accept;
-      Client.Request.ContentType := ContentType;
-      Client.Options(URL, LResponseStream);
+      Client.Options(URL, LResponseStream, CustomHeaders);
 
       AfterOPTIONS();
 
@@ -640,9 +676,7 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-      Client.Request.Accept := Accept;
-      Client.Request.ContentType := ContentType;
-      Client.Delete(URL, LResponseStream);
+      Client.Delete(URL, LResponseStream, CustomHeaders);
 
       AfterDELETE();
 
@@ -685,9 +719,7 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-        Client.Request.Accept := Accept;
-        Client.Request.ContentType := ContentType;
-        Client.Get(URL, LResponseStream);
+        Client.Get(URL, LResponseStream, CustomHeaders);
 
         AfterGET();
 
@@ -786,9 +818,7 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Request.Accept := Accept;
-        Client.Request.ContentType := ContentType;
-        Client.Patch(URL, LContent, LResponseStream);
+        Client.Patch(URL, LContent, LResponseStream, CustomHeaders);
 
         AfterPATCH();
 
@@ -829,9 +859,7 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Request.Accept := Accept;
-        Client.Request.ContentType := ContentType;
-        Client.Post(URL, LContent, LResponseStream);
+        Client.Post(URL, LContent, LResponseStream, CustomHeaders);
 
         AfterPOST();
 
@@ -891,9 +919,7 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Request.Accept := Accept;
-        Client.Request.ContentType := ContentType;
-        Client.Put(URL, LContent, LResponseStream);
+        Client.Put(URL, LContent, LResponseStream, CustomHeaders);
 
         AfterPUT();
 
@@ -944,24 +970,34 @@ begin
 end;
 
 procedure TWiRLClientCustomResource.StreamToObject(AObject: TObject;
-  AResponse: TWiRLResponse; AStream: TStream);
+  AHeaders: TWiRLHeaders; AStream: TStream);
 var
-  LType: TRttiType;
-  LContext: TRttiContext;
-  LMediaType: TMediaType;
-  LReader: IMessageBodyReader;
+  LHeaderList: TWiRLHeaderList;
+  LHeader: TWiRLHeader;
 begin
-  LType := LContext.GetType(AObject.ClassInfo);
-  LMediaType := TMediaType.Create(AResponse.ContentType);
+  LHeaderList := TWiRLHeaderList.Create;
   try
-    LReader := Application.ReaderRegistry.FindReader(LType, LMediaType);
-    if not Assigned(LReader) then
-      raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
-    ContextInjection(LReader as TObject);
-
-    LReader.ReadFrom(AObject, LType, LMediaType, AResponse.HeaderFields, AResponse.ContentStream);
+    for LHeader in AHeaders do
+      LHeaderList.Values[LHeader.Name] := LHeader.Value;
+    StreamToObject(AObject, LHeaderList, AStream);
   finally
-    LMediaType.Free;
+    LHeaderList.Free;
+  end;
+end;
+
+function TWiRLClientCustomResource.StreamToObject<T>(AHeaders: TWiRLHeaders;
+  AStream: TStream): T;
+var
+  LHeaderList: TWiRLHeaderList;
+  LHeader: TWiRLHeader;
+begin
+  LHeaderList := TWiRLHeaderList.Create;
+  try
+    for LHeader in AHeaders do
+      LHeaderList.Values[LHeader.Name] := LHeader.Value;
+    Result := StreamToObject<T>(LHeaderList, AStream);
+  finally
+    LHeaderList.Free;
   end;
 end;
 

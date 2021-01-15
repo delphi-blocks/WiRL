@@ -50,8 +50,11 @@ type
     FPassword: string;
   public
     constructor Create(const AUser, APassword: string);
+    property User: string read FUser;
+    property Password: string read FPassword;
 
     class operator Implicit(AAuth: TBasicAuth): string;
+    class operator Implicit(AAuth: string): TBasicAuth;
   end;
 
   // Bearer authentication helper
@@ -121,6 +124,28 @@ end;
 class operator TBasicAuth.Implicit(AAuth: TBasicAuth): string;
 begin
   Result := 'Basic ' + TNetEncoding.Base64.Encode(AAuth.FUser + ':' + AAuth.FPassword);
+end;
+
+class operator TBasicAuth.Implicit(AAuth: string): TBasicAuth;
+const
+  AUTH_BASIC = 'Basic ';
+var
+  LAuthField: string;
+  LColonIdx: Integer;
+begin
+  if not AAuth.StartsWith(AUTH_BASIC) then
+    raise EWiRLException.Create('Authentication header error: wrong authentication type');
+
+  LAuthField := AAuth.Substring(AUTH_BASIC.Length);
+  LAuthField := TNetEncoding.Base64.Decode(LAuthField);
+  LColonIdx := LAuthField.IndexOf(':');
+
+  if LColonIdx <= 0 then
+    raise EWiRLException.Create('Basic auth header error: wrong format');
+
+  Result.FUser := LAuthField.Substring(0, LColonIdx);
+  Result.FPassword := LAuthField.Substring(LColonIdx + 1, MaxInt);
+
 end;
 
 { TBearerAuth }
