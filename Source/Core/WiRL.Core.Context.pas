@@ -187,6 +187,7 @@ end;
 constructor TWiRLContextBase.Create;
 begin
   FContainers := TWiRLContainerList.Create;
+  AddContainerOnce(Self, False);
 end;
 
 destructor TWiRLContextBase.Destroy;

@@ -22,6 +22,7 @@ uses
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.http.Accept.MediaType,
+  WiRL.Core.Context,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBody.Classes,
@@ -68,7 +69,8 @@ type
   /// </summary>
   TWiRLJSONProvider = class(TMessageBodyProvider)
   private
-    [Context] FRequest: TWiRLRequest;
+    //[Context] FRequest: TWiRLRequest;
+    [Context] FContext: TWiRLContextHttp;
     [Context] FConfigurationNeon: TWiRLConfigurationNeon;
   protected
     procedure WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
@@ -511,8 +513,11 @@ procedure TWiRLJSONProvider.WriteJSONPToStream(AJSON: TJSONValue; AStream: TStre
 var
   LCallback: string;
   LBytes: TBytes;
+  LRequest: TWiRLRequest;
 begin
-  LCallback := FRequest.QueryFields.Values['callback'];
+  LRequest := FContext.GetContainerAs<TWiRLRequest>;
+
+  LCallback := LRequest.QueryFields.Values['callback'];
   if LCallback.IsEmpty then
     LCallback := 'callback';
 
