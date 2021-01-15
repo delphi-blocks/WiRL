@@ -82,7 +82,6 @@ end;
 
 function TWiRLConfigurationCompression.SetMinSize(AMinimumSize: Cardinal): IWiRLConfigurationCompression;
 begin
-  TArray.BinaryCompare()
   FMinimumSize := AMinimumSize;
   Result := Self;
 end;

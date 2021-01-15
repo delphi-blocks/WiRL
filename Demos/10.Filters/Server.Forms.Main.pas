@@ -101,7 +101,7 @@ begin
       .Plugin.Configure<IWiRLConfigurationCompression>
         .SetMinSize(300)
         .SetMediaTypes('application/xml,application/json,text/plain')
-        .SaveConfig
+        .ApplyConfig
   ;
 
   if not FServer.Active then

@@ -30,10 +30,11 @@ type
   CORSAttribute = class(TCustomAttribute);
 
   /// <summary>
-  ///   CORS Response filter.
+  ///   CORS (PreMatchingResource) Filter. It adds Headers to the response based on values found in
+  ///   the CORS configuration object
   /// </summary>
   /// <remarks>
-  ///   It's a PreMatchingResource Filter
+  ///   It doesn't need to be registerd, it's loaded by the CORS configuration object
   /// </remarks>
   [PreMatchingResource][CORS]
   TCORSFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
