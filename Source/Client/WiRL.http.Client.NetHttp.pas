@@ -21,6 +21,7 @@ uses
 
   WiRL.http.Client.Interfaces,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
   WiRL.http.Cookie;
 

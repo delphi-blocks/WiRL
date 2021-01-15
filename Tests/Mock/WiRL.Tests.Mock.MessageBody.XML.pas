@@ -16,6 +16,7 @@ uses
 
   System.Rtti,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.Core.Declarations,
   WiRL.Core.MessageBody.Classes,
   WiRL.Core.MessageBodyReader,
@@ -33,10 +34,10 @@ type
   TWiRLXmlObjectProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream); override;
   end;
 
 implementation
@@ -44,14 +45,14 @@ implementation
 { TWiRLXmlObjectProvider }
 
 function TWiRLXmlObjectProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+  const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue;
 begin
   raise Exception.Create('Not yet supported');
 end;
 
 procedure TWiRLXmlObjectProvider.WriteTo(const AValue: TValue;
   const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+  const AHeaders: TWiRLHeaders; AContentStream: TStream);
 const
   TestXml: UTF8String = '<xml>TEST</xml>';
 begin

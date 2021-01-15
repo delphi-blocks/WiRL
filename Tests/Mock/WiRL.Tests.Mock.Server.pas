@@ -18,6 +18,7 @@ uses
   WiRL.http.Server,
   WiRL.http.Server.Interfaces,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Engine,
   WiRL.http.Cookie,
@@ -110,7 +111,7 @@ type
     FQuery: string;
     FServerPort: Integer;
     FContentStream: TStream;
-    FHeaderFields: TWiRLHeaderList;
+    FHeaders: TWiRLHeaders;
     procedure ParseQueryParams;
     procedure SetUrl(const Value: string);
   protected
@@ -122,7 +123,7 @@ type
     function GetCookieFields: TWiRLCookies; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
-    function GetHeaderFields: TWiRLHeaderList; override;
+    function GetHeaders: TWiRLHeaders; override;
     function GetRemoteIP: string; override;
   public
     property Url: string read FUrl write SetUrl;
@@ -271,7 +272,6 @@ begin
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
-  FHeaderFields.Free;
   FContentStream.Free;
   inherited;
 end;
@@ -291,13 +291,13 @@ begin
   Result := FCookieFields;
 end;
 
-function TWiRLTestRequest.GetHeaderFields: TWiRLHeaderList;
+function TWiRLTestRequest.GetHeaders: TWiRLHeaders;
 begin
-  if not Assigned(FHeaderFields) then
-  begin
-    FHeaderFields := TWiRLHeaderList.Create;
-  end;
-  Result := FHeaderFields;
+//  if not Assigned(FHeaderFields) then
+//  begin
+//    FHeaderFields := TWiRLHeaderList.Create;
+//  end;
+  Result := FHeaders;
 end;
 
 function TWiRLTestRequest.GetHttpPathInfo: string;

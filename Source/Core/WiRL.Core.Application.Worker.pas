@@ -23,6 +23,7 @@ uses
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context.Server,
   WiRL.Core.Auth.Context,
@@ -91,7 +92,7 @@ type
     FContentStream: TStream;
     FParamName: string;
     FTypeKind: TTypeKind;
-    FHeaders: TWiRLHeaderList;
+    FHeaders: TWiRLHeaders;
     FMediaType: TMediaType;
     FStringValue: string;
     FStreamValue: TStream;
@@ -104,7 +105,7 @@ type
   public
     property ParamName: string read FParamName;
     property TypeKind: TTypeKind read FTypeKind;
-    property Headers: TWiRLHeaderList read FHeaders;
+    property Headers: TWiRLHeaders read FHeaders;
     property MediaType: TMediaType read FMediaType;
     property StringValue: string read FStringValue;
     property StreamValue: TStream read FStreamValue;
@@ -226,7 +227,7 @@ begin
   case FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenLocation of
     TAuthTokenLocation.Bearer: LToken := ExtractJWTToken(FContext.Request.Authorization);
     TAuthTokenLocation.Cookie: LToken := FContext.Request.CookieFields['token'];
-    TAuthTokenLocation.Header: LToken := FContext.Request.HeaderFields[FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenCustomHeader];
+    TAuthTokenLocation.Header: LToken := FContext.Request.Headers.Values[FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenCustomHeader];
   end;
 
   if LToken.IsEmpty then
@@ -592,7 +593,7 @@ begin
         try
           LStream.Position := 0;
           FContext.Response.ContentStream := LStream;
-          AWriter.WriteTo(LMethodResult, FResource.Method.AllAttributes, AMediaType, FContext.Response.HeaderFields, FContext.Response.ContentStream);
+          AWriter.WriteTo(LMethodResult, FResource.Method.AllAttributes, AMediaType, FContext.Response.Headers, FContext.Response.ContentStream);
           LStream.Position := 0;
         except
           on E: Exception do
@@ -727,7 +728,7 @@ begin
   begin
     if AContext.Request.ContentMediaType.MediaType = TMediaType.MULTIPART_FORM_DATA then
     begin
-      FHeaders := AContext.Request.MultiPartFormData[FParamName].HeaderFields;
+      FHeaders := AContext.Request.MultiPartFormData[FParamName].Headers;
       FMediaType := AContext.Request.MultiPartFormData[FParamName].ContentMediaType;
       FStreamValue := AContext.Request.MultiPartFormData[FParamName].ContentStream;
     end
@@ -739,10 +740,10 @@ begin
   else if AAttr is CookieParamAttribute then
     FStringValue := AContext.Request.CookieFields[FParamName]
   else if AAttr is HeaderParamAttribute then
-    FStringValue := AContext.Request.HeaderFields[FParamName]
+    FStringValue := AContext.Request.Headers.Values[FParamName]
   else if AAttr is BodyParamAttribute then
   begin
-    FHeaders := AContext.Request.HeaderFields;
+    FHeaders := AContext.Request.Headers;
     FMediaType := AContext.Request.ContentMediaType;
     FStreamValue := AContext.Request.ContentStream;
   end

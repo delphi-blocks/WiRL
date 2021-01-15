@@ -18,60 +18,13 @@ uses
   WiRL.Core.Classes,
   WiRL.Core.Exceptions,
   WiRL.Core.Singleton,
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType;
 
 type
   EWiRLClientException = class(EWiRLException);
 
   EWiRLSocketException = class(EWiRLClientException);
-
-  TWiRLHeader = record
-  public
-    const ACCEPT = 'Accept';
-    const ACCEPT_LANGUAGE = 'Accept-Language';
-    const ACCEPT_CHARSET = 'Accept-Charset';
-    const ACCEPT_ENCODING = 'Accept-Encoding';
-    const CONTENT_TYPE = 'Content-Type';
-    const AUTHORIZATION = 'Authorization';
-    const USER_AGENT = 'User-Agent';
-    const CONTENT_LENGTH = 'Content-Length';
-    const HOST = 'Host';
-  public
-    Name: string;
-    Value: string;
-    constructor Create(const AName, AValue: string);
-  end;
-
-  TWiRLHeaders = TArray<TWiRLHeader>;
-
-  TWiRLHeadersHelper = record helper for TWiRLHeaders
-  private
-    function GetValue(const AName: string): string;
-    procedure SetValue(const AName, AValue: string);
-    function GetAccept: string;
-    function GetAcceptCharSet: string;
-    function GetAcceptEncoding: string;
-    function GetAcceptLanguage: string;
-    function GetUserAgent: string;
-    function GetContentType: string;
-    function GetAuthorization: string;
-    procedure SetAccept(const AValue: string);
-    procedure SetAcceptCharSet(const AValue: string);
-    procedure SetAcceptEncoding(const AValue: string);
-    procedure SetAcceptLanguage(const AValue: string);
-    procedure SetAuthorization(const AValue: string);
-    procedure SetContentType(const AValue: string);
-    procedure SetUserAgent(const AValue: string);
-  public
-    property Values[const AName: string]: string read GetValue write SetValue;
-    property Accept: string read GetAccept write SetAccept;
-    property AcceptCharSet: string read GetAcceptCharSet write SetAcceptCharSet;
-    property AcceptEncoding: string read GetAcceptEncoding write SetAcceptEncoding;
-    property AcceptLanguage: string read GetAcceptLanguage write SetAcceptLanguage;
-    property UserAgent: string read GetUserAgent write SetUserAgent;
-    property ContentType: string read GetContentType write SetContentType;
-    property Authorization: string read GetAuthorization write SetAuthorization;
-  end;
 
   IWiRLRequest = interface
     ['{818B8DD9-C5DB-404B-B886-0959DD8D753E}']
@@ -367,14 +320,6 @@ begin
   Result := FResponse.StatusCode;
 end;
 
-{ TWiRLHeader }
-
-constructor TWiRLHeader.Create(const AName, AValue: string);
-begin
-  Name := AName;
-  Value := AValue;
-end;
-
 { EWiRLClientResourceException }
 
 constructor EWiRLClientResourceException.Create(AResponse: IWiRLResponse);
@@ -406,103 +351,6 @@ destructor EWiRLClientResourceException.Destroy;
 begin
   FJsonResponse.Free;
   inherited;
-end;
-
-{ TWiRLHeadersHelper }
-
-function TWiRLHeadersHelper.GetAccept: string;
-begin
-  Result := GetValue(TWiRLHeader.ACCEPT);
-end;
-
-function TWiRLHeadersHelper.GetAcceptCharSet: string;
-begin
-  Result := GetValue(TWiRLHeader.ACCEPT_CHARSET);
-end;
-
-function TWiRLHeadersHelper.GetAcceptEncoding: string;
-begin
-  Result := GetValue(TWiRLHeader.ACCEPT_ENCODING);
-end;
-
-function TWiRLHeadersHelper.GetAcceptLanguage: string;
-begin
-  Result := GetValue(TWiRLHeader.ACCEPT_LANGUAGE);
-end;
-
-function TWiRLHeadersHelper.GetAuthorization: string;
-begin
-  Result := GetValue(TWiRLHeader.AUTHORIZATION);
-end;
-
-function TWiRLHeadersHelper.GetContentType: string;
-begin
-  Result := GetValue(TWiRLHeader.CONTENT_TYPE);
-end;
-
-function TWiRLHeadersHelper.GetUserAgent: string;
-begin
-  Result := GetValue(TWiRLHeader.USER_AGENT);
-end;
-
-function TWiRLHeadersHelper.GetValue(const AName: string): string;
-var
-  LHeader: TWiRLHeader;
-begin
-  Result := '';
-  for LHeader in Self do
-    if LHeader.Name = AName then
-      Exit(LHeader.Value);
-end;
-
-procedure TWiRLHeadersHelper.SetAccept(const AValue: string);
-begin
-  SetValue(TWiRLHeader.ACCEPT, AValue);
-end;
-
-procedure TWiRLHeadersHelper.SetAcceptCharSet(const AValue: string);
-begin
-  SetValue(TWiRLHeader.ACCEPT_CHARSET, AValue);
-end;
-
-procedure TWiRLHeadersHelper.SetAcceptEncoding(const AValue: string);
-begin
-  SetValue(TWiRLHeader.ACCEPT_ENCODING, AValue);
-end;
-
-procedure TWiRLHeadersHelper.SetAcceptLanguage(const AValue: string);
-begin
-  SetValue(TWiRLHeader.ACCEPT_LANGUAGE, AValue);
-end;
-
-procedure TWiRLHeadersHelper.SetAuthorization(const AValue: string);
-begin
-  SetValue(TWiRLHeader.AUTHORIZATION, AValue);
-end;
-
-procedure TWiRLHeadersHelper.SetContentType(const AValue: string);
-begin
-  SetValue(TWiRLHeader.CONTENT_TYPE, AValue);
-end;
-
-procedure TWiRLHeadersHelper.SetUserAgent(const AValue: string);
-begin
-  SetValue(TWiRLHeader.USER_AGENT, AValue);
-end;
-
-procedure TWiRLHeadersHelper.SetValue(const AName, AValue: string);
-var
-  LIndex: Integer;
-begin
-  for LIndex := Low(Self) to High(Self) do
-  begin
-    if Self[LIndex].Name = AName then
-    begin
-      Self[LIndex].Value := AValue;
-      Exit;
-    end;
-  end;
-  Self := Self + [TWiRLHeader.Create(AName, AValue)];
 end;
 
 end.

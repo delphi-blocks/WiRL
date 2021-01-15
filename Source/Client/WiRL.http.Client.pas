@@ -21,6 +21,7 @@ uses
 {$ENDIF}
 
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Client.Interfaces,
   WiRL.http.Accept.MediaType,
 

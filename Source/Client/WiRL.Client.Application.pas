@@ -20,6 +20,7 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.http.Filters,
+  WiRL.http.Headers,
   WiRL.http.Client;
 
 type
@@ -450,7 +451,7 @@ end;
 
 function TWiRLInvocation.Header(const AName, AValue: string): TWiRLInvocation;
 begin
-  (FWiRLInvocation.Resource as TWiRLClientCustomResource).HeaderFields[AName] := AValue;
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).Headers.Values[AName] := AValue;
   Result := Self;
 end;
 

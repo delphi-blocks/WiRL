@@ -121,21 +121,6 @@ type
     property Location: string read FLocation write FLocation;
   end;
 
-  TWiRLHeaderList = class(TStringList)
-  private
-    function GetName(AIndex: Integer): string;
-    function GetValue(const AName: string): string;
-    procedure SetValue(const AName, AValue: string);
-    function GetValueFromLine(AIndex: Integer): string;
-  public
-    constructor Create;
-
-    function IndexOfName(const AName: string): Integer; reintroduce;
-    property Names[Index: Integer]: string read GetName;
-    property Values[const Name: string]: string read GetValue write SetValue; default;
-    property ValueFromIndex[Index: Integer]: string read GetValueFromLine;
-  end;
-
   TWiRLParam = class(TStringList)
   private
     FApplication: TObject;
@@ -224,92 +209,6 @@ begin
     Result := TEncoding.ASCII
   else
     Result := DefaultCharSetEncoding;
-end;
-
-{ TWiRLHeaderList }
-
-const
-  HeaderNameValueSeparator = ': ';
-
-constructor TWiRLHeaderList.Create;
-begin
-  inherited Create;
-  NameValueSeparator := ':';
-end;
-
-function TWiRLHeaderList.GetName(AIndex: Integer): string;
-var
-  LLine: string;
-  LTrimmedSeparator: string;
-  LSepIndex: Integer;
-begin
-  if (AIndex >= 0) and (AIndex < Count) then
-  begin
-    LLine := Get(AIndex);
-    LTrimmedSeparator := Trim(HeaderNameValueSeparator); // Sometimes the space is not present
-    LSepIndex := LLine.IndexOf(LTrimmedSeparator);
-    Result := LLine.Substring(0, LSepIndex).Trim;
-  end
-  else
-  begin
-    Result := '';
-  end;
-end;
-
-function TWiRLHeaderList.GetValueFromLine(AIndex: Integer): string;
-var
-  LLine: string;
-  LTrimmedSeparator: string;
-  LSepIndex: Integer;
-begin
-  if (AIndex >= 0) and (AIndex < Count) then
-  begin
-    LLine := Get(AIndex);
-    LTrimmedSeparator := Trim(HeaderNameValueSeparator); // Sometimes the space is not present
-    LSepIndex := LLine.IndexOf(LTrimmedSeparator);
-    Result := LLine.Substring(LSepIndex + 1).Trim;
-  end
-  else
-  begin
-    Result := '';
-  end;
-end;
-
-function TWiRLHeaderList.GetValue(const AName: string): string;
-var
-  LIndex: Integer;
-begin
-  LIndex := IndexOfName(AName);
-  Result := GetValueFromLine(LIndex);
-end;
-
-function TWiRLHeaderList.IndexOfName(const AName: string): Integer;
-var
-  LIndex: Integer;
-begin
-  Result := -1;
-  for LIndex := 0 to Count - 1 do
-  begin
-    if CompareText(GetName(LIndex), AName) = 0 then
-    begin
-      Exit(LIndex);
-    end;
-  end;
-end;
-
-procedure TWiRLHeaderList.SetValue(const AName, AValue: string);
-var
-  LIndex: Integer;
-begin
-  LIndex := IndexOfName(AName);
-  if AValue <> '' then
-  begin
-    if LIndex < 0 then
-      LIndex := Add('');
-    Put(LIndex, AName + HeaderNameValueSeparator + AValue);
-  end
-  else if LIndex >= 0 then
-    Delete(LIndex);
 end;
 
 { TWiRLParam }

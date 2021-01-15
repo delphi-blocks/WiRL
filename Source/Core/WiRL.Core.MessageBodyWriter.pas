@@ -16,6 +16,7 @@ uses
 
   WiRL.Core.Singleton,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Response,
   WiRL.Core.Resource,
   WiRL.http.Accept.MediaType,
@@ -40,7 +41,7 @@ type
     ///   Write a type to an HTTP message (body)
     /// </summary>
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
   end;
 
   TIsWritableFunction = reference to function(AType: TRttiType;

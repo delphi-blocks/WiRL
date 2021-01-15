@@ -18,6 +18,7 @@ uses
 
   WiRL.Core.Classes,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Cookie,
   WiRL.http.Server.Interfaces,
   WiRL.http.Engines,
@@ -86,7 +87,7 @@ type
     FRequestInfo: TIdHTTPRequestInfo;
     FCookieFields: TWiRLCookies;
     FQueryFields: TWiRLParam;
-    FHeaderFields: TWiRLHeaderList;
+    FHeaders: TWiRLHeaders;
     FContentFields: TWiRLParam;
     procedure ParseParams(Params :TStrings; const AValue: String);
   protected
@@ -97,7 +98,7 @@ type
     function GetQueryFields: TWiRLParam; override;
     function GetContentFields: TWiRLParam; override;
     function GetCookieFields: TWiRLCookies; override;
-    function GetHeaderFields: TWiRLHeaderList; override;
+    function GetHeaders: TWiRLHeaders; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
   public
@@ -258,7 +259,6 @@ begin
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
-  FHeaderFields.Free;
   inherited;
 end;
 
@@ -332,14 +332,21 @@ begin
   Result := FCookieFields;
 end;
 
-function TWiRLHttpRequestIndy.GetHeaderFields: TWiRLHeaderList;
+function TWiRLHttpRequestIndy.GetHeaders: TWiRLHeaders;
+var
+  LIndex: Integer;
+  LName, LValue: string;
 begin
-  if not Assigned(FHeaderFields) then
+  if Length(FHeaders) <= 0 then
   begin
-    FHeaderFields := TWiRLHeaderList.Create;
-    FHeaderFields.Assign(FRequestInfo.RawHeaders);
+    for LIndex := 0 to FRequestInfo.RawHeaders.Count - 1 do
+    begin
+      LName := FRequestInfo.RawHeaders.Names[LIndex];
+      LValue := FRequestInfo.RawHeaders.Values[LName];
+      FHeaders := FHeaders + [ TWiRLHeader.Create(LName, LValue) ];
+    end;
   end;
-  Result := FHeaderFields;
+  Result := FHeaders;
 end;
 
 function TWiRLHttpRequestIndy.GetHttpPathInfo: string;
@@ -463,17 +470,18 @@ procedure TWiRLHttpResponseIndy.SendHeaders;
   end;
 
 var
-  LIndex :Integer;
+  //LIndex :Integer;
+  LHeader: TWiRLHeader;
 begin
   inherited;
-  FResponseInfo.Date := GMTToLocalDateTime(HeaderFields['Date']);
+  FResponseInfo.Date := GMTToLocalDateTime(Headers.Values['Date']);
   FResponseInfo.CustomHeaders.Clear;
 
-  for LIndex := 0 to HeaderFields.Count - 1 do
+  for LHeader in Headers do
   begin
-    if IsIndyHeader(HeaderFields.Names[LIndex]) then
+    if IsIndyHeader(LHeader.Name) then
       Continue;
-    FResponseInfo.CustomHeaders.Add(HeaderFields.Strings[LIndex]);
+    FResponseInfo.CustomHeaders.AddValue(LHeader.Name, LHeader.Value);
   end;
   if ContentType <> '' then
     ContentMediaType.Parse(ContentType);

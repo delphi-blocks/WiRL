@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils,
 
   WiRL.Http.Core,
+  WiRL.Http.Headers,
   WiRL.http.Cookie,
   WiRL.Http.Accept.Parser,
   WiRL.Http.Accept.Charset,
@@ -24,6 +25,19 @@ uses
   WiRL.http.MultipartData;
 
 type
+  TWiRLRequest = class;
+
+  // deprecated
+  TWiRLRequestHeaderList = class(TObject)
+  private
+    FRequest: TWiRLRequest;
+    function GetValue(const AName: string): string;
+    procedure SetValue(const AName, AValue: string);
+  public
+    property Values[const AName: string]: string read GetValue write SetValue; default;
+    constructor Create(ARequest: TWiRLRequest);
+  end;
+
   TWiRLRequest = class
   private
     FPathInfo: string;
@@ -35,6 +49,7 @@ type
     FAcceptableMediaTypes: TMediaTypeList;
     FMultiPartFormData: TWiRLFormDataMultiPart;
     FApplication: TObject;
+    FHeaderFields: TWiRLRequestHeaderList;
     function GetAcceptableMediaTypes: TMediaTypeList;
     function GetContent: string;
     procedure SetContent(const Value: string);
@@ -78,12 +93,13 @@ type
     procedure SetReferer(const Value: string);
     function GetMultiPartFormData: TWiRLFormDataMultiPart;
     procedure SetApplication(const Value: TObject);
+    function GetHeaderFields: TWiRLRequestHeaderList; deprecated;
   protected
     FMethod: string;
     function GetHttpQuery: string; virtual; abstract;
     function GetRemoteIP: string; virtual; abstract;
     function GetServerPort: Integer; virtual; abstract;
-    function GetHeaderFields: TWiRLHeaderList; virtual; abstract;
+    function GetHeaders: TWiRLHeaders; virtual; abstract;
     function GetQueryFields: TWiRLParam; virtual; abstract;
     function GetContentFields: TWiRLParam; virtual; abstract;
     function GetCookieFields: TWiRLCookies; virtual; abstract;
@@ -105,7 +121,8 @@ type
     property ServerPort: Integer read GetServerPort;
     property QueryFields: TWiRLParam read GetQueryFields;
     property ContentFields: TWiRLParam read GetContentFields;
-    property HeaderFields: TWiRLHeaderList read GetHeaderFields;
+    property Headers: TWiRLHeaders read GetHeaders;
+    property HeaderFields: TWiRLRequestHeaderList read GetHeaderFields;
     property CookieFields: TWiRLCookies read GetCookieFields;
     property Content: string read GetContent write SetContent;
     property RawContent: TBytes read GetRawContent write SetRawContent;
@@ -134,6 +151,7 @@ implementation
 
 destructor TWiRLRequest.Destroy;
 begin
+  FHeaderFields.Free;
   FContentMediaType.Free;
   FAcceptableCharSets.Free;
   FAcceptableLanguages.Free;
@@ -146,7 +164,7 @@ end;
 
 function TWiRLRequest.GetAccept: string;
 begin
-  Result := HeaderFields.Values['Accept'];
+  Result := Headers.Values['Accept'];
 end;
 
 function TWiRLRequest.GetAcceptableCharSets: TAcceptCharsetList;
@@ -196,22 +214,22 @@ end;
 
 function TWiRLRequest.GetAcceptCharSet: string;
 begin
-  Result := HeaderFields.Values['Accept-Charset'];
+  Result := Headers.AcceptCharSet;
 end;
 
 function TWiRLRequest.GetAcceptEncoding: string;
 begin
-  Result := HeaderFields.Values['Accept-Encoding'];
+  Result := Headers.AcceptEncoding;
 end;
 
 function TWiRLRequest.GetAcceptLanguage: string;
 begin
-  Result := HeaderFields.Values['Accept-Language'];
+  Result := Headers.AcceptLanguage;
 end;
 
 function TWiRLRequest.GetAuthorization: string;
 begin
-  Result := HeaderFields.Values['Authorization'];
+  Result := Headers.Authorization;
 end;
 
 function TWiRLRequest.GetContent: string;
@@ -228,12 +246,12 @@ end;
 
 function TWiRLRequest.GetContentEncoding: string;
 begin
-  Result := HeaderFields.Values['Content-Encoding'];
+  Result := Headers.ContentEncoding;
 end;
 
 function TWiRLRequest.GetContentLength: Integer;
 begin
-  Result := StrToIntDef(HeaderFields.Values['Content-Length'], -1);
+  Result := Headers.ContentLength;
 end;
 
 function TWiRLRequest.GetContentMediaType: TMediaType;
@@ -245,22 +263,31 @@ end;
 
 function TWiRLRequest.GetContentType: string;
 begin
-  Result := HeaderFields.Values['Content-Type'];
+  Result := Headers.ContentType;
 end;
 
 function TWiRLRequest.GetContentVersion: string;
 begin
-  Result := HeaderFields.Values['Content-Version'];
+  Result := Headers.Values['Content-Version'];
 end;
 
 function TWiRLRequest.GetFrom: string;
 begin
-  Result := HeaderFields.Values['From'];
+  Result := Headers.Values['From'];
+end;
+
+function TWiRLRequest.GetHeaderFields: TWiRLRequestHeaderList;
+begin
+  if not Assigned(FHeaderFields) then
+  begin
+    FHeaderFields := TWiRLRequestHeaderList.Create(Self);
+  end;
+  Result := FHeaderFields;
 end;
 
 function TWiRLRequest.GetHost: string;
 begin
-  Result := HeaderFields.Values['Host'];
+  Result := Headers.Values['Host'];
 end;
 
 function TWiRLRequest.GetMultiPartFormData: TWiRLFormDataMultiPart;
@@ -290,7 +317,7 @@ end;
 
 function TWiRLRequest.GetRange: string;
 begin
-  Result := HeaderFields.Values['Range'];
+  Result := Headers.Values['Range'];
 end;
 
 function TWiRLRequest.GetRawContent: TBytes;
@@ -312,32 +339,32 @@ end;
 
 function TWiRLRequest.GetReferer: string;
 begin
-  Result := HeaderFields.Values['Referer'];
+  Result := Headers.Values['Referer'];
 end;
 
 function TWiRLRequest.GetUserAgent: string;
 begin
-  Result := HeaderFields.Values['User-Agent'];
+  Result := Headers.UserAgent;
 end;
 
 procedure TWiRLRequest.SetAccept(const Value: string);
 begin
-  HeaderFields.Values['Accept'] := Value;
+  Headers.Accept := Value;
 end;
 
 procedure TWiRLRequest.SetAcceptCharSet(const Value: string);
 begin
-  HeaderFields.Values['Accept-Charset'] := Value;
+  Headers.AcceptCharSet := Value;
 end;
 
 procedure TWiRLRequest.SetAcceptEncoding(const Value: string);
 begin
-  HeaderFields.Values['Accept-Encoding'] := Value;
+  Headers.AcceptEncoding := Value;
 end;
 
 procedure TWiRLRequest.SetAcceptLanguage(const Value: string);
 begin
-  HeaderFields.Values['Accept-Language'] := Value;
+  Headers.AcceptLanguage := Value;
 end;
 
 procedure TWiRLRequest.SetApplication(const Value: TObject);
@@ -349,7 +376,7 @@ end;
 
 procedure TWiRLRequest.SetAuthorization(const Value: string);
 begin
-  HeaderFields.Values['Authorization'] := Value;
+  Headers.Authorization := Value;
 end;
 
 procedure TWiRLRequest.SetContent(const Value: string);
@@ -366,32 +393,32 @@ end;
 
 procedure TWiRLRequest.SetContentEncoding(const Value: string);
 begin
-  HeaderFields.Values['Content-Encoding'] := Value;
+  Headers.ContentEncoding := Value;
 end;
 
 procedure TWiRLRequest.SetContentLength(const Value: Integer);
 begin
-  HeaderFields.Values['Content-Length'] := IntToStr(Value);
+  Headers.ContentLength := Value;
 end;
 
 procedure TWiRLRequest.SetContentType(const Value: string);
 begin
-  HeaderFields.Values['Content-Type'] := Value;
+  Headers.ContentType := Value;
 end;
 
 procedure TWiRLRequest.SetContentVersion(const Value: string);
 begin
-  HeaderFields.Values['Content-Version'] := Value;
+  Headers.Values['Content-Version'] := Value;
 end;
 
 procedure TWiRLRequest.SetFrom(const Value: string);
 begin
-  HeaderFields.Values['From'] := Value;
+  Headers.Values['From'] := Value;
 end;
 
 procedure TWiRLRequest.SetHost(const Value: string);
 begin
-  HeaderFields.Values['Host'] := Value;
+  Headers.Values['Host'] := Value;
 end;
 
 procedure TWiRLRequest.SetPathInfo(const Value: string);
@@ -406,7 +433,7 @@ end;
 
 procedure TWiRLRequest.SetRange(const Value: string);
 begin
-  HeaderFields.Values['Range'] := Value;
+  Headers.Values['Range'] := Value;
 end;
 
 procedure TWiRLRequest.SetRawContent(const Value: TBytes);
@@ -419,12 +446,30 @@ end;
 
 procedure TWiRLRequest.SetReferer(const Value: string);
 begin
-  HeaderFields.Values['Referer'] := Value;
+  Headers.Values['Referer'] := Value;
 end;
 
 procedure TWiRLRequest.SetUserAgent(const Value: string);
 begin
-  HeaderFields.Values['User-Agent'] := Value;
+  Headers.UserAgent := Value;
+end;
+
+{ TWiRLRequestHeaderList }
+
+constructor TWiRLRequestHeaderList.Create(ARequest: TWiRLRequest);
+begin
+  inherited Create;
+  FRequest := ARequest;
+end;
+
+function TWiRLRequestHeaderList.GetValue(const AName: string): string;
+begin
+  Result := FRequest.Headers.Values[AName];
+end;
+
+procedure TWiRLRequestHeaderList.SetValue(const AName, AValue: string);
+begin
+  FRequest.Headers.Values[AName] := AValue;
 end;
 
 end.

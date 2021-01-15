@@ -17,6 +17,7 @@ uses
 
   WiRL.Core.Classes,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
   WiRL.http.Accept.Parser;
 
@@ -63,7 +64,7 @@ type
     FContentMediaType: TMediaType;
     FContentStream: TStream;
     FContentDisposition: TWiRLContentDisposition;
-    FHeaderFields: TWiRLHeaderList;
+    FHeaders: TWiRLHeaders;
     FContentType: string;
     function GetContent: string;
     function GetContentStream: TStream;
@@ -82,7 +83,7 @@ type
     property ContentMediaType: TMediaType read GetContentMediaType;
     property ContentType: string read FContentType write FContentType;
     property Charset: string read GetCharset;
-    property HeaderFields: TWiRLHeaderList read FHeaderFields;
+    property Headers: TWiRLHeaders read FHeaders;
 
     property Content: string read GetContent;
     property RawContent: TBytes read GetRawContent;
@@ -98,7 +99,7 @@ type
     FPreamble: string;
     function GetPart(const AName: string): TWiRLFormDataPart;
     procedure Parse(AStream: TStream);
-    function AddPart(Headers: TStrings; const Body: string): TWiRLFormDataPart;
+    function AddPart(AHeaders: TWiRLHeaders; const ABody: string): TWiRLFormDataPart;
   public
     constructor Create(AStream: TStream; const AMIMEBoundary: string);
     destructor Destroy; override;
@@ -170,7 +171,6 @@ begin
   inherited;
   FContentStream := TMemoryStream.Create;
   FContentDisposition := TWiRLContentDisposition.Create('');
-  FHeaderFields := TWiRLHeaderList.Create;
 end;
 
 destructor TWiRLFormDataPart.Destroy;
@@ -178,7 +178,6 @@ begin
   FContentDisposition.Free;
   FContentMediaType.Free;
   FContentStream.Free;
-  FHeaderFields.Free;
   inherited;
 end;
 
@@ -233,32 +232,32 @@ end;
 
 { TWiRLFormDataMultiPart }
 
-function TWiRLFormDataMultiPart.AddPart(Headers: TStrings; const Body: string): TWiRLFormDataPart;
+function TWiRLFormDataMultiPart.AddPart(AHeaders: TWiRLHeaders; const ABody: string): TWiRLFormDataPart;
 var
   LRawBody: TBytes;
 begin
   Result := TWiRLFormDataPart.Create;
-  Result.FHeaderFields.Assign(Headers);
-  Result.FContentDisposition.Parse(Headers.Values['Content-Disposition']);
-  Result.FContentTransferEncoding := Headers.Values['Content-Transfer-Encoding'];
-  Result.FContentType := Headers.Values['Content-Type'];
+  Result.FHeaders := AHeaders;
+  Result.FContentDisposition.Parse(AHeaders.Values['Content-Disposition']);
+  Result.FContentTransferEncoding := AHeaders.Values['Content-Transfer-Encoding'];
+  Result.FContentType := AHeaders.ContentType;
 
   if Result.ContentMediaType.MediaType = TMediaType.APPLICATION_OCTET_STREAM then
   begin
     if (Result.FContentTransferEncoding = '') or (CompareText(Result.FContentTransferEncoding, 'BINARY') = 0) then
     begin
-      LRawBody := TEncoding.ANSI.GetBytes(Body);
+      LRawBody := TEncoding.ANSI.GetBytes(ABody);
     end
     else if CompareText(Result.FContentTransferEncoding, 'BASE64') = 0 then
     begin
-      LRawBody := TNetEncoding.Base64.DecodeStringToBytes(Body);
+      LRawBody := TNetEncoding.Base64.DecodeStringToBytes(ABody);
     end
     else
       raise EWiRLException.CreateFmt('[%s] Encoding not supported', [Result.FContentTransferEncoding]);
   end
   else
   begin
-    LRawBody := TEncoding.ANSI.GetBytes(Body);
+    LRawBody := TEncoding.ANSI.GetBytes(ABody);
   end;
   Result.FContentStream.WriteData(LRawBody, Length(LRawBody));
   Result.FContentStream.Position := 0;
@@ -304,18 +303,21 @@ type
 var
   LStreamReader: TMimeStreamReader;
   LLine, LBody: string;
-  LHeaders: TWiRLHeaderList;
+  LHeaders: TWiRLHeaders;
   LLastLineBreak: string;
   LSearchStatus: TPartSearchStatus;
 
   procedure AddHeader(const HeaderLine: string);
   var
     LSepIndex: Integer;
+    LName, LValue: string;
   begin
     LSepIndex := Pos(':', HeaderLine);
     if LSepIndex > 0 then
     begin
-      LHeaders.AddPair(Trim(Copy(HeaderLine, 1, LSepIndex - 1)), Trim(Copy(HeaderLine, LSepIndex + 1, Length(HeaderLine) - LSepIndex)));
+      LName := Trim(Copy(HeaderLine, 1, LSepIndex - 1));
+      LValue := Trim(Copy(HeaderLine, LSepIndex + 1, Length(HeaderLine) - LSepIndex));
+      LHeaders.Values[LName] := LValue;
     end;
   end;
 
@@ -327,60 +329,56 @@ begin
   LLastLineBreak := '';
   LStreamReader := TMimeStreamReader.Create(AStream, TEncoding.ANSI);
   try
-    LHeaders := TWiRLHeaderList.Create;
-    try
-      while not LStreamReader.EndOfStream do
+    LHeaders.Clear;
+    while not LStreamReader.EndOfStream do
+    begin
+      LLine := LStreamReader.ReadLine;
+      // Boundary found
+      if CompareStr(LLine, '--' + FMIMEBoundary) = 0 then
       begin
-        LLine := LStreamReader.ReadLine;
-        // Boundary found
-        if CompareStr(LLine, '--' + FMIMEBoundary) = 0 then
-        begin
-          if LSearchStatus = ssBody then
-          begin
-            SetLength(LBody, Length(LBody) - Length(LLastLineBreak));
-            AddPart(LHeaders, LBody);
-          end
-          else if LSearchStatus = ssPreamble then
-          begin
-            SetLength(LBody, Length(LBody) - Length(LLastLineBreak));
-            FPreamble := LBody;
-          end;
-          LBody := '';
-          LHeaders.Clear;
-          LSearchStatus := ssHeader;
-        end
-        // Last boundary found
-        else if CompareStr(LLine, '--' + FMIMEBoundary + '--') = 0 then
+        if LSearchStatus = ssBody then
         begin
           SetLength(LBody, Length(LBody) - Length(LLastLineBreak));
           AddPart(LHeaders, LBody);
-          LSearchStatus := ssEpilogue;
-          LBody := '';
         end
-        else if LSearchStatus = ssHeader then
+        else if LSearchStatus = ssPreamble then
         begin
-          if LLine <> '' then
-          begin
-            AddHeader(LLine);
-          end
-          else
-          begin
-            LSearchStatus := ssBody;
-          end;
-        end
-        else //if SearchStatus = ssBody then
-        begin
-          LBody := LBody + LLine + LStreamReader.LastLineBreak;
-          LLastLineBreak := LStreamReader.LastLineBreak;
+          SetLength(LBody, Length(LBody) - Length(LLastLineBreak));
+          FPreamble := LBody;
         end;
-      end;
-
-      if LSearchStatus = ssEpilogue then
+        LBody := '';
+        LHeaders.Clear;
+        LSearchStatus := ssHeader;
+      end
+      // Last boundary found
+      else if CompareStr(LLine, '--' + FMIMEBoundary + '--') = 0 then
       begin
-        FEpilogue := LBody;
+        SetLength(LBody, Length(LBody) - Length(LLastLineBreak));
+        AddPart(LHeaders, LBody);
+        LSearchStatus := ssEpilogue;
+        LBody := '';
+      end
+      else if LSearchStatus = ssHeader then
+      begin
+        if LLine <> '' then
+        begin
+          AddHeader(LLine);
+        end
+        else
+        begin
+          LSearchStatus := ssBody;
+        end;
+      end
+      else //if SearchStatus = ssBody then
+      begin
+        LBody := LBody + LLine + LStreamReader.LastLineBreak;
+        LLastLineBreak := LStreamReader.LastLineBreak;
       end;
-    finally
-      LHeaders.Free;
+    end;
+
+    if LSearchStatus = ssEpilogue then
+    begin
+      FEpilogue := LBody;
     end;
   finally
     LStreamReader.Free;

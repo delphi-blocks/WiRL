@@ -18,8 +18,7 @@ uses
   WiRL.Core.Context,
   WiRL.Client.Application,
   WiRL.http.Core,
-//  WiRL.http.Response,
-//  WiRL.http.Request,
+  WiRL.http.Headers,
   WiRL.http.Client.Interfaces,
   WiRL.http.Client;
 
@@ -43,18 +42,15 @@ type
     FQueryParams: TStrings;
     FSpecificAccept: string;
     FSpecificContentType: string;
-    FHeaderFields: TWiRLHeaderList;
+    FHeaders: TWiRLHeaders;
     procedure SetPathParamsValues(const Value: TStrings);
     procedure SetQueryParams(const Value: TStrings);
 
     procedure ContextInjection(AInstance: TObject);
     function CustomHeaders: TWiRLHeaders;
-    function StreamToObject<T>(AHeaders: TWiRLHeaderList; AStream: TStream): T; overload;
-    function StreamToObject<T>(AHeaders: TWiRLHeaders; AStream: TStream): T; overload;
-    procedure StreamToObject(AObject: TObject; AHeaders: TWiRLHeaderList; AStream: TStream); overload;
-    procedure StreamToObject(AObject: TObject; AHeaders: TWiRLHeaders; AStream: TStream); overload;
-    procedure ObjectToStream<T>(AHeaders: TWiRLHeaderList; AObject: T; AStream: TStream); overload;
-    procedure ObjectToStream<T>(AHeaders: TWiRLHeaders; AObject: T; AStream: TStream); overload;
+    function StreamToObject<T>(const AHeaders: TWiRLHeaders; AStream: TStream): T; overload;
+    procedure StreamToObject(AObject: TObject; const AHeaders: TWiRLHeaders; AStream: TStream); overload;
+    procedure ObjectToStream<T>(const AHeaders: TWiRLHeaders; AObject: T; AStream: TStream); overload;
     function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
   protected
     function GetClient: TWiRLClient; virtual;
@@ -158,7 +154,7 @@ type
     property PathParamsValues: TStrings read FPathParamsValues write SetPathParamsValues;
     property QueryParams: TStrings read FQueryParams write SetQueryParams;
     property URL: string read GetURL;
-    property HeaderFields: TWiRLHeaderList read FHeaderFields;
+    property Headers: TWiRLHeaders read FHeaders;
   end;
 
 
@@ -309,7 +305,7 @@ begin
   FPathParamsValues := TStringList.Create;
   FQueryParams := TStringList.Create;
   FContext := TWiRLContextHttp.Create;
-  FHeaderFields := TWiRLHeaderList.Create;
+  FHeaders.Clear;
 end;
 
 function TWiRLClientCustomResource.GetClient: TWiRLClient;
@@ -427,7 +423,7 @@ end;
 
 function TWiRLClientCustomResource.CustomHeaders: TWiRLHeaders;
 var
-  I: Integer;
+  LHeader: TWiRLHeader;
 begin
   Result := [];
   if Accept <> '' then
@@ -435,14 +431,14 @@ begin
   if ContentType <> '' then
     Result.ContentType := ContentType;
 
-  for I := 0 to FHeaderFields.Count - 1 do
+  for LHeader in FHeaders do
   begin
-    Result.Values[FHeaderFields.Names[I]] := FHeaderFields.ValueFromIndex[I];
+    Result.Values[LHeader.Name] := LHeader.Value;
   end;
 end;
 
 procedure TWiRLClientCustomResource.StreamToObject(AObject: TObject;
-  AHeaders: TWiRLHeaderList; AStream: TStream);
+  const AHeaders: TWiRLHeaders; AStream: TStream);
 var
   LType: TRttiType;
   LContext: TRttiContext;
@@ -463,7 +459,7 @@ begin
   end;
 end;
 
-function TWiRLClientCustomResource.StreamToObject<T>(AHeaders: TWiRLHeaderList; AStream: TStream): T;
+function TWiRLClientCustomResource.StreamToObject<T>(const AHeaders: TWiRLHeaders; AStream: TStream): T;
 var
   LType: TRttiType;
   LContext: TRttiContext;
@@ -472,7 +468,7 @@ var
   LValue: TValue;
 begin
   LType := LContext.GetType(TypeInfo(T));
-  LMediaType := TMediaType.Create(AHeaders['Content-Type']);
+  LMediaType := TMediaType.Create(AHeaders.ContentType);
   try
     LReader := Application.ReaderRegistry.FindReader(LType, LMediaType);
     if not Assigned(LReader) then
@@ -486,7 +482,7 @@ begin
   end;
 end;
 
-procedure TWiRLClientCustomResource.ObjectToStream<T>(AHeaders: TWiRLHeaderList;
+procedure TWiRLClientCustomResource.ObjectToStream<T>(const AHeaders: TWiRLHeaders;
   AObject: T; AStream: TStream);
 var
   LType: TRttiType;
@@ -613,22 +609,6 @@ begin
   GenericHttpRequest<T>('PUT', ARequestEntity, AResponseEntity);
 end;
 
-procedure TWiRLClientCustomResource.ObjectToStream<T>(AHeaders: TWiRLHeaders;
-  AObject: T; AStream: TStream);
-var
-  LHeaderList: TWiRLHeaderList;
-  LHeader: TWiRLHeader;
-begin
-  LHeaderList := TWiRLHeaderList.Create;
-  try
-    for LHeader in AHeaders do
-      LHeaderList.Values[LHeader.Name] := LHeader.Value;
-    ObjectToStream<T>(LHeaderList, AObject, AStream);
-  finally
-    LHeaderList.Free;
-  end;
-end;
-
 procedure TWiRLClientCustomResource.OPTIONS(const ABeforeExecute: TWiRLClientProc = nil;
   const AAfterExecute: TWiRLClientResponseProc = nil;
   const AOnException: TWiRLClientExceptionProc = nil);
@@ -701,7 +681,6 @@ begin
   FPathParamsValues.Free;
   FQueryParams.Free;
   FContext.Free;
-  FHeaderFields.Free;
   inherited;
 end;
 
@@ -967,38 +946,6 @@ end;
 procedure TWiRLClientCustomResource.SetQueryParams(const Value: TStrings);
 begin
   FQueryParams.Assign(Value);
-end;
-
-procedure TWiRLClientCustomResource.StreamToObject(AObject: TObject;
-  AHeaders: TWiRLHeaders; AStream: TStream);
-var
-  LHeaderList: TWiRLHeaderList;
-  LHeader: TWiRLHeader;
-begin
-  LHeaderList := TWiRLHeaderList.Create;
-  try
-    for LHeader in AHeaders do
-      LHeaderList.Values[LHeader.Name] := LHeader.Value;
-    StreamToObject(AObject, LHeaderList, AStream);
-  finally
-    LHeaderList.Free;
-  end;
-end;
-
-function TWiRLClientCustomResource.StreamToObject<T>(AHeaders: TWiRLHeaders;
-  AStream: TStream): T;
-var
-  LHeaderList: TWiRLHeaderList;
-  LHeader: TWiRLHeader;
-begin
-  LHeaderList := TWiRLHeaderList.Create;
-  try
-    for LHeader in AHeaders do
-      LHeaderList.Values[LHeader.Name] := LHeader.Value;
-    Result := StreamToObject<T>(LHeaderList, AStream);
-  finally
-    LHeaderList.Free;
-  end;
 end;
 
 initialization

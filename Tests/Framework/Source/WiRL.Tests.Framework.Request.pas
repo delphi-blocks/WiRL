@@ -19,6 +19,7 @@ uses
 
   DUnitX.TestFramework,
 
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
   WiRL.http.Request,
   WiRL.Tests.Mock.Server;
@@ -373,7 +374,7 @@ begin
   FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=1234';
   FRequest.ContentStream := TStringStream.Create(MultiPartTest, TEncoding.UTF8);
   Assert.AreEqual('ии', FRequest.MultiPartFormData['test2'].Content);
-  Assert.AreEqual('test', FRequest.MultiPartFormData['test2'].HeaderFields.Values['x-header']);
+  Assert.AreEqual('test', FRequest.MultiPartFormData['test2'].Headers.Values['x-header']);
 end;
 
 procedure TTestRequest.TestFormDataEpilogue;
@@ -441,8 +442,8 @@ end;
 
 procedure TTestRequest.TestHeaderFields;
 begin
-  FRequest.HeaderFields['X-Custom'] := 'Value';
-  Assert.AreEqual('Value', FRequest.HeaderFields['X-Custom']);
+  FRequest.Headers.Values['X-Custom'] := 'Value';
+  Assert.AreEqual('Value', FRequest.Headers.Values['X-Custom']);
 end;
 
 procedure TTestRequest.TestHost;

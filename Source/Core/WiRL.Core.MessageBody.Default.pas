@@ -19,8 +19,9 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Declarations,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Request,
-  WiRL.http.Response,
+//  WiRL.http.Response,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
   WiRL.Core.MessageBodyWriter,
@@ -40,10 +41,10 @@ type
   TWiRLStringProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream); override;
   end;
 
   /// <summary>
@@ -57,10 +58,10 @@ type
     [Context] FFormatSettingConfig: TWiRLFormatSettingConfig;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream); override;
   end;
 
   /// <summary>
@@ -88,10 +89,10 @@ type
     [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream); override;
   end;
 
   /// <summary>
@@ -106,13 +107,13 @@ type
     [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; overload; override;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; overload; override;
 
     procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
-	    AHeaderFields: TWiRLHeaderList; AContentStream: TStream); overload; override;
+	    const AHeaders: TWiRLHeaders; AContentStream: TStream); overload; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream); override;
   end;
 
   /// <summary>
@@ -124,10 +125,10 @@ type
   TWiRLJSONValueProvider = class(TWiRLJSONProvider)
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream); override;
 
     function AsObject: TObject;
   end;
@@ -140,10 +141,10 @@ type
   TWiRLStreamProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream); override;
   end;
 
 implementation
@@ -159,7 +160,7 @@ uses
 { TWiRLStringProvider }
 
 function TWiRLStringProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+  const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue;
 var
   LStreamReader: TStreamReader;
   LEncoding: TEncoding;
@@ -179,7 +180,7 @@ begin
 end;
 
 procedure TWiRLStringProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
   LEncoding: TEncoding;
@@ -210,13 +211,13 @@ begin
 end;
 
 function TWiRLJSONValueProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue;
 begin
   Result := TJSONObject.ParseJSONValue(ContentStreamToString(AMediaType.Charset, AContentStream));
 end;
 
 procedure TWiRLJSONValueProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
 var
   LJSONValue: TJSONValue;
 begin
@@ -233,7 +234,7 @@ end;
 { TWiRLSimpleTypesProvider }
 
 function TWiRLSimpleTypesProvider.ReadFrom(AType: TRttiType;
-  AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList;
+  AMediaType: TMediaType; const AHeaders: TWiRLHeaders;
   AContentStream: TStream): TValue;
 var
   LStreamReader: TStreamReader;
@@ -262,7 +263,7 @@ begin
 end;
 
 procedure TWiRLSimpleTypesProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
 var
   LFormatSetting: string;
   LEncoding: TEncoding;
@@ -284,7 +285,7 @@ end;
 { TWiRLValueTypesProvider }
 
 function TWiRLValueTypesProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue;
 var
   LDes: TNeonDeserializerJSON;
   LJSON: TJSONValue;
@@ -305,7 +306,7 @@ begin
 end;
 
 procedure TWiRLValueTypesProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
 var
   LJSON: TJSONValue;
 begin
@@ -330,19 +331,19 @@ end;
 { TWiRLObjectProvider }
 
 function TWiRLObjectProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue;
 begin
   Result := TNeon.JSONToObject(AType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.ReadFrom(AObject: TObject; AType: TRttitype;
-  AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+  AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
 begin
   TNeon.JSONToObject(AObject, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
 var
   LJSON: TJSONValue;
 begin
@@ -360,7 +361,7 @@ end;
 { TWiRLStreamProvider }
 
 function TWiRLStreamProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue;
 begin
   if AContentStream is TGCMemoryStream then
     Result := AContentStream
@@ -369,7 +370,7 @@ begin
 end;
 
 procedure TWiRLStreamProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
 var
   LStream: TStream;
 begin

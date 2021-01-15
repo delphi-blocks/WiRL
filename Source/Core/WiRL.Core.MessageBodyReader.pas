@@ -18,6 +18,7 @@ uses
 
   WiRL.Core.Singleton,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
   WiRL.http.Request,
   WiRL.Core.Declarations,
@@ -40,7 +41,7 @@ type
     ///   Read a type from the HTTP Request stream
     /// </summary>
     function ReadFrom(AType: TRttitype; AMediaType: TMediaType;
-  	  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; overload;
+  	  const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; overload;
 
     /// <summary>
     ///   Read a type from the HTTP Request stream.
@@ -50,7 +51,7 @@ type
     ///   already exists!
     /// </remarks>
     procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
-	    AHeaderFields: TWiRLHeaderList; AContentStream: TStream); overload;
+	    const AHeaders: TWiRLHeaders; AContentStream: TStream); overload;
   end;
 
   TIsReadableFunction = reference to function(AType: TRttiType;

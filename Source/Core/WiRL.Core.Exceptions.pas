@@ -485,7 +485,7 @@ begin
 
   EWiRLWebApplicationException.BuildReponse(E, LErrorMediaType, AContext.Response);
   if (AContext.Response.StatusCode = 401) and (LAuthChallengeHeader <> '') then
-    AContext.Response.HeaderFields['WWW-Authenticate'] := LAuthChallengeHeader;
+    AContext.Response.WWWAuthenticate := LAuthChallengeHeader;
 
   if Assigned(LApplication) then
   begin
