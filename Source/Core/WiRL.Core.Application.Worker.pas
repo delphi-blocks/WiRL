@@ -509,27 +509,32 @@ begin
       LMediaType
     );
 
-    if FResource.Method.IsFunction and not Assigned(LWriter) then
-      raise EWiRLUnsupportedMediaTypeException.Create(
-        Format('MediaType [%s] not supported on resource [%s]',
-          [FContext.Request.AcceptableMediaTypes.ToString, FResource.Path]),
-        Self.ClassName, 'InternalHandleRequest'
-      );
-
-    ContextInjection(LInstance);
-
-    if Assigned(LWriter) then
-      ContextInjection(LWriter as TObject);
-
     try
-      FContext.Request.Application := FAppConfig;
-      // Set the Response Status Code before the method invocation so, inside the method,
-      // we can override: HTTP response code, reason and location
-      FContext.Response.FromWiRLStatus(FResource.Method.Status);
 
-      InvokeResourceMethod(LInstance, LWriter, LMediaType);
+      if FResource.Method.IsFunction and not Assigned(LWriter) then
+        raise EWiRLUnsupportedMediaTypeException.Create(
+          Format('MediaType [%s] not supported on resource [%s]',
+            [FContext.Request.AcceptableMediaTypes.ToString, FResource.Path]),
+          Self.ClassName, 'InternalHandleRequest'
+        );
+
+      ContextInjection(LInstance);
+
+      if Assigned(LWriter) then
+        ContextInjection(LWriter as TObject);
+
+      try
+        FContext.Request.Application := FAppConfig;
+        // Set the Response Status Code before the method invocation so, inside the method,
+        // we can override: HTTP response code, reason and location
+        FContext.Response.FromWiRLStatus(FResource.Method.Status);
+
+        InvokeResourceMethod(LInstance, LWriter, LMediaType);
+      finally
+        LWriter := nil;
+      end;
+
     finally
-      LWriter := nil;
       LMediaType.Free;
     end;
 

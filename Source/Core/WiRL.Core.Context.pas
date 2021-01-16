@@ -73,6 +73,8 @@ type
   TWiRLContextHttp = class(TWiRLContextBase)
   private
     FRequestURL: TWiRLURL;
+    procedure InitRequestURL(ARequest: TWiRLRequest);
+
     function GetRequestURL: TWiRLURL;
     function GetRequest: TWiRLRequest;
     function GetResponse: TWiRLResponse;
@@ -278,7 +280,7 @@ end;
 function TWiRLContextHttp.GetRequestURL: TWiRLURL;
 begin
   if not Assigned(FRequestURL) then
-    FRequestURL := TWiRLURL.Create(Request);
+    raise EWiRLException.Create('RequestURL not found');
   Result := FRequestURL;
 end;
 
@@ -287,9 +289,18 @@ begin
   Result := FindContainerAs<TWiRLResponse>;
 end;
 
+procedure TWiRLContextHttp.InitRequestURL(ARequest: TWiRLRequest);
+begin
+  if Assigned(FRequestURL) then
+    FRequestURL.Free;
+  FRequestURL := TWiRLURL.Create(ARequest);
+  AddContainerOnce(FRequestURL, False);
+end;
+
 procedure TWiRLContextHttp.SetRequest(const Value: TWiRLRequest);
 begin
   AddContainerOnce(Value, False);
+  InitRequestURL(Value);
 end;
 
 procedure TWiRLContextHttp.SetResponse(const Value: TWiRLResponse);

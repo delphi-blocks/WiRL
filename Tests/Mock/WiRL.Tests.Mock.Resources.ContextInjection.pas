@@ -20,6 +20,7 @@ uses
   WiRL.Core.MessageBody.Default,
   WiRL.http.Request,
   WiRL.http.Response,
+  WiRL.http.URL,
   WiRL.Core.Registry,
 
   WiRL.Tests.Mock.Classes;
@@ -32,6 +33,8 @@ type
     FApplication: TWiRLApplication;
     [Context]
     FRequest: TWiRLRequest;
+    [Context]
+    FURL: TWiRLURL;
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
@@ -61,6 +64,11 @@ type
     [Path('addcounter')]
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
     function AddCounter([Context][Singleton] ACounter: TCounter): string;
+
+    [GET]
+    [Path('url')]
+    [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
+    function CheckUrl(): string;
   end;
 
 implementation
@@ -93,6 +101,11 @@ function TContextInjectionResource.CheckResponseMethodInjection(
   ARequest: TWiRLRequest): string;
 begin
   Result := ARequest.QueryFields['value'];
+end;
+
+function TContextInjectionResource.CheckUrl: string;
+begin
+  Result := FURL.Path;
 end;
 
 function TContextInjectionResource.HelloWorld: string;
