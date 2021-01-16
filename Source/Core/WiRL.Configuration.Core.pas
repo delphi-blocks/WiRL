@@ -63,7 +63,7 @@ type
   IWiRLConfiguration = interface
   ['{E53BA2F7-6CC5-4710-AB18-B0F30E909655}']
     function BackToApp: IWiRLApplication;
-    function SaveConfig: IWiRLApplication;
+    function ApplyConfig: IWiRLApplication;
   end;
 
   /// <summary>
@@ -91,7 +91,7 @@ type
     property AsJSON: TJSONObject read GetAsJSON;
 
     function BackToApp: IWiRLApplication;
-    function SaveConfig: IWiRLApplication;
+    function ApplyConfig: IWiRLApplication; virtual;
   end;
   {$M-}
 
@@ -162,7 +162,7 @@ begin
   Result := TNeon.ObjectToJSONString(Self, FNeonConfig);
 end;
 
-function TWiRLConfiguration.SaveConfig: IWiRLApplication;
+function TWiRLConfiguration.ApplyConfig: IWiRLApplication;
 begin
   Result := FApplication;
 end;
