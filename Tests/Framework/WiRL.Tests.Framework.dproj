@@ -4,7 +4,7 @@
         <ProjectVersion>19.0</ProjectVersion>
         <MainSource>WiRL.Tests.Framework.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">TestInsight</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Console</AppType>
@@ -133,6 +133,7 @@
         <DCCReference Include="Source\WiRL.Tests.Framework.ContextInjection.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.ContextInjection.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.InjectionFactories.pas"/>
+        <DCCReference Include="Source\WiRL.Tests.Framework.MultiParts.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -176,6 +177,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Win32\Debug\WiRL.Tests.Framework.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>WiRL_Tests_Framework.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Release\WiRL.Tests.Framework.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>WiRL_Tests_Framework.exe</RemoteName>
                         <Overwrite>true</Overwrite>

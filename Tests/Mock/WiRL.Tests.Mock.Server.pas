@@ -80,6 +80,7 @@ type
     FReasonString: string;
     FResponseError: TWiRLResponseError;
     FHeadersSent: Boolean;
+    FHeader: IWiRLHeaders;
     function GetResponseError: TWiRLResponseError;
   protected
     function GetContent: string; override;
@@ -90,6 +91,7 @@ type
     procedure SetStatusCode(const Value: Integer); override;
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
+    function GetHeaders: IWiRLHeaders; override;
   public
     procedure SendHeaders; override;
     property Error: TWiRLResponseError read GetResponseError;
@@ -111,7 +113,7 @@ type
     FQuery: string;
     FServerPort: Integer;
     FContentStream: TStream;
-    FHeaders: TWiRLHeaders;
+    FHeaders: IWiRLHeaders;
     procedure ParseQueryParams;
     procedure SetUrl(const Value: string);
   protected
@@ -123,7 +125,7 @@ type
     function GetCookieFields: TWiRLCookies; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
-    function GetHeaders: TWiRLHeaders; override;
+    function GetHeaders: IWiRLHeaders; override;
     function GetRemoteIP: string; override;
   public
     property Url: string read FUrl write SetUrl;
@@ -291,12 +293,12 @@ begin
   Result := FCookieFields;
 end;
 
-function TWiRLTestRequest.GetHeaders: TWiRLHeaders;
+function TWiRLTestRequest.GetHeaders: IWiRLHeaders;
 begin
-//  if not Assigned(FHeaderFields) then
-//  begin
-//    FHeaderFields := TWiRLHeaderList.Create;
-//  end;
+  if not Assigned(FHeaders) then
+  begin
+    FHeaders := TWiRLHeaders.Create;
+  end;
   Result := FHeaders;
 end;
 
@@ -401,6 +403,8 @@ constructor TWiRLTestResponse.Create;
 begin
   inherited;
   FResponseError := TWiRLResponseError.Create;
+  FHeader := TWiRLHeaders.Create;
+
   FStatusCode := 200;
   FReasonString := 'OK';
   FHeadersSent := False;
@@ -432,6 +436,11 @@ end;
 function TWiRLTestResponse.GetContentStream: TStream;
 begin
   Result := FContentStream;
+end;
+
+function TWiRLTestResponse.GetHeaders: IWiRLHeaders;
+begin
+  Result := FHeader;
 end;
 
 function TWiRLTestResponse.GetReasonString: string;

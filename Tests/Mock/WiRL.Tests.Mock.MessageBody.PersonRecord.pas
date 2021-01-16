@@ -34,10 +34,10 @@ type
   TWiRLTestPersonRecordProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; override;
+      AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream); override;
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
   end;
 
 implementation
@@ -45,7 +45,7 @@ implementation
 { TWiRLTestPersonRecordProvider }
 
 function TWiRLTestPersonRecordProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-  const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue;
+  AHeaders: IWiRLHeaders; AContentStream: TStream): TValue;
 var
   LContent: string;
   LTestPerson: TTestPersonRecord;
@@ -66,7 +66,7 @@ end;
 
 procedure TWiRLTestPersonRecordProvider.WriteTo(const AValue: TValue;
   const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  const AHeaders: TWiRLHeaders; AContentStream: TStream);
+  AHeaders: IWiRLHeaders; AContentStream: TStream);
 var
   LContent: TBytes;
   LStringList: TStringList;

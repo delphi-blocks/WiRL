@@ -37,7 +37,6 @@ type
   private
     FCookie: TWiRLCookies;
     FMediaType: TMediaType;
-    FHeaders: TWiRLHeaders;
     FHasContentLength: Boolean;
     FHeaderFields: TWiRLResponseHeaderList;
     function GetContentType: string;
@@ -71,7 +70,7 @@ type
     function GetHeaderFields: TWiRLResponseHeaderList;
   protected
     function IsUnknownResponseCode: Boolean; virtual;
-    function GetHeaders: TWiRLHeaders;
+    function GetHeaders: IWiRLHeaders; virtual; abstract;
     function GetContent: string; virtual; abstract;
     function GetContentStream: TStream; virtual; abstract;
     procedure SetContent(const Value: string); virtual; abstract;
@@ -100,7 +99,7 @@ type
     property ReasonString: string read GetReasonString write SetReasonString;
     property ContentType: string read GetContentType write SetContentType;
     property ContentLength: Int64 read GetContentLength write SetContentLength;
-    property Headers: TWiRLHeaders read GetHeaders;
+    property Headers: IWiRLHeaders read GetHeaders;
     property HeaderFields: TWiRLResponseHeaderList read GetHeaderFields;
     property ContentMediaType: TMediaType read GetContentMediaType;
     property Connection: string read GetConnection write SetConnection;
@@ -141,27 +140,27 @@ end;
 
 function TWiRLResponse.GetAllow: string;
 begin
-  Result := FHeaders.Allow;
+  Result := Headers.Allow;
 end;
 
 function TWiRLResponse.GetConnection: string;
 begin
-  Result := FHeaders.Connection;
+  Result := Headers.Connection;
 end;
 
 function TWiRLResponse.GetContentEncoding: string;
 begin
-  Result := FHeaders.ContentEncoding;
+  Result := Headers.ContentEncoding;
 end;
 
 function TWiRLResponse.GetContentLanguage: string;
 begin
-  Result := FHeaders.ContentLanguage;
+  Result := Headers.ContentLanguage;
 end;
 
 function TWiRLResponse.GetContentLength: Int64;
 begin
-  Result := FHeaders.ContentLength;
+  Result := Headers.ContentLength;
 end;
 
 function TWiRLResponse.GetContentMediaType: TMediaType;
@@ -173,7 +172,7 @@ end;
 
 function TWiRLResponse.GetContentType: string;
 begin
-  Result := FHeaders.ContentType;
+  Result := Headers.ContentType;
 end;
 
 function TWiRLResponse.GetCookies: TWiRLCookies;
@@ -187,7 +186,7 @@ function TWiRLResponse.GetDate: TDateTime;
 var
   LValue: string;
 begin
-  LValue := FHeaders.Values['Date'];
+  LValue := Headers.Values['Date'];
   if LValue = '' then
     Result := Now
   else
@@ -198,7 +197,7 @@ function TWiRLResponse.GetExpires: TDateTime;
 var
   LValue: string;
 begin
-  LValue := FHeaders.Values['Expires'];
+  LValue := Headers.Values['Expires'];
   if LValue = '' then
     Result := 0
   else
@@ -214,16 +213,11 @@ begin
   Result := FHeaderFields;
 end;
 
-function TWiRLResponse.GetHeaders: TWiRLHeaders;
-begin
-  Result := FHeaders;
-end;
-
 function TWiRLResponse.GetLastModified: TDateTime;
 var
   LValue: string;
 begin
-  LValue := FHeaders.Values['Last-Modified'];
+  LValue := Headers.Values['Last-Modified'];
   if LValue = '' then
     Result := 0
   else
@@ -232,7 +226,7 @@ end;
 
 function TWiRLResponse.GetLocation: string;
 begin
-  Result := FHeaders.Location;
+  Result := Headers.Location;
 end;
 
 function TWiRLResponse.GetRawContent: TBytes;
@@ -247,7 +241,7 @@ end;
 
 function TWiRLResponse.GetServer: string;
 begin
-  Result := FHeaders.Values['Server'];
+  Result := Headers.Values['Server'];
 end;
 
 function TWiRLResponse.IsUnknownResponseCode: Boolean;
@@ -257,7 +251,7 @@ end;
 
 function TWiRLResponse.GetWWWAuthenticate: string;
 begin
-  Result := FHeaders.WWWAuthenticate;
+  Result := Headers.WWWAuthenticate;
 end;
 
 procedure TWiRLResponse.Redirect(ACode: Integer; const ALocation: string);
@@ -269,59 +263,59 @@ end;
 
 procedure TWiRLResponse.SetAllow(const Value: string);
 begin
-  FHeaders.Allow := Value;
+  Headers.Allow := Value;
 end;
 
 procedure TWiRLResponse.SetConnection(const Value: string);
 begin
-  FHeaders.Connection := Value;
+  Headers.Connection := Value;
 end;
 
 procedure TWiRLResponse.SetContentEncoding(const Value: string);
 begin
-  FHeaders.ContentEncoding := Value;
+  Headers.ContentEncoding := Value;
 end;
 
 procedure TWiRLResponse.SetContentLanguage(const Value: string);
 begin
-  FHeaders.ContentLanguage := Value;
+  Headers.ContentLanguage := Value;
 end;
 
 procedure TWiRLResponse.SetContentLength(const Value: Int64);
 begin
   FHasContentLength := True;
-  FHeaders.ContentLength := Value;
+  Headers.ContentLength := Value;
 end;
 
 procedure TWiRLResponse.SetContentType(const Value: string);
 begin
-  FHeaders.ContentType := Value;
+  Headers.ContentType := Value;
 end;
 
 procedure TWiRLResponse.SetDate(const Value: TDateTime);
 begin
-  FHeaders.Values['Date'] := LocalDateTimeToHttpStr(Value);
+  Headers.Values['Date'] := LocalDateTimeToHttpStr(Value);
 end;
 
 procedure TWiRLResponse.SetExpires(const Value: TDateTime);
 begin
   if Value = 0 then
-    FHeaders.Values['Expires'] := ''
+    Headers.Values['Expires'] := ''
   else
-    FHeaders.Values['Expires'] := LocalDateTimeToHttpStr(Value);
+    Headers.Values['Expires'] := LocalDateTimeToHttpStr(Value);
 end;
 
 procedure TWiRLResponse.SetLastModified(const Value: TDateTime);
 begin
   if Value = 0 then
-    FHeaders.Values['Last-Modified'] := ''
+    Headers.Values['Last-Modified'] := ''
   else
-    FHeaders.Values['Last-Modified'] := LocalDateTimeToHttpStr(Value);
+    Headers.Values['Last-Modified'] := LocalDateTimeToHttpStr(Value);
 end;
 
 procedure TWiRLResponse.SetLocation(const Value: string);
 begin
-  FHeaders.Location := Value;
+  Headers.Location := Value;
 end;
 
 procedure TWiRLResponse.SetNonStandardReasonString(const AValue: string);
@@ -340,12 +334,12 @@ end;
 
 procedure TWiRLResponse.SetServer(const Value: string);
 begin
-  FHeaders.Values['Server'] := Value;
+  Headers.Values['Server'] := Value;
 end;
 
 procedure TWiRLResponse.SetWWWAuthenticate(const Value: string);
 begin
-  FHeaders.WWWAuthenticate := Value;
+  Headers.WWWAuthenticate := Value;
 end;
 
 { TWiRLResponseHeaderList }

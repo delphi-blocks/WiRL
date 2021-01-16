@@ -63,7 +63,7 @@ type
   private
     FContext: TIdContext;
     FResponseInfo: TIdHTTPResponseInfo;
-    FCustomHeaders: TStrings;
+    FHeaders: IWiRLHeaders;
     procedure SendCookies;
   protected
     function GetContent: string; override;
@@ -75,6 +75,7 @@ type
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
     function IsUnknownResponseCode: Boolean; override;
+    function GetHeaders: IWiRLHeaders; override;
   public
     procedure SendHeaders; override;
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
@@ -87,7 +88,7 @@ type
     FRequestInfo: TIdHTTPRequestInfo;
     FCookieFields: TWiRLCookies;
     FQueryFields: TWiRLParam;
-    FHeaders: TWiRLHeaders;
+    FHeaders: IWiRLHeaders;
     FContentFields: TWiRLParam;
     procedure ParseParams(Params :TStrings; const AValue: String);
   protected
@@ -98,7 +99,7 @@ type
     function GetQueryFields: TWiRLParam; override;
     function GetContentFields: TWiRLParam; override;
     function GetCookieFields: TWiRLCookies; override;
-    function GetHeaders: TWiRLHeaders; override;
+    function GetHeaders: IWiRLHeaders; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
   public
@@ -332,18 +333,19 @@ begin
   Result := FCookieFields;
 end;
 
-function TWiRLHttpRequestIndy.GetHeaders: TWiRLHeaders;
+function TWiRLHttpRequestIndy.GetHeaders: IWiRLHeaders;
 var
   LIndex: Integer;
   LName, LValue: string;
 begin
-  if Length(FHeaders) <= 0 then
+  if not Assigned(FHeaders) then
   begin
+    FHeaders := TWiRLHeaders.Create;
     for LIndex := 0 to FRequestInfo.RawHeaders.Count - 1 do
     begin
       LName := FRequestInfo.RawHeaders.Names[LIndex];
       LValue := FRequestInfo.RawHeaders.Values[LName];
-      FHeaders := FHeaders + [ TWiRLHeader.Create(LName, LValue) ];
+      FHeaders.AddHeader(TWiRLHeader.Create(LName, LValue));
     end;
   end;
   Result := FHeaders;
@@ -393,17 +395,26 @@ end;
 
 constructor TWiRLHttpResponseIndy.Create(AContext: TIdContext;
   AResponseInfo: TIdHTTPResponseInfo);
+var
+  LName, LValue: string;
+  LIndex: Integer;
 begin
   inherited Create;
   FContext := AContext;
   FResponseInfo := AResponseInfo;
-  FCustomHeaders := TStringList.Create;
-  FCustomHeaders.Assign(AResponseInfo.CustomHeaders);
+
+  FHeaders := TWiRLHeaders.Create;
+  for LIndex := 0 to AResponseInfo.RawHeaders.Count - 1 do
+  begin
+    LName := AResponseInfo.RawHeaders.Names[LIndex];
+    LValue := AResponseInfo.RawHeaders.Values[LName];
+    FHeaders.AddHeader(TWiRLHeader.Create(LName, LValue));
+  end;
 end;
 
 destructor TWiRLHttpResponseIndy.Destroy;
 begin
-  FCustomHeaders.Free;
+//  FHeaders.Free;
   inherited;
 end;
 
@@ -415,6 +426,11 @@ end;
 function TWiRLHttpResponseIndy.GetContentStream: TStream;
 begin
   Result := FResponseInfo.ContentStream;
+end;
+
+function TWiRLHttpResponseIndy.GetHeaders: IWiRLHeaders;
+begin
+  Result := FHeaders;
 end;
 
 function TWiRLHttpResponseIndy.GetReasonString: string;

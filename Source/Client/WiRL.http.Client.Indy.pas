@@ -30,7 +30,7 @@ type
   TWiRLClientResponseIndy = class(TInterfacedObject, IWiRLResponse)
   private
     FIdHTTPResponse: TIdHTTPResponse;
-    FHeaders: TWiRLHeaders;
+    FHeaders: IWiRLHeaders;
     FMediaType: TMediaType;
 
     { IWiRLResponse }
@@ -40,7 +40,7 @@ type
     function GetContentType: string;
     function GetContent: string;
     function GetContentStream: TStream;
-    function GetHeaders: TWiRLHeaders;
+    function GetHeaders: IWiRLHeaders;
     function GetContentMediaType: TMediaType;
     function GetRawContent: TBytes;
   public
@@ -63,19 +63,19 @@ type
     procedure SetMaxRedirects(const Value: Integer);
     function GetClientImplementation: TObject;
 
-    procedure BuildRequestObject(const AHeaders: TWiRLHeaders);
+    procedure BuildRequestObject(AHeaders: IWiRLHeaders);
   public
     constructor Create; virtual;
     destructor Destroy; override;
 
     // Http methods
-    function Get(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Post(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Put(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Delete(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Options(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Head(const AURL: string; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Patch(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+    function Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Post(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Put(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Options(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Patch(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
   end;
 
 implementation
@@ -92,7 +92,7 @@ begin
   FHttpClient.HTTPOptions := FHttpClient.HTTPOptions + [hoNoProtocolErrorException, hoWantProtocolErrorContent];
 end;
 
-function TWiRLClientIndy.Delete(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientIndy.Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   BuildRequestObject(AHeaders);
   try
@@ -110,7 +110,7 @@ begin
   inherited;
 end;
 
-function TWiRLClientIndy.Get(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientIndy.Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   BuildRequestObject(AHeaders);
   try
@@ -147,7 +147,7 @@ begin
   Result := FHttpClient.ReadTimeout;
 end;
 
-function TWiRLClientIndy.Head(const AURL: string; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientIndy.Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   BuildRequestObject(AHeaders);
   try
@@ -159,7 +159,7 @@ begin
   Result := TWiRLClientResponseIndy.Create(FHttpClient.Response);
 end;
 
-procedure TWiRLClientIndy.BuildRequestObject(const AHeaders: TWiRLHeaders);
+procedure TWiRLClientIndy.BuildRequestObject(AHeaders: IWiRLHeaders);
 var
   LHeader: TWiRLHeader;
 begin
@@ -198,7 +198,7 @@ begin
   end;
 end;
 
-function TWiRLClientIndy.Options(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientIndy.Options(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   BuildRequestObject(AHeaders);
   try
@@ -210,7 +210,7 @@ begin
   Result := TWiRLClientResponseIndy.Create(FHttpClient.Response);
 end;
 
-function TWiRLClientIndy.Patch(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientIndy.Patch(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   BuildRequestObject(AHeaders);
   try
@@ -222,7 +222,7 @@ begin
   Result := TWiRLClientResponseIndy.Create(FHttpClient.Response);
 end;
 
-function TWiRLClientIndy.Post(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientIndy.Post(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   BuildRequestObject(AHeaders);
   try
@@ -234,7 +234,7 @@ begin
   Result := TWiRLClientResponseIndy.Create(FHttpClient.Response);
 end;
 
-function TWiRLClientIndy.Put(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientIndy.Put(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   BuildRequestObject(AHeaders);
   try
@@ -302,19 +302,19 @@ begin
   Result := GetHeaderValue('Content-Type');
 end;
 
-function TWiRLClientResponseIndy.GetHeaders: TWiRLHeaders;
+function TWiRLClientResponseIndy.GetHeaders: IWiRLHeaders;
 var
   LIndex: Integer;
-  LName: string;
+  LName, LValue: string;
 begin
-  if Length(FHeaders) <= 0 then
+  if not Assigned(FHeaders) then
   begin
-    SetLength(FHeaders, FIdHTTPResponse.RawHeaders.Count);
+    FHeaders := TWiRLHeaders.Create;
     for LIndex := 0 to FIdHTTPResponse.RawHeaders.Count - 1 do
     begin
       LName := FIdHTTPResponse.RawHeaders.Names[LIndex];
-      FHeaders[LIndex] :=
-        TWiRLHeader.Create(LName, FIdHTTPResponse.RawHeaders.Values[LName]);
+      LValue := FIdHTTPResponse.RawHeaders.Values[LName];
+      FHeaders.AddHeader(TWiRLHeader.Create(LName, LValue));
     end;
   end;
   Result := FHeaders;

@@ -30,7 +30,7 @@ type
   private
     FResponse: IHTTPResponse;
     FMediaType: TMediaType;
-    FHeaders: TWiRLHeaders;
+    FHeaders: IWiRLHeaders;
 
     { IWiRLResponse }
     function GetHeaderValue(const AName: string): string;
@@ -39,7 +39,7 @@ type
     function GetContentType: string;
     function GetContent: string;
     function GetContentStream: TStream;
-    function GetHeaders: TWiRLHeaders;
+    function GetHeaders: IWiRLHeaders;
     function GetContentMediaType: TMediaType;
     function GetRawContent: TBytes;
   public
@@ -63,15 +63,15 @@ type
     function GetClientImplementation: TObject;
 
     // Http methods
-    function Get(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Post(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Put(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Delete(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Options(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Head(const AURL: string; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Patch(const AURL: string; ARequestContent, AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+    function Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Post(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Put(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Options(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Patch(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 
-    function GetRequestHeaders(const AHeaders: TWiRLHeaders): TNetHeaders;
+    function GetRequestHeaders(AHeaders: IWiRLHeaders): TNetHeaders;
   public
     constructor Create; virtual;
     destructor Destroy; override;
@@ -91,7 +91,7 @@ begin
 end;
 
 function TWiRLClientNetHttp.Delete(const AURL: string;
-  AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+  AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
@@ -110,7 +110,7 @@ begin
   inherited;
 end;
 
-function TWiRLClientNetHttp.Get(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientNetHttp.Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
@@ -148,25 +148,20 @@ begin
   Result := FHttpClient.ResponseTimeout;
 end;
 
-function TWiRLClientNetHttp.GetRequestHeaders(const AHeaders: TWiRLHeaders): TNetHeaders;
+function TWiRLClientNetHttp.GetRequestHeaders(AHeaders: IWiRLHeaders): TNetHeaders;
 var
-  LIndex: Integer;
   LHeader: TWiRLHeader;
 begin
-  SetLength(Result, Length(AHeaders));
-  LIndex := 0;
   for LHeader in AHeaders do
   begin
-    Result[LIndex].Name := LHeader.Name;
-    Result[LIndex].Value := LHeader.Value;
-    Inc(LIndex);
+    Result := Result + [TNameValuePair.Create(LHeader.Name, LHeader.Value)];
   end;
 
   if AHeaders.UserAgent = '' then
     Result := Result + [TNameValuePair.Create(TWiRLHeader.USER_AGENT, DefaultUserAgent)];
 end;
 
-function TWiRLClientNetHttp.Head(const AURL: string; const AHeaders: TWiRLHeaders): IWiRLResponse;
+function TWiRLClientNetHttp.Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
@@ -180,7 +175,7 @@ begin
 end;
 
 function TWiRLClientNetHttp.Options(const AURL: string;
-  AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+  AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
@@ -194,7 +189,7 @@ begin
 end;
 
 function TWiRLClientNetHttp.Patch(const AURL: string; ARequestContent,
-  AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+  AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
@@ -209,7 +204,7 @@ begin
 end;
 
 function TWiRLClientNetHttp.Post(const AURL: string; ARequestContent,
-  AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+  AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
@@ -224,7 +219,7 @@ begin
 end;
 
 function TWiRLClientNetHttp.Put(const AURL: string; ARequestContent,
-  AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+  AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
@@ -264,7 +259,6 @@ constructor TWiRLClientResponseNetHttp.Create(AResponse: IHTTPResponse);
 begin
   inherited Create;
   FResponse := AResponse;
-  FHeaders := [];
 end;
 
 destructor TWiRLClientResponseNetHttp.Destroy;
@@ -295,17 +289,16 @@ begin
   Result := GetHeaderValue('Content-Type');
 end;
 
-function TWiRLClientResponseNetHttp.GetHeaders: TWiRLHeaders;
+function TWiRLClientResponseNetHttp.GetHeaders: IWiRLHeaders;
 var
   LHeader: TNameValuePair;
 begin
-  if Length(FHeaders) <= 0 then
+  if not Assigned(FHeaders) then
   begin
+    FHeaders := TWiRLHeaders.Create;
     for LHeader in FResponse.Headers do
     begin
-      FHeaders := FHeaders + [
-        TWiRLHeader.Create(LHeader.Name, LHeader.Value)
-      ];
+      FHeaders.AddHeader(TWiRLHeader.Create(LHeader.Name, LHeader.Value));
     end;
   end;
   Result := FHeaders;

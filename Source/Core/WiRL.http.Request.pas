@@ -99,7 +99,7 @@ type
     function GetHttpQuery: string; virtual; abstract;
     function GetRemoteIP: string; virtual; abstract;
     function GetServerPort: Integer; virtual; abstract;
-    function GetHeaders: TWiRLHeaders; virtual; abstract;
+    function GetHeaders: IWiRLHeaders; virtual; abstract;
     function GetQueryFields: TWiRLParam; virtual; abstract;
     function GetContentFields: TWiRLParam; virtual; abstract;
     function GetCookieFields: TWiRLCookies; virtual; abstract;
@@ -121,7 +121,7 @@ type
     property ServerPort: Integer read GetServerPort;
     property QueryFields: TWiRLParam read GetQueryFields;
     property ContentFields: TWiRLParam read GetContentFields;
-    property Headers: TWiRLHeaders read GetHeaders;
+    property Headers: IWiRLHeaders read GetHeaders;
     property HeaderFields: TWiRLRequestHeaderList read GetHeaderFields;
     property CookieFields: TWiRLCookies read GetCookieFields;
     property Content: string read GetContent write SetContent;

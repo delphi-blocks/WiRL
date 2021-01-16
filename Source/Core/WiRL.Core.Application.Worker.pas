@@ -92,7 +92,7 @@ type
     FContentStream: TStream;
     FParamName: string;
     FTypeKind: TTypeKind;
-    FHeaders: TWiRLHeaders;
+    FHeaders: IWiRLHeaders;
     FMediaType: TMediaType;
     FStringValue: string;
     FStreamValue: TStream;
@@ -105,7 +105,7 @@ type
   public
     property ParamName: string read FParamName;
     property TypeKind: TTypeKind read FTypeKind;
-    property Headers: TWiRLHeaders read FHeaders;
+    property Headers: IWiRLHeaders read FHeaders;
     property MediaType: TMediaType read FMediaType;
     property StringValue: string read FStringValue;
     property StreamValue: TStream read FStreamValue;

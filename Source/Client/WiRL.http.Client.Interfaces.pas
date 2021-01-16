@@ -43,7 +43,7 @@ type
     /// <summary>Getter for the HeaderValue Property</summary>
     function GetHeaderValue(const AName: string): string;
     /// <summary>Getter for the Headers Property</summary>
-    function GetHeaders: TWiRLHeaders;
+    function GetHeaders: IWiRLHeaders;
     /// <summary>Getter for the Content Property</summary>
     function GetContent: string;
     /// <summary>Getter for the ContentStream Property</summary>
@@ -70,7 +70,7 @@ type
     /// <summary>Get the body of the request as a bytes</summary>
     property RawContent: TBytes read GetRawContent;
     /// <summary>Get all response headers</summary>
-    property Headers: TWiRLHeaders read GetHeaders;
+    property Headers: IWiRLHeaders read GetHeaders;
     /// <summary>Property to Get Header values</summary>
     /// <param name="AName">Name of the Header</param>
     /// <returns>The string value associated to the given name.</returns>
@@ -109,7 +109,7 @@ type
     /// <summary>Getter for the ContentStream Property</summary>
     function GetContentStream: TStream;
     /// <summary>Getter for the Headers Property</summary>
-    function GetHeaders: TWiRLHeaders;
+    function GetHeaders: IWiRLHeaders;
     /// <summary>Getter for the ContentMediaType Property</summary>
     function GetContentMediaType: TMediaType;
     /// <summary>Getter for the RawContent Property</summary>
@@ -132,7 +132,7 @@ type
     /// <summary>Get the body from server response as a bytes</summary>
     property RawContent: TBytes read GetRawContent;
     /// <summary>Get all response headers</summary>
-    property Headers: TWiRLHeaders read GetHeaders;
+    property Headers: IWiRLHeaders read GetHeaders;
     /// <summary>Get media type info</summary>
     property ContentMediaType: TMediaType read GetContentMediaType;
   end;
@@ -194,13 +194,13 @@ type
     function GetClientImplementation: TObject;
 
     // Http methods
-    function Delete(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Get(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Options(const AURL: string; AResponseContent: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Head(const AURL: string; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Patch(const AURL: string; AContent, AResponse: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Post(const AURL: string; AContent, AResponse: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
-    function Put(const AURL: string; AContent, AResponse: TStream; const AHeaders: TWiRLHeaders): IWiRLResponse;
+    function Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Options(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Patch(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Post(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Put(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 
     // Http properties
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;

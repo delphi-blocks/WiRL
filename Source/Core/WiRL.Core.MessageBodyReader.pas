@@ -41,7 +41,7 @@ type
     ///   Read a type from the HTTP Request stream
     /// </summary>
     function ReadFrom(AType: TRttitype; AMediaType: TMediaType;
-  	  const AHeaders: TWiRLHeaders; AContentStream: TStream): TValue; overload;
+  	  AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; overload;
 
     /// <summary>
     ///   Read a type from the HTTP Request stream.
@@ -51,7 +51,7 @@ type
     ///   already exists!
     /// </remarks>
     procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
-	    const AHeaders: TWiRLHeaders; AContentStream: TStream); overload;
+	    AHeaders: IWiRLHeaders; AContentStream: TStream); overload;
   end;
 
   TIsReadableFunction = reference to function(AType: TRttiType;

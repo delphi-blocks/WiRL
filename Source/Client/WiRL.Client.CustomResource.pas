@@ -42,15 +42,15 @@ type
     FQueryParams: TStrings;
     FSpecificAccept: string;
     FSpecificContentType: string;
-    FHeaders: TWiRLHeaders;
+    FHeaders: IWiRLHeaders;
     procedure SetPathParamsValues(const Value: TStrings);
     procedure SetQueryParams(const Value: TStrings);
 
     procedure ContextInjection(AInstance: TObject);
-    function CustomHeaders: TWiRLHeaders;
-    function StreamToObject<T>(const AHeaders: TWiRLHeaders; AStream: TStream): T; overload;
-    procedure StreamToObject(AObject: TObject; const AHeaders: TWiRLHeaders; AStream: TStream); overload;
-    procedure ObjectToStream<T>(const AHeaders: TWiRLHeaders; AObject: T; AStream: TStream); overload;
+    function CustomHeaders: IWiRLHeaders;
+    function StreamToObject<T>(AHeaders: IWiRLHeaders; AStream: TStream): T; overload;
+    procedure StreamToObject(AObject: TObject; AHeaders: IWiRLHeaders; AStream: TStream); overload;
+    procedure ObjectToStream<T>(AHeaders: IWiRLHeaders; AObject: T; AStream: TStream); overload;
     function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
   protected
     function GetClient: TWiRLClient; virtual;
@@ -82,7 +82,7 @@ type
     procedure AfterOPTIONS; virtual;
 
     procedure InitHttpRequest; virtual;
-    function InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse; virtual;
+    function InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -154,7 +154,7 @@ type
     property PathParamsValues: TStrings read FPathParamsValues write SetPathParamsValues;
     property QueryParams: TStrings read FQueryParams write SetQueryParams;
     property URL: string read GetURL;
-    property Headers: TWiRLHeaders read FHeaders;
+    property Headers: IWiRLHeaders read FHeaders;
   end;
 
 
@@ -177,7 +177,7 @@ type
   THttpMethodImplementation = reference to function (
     AResource: TWiRLClientCustomResource;
     ARequestStream, AResponseStream: TStream;
-    ACustomHeaders: TWiRLHeaders): IWiRLResponse;
+    ACustomHeaders: IWiRLHeaders): IWiRLResponse;
 
   THttpMethodImplementations = array [TWiRLHttpMethod] of THttpMethodImplementation;
 
@@ -187,31 +187,31 @@ var
 procedure RegisterHttpMethodImplementations;
 begin
   HttpMethodImplementations[TWiRLHttpMethod.GET] :=
-    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse
     begin
       Result := AResource.Client.Get(AResource.URL, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.POST] :=
-    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse
     begin
       Result := AResource.Client.Post(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.PUT] :=
-    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse
     begin
       Result := AResource.Client.Put(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.DELETE] :=
-    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse
     begin
       Result := AResource.Client.Delete(AResource.URL, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.PATCH] :=
-    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: TWiRLHeaders): IWiRLResponse
+    function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse
     begin
       Result := AResource.Client.Patch(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
     end;
@@ -305,7 +305,7 @@ begin
   FPathParamsValues := TStringList.Create;
   FQueryParams := TStringList.Create;
   FContext := TWiRLContextHttp.Create;
-  FHeaders.Clear;
+  FHeaders := TWiRLHeaders.Create;
 end;
 
 function TWiRLClientCustomResource.GetClient: TWiRLClient;
@@ -403,7 +403,7 @@ end;
 
 function TWiRLClientCustomResource.InternalHttpRequest(
   const AHttpMethod: string; ARequestStream, AResponseStream: TStream;
-  ACustomHeaders: TWiRLHeaders): IWiRLResponse;
+  ACustomHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHttpMethodImplementation: THttpMethodImplementation;
 begin
@@ -421,11 +421,11 @@ begin
   end;
 end;
 
-function TWiRLClientCustomResource.CustomHeaders: TWiRLHeaders;
+function TWiRLClientCustomResource.CustomHeaders: IWiRLHeaders;
 var
   LHeader: TWiRLHeader;
 begin
-  Result := [];
+  Result := TWiRLHeaders.Create;
   if Accept <> '' then
     Result.Accept := Accept;
   if ContentType <> '' then
@@ -438,7 +438,7 @@ begin
 end;
 
 procedure TWiRLClientCustomResource.StreamToObject(AObject: TObject;
-  const AHeaders: TWiRLHeaders; AStream: TStream);
+  AHeaders: IWiRLHeaders; AStream: TStream);
 var
   LType: TRttiType;
   LContext: TRttiContext;
@@ -459,7 +459,7 @@ begin
   end;
 end;
 
-function TWiRLClientCustomResource.StreamToObject<T>(const AHeaders: TWiRLHeaders; AStream: TStream): T;
+function TWiRLClientCustomResource.StreamToObject<T>(AHeaders: IWiRLHeaders; AStream: TStream): T;
 var
   LType: TRttiType;
   LContext: TRttiContext;
@@ -482,7 +482,7 @@ begin
   end;
 end;
 
-procedure TWiRLClientCustomResource.ObjectToStream<T>(const AHeaders: TWiRLHeaders;
+procedure TWiRLClientCustomResource.ObjectToStream<T>(AHeaders: IWiRLHeaders;
   AObject: T; AStream: TStream);
 var
   LType: TRttiType;

@@ -64,7 +64,7 @@ type
     FContentMediaType: TMediaType;
     FContentStream: TStream;
     FContentDisposition: TWiRLContentDisposition;
-    FHeaders: TWiRLHeaders;
+    FHeaders: IWiRLHeaders;
     FContentType: string;
     function GetContent: string;
     function GetContentStream: TStream;
@@ -83,7 +83,7 @@ type
     property ContentMediaType: TMediaType read GetContentMediaType;
     property ContentType: string read FContentType write FContentType;
     property Charset: string read GetCharset;
-    property Headers: TWiRLHeaders read FHeaders;
+    property Headers: IWiRLHeaders read FHeaders;
 
     property Content: string read GetContent;
     property RawContent: TBytes read GetRawContent;
@@ -99,7 +99,7 @@ type
     FPreamble: string;
     function GetPart(const AName: string): TWiRLFormDataPart;
     procedure Parse(AStream: TStream);
-    function AddPart(AHeaders: TWiRLHeaders; const ABody: string): TWiRLFormDataPart;
+    function AddPart(AHeaders: IWiRLHeaders; const ABody: string): TWiRLFormDataPart;
   public
     constructor Create(AStream: TStream; const AMIMEBoundary: string);
     destructor Destroy; override;
@@ -171,6 +171,7 @@ begin
   inherited;
   FContentStream := TMemoryStream.Create;
   FContentDisposition := TWiRLContentDisposition.Create('');
+  FHeaders := TWiRLHeaders.Create;
 end;
 
 destructor TWiRLFormDataPart.Destroy;
@@ -232,36 +233,41 @@ end;
 
 { TWiRLFormDataMultiPart }
 
-function TWiRLFormDataMultiPart.AddPart(AHeaders: TWiRLHeaders; const ABody: string): TWiRLFormDataPart;
+function TWiRLFormDataMultiPart.AddPart(AHeaders: IWiRLHeaders; const ABody: string): TWiRLFormDataPart;
 var
   LRawBody: TBytes;
 begin
   Result := TWiRLFormDataPart.Create;
-  Result.FHeaders := AHeaders;
-  Result.FContentDisposition.Parse(AHeaders.Values['Content-Disposition']);
-  Result.FContentTransferEncoding := AHeaders.Values['Content-Transfer-Encoding'];
-  Result.FContentType := AHeaders.ContentType;
+  try
+    Result.FHeaders.Assign(AHeaders);
+    Result.FContentDisposition.Parse(AHeaders.Values['Content-Disposition']);
+    Result.FContentTransferEncoding := AHeaders.Values['Content-Transfer-Encoding'];
+    Result.FContentType := AHeaders.ContentType;
 
-  if Result.ContentMediaType.MediaType = TMediaType.APPLICATION_OCTET_STREAM then
-  begin
-    if (Result.FContentTransferEncoding = '') or (CompareText(Result.FContentTransferEncoding, 'BINARY') = 0) then
+    if Result.ContentMediaType.MediaType = TMediaType.APPLICATION_OCTET_STREAM then
     begin
-      LRawBody := TEncoding.ANSI.GetBytes(ABody);
-    end
-    else if CompareText(Result.FContentTransferEncoding, 'BASE64') = 0 then
-    begin
-      LRawBody := TNetEncoding.Base64.DecodeStringToBytes(ABody);
+      if (Result.FContentTransferEncoding = '') or (CompareText(Result.FContentTransferEncoding, 'BINARY') = 0) then
+      begin
+        LRawBody := TEncoding.ANSI.GetBytes(ABody);
+      end
+      else if CompareText(Result.FContentTransferEncoding, 'BASE64') = 0 then
+      begin
+        LRawBody := TNetEncoding.Base64.DecodeStringToBytes(ABody);
+      end
+      else
+        raise EWiRLException.CreateFmt('[%s] Encoding not supported', [Result.FContentTransferEncoding]);
     end
     else
-      raise EWiRLException.CreateFmt('[%s] Encoding not supported', [Result.FContentTransferEncoding]);
-  end
-  else
-  begin
-    LRawBody := TEncoding.ANSI.GetBytes(ABody);
+    begin
+      LRawBody := TEncoding.ANSI.GetBytes(ABody);
+    end;
+    Result.FContentStream.WriteData(LRawBody, Length(LRawBody));
+    Result.FContentStream.Position := 0;
+    FFormDataList.Add(Result);
+  except
+    Result.Free;
+    raise;
   end;
-  Result.FContentStream.WriteData(LRawBody, Length(LRawBody));
-  Result.FContentStream.Position := 0;
-  FFormDataList.Add(Result);
 end;
 
 constructor TWiRLFormDataMultiPart.Create(AStream: TStream; const AMIMEBoundary: string);
@@ -303,7 +309,7 @@ type
 var
   LStreamReader: TMimeStreamReader;
   LLine, LBody: string;
-  LHeaders: TWiRLHeaders;
+  LHeaders: IWiRLHeaders;
   LLastLineBreak: string;
   LSearchStatus: TPartSearchStatus;
 
@@ -329,7 +335,7 @@ begin
   LLastLineBreak := '';
   LStreamReader := TMimeStreamReader.Create(AStream, TEncoding.ANSI);
   try
-    LHeaders.Clear;
+    LHeaders := TWiRLHeaders.Create;
     while not LStreamReader.EndOfStream do
     begin
       LLine := LStreamReader.ReadLine;

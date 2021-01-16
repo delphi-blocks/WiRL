@@ -54,7 +54,8 @@ uses
   WiRL.Tests.Mock.Resources.Convert in '..\Mock\WiRL.Tests.Mock.Resources.Convert.pas',
   WiRL.Tests.Framework.ContextInjection in 'Source\WiRL.Tests.Framework.ContextInjection.pas',
   WiRL.Tests.Mock.Resources.ContextInjection in '..\Mock\WiRL.Tests.Mock.Resources.ContextInjection.pas',
-  WiRL.Tests.Mock.InjectionFactories in '..\Mock\WiRL.Tests.Mock.InjectionFactories.pas';
+  WiRL.Tests.Mock.InjectionFactories in '..\Mock\WiRL.Tests.Mock.InjectionFactories.pas',
+  WiRL.Tests.Framework.MultiParts in 'Source\WiRL.Tests.Framework.MultiParts.pas';
 
 var
   runner : ITestRunner;

@@ -41,7 +41,7 @@ type
     ///   Write a type to an HTTP message (body)
     /// </summary>
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; const AHeaders: TWiRLHeaders; AContentStream: TStream);
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
   end;
 
   TIsWritableFunction = reference to function(AType: TRttiType;

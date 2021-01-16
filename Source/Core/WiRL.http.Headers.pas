@@ -12,10 +12,10 @@ unit WiRL.http.Headers;
 interface
 
 uses
-  System.Classes, System.SysUtils;
+  System.Classes, System.SysUtils, Generics.Collections;
 
 type
-  TWiRLHeader = record
+  TWiRLHeader = class(TObject)
   public
     const ACCEPT = 'Accept';
     const ACCEPT_LANGUAGE = 'Accept-Language';
@@ -38,8 +38,132 @@ type
     constructor Create(const AName, AValue: string);
   end;
 
-  TWiRLHeaders = TArray<TWiRLHeader>;
+  IWiRLHeaders = interface
+  ['{090D3CBF-D3FE-49B5-BB57-7DDD7271E765}']
+    function GetValue(const AName: string): string;
+    procedure SetValue(const AName, AValue: string);
+    function GetAccept: string;
+    function GetAcceptCharSet: string;
+    function GetAcceptEncoding: string;
+    function GetAcceptLanguage: string;
+    function GetUserAgent: string;
+    function GetContentType: string;
+    function GetAuthorization: string;
+    function GetAllow: string;
+    function GetConnection: string;
+    function GetContentEncoding: string;
+    function GetContentLanguage: string;
+    function GetContentLength: Int64;
+    function GetLocation: string;
+    function GetWWWAuthenticate: string;
+    procedure SetAccept(const AValue: string);
+    procedure SetAcceptCharSet(const AValue: string);
+    procedure SetAcceptEncoding(const AValue: string);
+    procedure SetAcceptLanguage(const AValue: string);
+    procedure SetAuthorization(const AValue: string);
+    procedure SetContentType(const AValue: string);
+    procedure SetUserAgent(const AValue: string);
+    procedure SetAllow(const AValue: string);
+    procedure SetConnection(const AValue: string);
+    procedure SetContentEncoding(const AValue: string);
+    procedure SetContentLanguage(const AValue: string);
+    procedure SetContentLength(const AValue: Int64);
+    procedure SetLocation(const AValue: string);
+    procedure SetWWWAuthenticate(const AValue: string);
 
+    procedure Clear;
+    procedure AddHeader(AHeader: TWiRLHeader);
+    function GetEnumerator: TEnumerator<TWiRLHeader>;
+    property Values[const AName: string]: string read GetValue write SetValue;
+    procedure Assign(AHeaders: IWiRLHeaders);
+
+    /// <summary>Media type(s) that is/are acceptable for the response</summary>
+    property Accept: string read GetAccept write SetAccept;
+    /// <summary>Character sets that are acceptable</summary>
+    property AcceptCharSet: string read GetAcceptCharSet write SetAcceptCharSet;
+    /// <summary>List of acceptable encodings</summary>
+    property AcceptEncoding: string read GetAcceptEncoding write SetAcceptEncoding;
+    /// <summary>List of acceptable human languages for response</summary>
+    property AcceptLanguage: string read GetAcceptLanguage write SetAcceptLanguage;
+    /// <summary>The user agent string of the user agent</summary>
+    property UserAgent: string read GetUserAgent write SetUserAgent;
+    /// <summary>The MIME type of this content</summary>
+    property ContentType: string read GetContentType write SetContentType;
+    /// <summary>Authentication credentials for HTTP authentication</summary>
+    property Authorization: string read GetAuthorization write SetAuthorization;
+    /// <summary>Valid methods for a specified resource. To be used for a 405 Method not allowed</summary>
+    property Allow: string read GetAllow write SetAllow;
+    /// <summary>Control options for the current connection and list of hop-by-hop response fields</summary>
+    property Connection: string read GetConnection write SetConnection;
+    /// <summary>The type of encoding used on the data</summary>
+    property ContentEncoding: string read GetContentEncoding write SetContentEncoding;
+    /// <summary>The natural language or languages of the intended audience for the enclosed content</summary>
+    property ContentLanguage: string read GetContentLanguage write SetContentLanguage;
+    /// <summary>The length of the response body in octets (8-bit bytes)</summary>
+    property ContentLength: Int64 read GetContentLength write SetContentLength;
+    /// <summary>Used in redirection, or when a new resource has been created</summary>
+    property Location: string read GetLocation write SetLocation;
+    /// <summary>Indicates the authentication scheme that should be used to access the requested entity</summary>
+    property WWWAuthenticate: string read GetWWWAuthenticate write SetWWWAuthenticate;
+  end;
+
+  TWiRLHeaders = class(TObjectList<TWiRLHeader>, IWiRLHeaders)
+  private
+    [Volatile] FRefCount: Integer;
+    function FindHeader(const AName: string): TWiRLHeader;
+
+    { IWiRLHeader }
+    function GetAccept: string;
+    function GetAcceptCharSet: string;
+    function GetAcceptEncoding: string;
+    function GetAcceptLanguage: string;
+    function GetAllow: string;
+    function GetAuthorization: string;
+    function GetConnection: string;
+    function GetContentEncoding: string;
+    function GetContentLanguage: string;
+    function GetContentLength: Int64;
+    function GetContentType: string;
+    function GetLocation: string;
+    function GetUserAgent: string;
+    function GetValue(const AName: string): string;
+    function GetWWWAuthenticate: string;
+    procedure SetAccept(const AValue: string);
+    procedure SetAcceptCharSet(const AValue: string);
+    procedure SetAcceptEncoding(const AValue: string);
+    procedure SetAcceptLanguage(const AValue: string);
+    procedure SetAllow(const AValue: string);
+    procedure SetAuthorization(const AValue: string);
+    procedure SetConnection(const AValue: string);
+    procedure SetContentEncoding(const AValue: string);
+    procedure SetContentLanguage(const AValue: string);
+    procedure SetContentLength(const AValue: Int64);
+    procedure SetContentType(const AValue: string);
+    procedure SetLocation(const AValue: string);
+    procedure SetUserAgent(const AValue: string);
+    procedure SetValue(const AName, AValue: string);
+    procedure SetWWWAuthenticate(const AValue: string);
+    procedure AddHeader(AHeader: TWiRLHeader);
+    procedure Assign(AHeaders: IWiRLHeaders);
+
+    { IInterface }
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
+
+
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+    function GetEnumerator: TEnumerator<TWiRLHeader>; reintroduce;
+
+    constructor Create;
+  public
+    class function NewInstance: TObject; override;
+    class function FromArray(AHeaders: TArray<TWiRLHeader>): IWiRLHeaders;
+  end;
+
+  (*
   TWiRLHeadersHelper = record helper for TWiRLHeaders
   private
     function GetValue(const AName: string): string;
@@ -105,6 +229,7 @@ type
     /// <summary>Indicates the authentication scheme that should be used to access the requested entity</summary>
     property WWWAuthenticate: string read GetWWWAuthenticate write SetWWWAuthenticate;
   end;
+  *)
 
 implementation
 
@@ -112,180 +237,272 @@ implementation
 
 constructor TWiRLHeader.Create(const AName, AValue: string);
 begin
+  inherited Create;
   Name := AName;
   Value := AValue;
 end;
 
-{ TWiRLHeadersHelper }
+{ TWiRLHeaders }
 
-procedure TWiRLHeadersHelper.Clear;
+procedure TWiRLHeaders.AddHeader(AHeader: TWiRLHeader);
+var
+  LHeader: TWiRLHeader;
 begin
-  SetLength(Self, 0);
+  LHeader := FindHeader(AHeader.Name);
+  if Assigned(LHeader) then
+  begin
+    LHeader.Value := AHeader.Value;
+    AHeader.Free;
+  end
+  else
+    Add(AHeader);
 end;
 
-function TWiRLHeadersHelper.GetAccept: string;
+procedure TWiRLHeaders.AfterConstruction;
+begin
+  inherited;
+  AtomicDecrement(FRefCount);
+end;
+
+procedure TWiRLHeaders.Assign(AHeaders: IWiRLHeaders);
+var
+  LHeader: TWiRLHeader;
+begin
+  Clear;
+  for LHeader in AHeaders do
+  begin
+    AddHeader(TWiRLHeader.Create(LHeader.Name, LHeader.Value));
+  end;
+end;
+
+procedure TWiRLHeaders.BeforeDestruction;
+begin
+  inherited;
+  if FRefCount <> 0 then
+    System.Error(reInvalidPtr);
+end;
+
+constructor TWiRLHeaders.Create;
+begin
+  inherited Create(True);
+end;
+
+class function TWiRLHeaders.FromArray(
+  AHeaders: TArray<TWiRLHeader>): IWiRLHeaders;
+var
+  LHeader: TWiRLHeader;
+begin
+  Result := TWiRLHeaders.Create;
+  for LHeader in AHeaders do
+    Result.AddHeader(LHeader);
+end;
+
+function TWiRLHeaders.GetAccept: string;
 begin
   Result := GetValue(TWiRLHeader.ACCEPT);
 end;
 
-function TWiRLHeadersHelper.GetAcceptCharSet: string;
+function TWiRLHeaders.GetAcceptCharSet: string;
 begin
   Result := GetValue(TWiRLHeader.ACCEPT_CHARSET);
 end;
 
-function TWiRLHeadersHelper.GetAcceptEncoding: string;
+function TWiRLHeaders.GetAcceptEncoding: string;
 begin
   Result := GetValue(TWiRLHeader.ACCEPT_ENCODING);
 end;
 
-function TWiRLHeadersHelper.GetAcceptLanguage: string;
+function TWiRLHeaders.GetAcceptLanguage: string;
 begin
   Result := GetValue(TWiRLHeader.ACCEPT_LANGUAGE);
 end;
 
-function TWiRLHeadersHelper.GetAllow: string;
+function TWiRLHeaders.GetAllow: string;
 begin
   Result := GetValue(TWiRLHeader.ALLOW);
 end;
 
-function TWiRLHeadersHelper.GetAuthorization: string;
+function TWiRLHeaders.GetAuthorization: string;
 begin
   Result := GetValue(TWiRLHeader.AUTHORIZATION);
 end;
 
-function TWiRLHeadersHelper.GetConnection: string;
+function TWiRLHeaders.GetConnection: string;
 begin
   Result := GetValue(TWiRLHeader.CONNECTION);
 end;
 
-function TWiRLHeadersHelper.GetContentEncoding: string;
+function TWiRLHeaders.GetContentEncoding: string;
 begin
   Result := GetValue(TWiRLHeader.CONTENT_ENCODING);
 end;
 
-function TWiRLHeadersHelper.GetContentLanguage: string;
+function TWiRLHeaders.GetContentLanguage: string;
 begin
   Result := GetValue(TWiRLHeader.CONTENT_LANGUAGE);
 end;
 
-function TWiRLHeadersHelper.GetContentLength: Int64;
+function TWiRLHeaders.GetContentLength: Int64;
 begin
   Result := StrToInt64Def(GetValue(TWiRLHeader.CONTENT_LENGTH), -1);
 end;
 
-function TWiRLHeadersHelper.GetContentType: string;
+function TWiRLHeaders.GetContentType: string;
 begin
   Result := GetValue(TWiRLHeader.CONTENT_TYPE);
 end;
 
-function TWiRLHeadersHelper.GetLocation: string;
+function TWiRLHeaders.GetEnumerator: TEnumerator<TWiRLHeader>;
+begin
+  Result := inherited GetEnumerator;
+end;
+
+function TWiRLHeaders.FindHeader(const AName: string): TWiRLHeader;
+var
+  LHeader: TWiRLHeader;
+begin
+  Result := nil;
+  for LHeader in Self do
+    if LHeader.Name = AName then
+      Exit(LHeader);
+end;
+
+function TWiRLHeaders.GetLocation: string;
 begin
   Result := GetValue(TWiRLHeader.LOCATION);
 end;
 
-function TWiRLHeadersHelper.GetUserAgent: string;
+function TWiRLHeaders.GetUserAgent: string;
 begin
   Result := GetValue(TWiRLHeader.USER_AGENT);
 end;
 
-function TWiRLHeadersHelper.GetValue(const AName: string): string;
+function TWiRLHeaders.GetValue(const AName: string): string;
 var
   LHeader: TWiRLHeader;
 begin
   Result := '';
-  for LHeader in Self do
-    if LHeader.Name = AName then
+  LHeader := FindHeader(AName);
+  if Assigned(LHeader) then
       Exit(LHeader.Value);
 end;
 
-function TWiRLHeadersHelper.GetWWWAuthenticate: string;
+function TWiRLHeaders.GetWWWAuthenticate: string;
 begin
   Result := GetValue(TWiRLHeader.WWW_AUTHENTICATE);
 end;
 
-procedure TWiRLHeadersHelper.SetAccept(const AValue: string);
+class function TWiRLHeaders.NewInstance: TObject;
+begin
+  Result := inherited NewInstance;
+  TWiRLHeaders(Result).FRefCount := 1;
+end;
+
+function TWiRLHeaders.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+begin
+  if GetInterface(IID, Obj) then
+    Result := 0
+  else
+    Result := E_NOINTERFACE;
+end;
+
+procedure TWiRLHeaders.SetAccept(const AValue: string);
 begin
   SetValue(TWiRLHeader.ACCEPT, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetAcceptCharSet(const AValue: string);
+procedure TWiRLHeaders.SetAcceptCharSet(const AValue: string);
 begin
   SetValue(TWiRLHeader.ACCEPT_CHARSET, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetAcceptEncoding(const AValue: string);
+procedure TWiRLHeaders.SetAcceptEncoding(const AValue: string);
 begin
   SetValue(TWiRLHeader.ACCEPT_ENCODING, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetAcceptLanguage(const AValue: string);
+procedure TWiRLHeaders.SetAcceptLanguage(const AValue: string);
 begin
   SetValue(TWiRLHeader.ACCEPT_LANGUAGE, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetAllow(const AValue: string);
+procedure TWiRLHeaders.SetAllow(const AValue: string);
 begin
   SetValue(TWiRLHeader.ALLOW, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetAuthorization(const AValue: string);
+procedure TWiRLHeaders.SetAuthorization(const AValue: string);
 begin
   SetValue(TWiRLHeader.AUTHORIZATION, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetConnection(const AValue: string);
+procedure TWiRLHeaders.SetConnection(const AValue: string);
 begin
   SetValue(TWiRLHeader.CONNECTION, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetContentEncoding(const AValue: string);
+procedure TWiRLHeaders.SetContentEncoding(const AValue: string);
 begin
   SetValue(TWiRLHeader.CONTENT_ENCODING, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetContentLanguage(const AValue: string);
+procedure TWiRLHeaders.SetContentLanguage(const AValue: string);
 begin
   SetValue(TWiRLHeader.CONTENT_LANGUAGE, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetContentLength(const AValue: Int64);
+procedure TWiRLHeaders.SetContentLength(const AValue: Int64);
 begin
-  SetValue(TWiRLHeader.CONTENT_LANGUAGE, IntToStr(AValue));
+  SetValue(TWiRLHeader.CONTENT_LENGTH, IntToStr(AValue));
 end;
 
-procedure TWiRLHeadersHelper.SetContentType(const AValue: string);
+procedure TWiRLHeaders.SetContentType(const AValue: string);
 begin
   SetValue(TWiRLHeader.CONTENT_TYPE, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetLocation(const AValue: string);
+procedure TWiRLHeaders.SetLocation(const AValue: string);
 begin
   SetValue(TWiRLHeader.LOCATION, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetUserAgent(const AValue: string);
+procedure TWiRLHeaders.SetUserAgent(const AValue: string);
 begin
   SetValue(TWiRLHeader.USER_AGENT, AValue);
 end;
 
-procedure TWiRLHeadersHelper.SetValue(const AName, AValue: string);
+procedure TWiRLHeaders.SetValue(const AName, AValue: string);
 var
   LIndex: Integer;
 begin
-  for LIndex := Low(Self) to High(Self) do
+  for LIndex := 0 to Count - 1 do
   begin
-    if Self[LIndex].Name = AName then
+    if Items[LIndex].Name = AName then
     begin
-      Self[LIndex].Value := AValue;
+      Items[LIndex].Value := AValue;
       Exit;
     end;
   end;
-  Self := Self + [TWiRLHeader.Create(AName, AValue)];
+  Add(TWiRLHeader.Create(AName, AValue));
 end;
 
-procedure TWiRLHeadersHelper.SetWWWAuthenticate(const AValue: string);
+procedure TWiRLHeaders.SetWWWAuthenticate(const AValue: string);
 begin
   SetValue(TWiRLHeader.WWW_AUTHENTICATE, AValue);
+end;
+
+function TWiRLHeaders._AddRef: Integer;
+begin
+  Result := AtomicIncrement(FRefCount);
+end;
+
+function TWiRLHeaders._Release: Integer;
+begin
+  Result := AtomicDecrement(FRefCount);
+  if Result = 0 then
+  begin
+    Destroy;
+  end;
 end;
 
 end.
