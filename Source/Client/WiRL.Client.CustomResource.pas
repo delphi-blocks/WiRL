@@ -61,25 +61,25 @@ type
     function GetContentType: string;
 
     procedure BeforeGET; virtual;
-    procedure AfterGET; virtual;
+    procedure AfterGET(AResponse: IWiRLResponse); virtual;
 
     procedure BeforePOST(AContent: TMemoryStream); virtual;
-    procedure AfterPOST; virtual;
+    procedure AfterPOST(AResponse: IWiRLResponse); virtual;
 
     procedure BeforePUT(AContent: TMemoryStream); virtual;
-    procedure AfterPUT; virtual;
+    procedure AfterPUT(AResponse: IWiRLResponse); virtual;
 
     procedure BeforePATCH(AContent: TMemoryStream); virtual;
-    procedure AfterPATCH; virtual;
+    procedure AfterPATCH(AResponse: IWiRLResponse); virtual;
 
     procedure BeforeHEAD; virtual;
     procedure AfterHEAD; virtual;
 
     procedure BeforeDELETE; virtual;
-    procedure AfterDELETE; virtual;
+    procedure AfterDELETE(AResponse: IWiRLResponse); virtual;
 
     procedure BeforeOPTIONS; virtual;
-    procedure AfterOPTIONS; virtual;
+    procedure AfterOPTIONS(AResponse: IWiRLResponse); virtual;
 
     procedure InitHttpRequest; virtual;
     function InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse; virtual;
@@ -220,12 +220,12 @@ end;
 
 { TWiRLClientCustomResource }
 
-procedure TWiRLClientCustomResource.AfterDELETE;
+procedure TWiRLClientCustomResource.AfterDELETE(AResponse: IWiRLResponse);
 begin
 
 end;
 
-procedure TWiRLClientCustomResource.AfterGET;
+procedure TWiRLClientCustomResource.AfterGET(AResponse: IWiRLResponse);
 begin
 
 end;
@@ -235,22 +235,22 @@ begin
 
 end;
 
-procedure TWiRLClientCustomResource.AfterOPTIONS;
+procedure TWiRLClientCustomResource.AfterOPTIONS(AResponse: IWiRLResponse);
 begin
 
 end;
 
-procedure TWiRLClientCustomResource.AfterPATCH;
+procedure TWiRLClientCustomResource.AfterPATCH(AResponse: IWiRLResponse);
 begin
 
 end;
 
-procedure TWiRLClientCustomResource.AfterPOST;
+procedure TWiRLClientCustomResource.AfterPOST(AResponse: IWiRLResponse);
 begin
 
 end;
 
-procedure TWiRLClientCustomResource.AfterPUT;
+procedure TWiRLClientCustomResource.AfterPUT(AResponse: IWiRLResponse);
 begin
 
 end;
@@ -614,6 +614,7 @@ procedure TWiRLClientCustomResource.OPTIONS(const ABeforeExecute: TWiRLClientPro
   const AOnException: TWiRLClientExceptionProc = nil);
 var
   LResponseStream: TMemoryStream;
+  LResponse: IWiRLResponse;
 begin
   LResponseStream := TMemoryStream.Create;
   try
@@ -623,9 +624,9 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-      Client.Options(URL, LResponseStream, CustomHeaders);
+      LResponse := Client.Options(URL, LResponseStream, CustomHeaders);
 
-      AfterOPTIONS();
+      AfterOPTIONS(LResponse);
 
       if Assigned(AAfterExecute) then
         AAfterExecute(LResponseStream);
@@ -647,6 +648,7 @@ procedure TWiRLClientCustomResource.DELETE(const ABeforeExecute,
   AAfterExecute: TWiRLClientProc; const AOnException: TWiRLClientExceptionProc);
 var
   LResponseStream: TMemoryStream;
+  LResponse: IWiRLResponse;
 begin
   LResponseStream := TMemoryStream.Create;
   try
@@ -656,9 +658,9 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-      Client.Delete(URL, LResponseStream, CustomHeaders);
+      LResponse := Client.Delete(URL, LResponseStream, CustomHeaders);
 
-      AfterDELETE();
+      AfterDELETE(LResponse);
 
       if Assigned(AAfterExecute) then
         AAfterExecute();
@@ -689,6 +691,7 @@ procedure TWiRLClientCustomResource.GET(const ABeforeExecute: TWiRLCLientProc;
   const AOnException: TWiRLClientExceptionProc);
 var
   LResponseStream: TMemoryStream;
+  LResponse: IWiRLResponse;
 begin
   LResponseStream := TMemoryStream.Create;
   try
@@ -698,9 +701,9 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-        Client.Get(URL, LResponseStream, CustomHeaders);
+        LResponse := Client.Get(URL, LResponseStream, CustomHeaders);
 
-        AfterGET();
+        AfterGET(LResponse);
 
         if Assigned(AAfterExecute) then
           AAfterExecute(LResponseStream);
@@ -786,6 +789,7 @@ procedure TWiRLClientCustomResource.PATCH(const ABeforeExecute: TProc<TMemoryStr
 var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;
+  LResponse: IWiRLResponse;
 begin
   LContent := TMemoryStream.Create;
   try
@@ -797,9 +801,9 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Patch(URL, LContent, LResponseStream, CustomHeaders);
+        LResponse := Client.Patch(URL, LContent, LResponseStream, CustomHeaders);
 
-        AfterPATCH();
+        AfterPATCH(LResponse);
 
         if Assigned(AAfterExecute) then
           AAfterExecute(LResponseStream);
@@ -827,6 +831,7 @@ procedure TWiRLClientCustomResource.POST(
 var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;
+  LResponse: IWiRLResponse;
 begin
   LContent := TMemoryStream.Create;
   try
@@ -838,9 +843,9 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Post(URL, LContent, LResponseStream, CustomHeaders);
+        LResponse := Client.Post(URL, LContent, LResponseStream, CustomHeaders);
 
-        AfterPOST();
+        AfterPOST(LResponse);
 
         if Assigned(AAfterExecute) then
           AAfterExecute(LResponseStream);
@@ -887,6 +892,7 @@ procedure TWiRLClientCustomResource.PUT(const ABeforeExecute: TProc<TMemoryStrea
 var
   LResponseStream: TMemoryStream;
   LContent: TMemoryStream;
+  LResponse: IWiRLResponse;
 begin
   LContent := TMemoryStream.Create;
   try
@@ -898,9 +904,9 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        Client.Put(URL, LContent, LResponseStream, CustomHeaders);
+        LResponse := Client.Put(URL, LContent, LResponseStream, CustomHeaders);
 
-        AfterPUT();
+        AfterPUT(LResponse);
 
         if Assigned(AAfterExecute) then
           AAfterExecute(LResponseStream);

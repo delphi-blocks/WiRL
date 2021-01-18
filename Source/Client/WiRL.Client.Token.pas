@@ -17,6 +17,7 @@ uses
   System.SysUtils, System.Classes,
   WiRL.Core.JSON,
   WiRL.Client.Resource,
+  WiRL.http.Client.Interfaces,
   WiRL.http.Client;
 
 type
@@ -32,12 +33,12 @@ type
     FUsername: string;
     FUserRoles: TStringList;
   protected
-    procedure AfterGET(); override;
+    procedure AfterGET(AResponse: IWiRLResponse); override;
 
     procedure BeforePOST(AContent: TMemoryStream); override;
-    procedure AfterPOST(); override;
+    procedure AfterPOST(AResponse: IWiRLResponse); override;
 
-    procedure AfterDELETE; override;
+    procedure AfterDELETE(AResponse: IWiRLResponse); override;
 
     procedure ParseData; virtual;
   public
@@ -57,31 +58,31 @@ uses
 
 { TWiRLClientToken }
 
-procedure TWiRLClientToken.AfterDELETE();
+procedure TWiRLClientToken.AfterDELETE(AResponse: IWiRLResponse);
 begin
   inherited;
   if Assigned(FData) then
     FData.Free;
-  FData := StreamToJSONValue(Client.Response.ContentStream) as TJSONObject;
+  FData := StreamToJSONValue(AResponse.ContentStream) as TJSONObject;
   ParseData;
 end;
 
-procedure TWiRLClientToken.AfterGET();
+procedure TWiRLClientToken.AfterGET(AResponse: IWiRLResponse);
 begin
   inherited;
   if Assigned(FData) then
     FData.Free;
-  FData := StreamToJSONValue(Client.Response.ContentStream) as TJSONObject;
+  FData := StreamToJSONValue(AResponse.ContentStream) as TJSONObject;
   ParseData;
 end;
 
-procedure TWiRLClientToken.AfterPOST();
+procedure TWiRLClientToken.AfterPOST(AResponse: IWiRLResponse);
 begin
   inherited;
 
   if Assigned(FData) then
     FData.Free;
-  FData := StreamToJSONValue(Client.Response.ContentStream) as TJSONObject;
+  FData := StreamToJSONValue(AResponse.ContentStream) as TJSONObject;
   ParseData;
 end;
 

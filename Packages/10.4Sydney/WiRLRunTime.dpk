@@ -119,7 +119,10 @@ contains
   WiRL.Configuration.Core in '..\..\Source\Core\WiRL.Configuration.Core.pas',
   WiRL.Configuration.JWT in '..\..\Source\Core\WiRL.Configuration.JWT.pas',
   WiRL.Configuration.Neon in '..\..\Source\Core\WiRL.Configuration.Neon.pas',
-  WiRL.Core.Converter in '..\..\Source\Core\WiRL.Core.Converter.pas';
+  WiRL.Core.Converter in '..\..\Source\Core\WiRL.Core.Converter.pas',
+  WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
+  WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
+  WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas';
 
 end.
 

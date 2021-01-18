@@ -17,6 +17,7 @@ uses
   System.SysUtils, System.Classes, 
   WiRL.Core.JSON, 
   WiRL.Client.Resource, 
+  WiRL.http.Client.Interfaces,
   WiRL.http.Client;
 
 type
@@ -29,8 +30,8 @@ type
   private
     FResponse: TJSONValue;
   protected
-    procedure AfterGET(); override;
-    procedure AfterPOST(); override;
+    procedure AfterGET(AResponse: IWiRLResponse); override;
+    procedure AfterPOST(AResponse: IWiRLResponse); override;
     function GetResponseAsString: string; virtual;
   public
     constructor Create(AOwner: TComponent); override;
@@ -48,20 +49,20 @@ uses
 
 { TWiRLClientResourceJSON }
 
-procedure TWiRLClientResourceJSON.AfterGET();
+procedure TWiRLClientResourceJSON.AfterGET(AResponse: IWiRLResponse);
 begin
   inherited;
   if Assigned(FResponse) then
     FResponse.Free;
-  FResponse := StreamToJSONValue(Client.Response.ContentStream);
+  FResponse := StreamToJSONValue(AResponse.ContentStream);
 end;
 
-procedure TWiRLClientResourceJSON.AfterPOST;
+procedure TWiRLClientResourceJSON.AfterPOST(AResponse: IWiRLResponse);
 begin
   inherited;
   if Assigned(FResponse) then
     FResponse.Free;
-  FResponse := StreamToJSONValue(Client.Response.ContentStream);
+  FResponse := StreamToJSONValue(AResponse.ContentStream);
 end;
 
 constructor TWiRLClientResourceJSON.Create(AOwner: TComponent);

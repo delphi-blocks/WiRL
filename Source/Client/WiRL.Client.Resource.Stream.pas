@@ -15,7 +15,8 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  WiRL.Client.Resource, 
+  WiRL.Client.Resource,
+  WiRL.http.Client.Interfaces,
   WiRL.http.Client;
 
 type
@@ -28,8 +29,8 @@ type
   private
     FResponse: TStream;
   protected
-    procedure AfterGET(); override;
-    procedure AfterPOST(); override;
+    procedure AfterGET(AResponse: IWiRLResponse); override;
+    procedure AfterPOST(AResponse: IWiRLResponse); override;
     function GetResponseSize: Int64; virtual;
 
   public
@@ -48,16 +49,16 @@ uses
 
 { TWiRLClientResourceStream }
 
-procedure TWiRLClientResourceStream.AfterGET();
+procedure TWiRLClientResourceStream.AfterGET(AResponse: IWiRLResponse);
 begin
   inherited;
-  CopyStream(Client.Response.ContentStream, FResponse);
+  CopyStream(AResponse.ContentStream, FResponse);
 end;
 
-procedure TWiRLClientResourceStream.AfterPOST;
+procedure TWiRLClientResourceStream.AfterPOST(AResponse: IWiRLResponse);
 begin
   inherited;
-  CopyStream(Client.Response.ContentStream, FResponse);
+  CopyStream(AResponse.ContentStream, FResponse);
 end;
 
 constructor TWiRLClientResourceStream.Create(AOwner: TComponent);

@@ -45,8 +45,8 @@ type
     Edit4: TEdit;
     Label4: TLabel;
     btnPost: TButton;
-    Button1: TButton;
-    Button2: TButton;
+    BtnGenericGET: TButton;
+    BtnGenericPOST: TButton;
     Button3: TButton;
     StringGrid1: TStringGrid;
     FDMemTable1: TFDMemTable;
@@ -59,8 +59,8 @@ type
     procedure btnEchoClick(Sender: TObject);
     procedure btnReverseClick(Sender: TObject);
     procedure btnPostClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
+    procedure BtnGenericGETClick(Sender: TObject);
+    procedure BtnGenericPOSTClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
   private
@@ -93,7 +93,7 @@ begin
   Edit4.Text := MainDataModule.ReverseString(Edit3.Text);
 end;
 
-procedure TMainForm.Button1Click(Sender: TObject);
+procedure TMainForm.BtnGenericGETClick(Sender: TObject);
 var
   LPerson: TPerson;
 begin
@@ -109,7 +109,7 @@ begin
   end;
 end;
 
-procedure TMainForm.Button2Click(Sender: TObject);
+procedure TMainForm.BtnGenericPOSTClick(Sender: TObject);
 var
   LOrderProposal: TOrderProposal;
   LOrder: TOrder;

@@ -74,7 +74,7 @@ type
     procedure Clear;
     procedure AddHeader(AHeader: TWiRLHeader);
     function GetEnumerator: TEnumerator<TWiRLHeader>;
-    property Values[const AName: string]: string read GetValue write SetValue;
+    property Values[const AName: string]: string read GetValue write SetValue; default;
     procedure Assign(AHeaders: IWiRLHeaders);
 
     /// <summary>Media type(s) that is/are acceptable for the response</summary>

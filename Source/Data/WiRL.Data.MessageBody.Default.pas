@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti,
   WiRL.Core.Attributes,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Response,
   WiRL.Core.Declarations,
   WiRL.http.Accept.MediaType,
@@ -30,19 +31,19 @@ type
     [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; AHeaderFields: IWiRLHeaders; AContentStream: TStream); override;
   end;
 
   [Produces(TMediaType.APPLICATION_XML)]
   TDataSetWriterXML = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; AHeaderFields: IWiRLHeaders; AContentStream: TStream); override;
   end;
 
   [Produces(TMediaType.TEXT_CSV)]
   TDataSetWriterCSV = class(TMessageBodyWriter)
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; AHeaderFields: IWiRLHeaders; AContentStream: TStream); override;
   end;
 
 implementation
@@ -58,7 +59,7 @@ uses
 { TDataSetWriterXML }
 
 procedure TDataSetWriterXML.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; AHeaderFields: IWiRLHeaders; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
 begin
@@ -76,7 +77,7 @@ end;
 { TArrayDataSetWriter }
 
 procedure TArrayDataSetWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; AHeaderFields: IWiRLHeaders; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
   LResult: TJSONObject;
@@ -104,7 +105,7 @@ end;
 { TDataSetWriterCSV }
 
 procedure TDataSetWriterCSV.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; AHeaderFields: IWiRLHeaders; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
 begin

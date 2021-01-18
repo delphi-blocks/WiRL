@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, System.Rtti,
   WiRL.Rtti.Utils,
   WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Injection;
 
 type

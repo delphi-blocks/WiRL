@@ -14,6 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils,
   DesignEditors,
+  WiRL.http.Client.Interfaces,
   WiRL.Client.CustomResource;
 
 type
@@ -60,7 +61,8 @@ begin
   end;
 
   if (GetKeyState(VK_LSHIFT) < 0) then
-    ShowMessage(CurrentObj.Client.ResponseText);
+    //ShowMessage(LResponse.StatusText);
+    ShowMessage('Done');
 
   Designer.Modified;
 end;

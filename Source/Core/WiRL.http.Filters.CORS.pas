@@ -57,12 +57,12 @@ begin
   LConf := (ARequestContext.Context.Application as TWiRLApplication).GetConfiguration<TWiRLConfigurationCORS>;
 
   // Insert the Access-Control-Allow-Origin headers in every Response
-  ARequestContext.Response.HeaderFields.AddPair('Access-Control-Allow-Origin', LConf.Origin);
+  ARequestContext.Response.Headers.Values['Access-Control-Allow-Origin'] := LConf.Origin;
 
   if SameText(ARequestContext.Request.Method, 'OPTIONS') then
   begin
-    ARequestContext.Response.HeaderFields.AddPair('Access-Control-Allow-Methods', LConf.Methods);
-    ARequestContext.Response.HeaderFields.AddPair('Access-Control-Allow-Headers', LConf.Headers);
+    ARequestContext.Response.Headers.Values['Access-Control-Allow-Methods'] := LConf.Methods;
+    ARequestContext.Response.Headers.Values['Access-Control-Allow-Headers'] := LConf.Headers;
     ARequestContext.Abort();
   end;
 end;

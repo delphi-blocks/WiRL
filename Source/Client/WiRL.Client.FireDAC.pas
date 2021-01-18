@@ -18,6 +18,7 @@ uses
   WiRL.Core.JSON,
   FireDAC.Comp.Client,
   WiRL.Client.Resource,
+  WiRL.http.Client.Interfaces,
   WiRL.http.Client, System.JSON;
 
 type
@@ -57,14 +58,14 @@ type
     FResourceDataSets: TWiRLFDResourceDatasets;
     FJSONResponse: TJSONValue;
 
-    procedure ReadDeltas;
+    procedure ReadDeltas(AResponse: IWiRLResponse);
     procedure WriteDeltas(AContent: TMemoryStream);
   protected
-    procedure AfterGET(); override;
+    procedure AfterGET(AResponse: IWiRLResponse); override;
     procedure BeforePOST(AContent: TMemoryStream); override;
-    procedure AfterPOST(); override;
+    procedure AfterPOST(AResponse: IWiRLResponse); override;
     procedure BeforePUT(AContent: TMemoryStream); override;
-    procedure AfterPUT(); override;
+    procedure AfterPUT(AResponse: IWiRLResponse); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -87,7 +88,7 @@ uses
 
 { TWiRLFDResource }
 
-procedure TWiRLFDResource.AfterGET();
+procedure TWiRLFDResource.AfterGET(AResponse: IWiRLResponse);
 var
   LJSONObj: TJSONObject;
   LDataSets: TFireDACDataSets;
@@ -96,7 +97,7 @@ var
 begin
   inherited;
 
-  LJSONObj := TJSONObject.ParseJSONValue(StreamToString(Client.Response.ContentStream)) as TJSONObject;
+  LJSONObj := TJSONObject.ParseJSONValue(AResponse.Content) as TJSONObject;
 
   LDataSets := TFireDACDataSets.Create;
   try
@@ -147,16 +148,16 @@ begin
   end;
 end;
 
-procedure TWiRLFDResource.AfterPOST();
+procedure TWiRLFDResource.AfterPOST(AResponse: IWiRLResponse);
 begin
   inherited;
-  ReadDeltas;
+  ReadDeltas(AResponse);
 end;
 
-procedure TWiRLFDResource.AfterPUT;
+procedure TWiRLFDResource.AfterPUT(AResponse: IWiRLResponse);
 begin
   inherited;
-  ReadDeltas;
+  ReadDeltas(AResponse);
 end;
 
 procedure TWiRLFDResource.BeforePOST(AContent: TMemoryStream);
@@ -200,9 +201,9 @@ begin
   end;
 end;
 
-procedure TWiRLFDResource.ReadDeltas;
+procedure TWiRLFDResource.ReadDeltas(AResponse: IWiRLResponse);
 begin
-  if Client.LastCmdSuccess then
+  if AResponse.StatusCode < 400 then
     FResourceDataSets.ForEach(
       procedure (AItem: TWiRLFDResourceDatasetsItem)
       begin
@@ -213,7 +214,7 @@ begin
 
   if Assigned(FJSONResponse) then
     FJSONResponse.Free;
-  FJSONResponse := StreamToJSONValue(Client.Response.ContentStream);
+  FJSONResponse := StreamToJSONValue(AResponse.ContentStream);
 end;
 
 procedure TWiRLFDResource.WriteDeltas(AContent: TMemoryStream);

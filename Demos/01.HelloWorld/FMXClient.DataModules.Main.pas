@@ -19,11 +19,11 @@ uses
   WiRL.Client.SubResource.JSON, WiRL.Client.Messaging.Resource,
   WiRL.http.Request, WiRL.http.Response,
   System.JSON, System.Net.HttpClient.Win,
-  Demo.Entities, System.Net.URLClient, System.Net.HttpClient,
-  System.Net.HttpClientComponent, FMX.Types, IdBaseComponent, IdComponent,
-  IdTCPConnection, IdTCPClient, IdHTTP, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  Demo.Entities,
+  System.Net.HttpClientComponent, FMX.Types, FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
-  FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client;
+  FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
+  WiRL.http.Client.Interfaces;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -36,12 +36,8 @@ type
     ReverseStringResource: TWiRLClientSubResource;
     PostExampleResource: TWiRLClientSubResourceJSON;
     PersonResource: TWiRLClientSubResource;
-    WiRLClientResource1: TWiRLClientResource;
-    NetHTTPClient1: TNetHTTPClient;
-    Timer1: TTimer;
-    IdHTTP1: TIdHTTP;
-    procedure WiRLClient1BeforeCommand(ASender: TObject; ARequest: TWiRLRequest);
     procedure DataModuleCreate(Sender: TObject);
+    procedure WiRLClient1BeforeCommand(ASender: TObject; ARequest: IWiRLRequest);
   private
     { Private declarations }
   public
@@ -96,7 +92,7 @@ end;
 
 function TMainDataModule.EchoString(AString: string): string;
 begin
-  EchoStringResource.PathParamsValues.Text := AString;
+  EchoStringResource.PathParamsValues.Values['AString'] := AString;
   Result := EchoStringResource.GETAsString();
 end;
 
@@ -174,14 +170,14 @@ end;
 
 function TMainDataModule.ReverseString(AString: string): string;
 begin
-  ReverseStringResource.PathParamsValues.Text := AString;
+  ReverseStringResource.PathParamsValues.Values['AString'] := AString;
   Result := ReverseStringResource.GETAsString();
 end;
 
 procedure TMainDataModule.WiRLClient1BeforeCommand(ASender: TObject; ARequest:
-    TWiRLRequest);
+    IWiRLRequest);
 begin
-  ARequest.HeaderFields['X-App-Params'] := 'TestCustomHeader';
+  ARequest.Headers['X-App-Params'] := 'TestCustomHeader';
 end;
 
 end.

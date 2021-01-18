@@ -19,7 +19,7 @@ object MainForm: TMainForm
     Size.Width = 779.000000000000000000
     Size.Height = 440.000000000000000000
     Size.PlatformDefault = False
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 1
     TabPosition = PlatformDefault
     Sizes = (
@@ -31,7 +31,7 @@ object MainForm: TMainForm
       CustomIcon = <
         item
         end>
-      IsSelected = False
+      IsSelected = True
       Size.Width = 122.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -69,7 +69,7 @@ object MainForm: TMainForm
       CustomIcon = <
         item
         end>
-      IsSelected = True
+      IsSelected = False
       Size.Width = 131.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -188,27 +188,36 @@ object MainForm: TMainForm
       object btnPost: TButton
         Position.X = 24.000000000000000000
         Position.Y = 120.000000000000000000
+        Size.Width = 97.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
         TabOrder = 2
         Text = 'Post'
         OnClick = btnPostClick
       end
-      object Button1: TButton
-        Position.X = 56.000000000000000000
-        Position.Y = 174.000000000000000000
+      object BtnGenericGET: TButton
+        Position.X = 144.000000000000000000
+        Position.Y = 118.000000000000000000
+        Size.Width = 97.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
         TabOrder = 3
-        Text = 'Button1'
-        OnClick = Button1Click
+        Text = 'Generic GET'
+        OnClick = BtnGenericGETClick
       end
-      object Button2: TButton
-        Position.X = 152.000000000000000000
-        Position.Y = 174.000000000000000000
+      object BtnGenericPOST: TButton
+        Position.X = 264.000000000000000000
+        Position.Y = 118.000000000000000000
+        Size.Width = 97.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
         TabOrder = 4
-        Text = 'Button2'
-        OnClick = Button2Click
+        Text = 'Generic POST'
+        OnClick = BtnGenericPOSTClick
       end
       object Button3: TButton
-        Position.X = 264.000000000000000000
-        Position.Y = 174.000000000000000000
+        Position.X = 312.000000000000000000
+        Position.Y = 158.000000000000000000
         TabOrder = 5
         Text = 'DB GET'
         OnClick = Button3Click
@@ -216,8 +225,8 @@ object MainForm: TMainForm
       object StringGrid1: TStringGrid
         CanFocus = True
         ClipChildren = True
-        Position.X = 56.000000000000000000
-        Position.Y = 214.000000000000000000
+        Position.X = 24.000000000000000000
+        Position.Y = 158.000000000000000000
         Size.Width = 273.000000000000000000
         Size.Height = 155.000000000000000000
         Size.PlatformDefault = False
@@ -226,8 +235,8 @@ object MainForm: TMainForm
         Viewport.Height = 130.000000000000000000
       end
       object Button4: TButton
-        Position.X = 360.000000000000000000
-        Position.Y = 238.000000000000000000
+        Position.X = 312.000000000000000000
+        Position.Y = 198.000000000000000000
         TabOrder = 7
         Text = 'DB POST'
         OnClick = Button4Click
@@ -242,12 +251,12 @@ object MainForm: TMainForm
     UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
     UpdateOptions.CheckRequired = False
     UpdateOptions.AutoCommitUpdates = True
-    Left = 416
-    Top = 336
+    Left = 528
+    Top = 304
   end
   object FDStanStorageJSONLink1: TFDStanStorageJSONLink
-    Left = 432
-    Top = 232
+    Left = 504
+    Top = 216
   end
   object BindSourceDB1: TBindSourceDB
     DataSet = FDMemTable1

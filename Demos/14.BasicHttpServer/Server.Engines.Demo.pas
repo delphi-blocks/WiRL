@@ -17,7 +17,8 @@ uses
   WiRL.http.Server,
   WiRL.http.Engines,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Context;
+  WiRL.Core.Context,
+  WiRL.Core.Context.Server;
 
 type
   TWiRLDemoEngine = class(TWiRLCustomEngine)
