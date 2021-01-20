@@ -39,8 +39,8 @@ type
     procedure ContentType(const AContentType: string);
     procedure Accept(const AAccept: string);
     procedure AcceptLanguage(const AAcceptLanguage: string);
-    procedure QueryParam(const AName, AValue: string);
-    procedure PathParam(const AName, AValue: string);
+    procedure QueryParam(const AName: string; const AValue: TValue);
+    procedure PathParam(const AName: string; const AValue: TValue);
 
     function GetResource: TObject;
 

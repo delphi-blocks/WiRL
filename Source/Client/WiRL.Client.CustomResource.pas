@@ -47,7 +47,7 @@ type
     procedure SetQueryParams(const Value: TStrings);
 
     procedure ContextInjection(AInstance: TObject);
-    function CustomHeaders: IWiRLHeaders;
+    function MergeHeaders(const AHttpMethod: string): IWiRLHeaders;
     function StreamToObject<T>(AHeaders: IWiRLHeaders; AStream: TStream): T; overload;
     procedure StreamToObject(AObject: TObject; AHeaders: IWiRLHeaders; AStream: TStream); overload;
     procedure ObjectToStream<T>(AHeaders: IWiRLHeaders; AObject: T; AStream: TStream); overload;
@@ -82,7 +82,7 @@ type
     procedure AfterOPTIONS(AResponse: IWiRLResponse); virtual;
 
     procedure InitHttpRequest; virtual;
-    function InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse; virtual;
+    function InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream): IWiRLResponse; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -373,7 +373,7 @@ begin
     if Assigned(ABeforeExecute) then
       ABeforeExecute();
 
-    Client.Head(URL, CustomHeaders);
+    InternalHttpRequest('HEAD', nil, nil);
 
     AfterHEAD();
 
@@ -402,8 +402,7 @@ begin
 end;
 
 function TWiRLClientCustomResource.InternalHttpRequest(
-  const AHttpMethod: string; ARequestStream, AResponseStream: TStream;
-  ACustomHeaders: IWiRLHeaders): IWiRLResponse;
+  const AHttpMethod: string; ARequestStream, AResponseStream: TStream): IWiRLResponse;
 var
   LHttpMethodImplementation: THttpMethodImplementation;
 begin
@@ -412,7 +411,7 @@ begin
     raise EWiRLClientException.CreateFmt('Implementation not found for method [%s]', [AHttpMethod]);
 
   try
-    Result := LHttpMethodImplementation(Self, ARequestStream, AResponseStream, ACustomHeaders);
+    Result := LHttpMethodImplementation(Self, ARequestStream, AResponseStream, MergeHeaders(AHttpMethod));
   except
     on E: EWiRLClientProtocolException do
     begin
@@ -421,14 +420,23 @@ begin
   end;
 end;
 
-function TWiRLClientCustomResource.CustomHeaders: IWiRLHeaders;
+function TWiRLClientCustomResource.MergeHeaders(const AHttpMethod: string): IWiRLHeaders;
+
+  function HasResponseBody(const AHttpMethod: string): Boolean;
+  begin
+    if (AHttpMethod = 'POST') or (AHttpMethod = 'PUT') then
+      Result := True
+    else
+      Result := False;
+  end;
+
 var
   LHeader: TWiRLHeader;
 begin
   Result := TWiRLHeaders.Create;
   if Accept <> '' then
     Result.Accept := Accept;
-  if ContentType <> '' then
+  if HasResponseBody(AHttpMethod) and (ContentType <> '') then
     Result.ContentType := ContentType;
 
   for LHeader in FHeaders do
@@ -531,8 +539,8 @@ begin
   try
     LResponseStream := TGCMemoryStream.Create;
     try
-      ObjectToStream<T>(CustomHeaders, ARequestEntity, LRequestStream);
-      LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream, CustomHeaders);
+      ObjectToStream<T>(MergeHeaders(AHttpMethod), ARequestEntity, LRequestStream);
+      LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
       Result := StreamToObject<V>(LResponse.Headers, LResponseStream);
     finally
       if not SameObject<V>(Result, LResponseStream) then
@@ -555,8 +563,8 @@ begin
   try
     LResponseStream := TGCMemoryStream.Create;
     try
-      ObjectToStream<T>(CustomHeaders, ARequestEntity, LRequestStream);
-      LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream, CustomHeaders);
+      ObjectToStream<T>(MergeHeaders(AHttpMethod), ARequestEntity, LRequestStream);
+      LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
       StreamToObject(AResponseEntity, LResponse.Headers, LResponseStream);
     finally
       LResponseStream.Free;
@@ -624,7 +632,7 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-      LResponse := Client.Options(URL, LResponseStream, CustomHeaders);
+      LResponse := InternalHttpRequest('OPTIONS', nil, LResponseStream);
 
       AfterOPTIONS(LResponse);
 
@@ -658,7 +666,7 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-      LResponse := Client.Delete(URL, LResponseStream, CustomHeaders);
+        LResponse := InternalHttpRequest('DELETE', nil, LResponseStream);
 
       AfterDELETE(LResponse);
 
@@ -701,7 +709,7 @@ begin
       if Assigned(ABeforeExecute) then
         ABeforeExecute();
 
-        LResponse := Client.Get(URL, LResponseStream, CustomHeaders);
+        LResponse := InternalHttpRequest('GET', nil, LResponseStream);
 
         AfterGET(LResponse);
 
@@ -801,7 +809,7 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        LResponse := Client.Patch(URL, LContent, LResponseStream, CustomHeaders);
+        LResponse := InternalHttpRequest('PATCH', LContent, LResponseStream);
 
         AfterPATCH(LResponse);
 
@@ -843,7 +851,7 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        LResponse := Client.Post(URL, LContent, LResponseStream, CustomHeaders);
+        LResponse := InternalHttpRequest('POST', LContent, LResponseStream);
 
         AfterPOST(LResponse);
 
@@ -904,7 +912,7 @@ begin
         if Assigned(ABeforeExecute) then
           ABeforeExecute(LContent);
 
-        LResponse := Client.Put(URL, LContent, LResponseStream, CustomHeaders);
+        LResponse := InternalHttpRequest('PUT', LContent, LResponseStream);
 
         AfterPUT(LResponse);
 

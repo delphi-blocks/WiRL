@@ -93,7 +93,6 @@ type
     procedure SetReferer(const Value: string);
     function GetMultiPartFormData: TWiRLFormDataMultiPart;
     procedure SetApplication(const Value: TObject);
-    function GetHeaderFields: TWiRLRequestHeaderList; deprecated;
   protected
     FMethod: string;
     function GetHttpQuery: string; virtual; abstract;
@@ -109,6 +108,8 @@ type
   public
     destructor Destroy; override;
 
+    function HeaderFields: TWiRLRequestHeaderList; deprecated;
+
     property PathInfo: string read GetPathInfo write SetPathInfo;
     property Query: string read GetQuery write SetQuery;
     property Method: string read FMethod write FMethod;
@@ -122,7 +123,6 @@ type
     property QueryFields: TWiRLParam read GetQueryFields;
     property ContentFields: TWiRLParam read GetContentFields;
     property Headers: IWiRLHeaders read GetHeaders;
-    property HeaderFields: TWiRLRequestHeaderList read GetHeaderFields;
     property CookieFields: TWiRLCookies read GetCookieFields;
     property Content: string read GetContent write SetContent;
     property RawContent: TBytes read GetRawContent write SetRawContent;
@@ -276,7 +276,7 @@ begin
   Result := Headers.Values['From'];
 end;
 
-function TWiRLRequest.GetHeaderFields: TWiRLRequestHeaderList;
+function TWiRLRequest.HeaderFields: TWiRLRequestHeaderList;
 begin
   if not Assigned(FHeaderFields) then
   begin

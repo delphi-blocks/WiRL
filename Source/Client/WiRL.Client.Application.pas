@@ -14,7 +14,7 @@ unit WiRL.Client.Application;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections,
+  System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
   WiRL.Configuration.Core,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyReader,
@@ -36,8 +36,8 @@ type
     function AcceptLanguage(const AAcceptLanguage: string): TWiRLInvocation;
     function Header(const AName, AValue: string): TWiRLInvocation;
     function Authorization(const AValue: string): TWiRLInvocation;
-    function QueryParam(const AName, AValue: string): TWiRLInvocation;
-    function PathParam(const AName, AValue: string): TWiRLInvocation;
+    function QueryParam(const AName: string; const AValue: TValue): TWiRLInvocation;
+    function PathParam(const AName: string; const AValue: TValue): TWiRLInvocation;
 
     function Get<T>: T; overload;
     procedure Get(AResponseEntity: TObject); overload;
@@ -125,11 +125,13 @@ implementation
 
 uses
   WiRL.Rtti.Utils,
+  WiRL.Configuration.Converter,
   WiRL.Client.Utils,
   WiRL.Client.CustomResource,
   WiRL.Client.Resource,
   WiRL.http.Client.Interfaces,
   WiRL.Core.Utils,
+  WiRL.Core.Converter,
   WiRL.http.URL;
 
 type
@@ -137,6 +139,7 @@ type
   private
     FApp: TWiRLClientApplication;
     FResource: TWiRLClientCustomResource;
+    function ValueToString(const AValue: TValue): string;
   protected
     function GetResource: TObject;
   public
@@ -144,8 +147,8 @@ type
     procedure ContentType(const AContentType: string);
     procedure Accept(const AAccept: string);
     procedure AcceptLanguage(const AAcceptLanguage: string);
-    procedure QueryParam(const AName, AValue: string);
-    procedure PathParam(const AName, AValue: string);
+    procedure QueryParam(const AName: string; const AValue: TValue);
+    procedure PathParam(const AName: string; const AValue: TValue);
 
     constructor Create(AApplication: TWiRLClientApplication);
     destructor Destroy; override;
@@ -465,8 +468,8 @@ begin
   (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPatch(ARequestEntity, AResponseEntity);
 end;
 
-function TWiRLInvocation.PathParam(const AName,
-  AValue: string): TWiRLInvocation;
+function TWiRLInvocation.PathParam(const AName: string;
+  const AValue: TValue): TWiRLInvocation;
 begin
   FWiRLInvocation.PathParam(AName, AValue);
   Result := Self;
@@ -492,8 +495,8 @@ begin
   (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPut(ARequestEntity, AResponseEntity);
 end;
 
-function TWiRLInvocation.QueryParam(const AName,
-  AValue: string): TWiRLInvocation;
+function TWiRLInvocation.QueryParam(const AName: string;
+  const AValue: TValue): TWiRLInvocation;
 begin
   FWiRLInvocation.QueryParam(AName, AValue);
   Result := Self;
@@ -506,6 +509,14 @@ begin
 end;
 
 { TWiRLResourceWrapper }
+
+function TWiRLResourceWrapper.ValueToString(const AValue: TValue): string;
+var
+  LConfig: TWiRLFormatSettingConfig;
+begin
+  LConfig := FApp.GetConfigByClassRef(TWiRLFormatSettingConfig) as TWiRLFormatSettingConfig;
+  Result := TWiRLConvert.From(AValue, AValue.TypeInfo, LConfig.GetFormatSettingFor(AValue.TypeInfo));
+end;
 
 procedure TWiRLResourceWrapper.Accept(const AAccept: string);
 begin
@@ -548,18 +559,19 @@ begin
   Result := FResource;
 end;
 
-procedure TWiRLResourceWrapper.PathParam(const AName, AValue: string);
+procedure TWiRLResourceWrapper.PathParam(const AName: string; const AValue: TValue);
 begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
-  FResource.PathParamsValues.Values[AName] := AValue;
+
+  FResource.PathParamsValues.Values[AName] := ValueToString(AValue);
 end;
 
-procedure TWiRLResourceWrapper.QueryParam(const AName, AValue: string);
+procedure TWiRLResourceWrapper.QueryParam(const AName: string; const AValue: TValue);
 begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
-  FResource.QueryParams.Values[AName] := AValue;
+  FResource.QueryParams.Values[AName] := ValueToString(AValue);
 end;
 
 procedure TWiRLResourceWrapper.Target(const AUrl: string);
