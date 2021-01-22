@@ -443,8 +443,7 @@ end;
 
 { TWiRLApplicationInfo }
 
-constructor TWiRLApplicationInfo.Create(AApplication: TWiRLApplication;
-  AEngine: TWiRLEngine);
+constructor TWiRLApplicationInfo.Create(AApplication: TWiRLApplication; AEngine: TWiRLEngine);
 begin
   inherited Create;
   FApplication := AApplication;

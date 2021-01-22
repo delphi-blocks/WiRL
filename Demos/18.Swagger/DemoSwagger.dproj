@@ -72,12 +72,14 @@
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <DCC_OutputXMLDocumentation>false</DCC_OutputXMLDocumentation>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -86,8 +88,8 @@
         <DCCReference Include="Server.Forms.Main.pas">
             <Form>MainForm</Form>
         </DCCReference>
-        <DCCReference Include="Server.Resources.Demo.pas"/>
         <DCCReference Include="Server.Entities.pas"/>
+        <DCCReference Include="Server.Resources.Demo.pas"/>
         <DCCReference Include="Server.Resources.Swagger.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>

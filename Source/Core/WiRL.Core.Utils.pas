@@ -15,6 +15,10 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.SyncObjs, System.JSON,
+  System.Generics.Collections,
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF}
   {$IFDEF HAS_NET_ENCODING}
   System.NetEncoding,
   {$ELSE}
@@ -23,9 +27,41 @@ uses
   WiRL.Core.JSON;
 
 type
+  TStringFunc = TFunc<string>;
+
   TBase64 = class
     class function Encode(const ASource: TStream): string; overload;
     class procedure Decode(const ASource: string; ADest: TStream); overload;
+  end;
+
+  /// <summary>
+  ///   Class for a (very) simple Template Engine based on a template
+  /// </summary>
+  TWiRLTemplateEngine = class
+  private
+    FMacros: TDictionary<string, TStringFunc>;
+  protected
+    FStartChars: string;
+    FEndChars: string;
+    procedure InitMacros; virtual;
+  public
+    constructor Create(AStartChars: string = '{'; AEndChars: string = '}');
+    destructor Destroy; override;
+    function Render(const ATemplate: string): string;
+
+    property Macros: TDictionary<string, TStringFunc> read FMacros write FMacros;
+  end;
+
+  TWiRLTemplatePaths = class(TWiRLTemplateEngine)
+  protected
+    procedure InitMacros; override;
+  end;
+
+  TWiRLTemplateHTML = class(TWiRLTemplateEngine)
+  protected
+    procedure InitMacros; override;
+  public
+    constructor Create(AStartChars: string = '{%'; AEndChars: string = '%}');
   end;
 
   TCustomAttributeClass = class of TCustomAttribute;
@@ -65,7 +101,7 @@ type
 implementation
 
 uses
-  System.TypInfo, System.StrUtils, System.DateUtils, System.Masks;
+  System.TypInfo, System.StrUtils, System.DateUtils, System.Masks, System.IOUtils;
 
 function ExistsInArray(AArray: TJSONArray; const AValue: string): Boolean;
 var
@@ -290,6 +326,101 @@ begin
 {$ELSE}
   TIdDecoderMIME.DecodeStream(ASource, ADest);
 {$ENDIF}
+end;
+
+{ TWiRLTemplateEngine }
+
+constructor TWiRLTemplateEngine.Create(AStartChars: string = '{'; AEndChars: string = '}');
+begin
+  FStartChars := AStartChars;
+  FEndChars := AEndChars;
+  FMacros := TDictionary<string, TStringFunc>.Create;
+
+  InitMacros;
+end;
+
+destructor TWiRLTemplateEngine.Destroy;
+begin
+  FMacros.Free;
+  inherited;
+end;
+
+function TWiRLTemplateEngine.Render(const ATemplate: string): string;
+var
+  LMacroPair: TPair<string,TFunc<string>>;
+begin
+  Result := ATemplate;
+
+  for LMacroPair in FMacros do
+    Result := Result.Replace(FStartChars + LMacroPair.Key + FEndChars,
+      ExcludeTrailingPathDelimiter(LMacroPair.Value()), [rfIgnoreCase]);
+end;
+
+procedure TWiRLTemplateEngine.InitMacros;
+begin
+
+end;
+
+{ TWiRLTemplatePaths }
+
+procedure TWiRLTemplatePaths.InitMacros;
+begin
+  inherited;
+
+  Macros.Add('AppPath', function(): string
+    begin
+      Result := ExtractFilePath(ParamStr(0));
+    end
+  );
+
+  Macros.Add('CurrPath', function(): string
+    begin
+      Result := TDirectory.GetCurrentDirectory;
+    end
+  );
+
+  Macros.Add('TempPath', function(): string
+    begin
+      Result := TPath.GetTempPath;
+    end
+  );
+
+  Macros.Add('HomePath', function(): string
+    begin
+      Result := TPath.GetHomePath;
+    end
+  );
+
+  Macros.Add('DocumentsPath', function(): string
+    begin
+      Result := TPath.GetDocumentsPath;
+    end
+  );
+
+  Macros.Add('PublicPath', function(): string
+    begin
+      Result := TPath.GetPublicPath;
+    end
+  );
+end;
+
+{ TWiRLTemplateHTML }
+
+constructor TWiRLTemplateHTML.Create(AStartChars, AEndChars: string);
+begin
+  inherited Create(AStartChars, AEndChars);
+end;
+
+procedure TWiRLTemplateHTML.InitMacros;
+begin
+  inherited;
+
+  Macros.Add('AppPath', function(): string
+    begin
+      Result := ExtractFilePath(ParamStr(0));
+    end
+  );
+
 end;
 
 end.

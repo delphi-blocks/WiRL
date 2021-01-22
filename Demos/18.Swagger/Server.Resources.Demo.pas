@@ -36,6 +36,7 @@ type
   /// </summary>
   [Path('/params')]
   TParametersResource = class
+    [Context] Response: TWiRLResponse;
   public
     /// <summary>
     ///   Method with a sample documentation
@@ -79,12 +80,12 @@ type
     function ParamRecord([BodyParam] AParam: TRecordParam): TRecordParam;
   end;
 
-  [Path('/responses')]
+  [Path('/entities')]
   TResponsesResource = class
     [GET, Path('/str/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
     function ResponseStr([PathParam] AParam: string): string;
 
-    [GET, Produces(TMediaType.TEXT_PLAIN)]
+    [GET, Produces(TMediaType.APPLICATION_JSON)]
     function ResponseObject: TPerson;
   end;
 

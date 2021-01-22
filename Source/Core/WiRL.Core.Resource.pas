@@ -178,6 +178,7 @@ type
     function CreateInstance: TObject;
     function GetResourceMethod: TWiRLResourceMethod;
     function GetRequestMethod(AContext: TWiRLContext; const ARequestedPath: string): TWiRLResourceMethod;
+    function GetSanitizedPath: string;
   public
     property Path: string read FPath;
     property Methods: TWiRLResourceMethodList read FMethods;
@@ -308,6 +309,11 @@ begin
     if Assigned(Result) then
       Break;
   end;
+end;
+
+function TWiRLResource.GetSanitizedPath: string;
+begin
+  Result := Path.Trim(['/']);
 end;
 
 function TWiRLResource.MatchConsumes(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;

@@ -17,8 +17,9 @@ uses
 
   Neon.Core.Persistence.Swagger,
 
-  WiRL.Core.JSON,
   WiRL.Configuration.Neon,
+  WiRL.Configuration.OpenAPI,
+  WiRL.Core.JSON,
   WiRL.Core.Application,
   WiRL.Core.Engine,
   WiRL.Core.Context.Server,
@@ -29,12 +30,37 @@ uses
   WiRL.http.Filters;
 
 type
+  TOpenAPIInfo = class
+  private
+    FTitle: string;
+    FVersion: string;
+    FDescription: string;
+    FSchemes: TArray<string>;
+    FOpenAPIResource: string;
+    FApplication: TWiRLApplication;
+    FHost: string;
+  public
+    constructor Create(AApplication: TWiRLApplication; const ASwaggerResource: string);
+
+    procedure AddScheme(const AScheme: string);
+
+    property Host: string read FHost write FHost;
+    property Title: string read FTitle write FTitle;
+    property Version: string read FVersion write FVersion;
+    property Description: string read FDescription write FDescription;
+    property Schemes: TArray<string> read FSchemes write FSchemes;
+    property Application: TWiRLApplication read FApplication write FApplication;
+    property OpenAPIResource: string read FOpenAPIResource write FOpenAPIResource;
+  end;
+
 
   TOpenAPIv2Engine = class
   private
     const OPENAPI_VERSION = '2.0';
   private
+    FInfo: TOpenAPIInfo;
     FApplication: TWiRLApplication;
+    FConfigurationOpenAPI: TWiRLConfigurationOpenAPI;
     FConfigurationNeon: TWiRLConfigurationNeon;
     FSwaggerResource: string;
 
@@ -42,11 +68,15 @@ type
     procedure AddOperation(AJsonPath: TJSONObject; const AMethodName, ATagName: string; AResourceMethod: TRttiMethod);
     procedure AddResource(const AName: string; APaths: TJSONObject; AApplication: TWiRLApplication; LResource: TClass);
     function CreateParameter(ARttiParameter: TRttiParameter): TJSONObject;
+  protected
+    constructor Create(AApplication: TWiRLApplication; const ASwaggerResource: string); overload;
+    constructor Create(AInfo: TOpenAPIInfo); overload;
 
-    constructor Create(AApplication: TWiRLApplication; const ASwaggerResource: string);
     function Build(): TJSONObject;
   public
-    class function Generate(AApplication: TWiRLApplication; const ASwaggerResource: string): TJSONObject;
+    destructor Destroy; override;
+    class function Generate(AApplication: TWiRLApplication; const ASwaggerResource: string): TJSONObject; overload;
+    class function Generate(AInfo: TOpenAPIInfo): TJSONObject; overload;
   end;
 
 
@@ -211,14 +241,17 @@ var
   LInfo: TJSONObject;
   LTags: TJSONArray;
   LPaths: TJSONObject;
+  LSchemes: TJSONArray;
 
   LResourceName: string;
   LResource: TClass;
 begin
   // Info object
+  { TODO -opaolo -c : manage the empty strings scenario 07/01/2021 16:29:30 }
   LInfo := TJSONObject.Create
-    .AddPair('title', ChangeFileExt(ExtractFileName(ParamStr(0)), ''))
-    .AddPair('version', '1.0');
+    .AddPair('title', FConfigurationOpenAPI.Title)
+    .AddPair('version', FConfigurationOpenAPI.Version)
+    .AddPair('description', FConfigurationOpenAPI.Description);
 
   // Paths object
   LPaths := TJSONObject.Create;
@@ -227,17 +260,20 @@ begin
   // Loop on every resource of the application
   for LResourceName in FApplication.Resources.Keys do
   begin
-    if SameText(LResourceName, FSwaggerResource) then
+    if SameText(LResourceName.Trim(['/']), FSwaggerResource.Trim(['/'])) then
       Continue;
     LTags.Add(TJSONObject.Create.AddPair('name', LResourceName));
     LResource := FApplication.GetResourceInfo(LResourceName).TypeTClass;
     AddResource(LResourceName, LPaths, FApplication, LResource);
   end;
 
+  LSchemes := TJSONArray.Create;
+  LSchemes.Add('http');
+
   Result := TJSONObject.Create
     .AddPair('swagger', OPENAPI_VERSION)
-    //.AddPair('host', FWiRLContext.Request.Host)
-    .AddPair('host', 'localhost') { TODO -opaolo -c : Risolvere Host 04/01/2021 16:59:54 }
+    .AddPair('host', FConfigurationOpenAPI.Host)
+    .AddPair('schemes', LSchemes)
     .AddPair('info', LInfo)
     .AddPair('tags', LTags)
     .AddPair('paths', LPaths)
@@ -249,10 +285,20 @@ begin
   FSwaggerResource := ASwaggerResource;
   FApplication := AApplication;
   FConfigurationNeon := FApplication.GetConfiguration<TWiRLConfigurationNeon>;
+  FConfigurationOpenAPI := FApplication.GetConfiguration<TWiRLConfigurationOpenAPI>;
 end;
 
-function TOpenAPIv2Engine.CreateParameter(ARttiParameter: TRttiParameter):
-    TJSONObject;
+constructor TOpenAPIv2Engine.Create(AInfo: TOpenAPIInfo);
+begin
+  FInfo := AInfo;
+
+  FSwaggerResource := AInfo.OpenAPIResource;
+  FApplication := AInfo.Application;
+  FConfigurationNeon := FApplication.GetConfiguration<TWiRLConfigurationNeon>;
+  FConfigurationOpenAPI := FApplication.GetConfiguration<TWiRLConfigurationOpenAPI>;
+end;
+
+function TOpenAPIv2Engine.CreateParameter(ARttiParameter: TRttiParameter): TJSONObject;
 
   function GetParamPosition(ARttiParameter: TRttiParameter): string;
   begin
@@ -308,12 +354,30 @@ begin
   end;
 end;
 
+destructor TOpenAPIv2Engine.Destroy;
+begin
+  FInfo.Free;
+  inherited;
+end;
+
 class function TOpenAPIv2Engine.Generate(AApplication: TWiRLApplication; const
     ASwaggerResource: string): TJSONObject;
 var
   LEngine: TOpenAPIv2Engine;
 begin
   LEngine := TOpenAPIv2Engine.Create(AApplication, ASwaggerResource);
+  try
+    Result := LEngine.Build();
+  finally
+    LEngine.Free;
+  end;
+end;
+
+class function TOpenAPIv2Engine.Generate(AInfo: TOpenAPIInfo): TJSONObject;
+var
+  LEngine: TOpenAPIv2Engine;
+begin
+  LEngine := TOpenAPIv2Engine.Create(AInfo);
   try
     Result := LEngine.Build();
   finally
@@ -333,6 +397,19 @@ begin
     end
   );
   Result := LPath;
+end;
+
+{ TOpenAPIInfo }
+
+procedure TOpenAPIInfo.AddScheme(const AScheme: string);
+begin
+  FSchemes := FSchemes + [AScheme];
+end;
+
+constructor TOpenAPIInfo.Create(AApplication: TWiRLApplication; const ASwaggerResource: string);
+begin
+  FApplication := AApplication;
+  FOpenAPIResource := ASwaggerResource;
 end;
 
 end.

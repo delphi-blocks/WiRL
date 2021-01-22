@@ -16,12 +16,16 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
   WiRL.Configuration.Neon,
+  WiRL.Configuration.CORS,
   WiRL.Configuration.OpenAPI,
   Neon.Core.Types,
   WiRL.Core.Application,
   WiRL.Core.Engine,
+  WiRL.http.FileSystemEngine,
   WiRL.http.Server,
-  WiRL.http.Server.Indy;
+  WiRL.http.Server.Indy,
+
+  Server.Resources.Swagger;
 
 type
   TMainForm = class(TForm)
@@ -77,18 +81,34 @@ begin
 
       // Test for namespaces
       .SetResources('Server.Resources.Demo.*')
-      .SetResources('Server.Resources.Swagger.*')
+      //.SetResources('Server.Resources.Swagger.*')
       .SetFilters('*')
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase)
-        .BackToApp
+      .ApplyConfig
+
+      .Plugin.Configure<IWiRLConfigurationCORS>
+        .SetOrigin('*')
+        .SetMethods('GET,POST,PUT,DELETE')
+        .SetHeaders('Content-Type,Authorization')
+      .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationOpenAPI>
-        .SetXMLDocFolder('.\XMLDoc')
-        .SetDocumentationFolder('.\Documentation')
-        .BackToApp
+        .SetUseSwaggerUI()
+        .SetOpenAPIResource(TDocumentationResource)
+        .SetXMLDocFolder('{AppPath}\..\..\Docs')
+        .SetSwaggerUIFolder('{AppPath}\..\..\UI')
+        .SetDocumentationFolder('{AppPath}\..\..\Documentation')
+        // Properties for the Swagger document
+        .SetAPITitle('WiRL Swagger Demo')
+        .SetAPIVersion('1.0.0')
+        .SetAPIDescription('This is a demo API to test WiRL documentation features')
+        .SetAPIScheme('http')
+        .SetAPIScheme('https')
+        .SetAPIHost('localhost:8080')
+      .ApplyConfig
   ;
 
   StartServerAction.Execute;
