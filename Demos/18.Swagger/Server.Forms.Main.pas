@@ -102,6 +102,7 @@ begin
         .SetSwaggerUIFolder('{AppPath}\..\..\UI')
         .SetDocumentationFolder('{AppPath}\..\..\Documentation')
         // Properties for the Swagger document
+        .SetAPILogo('api-logo.png')
         .SetAPITitle('WiRL Swagger Demo')
         .SetAPIVersion('1.0.0')
         .SetAPIDescription('This is a demo API to test WiRL documentation features')

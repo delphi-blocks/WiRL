@@ -16,6 +16,7 @@ uses
 
   Neon.Core.Persistence.Swagger,
 
+  WiRL.Configuration.OpenAPI,
   WiRL.Core.JSON,
   WiRL.Core.OpenAPI,
   WiRL.Core.Application,
@@ -63,10 +64,10 @@ type
   TOpenAPIResourceCustom = class
   private
     [Context] App: TWiRLApplication;
+    [Context] Conf: TWiRLConfigurationOpenAPI;
     [Context] Request: TWiRLRequest;
     [Context] Response: TWiRLResponse;
     [Context] Resource: TWiRLResource;
-
     function FilterContent(const AFileName: string): TStream;
   public
     [GET, Produces(TMediaType.APPLICATION_JSON)]
@@ -89,16 +90,13 @@ implementation
 
 uses
   System.StrUtils, System.TypInfo, System.IOUtils,
-  WiRl.Core.Exceptions,
-  WiRL.Configuration.OpenAPI;
+  WiRl.Core.Exceptions;
 
 { TOpenAPIResourceCustom }
 
 function TOpenAPIResourceCustom.FilterContent(const AFileName: string): TStream;
 var
-  LConf: TWiRLConfigurationOpenAPI;
-  LURL, LResource: string;
-  LLine: string;
+  LURL, LLine: string;
   LReader: TStreamReader;
   LWriter: TStreamWriter;
 begin
@@ -106,16 +104,13 @@ begin
   if not SameText('.html', ExtractFileExt(AFileName)) then
     Exit(TFileStream.Create(AFileName, fmOpenRead));
 
-  LConf := App.GetConfiguration<TWiRLConfigurationOpenAPI>;
-
-  if Length(LConf.Schemes) > 0 then
-    LURL := LConf.Schemes[0] + '://'
+  if Length(Conf.Schemes) > 0 then
+    LURL := Conf.Schemes[0] + '://'
   else
     LURL := 'http' + '://';
 
-  LURL := LURL + LConf.Host + '/';
+  LURL := LURL + Conf.Host + '/';
   LURL := LURL + App.Path + '/' + Resource.GetSanitizedPath;
-  LResource := Resource.GetSanitizedPath;
 
   Result := TMemoryStream.Create;
   LReader := TStreamReader.Create(AFileName);
@@ -124,6 +119,7 @@ begin
     while not LReader.EndOfStream do
     begin
       LLine := LReader.ReadLine.Replace('{%url%}', LURL);
+      LLine := LLine.Replace('{%logo%}', Conf.Logo);
       LWriter.WriteLine(LLine);
     end;
     Result.Position := 0;
@@ -135,19 +131,16 @@ end;
 
 function TOpenAPIResourceCustom.GetSwaggerJSON: TJSONObject;
 var
-  LConf: TWiRLConfigurationOpenAPI;
   LInfo: TOpenAPIInfo;
 begin
-  LConf := App.GetConfiguration<TWiRLConfigurationOpenAPI>;
-
   LInfo := TOpenAPIInfo.Create(App, Resource.Path);
-  LInfo.Title := LConf.Title;
-  LInfo.Description := LConf.Description;
-  LInfo.Version := LConf.Version;
-  LInfo.Schemes := LConf.Schemes;
-  LInfo.Host := LConf.Host;
-  if LConf.Host.IsEmpty then
-    LConf.Host := Request.Host;
+  LInfo.Title := Conf.Title;
+  LInfo.Description := Conf.Description;
+  LInfo.Version := Conf.Version;
+  LInfo.Schemes := Conf.Schemes;
+  LInfo.Host := Conf.Host;
+  if Conf.Host.IsEmpty then
+    Conf.Host := Request.Host;
 
   Result := TOpenAPIv2Engine.Generate(LInfo);
 end;
@@ -155,8 +148,10 @@ end;
 function TOpenAPIResourceCustom.GetSwaggerAssets: TStream;
 var
   LProvider: TSwaggerUIProvider;
+  LPathInfo: string;
 begin
-  LProvider := TSwaggerUIProvider.Create('/rest/app/swagger', '{AppPath}\..\..\UI');
+  LPathInfo := EnsurePrefix(App.Path + EnsurePrefix(Resource.GetSanitizedPath, '/'), '/');
+  LProvider := TSwaggerUIProvider.Create(LPathInfo, Conf.FolderSwaggerUI);
   try
     Result := LProvider.HandleRequest(Request, Response);
   finally
@@ -167,10 +162,10 @@ end;
 function TOpenAPIResourceCustom.GetSwaggerHTML: TStream;
 var
   LProvider: TSwaggerUIProvider;
+  LPathInfo: string;
 begin
-  Request.PathInfo := Request.PathInfo.Replace('ui', 'index.html');
-
-  LProvider := TSwaggerUIProvider.Create('/rest/app/swagger', '{AppPath}\..\..\UI');
+  LPathInfo := EnsurePrefix(App.Path + EnsurePrefix(Resource.GetSanitizedPath, '/'), '/');
+  LProvider := TSwaggerUIProvider.Create(LPathInfo, Conf.FolderSwaggerUI);
   try
     LProvider.OnProcess := FilterContent;
     Result := LProvider.HandleRequest(Request, Response);

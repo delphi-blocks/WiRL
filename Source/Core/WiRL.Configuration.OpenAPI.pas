@@ -31,6 +31,7 @@ type
     function SetDocumentationFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
 
     function SetAPITitle(const ATitle: string): IWiRLConfigurationOpenAPI;
+    function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
     function SetAPIDescription(const ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIVersion(const AVersion: string): IWiRLConfigurationOpenAPI;
     function SetAPIScheme(const AScheme: string): IWiRLConfigurationOpenAPI;
@@ -55,6 +56,7 @@ type
     FHost: string;
     FFolderDocumentation: string;
     FFolderSwaggerUI: string;
+    FLogo: string;
   public
     class function Default: IWiRLConfigurationOpenAPI; static;
   public
@@ -68,6 +70,7 @@ type
     function SetDocumentationFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
 
     function SetAPITitle(const ATitle: string): IWiRLConfigurationOpenAPI;
+    function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
     function SetAPIDescription(const ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIVersion(const AVersion: string): IWiRLConfigurationOpenAPI;
     function SetAPIScheme(const AScheme: string): IWiRLConfigurationOpenAPI;
@@ -75,6 +78,7 @@ type
     function SetAPIHost(const AHost: string): IWiRLConfigurationOpenAPI;
   published
     property Title: string read FTitle write FTitle;
+    property Logo: string read FLogo write FLogo;
     property Version: string read FVersion write FVersion;
     property Description: string read FDescription write FDescription;
     property Host: string read FHost write FHost;
@@ -122,6 +126,12 @@ end;
 function TWiRLConfigurationOpenAPI.SetAPIHost(const AHost: string): IWiRLConfigurationOpenAPI;
 begin
   FHost := AHost;
+  Result := Self;
+end;
+
+function TWiRLConfigurationOpenAPI.SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
+begin
+  FLogo := ALogo;
   Result := Self;
 end;
 
