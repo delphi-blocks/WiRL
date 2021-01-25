@@ -17,6 +17,7 @@ uses
 
   Neon.Core.Persistence.Swagger,
 
+  WiRL.Configuration.Auth,
   WiRL.Configuration.Neon,
   WiRL.Configuration.OpenAPI,
   WiRL.Core.JSON,
@@ -25,6 +26,7 @@ uses
   WiRL.Core.Context.Server,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
+  WiRL.Core.Auth.Resource,
   WiRL.http.Accept.MediaType,
   WiRL.Rtti.Utils,
   WiRL.http.Filters;
@@ -62,10 +64,13 @@ type
     FApplication: TWiRLApplication;
     FConfigurationOpenAPI: TWiRLConfigurationOpenAPI;
     FConfigurationNeon: TWiRLConfigurationNeon;
+    FConfigurationAuth: TWiRLConfigurationAuth;
     FSwaggerResource: string;
 
     function GetPath(ARttiObject: TRttiObject): string;
-    procedure AddOperation(AJsonPath: TJSONObject; const AMethodName, ATagName: string; AResourceMethod: TRttiMethod);
+    procedure AddSecurityDefinition(AJson: TJSONObject; AResource: TClass);
+    procedure AddSecurity(AJson: TJSONObject; const AName: string);
+    function AddOperation(AJsonPath: TJSONObject; const AMethodName, ATagName: string; AResourceMethod: TRttiMethod): TJSONObject;
     procedure AddResource(const AName: string; APaths: TJSONObject; AApplication: TWiRLApplication; LResource: TClass);
     function CreateParameter(ARttiParameter: TRttiParameter): TJSONObject;
   protected
@@ -88,10 +93,10 @@ uses
   WiRL.Core.Utils,
   WiRL.http.Server;
 
-procedure TOpenAPIv2Engine.AddOperation(AJsonPath: TJSONObject; const
-    AMethodName, ATagName: string; AResourceMethod: TRttiMethod);
+function TOpenAPIv2Engine.AddOperation(AJsonPath: TJSONObject; const
+    AMethodName, ATagName: string; AResourceMethod: TRttiMethod): TJSONObject;
 
-  function FindOrCreateOperation(APath: TJSONObject; const AMethodName: string) :TJSONObject;
+  function FindOrCreateOperation(APath: TJSONObject; const AMethodName: string): TJSONObject;
   begin
     Result := APath.GetValue(AMethodName) as TJSONObject;
     if not Assigned(Result) then
@@ -112,15 +117,16 @@ var
   LOkResponse: TJSONObject;
 begin
   // Operation = Path + HttpMethod
-  // If more object method use the same operation add info on the
+  // If more object's method use the same operation add info on the
   // same operation
   LOperation := FindOrCreateOperation(AJsonPath, AMethodName);
 
   if not Assigned(LOperation.GetValue('summary')) then
     LOperation.AddPair('summary', AResourceMethod.Name);
 
-  if not ATagName.IsEmpty then
-    LOperation.AddPair('tags', TJSONArray.Create.Add(ATagName));
+  if not Assigned(LOperation.GetValue('tags')) then
+    if not ATagName.IsEmpty then
+      LOperation.AddPair('tags', TJSONArray.Create.Add(ATagName));
 
   LProduces := LOperation.GetValue('produces') as TJSONArray;
   TRttiHelper.HasAttribute<ProducesAttribute>(AResourceMethod,
@@ -180,6 +186,8 @@ begin
     if Assigned(AResourceMethod.ReturnType) and (AResourceMethod.ReturnType.TypeKind <> tkUnknown) then
       LOkResponse.AddPair('schema', TNeonSchemaGenerator.TypeToJSONSchema(AResourceMethod.ReturnType, FConfigurationNeon.GetNeonConfig));
   end;
+
+  Result := LOperation;
 end;
 
 procedure TOpenAPIv2Engine.AddResource(const AName: string; APaths:
@@ -203,6 +211,7 @@ var
   LMethodName: string;
   LResourceMethodPath: string;
   LJsonPath: TJSONObject;
+  LOperation: TJSONObject;
 begin
   LResourceType := TRttiHelper.Context.GetType(LResource);
   LResourcePath := GetPath(LResourceType);
@@ -230,10 +239,55 @@ begin
         // If the resource is already documented add the information on
         // the same json object
         LJsonPath := FindOrCreatePath(APaths, LMethodPath);
-        AddOperation(LJsonPath, LMethodName, AName, LResourceMethod);
+
+        LOperation := AddOperation(LJsonPath, LMethodName, AName, LResourceMethod);
+
+        // if has RolesAllowed (not *), Add Security
+        TRttiHelper.HasAttribute<RolesAllowedAttribute>(LResourceMethod,
+          procedure (AAttr: RolesAllowedAttribute)
+          begin
+            AddSecurity(LOperation, 'bearerAuth');
+          end
+        );
+
+        // if has RolesAllowed (not *), Add Security
+        TRttiHelper.HasAttribute<BasicAuthAttribute>(LResourceMethod,
+          procedure (AAttr: BasicAuthAttribute)
+          begin
+            AddSecurity(LOperation, 'basicAuth');
+          end
+        );
       end;
     end;
   end;
+end;
+
+procedure TOpenAPIv2Engine.AddSecurity(AJson: TJSONObject; const AName: string);
+var
+  LSec: TJSONArray;
+begin
+  LSec := TJSONArray.Create;
+  LSec.AddElement(TJSONObject.Create
+    .AddPair(AName, TJSONArray.Create));
+
+  AJson.AddPair('security', LSec);
+end;
+
+procedure TOpenAPIv2Engine.AddSecurityDefinition(AJson: TJSONObject; AResource: TClass);
+var
+  LDef: TJSONObject;
+begin
+  LDef := TJSONObject.Create;
+  LDef.AddPair('type', 'basic');
+  LDef.AddPair('description', 'Basic Authentication (Login)');
+  AJson.AddPair('basicAuth', LDef);
+
+  LDef := TJSONObject.Create;
+  LDef.AddPair('type', 'apiKey');
+  LDef.AddPair('in', 'header');
+  LDef.AddPair('name', 'Authorization');
+  LDef.AddPair('description', 'Bearer Authentication (Methods)');
+  AJson.AddPair('bearerAuth', LDef);
 end;
 
 function TOpenAPIv2Engine.Build(): TJSONObject;
@@ -242,7 +296,7 @@ var
   LTags: TJSONArray;
   LPaths: TJSONObject;
   LSchemes: TJSONArray;
-
+  LSecurityDefinitions: TJSONObject;
   LResourceName: string;
   LResource: TClass;
 begin
@@ -257,6 +311,8 @@ begin
   LPaths := TJSONObject.Create;
   LTags := TJSONArray.Create;
 
+  LSecurityDefinitions := TJSONObject.Create;
+
   // Loop on every resource of the application
   for LResourceName in FApplication.Resources.Keys do
   begin
@@ -264,6 +320,11 @@ begin
       Continue;
     LTags.Add(TJSONObject.Create.AddPair('name', LResourceName));
     LResource := FApplication.GetResourceInfo(LResourceName).TypeTClass;
+
+    // If a Resource inherits from Add TWiRLAuth* add a SecurityDefinition
+    if LResource.InheritsFrom(TWiRLAuthBasicResource) then
+      AddSecurityDefinition(LSecurityDefinitions, LResource);
+
     AddResource(LResourceName, LPaths, FApplication, LResource);
   end;
 
@@ -272,9 +333,10 @@ begin
 
   Result := TJSONObject.Create
     .AddPair('swagger', OPENAPI_VERSION)
+    .AddPair('info', LInfo)
     .AddPair('host', FConfigurationOpenAPI.Host)
     .AddPair('schemes', LSchemes)
-    .AddPair('info', LInfo)
+    .AddPair('securityDefinitions', LSecurityDefinitions)
     .AddPair('tags', LTags)
     .AddPair('paths', LPaths)
 end;

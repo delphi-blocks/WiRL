@@ -101,7 +101,7 @@ type
     const ERR_BASIC_HEADER = 'Auhtorization header incorrect';
     const AUTH_BASIC = 'Basic ';
   public
-    [POST, Produces(TMediaType.APPLICATION_JSON)]
+    [BasicAuth] [POST, Produces(TMediaType.APPLICATION_JSON)]
     function DoLogin([HeaderParam('Authorization')] const AAuth: string): TWiRLLoginResponse;
   end;
 

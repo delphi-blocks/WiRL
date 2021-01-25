@@ -269,11 +269,16 @@ type
   end;
 
   /// <summary>
+  ///   Used to mark a method as the handler of a Basic Auth request. Necessary
+  ///   to the Swagger codegen
+  /// </summary>
+  BasicAuthAttribute = class(AuthorizationAttribute);
+
+  /// <summary>
   ///   This attribute tells WiRL not to destroy the resulting object because it's a
   ///   "global" object.
   /// </summary>
   SingletonAttribute = class(TCustomAttribute);
-
 
   /// <summary>
   ///   Used to mark a Resource's Method as async. Not fully implemented in the

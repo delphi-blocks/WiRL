@@ -23,6 +23,7 @@ uses
   WiRL.Core.Application.Worker,
   WiRL.Core.MessageBody.Default,
   WiRL.Core.Auth.Context,
+  WiRL.Core.Auth.Resource,
   WiRL.http.Accept.MediaType,
   WiRL.http.URL,
   WiRL.http.Request,
@@ -52,7 +53,11 @@ type
     /// </remarks>
     /// <response code="200">Responde description</response>
     [GET, Path('/str/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamStr([PathParam] AParam: string): string;
+    [RolesAllowed('user')]
+    function ParamStr([PathParam] AParam: string): string; overload;
+
+    [GET, Path('/str/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
+    function ParamStr([PathParam] AParam: Integer): string; overload;
 
     [GET, Path('/int/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
     function ParamInt([PathParam] AParam: Integer): Integer;
@@ -81,12 +86,18 @@ type
   end;
 
   [Path('/entities')]
-  TResponsesResource = class
-    [GET, Path('/str/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
+  TEntitiesResource = class
     function ResponseStr([PathParam] AParam: string): string;
 
     [GET, Produces(TMediaType.APPLICATION_JSON)]
     function ResponseObject: TPerson;
+  end;
+
+  [Path('basic_auth')]
+  TBasicAuthResource = class(TWiRLAuthBasicResource)
+  private
+  protected
+    function Authenticate(const AUserName, APassword: string): TWiRLAuthResult; override;
   end;
 
 
@@ -145,9 +156,14 @@ begin
   Result := AParam;
 end;
 
-{ TResponsesResource }
+function TParametersResource.ParamStr(AParam: Integer): string;
+begin
 
-function TResponsesResource.ResponseObject: TPerson;
+end;
+
+{ TEntitiesResource }
+
+function TEntitiesResource.ResponseObject: TPerson;
 begin
   Result := TPerson.Create;
   Result.Name := 'Paolo';
@@ -157,13 +173,22 @@ begin
   Result.AddAddress('Parma', 'Italy');
 end;
 
-function TResponsesResource.ResponseStr(AParam: string): string;
+function TEntitiesResource.ResponseStr(AParam: string): string;
 begin
   Result := AParam;
 end;
 
+{ TBasicAuthResource }
+
+function TBasicAuthResource.Authenticate(const AUserName, APassword: string): TWiRLAuthResult;
+begin
+  Result.Success := SameText(APassword, 'mypassword');
+  Result.Roles := 'admin,manager,user'.Split([','])
+end;
+
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<TParametersResource>;
-  TWiRLResourceRegistry.Instance.RegisterResource<TResponsesResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TEntitiesResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
 
 end.
