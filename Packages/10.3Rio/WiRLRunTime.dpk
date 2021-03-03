@@ -82,10 +82,6 @@ contains
   WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
   WiRL.Core.Injection in '..\..\Source\Core\WiRL.Core.Injection.pas',
   WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
-  WiRL.Core.MessageBody.Classes in '..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
-  WiRL.Core.MessageBody.Default in '..\..\Source\Core\WiRL.Core.MessageBody.Default.pas',
-  WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
-  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
   WiRL.Core.Resource in '..\..\Source\Core\WiRL.Core.Resource.pas',
   WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
@@ -122,7 +118,12 @@ contains
   WiRL.Core.Converter in '..\..\Source\Core\WiRL.Core.Converter.pas',
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
-  WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas';
+  WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
+  WiRL.Client.Resource.Obj in '..\..\Source\Client\WiRL.Client.Resource.Obj.pas',
+  WiRL.Core.MessageBody.Classes in '..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
+  WiRL.Core.MessageBody.Default in '..\..\Source\Core\WiRL.Core.MessageBody.Default.pas',
+  WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
+  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas';
 
 end.
 

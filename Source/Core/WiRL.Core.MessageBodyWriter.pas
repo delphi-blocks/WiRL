@@ -284,6 +284,9 @@ begin
 
   for LEntry in FRegistry do
   begin
+    if not Assigned(LEntry.Produces) then
+      raise Exception.CreateFmt('Attribute [Produce] required for [%s]', [LEntry.WriterName]);
+
     if LEntry.IsWritable(AType, AType.GetAttributes, AMediaType) and
        (AMediaType.IsWildcard or LEntry.Produces.Contains(TMediaType.WILDCARD) or LEntry.Produces.Contains(AMediaType)) then
     begin

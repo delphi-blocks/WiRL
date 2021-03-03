@@ -15,7 +15,9 @@ uses
   System.Classes, System.SysUtils,
   DesignEditors,
   WiRL.http.Client.Interfaces,
-  WiRL.Client.CustomResource;
+  WiRL.Core.MessageBody.Default,
+  WiRL.Client.CustomResource,
+  WiRL.Client.Resource.Obj;
 
 type
   TWiRLClientCustomResourceEditor = class(TComponentEditor)
@@ -47,17 +49,43 @@ begin
 end;
 
 procedure TWiRLClientCustomResourceEditor.ExecuteVerb(Index: Integer);
+var
+  LRequestObject, LResponseObject: TComponent;
 begin
   inherited;
 
-  case Index of
-    0: CurrentObj.GET(nil, nil, nil);
-    1: CurrentObj.POST(nil, nil, nil);
-    2: CurrentObj.DELETE(nil, nil, nil);
-    3: CurrentObj.PUT(nil, nil, nil);
-    4: CurrentObj.PATCH(nil, nil, nil);
-    5: CurrentObj.HEAD(nil, nil, nil);
-    6: CurrentObj.OPTIONS(nil, nil, nil);
+  if Assigned(CurrentObj.Application) then
+  begin
+    CurrentObj.Application.SetWriters('*.*');
+    CurrentObj.Application.SetReaders('*.*');
+  end;
+
+  if CurrentObj is TWiRLClientResourceObject then
+  begin
+    LResponseObject := TWiRLClientResourceObject(CurrentObj).ResponseObject;
+    LRequestObject := TWiRLClientResourceObject(CurrentObj).RequestObject;
+
+    case Index of
+      0: CurrentObj.GenericGet(LResponseObject);
+      1: CurrentObj.GenericPost(LRequestObject, LResponseObject);
+      2: CurrentObj.GenericDelete(LResponseObject);
+      3: CurrentObj.GenericPut(LRequestObject, LResponseObject);
+      4: CurrentObj.GenericPatch(LRequestObject, LResponseObject);
+      5: CurrentObj.GenericHttpRequest('HEAD', LRequestObject, LResponseObject);
+      6: CurrentObj.GenericHttpRequest('OPTIONS', LRequestObject, LResponseObject);
+    end;
+  end
+  else
+  begin
+    case Index of
+      0: CurrentObj.GET(nil, nil, nil);
+      1: CurrentObj.POST(nil, nil, nil);
+      2: CurrentObj.DELETE(nil, nil, nil);
+      3: CurrentObj.PUT(nil, nil, nil);
+      4: CurrentObj.PATCH(nil, nil, nil);
+      5: CurrentObj.HEAD(nil, nil, nil);
+      6: CurrentObj.OPTIONS(nil, nil, nil);
+    end;
   end;
 
   if (GetKeyState(VK_LSHIFT) < 0) then

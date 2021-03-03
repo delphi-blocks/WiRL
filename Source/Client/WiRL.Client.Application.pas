@@ -15,6 +15,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
+  System.Contnrs,
   WiRL.Configuration.Core,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyReader,
@@ -36,8 +37,10 @@ type
     function AcceptLanguage(const AAcceptLanguage: string): TWiRLInvocation;
     function Header(const AName, AValue: string): TWiRLInvocation;
     function Authorization(const AValue: string): TWiRLInvocation;
-    function QueryParam(const AName: string; const AValue: TValue): TWiRLInvocation;
-    function PathParam(const AName: string; const AValue: TValue): TWiRLInvocation;
+    function QueryParam(const AName: string; const AValue: TValue): TWiRLInvocation; overload;
+    function QueryParam<T>(const AName: string; const AValue: T): TWiRLInvocation; overload;
+    function PathParam(const AName: string; const AValue: TValue): TWiRLInvocation; overload;
+    function PathParam<T>(const AName: string; const AValue: T): TWiRLInvocation; overload;
 
     function Get<T>: T; overload;
     procedure Get(AResponseEntity: TObject); overload;
@@ -68,12 +71,15 @@ type
     FReaderRegistry: TWiRLReaderRegistry;
     FConfigRegistry: TWiRLConfigRegistry;
     FAppConfigurator: TAppConfigurator;
+    FResources: TObjectList;
   protected
     function GetPath: string; virtual;
     function AddFilter(const AFilter: string): Boolean;
     function AddWriter(const AWriter: string): Boolean;
     function AddReader(const AReader: string): Boolean;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
+    property Resources: TObjectList read FResources;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   public
@@ -179,11 +185,11 @@ var
   LGlobalRegistry: TWiRLReaderRegistry;
   LReader: TWiRLReaderRegistry.TReaderInfo;
 begin
-  if csDesigning in ComponentState then
-  begin
-    FReaderRegistry.AddReaderName(AReader);
-    Exit(True);
-  end;
+//  if csDesigning in ComponentState then
+//  begin
+//    FReaderRegistry.AddReaderName(AReader);
+//    Exit(True);
+//  end;
 
   Result := False;
   LGlobalRegistry := TMessageBodyReaderRegistry.Instance;
@@ -209,11 +215,11 @@ var
   LGlobalRegistry: TWiRLWriterRegistry;
   LWriter: TWiRLWriterRegistry.TWriterInfo;
 begin
-  if csDesigning in ComponentState then
-  begin
-    FWriterRegistry.AddWriterName(AWriter);
-    Exit(True);
-  end;
+//  if csDesigning in ComponentState then
+//  begin
+//    FWriterRegistry.AddWriterName(AWriter);
+//    Exit(True);
+//  end;
 
   Result := False;
   LGlobalRegistry := TMessageBodyWriterRegistry.Instance;
@@ -243,6 +249,8 @@ begin
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
+
+  FResources := TObjectList.Create;
 
   FDefaultMediaType := 'application/json';
   FAppName := 'app';
@@ -296,6 +304,17 @@ begin
     LEngine := FClient.WiRLEngineURL;
 
   Result := TWiRLURL.CombinePath([LEngine, AppName])
+end;
+
+procedure TWiRLClientApplication.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited;
+  if Operation = opRemove then
+  begin
+    if AComponent = FClient then
+      FClient := nil;
+  end;
 end;
 
 function TWiRLClientApplication.Resource(
@@ -475,6 +494,13 @@ begin
   Result := Self;
 end;
 
+function TWiRLInvocation.PathParam<T>(const AName: string;
+  const AValue: T): TWiRLInvocation;
+begin
+  FWiRLInvocation.PathParam(AName, TValue.From<T>(AValue));
+  Result := Self;
+end;
+
 function TWiRLInvocation.Post<T, V>(const ARequestEntity: T): V;
 begin
   Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPost<T,V>(ARequestEntity);
@@ -493,6 +519,13 @@ end;
 procedure TWiRLInvocation.Put<T>(const ARequestEntity: T; AResponseEntity: TObject);
 begin
   (FWiRLInvocation.Resource as TWiRLClientCustomResource).GenericPut(ARequestEntity, AResponseEntity);
+end;
+
+function TWiRLInvocation.QueryParam<T>(const AName: string;
+  const AValue: T): TWiRLInvocation;
+begin
+  FWiRLInvocation.QueryParam(AName, TValue.From<T>(AValue));
+  Result := Self;
 end;
 
 function TWiRLInvocation.QueryParam(const AName: string;

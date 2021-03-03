@@ -60,6 +60,8 @@ type
     function GetAccept: string;
     function GetContentType: string;
 
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+
     procedure BeforeGET; virtual;
     procedure AfterGET(AResponse: IWiRLResponse); virtual;
 
@@ -442,6 +444,17 @@ begin
   for LHeader in FHeaders do
   begin
     Result.Values[LHeader.Name] := LHeader.Value;
+  end;
+end;
+
+procedure TWiRLClientCustomResource.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited;
+  if Operation = opRemove then
+  begin
+    if AComponent = FApplication then
+      FApplication := nil;
   end;
 end;
 

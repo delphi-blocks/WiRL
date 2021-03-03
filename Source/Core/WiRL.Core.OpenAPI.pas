@@ -328,6 +328,8 @@ begin
     AddResource(LResourceName, LPaths, FApplication, LResource);
   end;
 
+  AddSecurityDefinition(LSecurityDefinitions, nil);
+
   LSchemes := TJSONArray.Create;
   LSchemes.Add('http');
 
