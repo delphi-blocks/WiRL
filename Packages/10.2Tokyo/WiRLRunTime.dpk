@@ -122,7 +122,8 @@ contains
   WiRL.Core.Converter in '..\..\Source\Core\WiRL.Core.Converter.pas',
   WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
-  WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas';
+  WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
+  WiRL.Client.Resource.Obj in '..\..\Source\Client\WiRL.Client.Resource.Obj.pas';
 
 end.
 

@@ -18,6 +18,7 @@ uses
   WiRL.Client.FireDAC,
   WiRL.Client.Messaging.Resource,
   WiRL.Client.Resource.JSON,
+  WiRL.Client.Resource.Obj,
   WiRL.Client.Resource,
   WiRL.Client.Resource.Stream,
   WiRL.Client.SubResource.JSON,
@@ -35,16 +36,20 @@ implementation
 procedure Register;
 begin
   RegisterComponents('WiRL Client', [TWiRLClientApplication]);
-  RegisterComponents('WiRL Client', [TWiRLFDResource]);
-  RegisterComponents('WiRL Client', [TWiRLClientMessagingResource]);
-  RegisterComponents('WiRL Client', [TWiRLClientResourceJSON]);
-  RegisterComponents('WiRL Client', [TWiRLClientResource]);
-  RegisterComponents('WiRL Client', [TWiRLClientResourceStream]);
-  RegisterComponents('WiRL Client', [TWiRLClientSubResourceJSON]);
-  RegisterComponents('WiRL Client', [TWiRLClientSubResource]);
-  RegisterComponents('WiRL Client', [TWiRLClientSubResourceStream]);
+//  RegisterComponents('WiRL Client', [TWiRLFDResource]);
+//  RegisterComponents('WiRL Client', [TWiRLClientMessagingResource]);
+//  RegisterComponents('WiRL Client', [TWiRLClientResourceJSON]);
+//  RegisterComponents('WiRL Client', [TWiRLClientResourceObject]);
+//  RegisterComponents('WiRL Client', [TWiRLClientResource]);
+//  RegisterComponents('WiRL Client', [TWiRLClientResourceStream]);
+//  RegisterComponents('WiRL Client', [TWiRLClientSubResourceJSON]);
+//  RegisterComponents('WiRL Client', [TWiRLClientSubResource]);
+//  RegisterComponents('WiRL Client', [TWiRLClientSubResourceStream]);
   RegisterComponents('WiRL Client', [TWiRLClientToken]);
   RegisterComponents('WiRL Client', [TWiRLClient]);
+
+  RegisterNoIcon([TWiRLClientResource]);
+
 end;
 
 

@@ -97,6 +97,8 @@ type
 
     class function GetType(AObject: TRttiObject): TRttiType;
 
+    class constructor Create;
+
     class property Context: TRttiContext read FContext;
   end;
 
@@ -628,6 +630,11 @@ begin
   end;
   if not Assigned(Result) then
     raise Exception.CreateFmt('TRttiHelper.CreateInstance: can''t create object [%s]', [AType.Name]);
+end;
+
+class constructor TRttiHelper.Create;
+begin
+  FContext := TRttiContext.Create;
 end;
 
 class function TRttiHelper.CreateInstance(const ATypeName: string;
