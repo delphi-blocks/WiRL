@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -24,7 +24,7 @@ uses
   WiRL.Core.Context.Server,
   WiRL.http.Request,
   WiRL.http.Response,
-  WiRL.Core.Resource,
+  WiRL.Core.Metadata,
   WiRL.Rtti.Utils;
 
 type
@@ -34,16 +34,16 @@ type
     FResponse: TWiRLResponse;
     FAborted: Boolean;
     FContext: TWiRLContext;
-    FResource: TWiRLResource;
-    function GetResource: TWiRLResource;
+    FResource: TWiRLProxyResource;
+    function GetResource: TWiRLProxyResource;
   public
     property Context: TWiRLContext read FContext;
     property Request: TWiRLRequest read FRequest;
     property Response: TWiRLResponse read FResponse;
-    property Resource: TWiRLResource read GetResource;
+    property Resource: TWiRLProxyResource read GetResource;
     property Aborted: Boolean read FAborted;
     procedure Abort;
-    constructor Create(AContext: TWiRLContext; AResource: TWiRLResource = nil);
+    constructor Create(AContext: TWiRLContext; AResource: TWiRLProxyResource = nil);
   end;
 
   TWiRLContainerResponseContext = class(TObject)
@@ -51,14 +51,14 @@ type
     FRequest: TWiRLRequest;
     FResponse: TWiRLResponse;
     FContext: TWiRLContext;
-    FResource: TWiRLResource;
-    function GetResource: TWiRLResource;
+    FResource: TWiRLProxyResource;
+    function GetResource: TWiRLProxyResource;
   public
     property Context: TWiRLContext read FContext;
     property Request: TWiRLRequest read FRequest;
     property Response: TWiRLResponse read FResponse;
-    property Resource: TWiRLResource read GetResource;
-    constructor Create(AContext: TWiRLContext; AResource: TWiRLResource = nil);
+    property Resource: TWiRLProxyResource read GetResource;
+    constructor Create(AContext: TWiRLContext; AResource: TWiRLProxyResource = nil);
   end;
 
   IWiRLContainerRequestFilter = interface
@@ -461,7 +461,7 @@ begin
   FAborted := True;
 end;
 
-constructor TWiRLContainerRequestContext.Create(AContext: TWiRLContext; AResource: TWiRLResource);
+constructor TWiRLContainerRequestContext.Create(AContext: TWiRLContext; AResource: TWiRLProxyResource);
 begin
   inherited Create;
   FContext := AContext;
@@ -470,7 +470,7 @@ begin
   FResource := AResource;
 end;
 
-function TWiRLContainerRequestContext.GetResource: TWiRLResource;
+function TWiRLContainerRequestContext.GetResource: TWiRLProxyResource;
 begin
   if not Assigned(FResource) then
     raise EWiRLException.Create('Resource info not available');
@@ -479,7 +479,7 @@ end;
 
 { TWiRLContainerResponseContext }
 
-constructor TWiRLContainerResponseContext.Create(AContext: TWiRLContext; AResource: TWiRLResource);
+constructor TWiRLContainerResponseContext.Create(AContext: TWiRLContext; AResource: TWiRLProxyResource);
 begin
   inherited Create;
   FContext := AContext;
@@ -488,7 +488,7 @@ begin
   FResource := AResource;
 end;
 
-function TWiRLContainerResponseContext.GetResource: TWiRLResource;
+function TWiRLContainerResponseContext.GetResource: TWiRLProxyResource;
 begin
   if not Assigned(FResource) then
     raise EWiRLException.Create('Resource info not available');

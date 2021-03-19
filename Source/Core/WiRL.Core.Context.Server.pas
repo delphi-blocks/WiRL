@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -30,6 +30,7 @@ type
 //    FRequest: TWiRLRequest;
 //    FAuthContext: TWiRLAuthContext;
     FResourceURL: TWiRLURL;
+    FResourceMethod: TObject;
     function GetResourceURL: TWiRLURL;
     function GetServer: TObject;
     procedure SetServer(const Value: TObject);
@@ -52,6 +53,7 @@ type
     property Application: TObject read GetApplication write SetApplication;
     property Resource: TObject read GetResource write SetResource;
     property ResourceURL: TWiRLURL read GetResourceURL write FResourceURL;
+    property ResourceMethod: TObject read FResourceMethod write FResourceMethod;
     property AuthContext: TWiRLAuthContext read GetAuthContext write SetAuthContext;
   end;
 
@@ -61,7 +63,7 @@ implementation
 
 uses
   WiRL.Core.Application,
-  WiRL.Core.Resource,
+  WiRL.Core.Metadata,
   WiRL.Core.Engine,
   WiRL.Configuration.Core,
   WiRL.http.Server;
@@ -107,7 +109,7 @@ end;
 
 function TWiRLContextServer.GetResource: TObject;
 begin
-  Result := FindContainerAs<TWiRLResource>;
+  Result := FindContainerAs<TWiRLProxyResource>;
 end;
 
 function TWiRLContextServer.GetResourceURL: TWiRLURL;

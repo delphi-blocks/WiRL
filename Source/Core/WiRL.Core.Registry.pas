@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -17,7 +17,7 @@ uses
   WiRL.Rtti.Utils;
 
 type
-  TWiRLConstructorInfo = class
+  TWiRLConstructorProxy = class
   private
     FConstructorFunc: TFunc<TObject>;
     FTypeTClass: TClass;
@@ -26,20 +26,20 @@ type
 
     property TypeTClass: TClass read FTypeTClass;
     property ConstructorFunc: TFunc<TObject> read FConstructorFunc write FConstructorFunc;
-    function Clone: TWiRLConstructorInfo;
+    function Clone: TWiRLConstructorProxy;
   end;
 
-  TWiRLResourceRegistry = class(TObjectDictionary<string, TWiRLConstructorInfo>)
+  TWiRLResourceRegistry = class(TObjectDictionary<string, TWiRLConstructorProxy>)
   private type
     TWiRLResourceRegistrySingleton = TWiRLSingleton<TWiRLResourceRegistry>;
   protected
     class function GetInstance: TWiRLResourceRegistry; static; inline;
   public
     constructor Create; virtual;
-    function AddResourceName(const AResourceName: string): TWiRLConstructorInfo;
-    function RegisterResource(AClass: TClass): TWiRLConstructorInfo; overload;
-    function RegisterResource<T: class>: TWiRLConstructorInfo; overload;
-    function RegisterResource<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLConstructorInfo; overload;
+    function AddResourceName(const AResourceName: string): TWiRLConstructorProxy;
+    function RegisterResource(AClass: TClass): TWiRLConstructorProxy; overload;
+    function RegisterResource<T: class>: TWiRLConstructorProxy; overload;
+    function RegisterResource<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLConstructorProxy; overload;
 
     procedure UnregisterResource(AClass: TClass);
 
@@ -55,7 +55,7 @@ implementation
 
 function TWiRLResourceRegistry.GetResourceInstance<T>: T;
 var
-  LInfo: TWiRLConstructorInfo;
+  LInfo: TWiRLConstructorProxy;
 begin
   if Self.TryGetValue(T.ClassName, LInfo) then
   begin
@@ -64,21 +64,21 @@ begin
   end;
 end;
 
-function TWiRLResourceRegistry.RegisterResource<T>: TWiRLConstructorInfo;
+function TWiRLResourceRegistry.RegisterResource<T>: TWiRLConstructorProxy;
 begin
   Result := RegisterResource<T>(nil);
 end;
 
-function TWiRLResourceRegistry.RegisterResource(AClass: TClass): TWiRLConstructorInfo;
+function TWiRLResourceRegistry.RegisterResource(AClass: TClass): TWiRLConstructorProxy;
 begin
-  Result := TWiRLConstructorInfo.Create(AClass, nil);
+  Result := TWiRLConstructorProxy.Create(AClass, nil);
   Self.Add(AClass.QualifiedClassName, Result);
 end;
 
 function TWiRLResourceRegistry.RegisterResource<T>(
-  const AConstructorFunc: TFunc<TObject>): TWiRLConstructorInfo;
+  const AConstructorFunc: TFunc<TObject>): TWiRLConstructorProxy;
 begin
-  Result := TWiRLConstructorInfo.Create(TClass(T), AConstructorFunc);
+  Result := TWiRLConstructorProxy.Create(TClass(T), AConstructorFunc);
   Self.Add(T.QualifiedClassName, Result);
 end;
 
@@ -87,7 +87,7 @@ begin
   Self.Remove(AClass.QualifiedClassName);
 end;
 
-function TWiRLResourceRegistry.AddResourceName(const AResourceName: string): TWiRLConstructorInfo;
+function TWiRLResourceRegistry.AddResourceName(const AResourceName: string): TWiRLConstructorProxy;
 begin
   Self.Add(AResourceName, nil);
   Result := nil;
@@ -105,7 +105,7 @@ end;
 
 function TWiRLResourceRegistry.GetResourceClass(const AResourceName: string; out Value: TClass): Boolean;
 var
-  LInfo: TWiRLConstructorInfo;
+  LInfo: TWiRLConstructorProxy;
 begin
   Value := nil;
   Result := Self.TryGetValue(AResourceName, LInfo);
@@ -113,14 +113,14 @@ begin
     Value := LInfo.TypeTClass;
 end;
 
-{ TWiRLConstructorInfo }
+{ TWiRLConstructorProxy }
 
-function TWiRLConstructorInfo.Clone: TWiRLConstructorInfo;
+function TWiRLConstructorProxy.Clone: TWiRLConstructorProxy;
 begin
-  Result := TWiRLConstructorInfo.Create(FTypeTClass, FConstructorFunc);
+  Result := TWiRLConstructorProxy.Create(FTypeTClass, FConstructorFunc);
 end;
 
-constructor TWiRLConstructorInfo.Create(AClass: TClass;
+constructor TWiRLConstructorProxy.Create(AClass: TClass;
   const AConstructorFunc: TFunc<TObject>);
 begin
   inherited Create;

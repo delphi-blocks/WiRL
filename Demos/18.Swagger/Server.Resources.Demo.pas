@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -18,7 +18,6 @@ uses
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.Core.Registry,
-  WiRL.Core.Resource,
   WiRL.Core.Attributes,
   WiRL.Core.Application.Worker,
   WiRL.Core.MessageBody.Default,
@@ -36,7 +35,7 @@ type
   ///   This resource serves to test the OpenAPI 2.0 documentation generation
   /// </summary>
   [Path('/params')]
-  TParametersResource = class
+  TParametersResource = class(TObject)
     [Context] Response: TWiRLResponse;
   public
     /// <summary>
@@ -52,12 +51,11 @@ type
     ///   Here is a sample remarks placeholder.
     /// </remarks>
     /// <response code="200">Responde description</response>
-    [GET, Path('/str/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    [RolesAllowed('user')]
-    function ParamStr([PathParam] AParam: string): string; overload;
+    [GET, Path('/test/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
+    function ParamTest([PathParam] AParam: string): string;
 
     [GET, Path('/str/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamStr([PathParam] AParam: Integer): string; overload;
+    function ParamStr([PathParam] AParam: string): string;
 
     [GET, Path('/int/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
     function ParamInt([PathParam] AParam: Integer): Integer;
@@ -156,9 +154,9 @@ begin
   Result := AParam;
 end;
 
-function TParametersResource.ParamStr(AParam: Integer): string;
+function TParametersResource.ParamTest(AParam: string): string;
 begin
-
+  Result := AParam;
 end;
 
 { TEntitiesResource }

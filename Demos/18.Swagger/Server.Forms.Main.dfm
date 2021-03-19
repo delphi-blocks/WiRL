@@ -56,6 +56,23 @@ object MainForm: TMainForm
       Text = '8080'
     end
   end
+  object Button1: TButton
+    Left = 16
+    Top = 96
+    Width = 75
+    Height = 25
+    Caption = 'Button1'
+    TabOrder = 1
+  end
+  object Memo1: TMemo
+    Left = 104
+    Top = 98
+    Width = 442
+    Height = 183
+    Lines.Strings = (
+      'Memo1')
+    TabOrder = 2
+  end
   object MainActionList: TActionList
     Left = 104
     Top = 96

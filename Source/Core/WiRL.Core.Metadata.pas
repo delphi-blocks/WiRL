@@ -2,12 +2,12 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.Core.Resource;
+unit WiRL.Core.Metadata;
 
 interface
 
@@ -20,27 +20,39 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Exceptions,
   WiRL.Core.Declarations,
-  WiRL.Core.Context.Server,
   WiRL.Core.Registry;
 
 type
-  TWiRLResource = class;
+  TWiRLProxyResource = class;
 
-  TWiRLFilter = class
+  TWiRLProxyBase = class
+  protected
+    FProcessed: Boolean;
+    FName: string;
+    FRemarks: string;
+    FSummary: string;
+  public
+    procedure Process(); virtual;
+
+    property Name: string read FName write FName;
+    property Summary: string read FSummary write FSummary;
+    property Remarks: string read FRemarks write FRemarks;
+  end;
+
+  TWiRLProxyFilter = class(TWiRLProxyBase)
   private
     FAttribute: TCustomAttribute;
-    //FFilter: TWiRLFilterConstructorInfo;
     FFilterType: TClass;
   public
     constructor Create(AAttribute: TCustomAttribute);
+    procedure Process(); override;
   public
     property FilterType: TClass read FFilterType;
   end;
 
-  TWiRLFilterList = class(TObjectList<TWiRLFilter>)
-  end;
+  TWiRLProxyFilters = class(TObjectList<TWiRLProxyFilter>);
 
-  TWiRLMethodParam = class
+  TWiRLProxyParameter = class(TWiRLProxyBase)
   private
     FParam: TRttiParameter;
     FAttributes: TArray<TCustomAttribute>;
@@ -49,9 +61,11 @@ type
     FKind: TMethodParamType;
     FName: string;
     FRest: Boolean;
+    procedure ProcessAttributes;
   public
     constructor Create(AParam: TRttiParameter);
-    procedure ProcessAttributes;
+
+    procedure Process(); override;
   public
     property Rest: Boolean read FRest write FRest;
     property Name: string read FName write FName;
@@ -63,33 +77,43 @@ type
     property Attributes: TArray<TCustomAttribute> read FAttributes write FAttributes;
   end;
 
-  TWiRLMethodParamList = class(TObjectList<TWiRLMethodParam>)
-  end;
+  TWiRLProxyParameters = class(TObjectList<TWiRLProxyParameter>);
 
-  TWiRLMethodResult = class
+  TWiRLProxyMethodResult = class(TWiRLProxyBase)
   private
     FRttiObject: TRttiType;
     FResultType: TTypeKind;
     FIsClass: Boolean;
     FIsRecord: Boolean;
     FIsSingleton: Boolean;
+    FIsProcedure: Boolean;
+    FIsArray: Boolean;
+    FIsSimple: Boolean;
   public
     constructor Create(AResultType: TRttiType);
+
+    procedure Process(); override;
     procedure SetAsSingleton;
   public
+    property IsProcedure: Boolean read FIsProcedure;
+
     property ResultType: TTypeKind read FResultType;
     property IsClass: Boolean read FIsClass;
     property IsRecord: Boolean read FIsRecord;
+    property IsArray: Boolean read FIsArray;
+    property IsSimple: Boolean read FIsSimple;
     property IsSingleton: Boolean read FIsSingleton;
   end;
 
-  TWiRLMethodAuthorization = class
+  TWiRLProxyMethodAuth = class(TWiRLProxyBase)
   private
     FDenyAll: Boolean;
     FRoles: TStringArray;
     FPermitAll: Boolean;
     FHasAuth: Boolean;
   public
+    procedure Process(); override;
+
     procedure SetPermitAll;
     procedure SetDenyAll;
     procedure SetRoles(ARoles: TStrings);
@@ -100,30 +124,35 @@ type
     property Roles: TStringArray read FRoles;
   end;
 
-  TWiRLResourceMethod = class
+  TWiRLProxyMethod = class(TWiRLProxyBase)
   private
-    FResource: TWiRLResource;
+    FResource: TWiRLProxyResource;
     FRttiMethod: TRttiMethod;
-    FHttpMethod: string;
+    FHttpVerb: string;
     FPath: string;
     FConsumes: TMediaTypeList;
     FProduces: TMediaTypeList;
-    FMethodResult: TWiRLMethodResult;
+    FMethodResult: TWiRLProxyMethodResult;
     FAsync: Boolean;
     FRest: Boolean;
     FIsFunction: Boolean;
-    FAuth: TWiRLMethodAuthorization;
-    FFilters: TWiRLFilterList;
+    FAuth: TWiRLProxyMethodAuth;
+    FFilters: TWiRLProxyFilters;
     FAllAttributes: TArray<TCustomAttribute>;
     FStatus: TWiRLHttpStatus;
-    FParams: TWiRLMethodParamList;
+    FParams: TWiRLProxyParameters;
     FName: string;
+    FAuthHandler: Boolean;
 
     procedure ProcessAttributes;
     procedure ProcessParams;
   public
-    constructor Create(AResource: TWiRLResource; ARttiMethod: TRttiMethod);
+    constructor Create(AResource: TWiRLProxyResource; ARttiMethod: TRttiMethod);
     destructor Destroy; override;
+
+    procedure Process(); override;
+
+    function NewParam(AParam: TRttiParameter): TWiRLProxyParameter;
 
     function HasFilter(AAttribute: TCustomAttribute): Boolean;
   public
@@ -131,77 +160,110 @@ type
     property Name: string read FName;
     property Path: string read FPath;
     property Async: Boolean read FAsync;
-    property Auth: TWiRLMethodAuthorization read FAuth;
+    property Auth: TWiRLProxyMethodAuth read FAuth;
+    property AuthHandler: Boolean read FAuthHandler;
     property IsFunction: Boolean read FIsFunction;
-    property HttpMethod: string read FHttpMethod;
-    property MethodResult: TWiRLMethodResult read FMethodResult;
+    property HttpVerb: string read FHttpVerb write FHttpVerb;
+    property MethodResult: TWiRLProxyMethodResult read FMethodResult;
     property Consumes: TMediaTypeList read FConsumes;
     property Produces: TMediaTypeList read FProduces;
-    property Filters: TWiRLFilterList read FFilters;
+    property Filters: TWiRLProxyFilters read FFilters;
     property Status: TWiRLHttpStatus read FStatus write FStatus;
-    property Params: TWiRLMethodParamList read FParams write FParams;
+    property Params: TWiRLProxyParameters read FParams write FParams;
+
     property AllAttributes: TArray<TCustomAttribute> read FAllAttributes;
     property RttiObject: TRttiMethod read FRttiMethod;
   end;
 
-  TWiRLResourceMethodList = class(TObjectList<TWiRLResourceMethod>)
+  TWiRLProxyMethods = class(TObjectList<TWiRLProxyMethod>);
 
-  end;
-
-  TWiRLResource = class
+  TWiRLProxyResource = class(TWiRLProxyBase)
   private
-    FContext: TWiRLContext;
-    FAppPath: string;
-    FEnginePath: string;
-    FRttiType: TRttiType;
-    FInfo: TWiRLConstructorInfo;
-
-    FMethod: TWiRLResourceMethod;
-    FMethods: TWiRLResourceMethodList;
-    FFound: Boolean;
+    FContext: TWiRLResourceRegistry;
+    FResourceClass: TClass;
+    FConstructor: TWiRLConstructorProxy;
     FPath: string;
+    FAuth: Boolean;
+    FRttiType: TRttiType;
+    FMethods: TWiRLProxyMethods;
     FProduces: TMediaTypeList;
     FConsumes: TMediaTypeList;
-    FTypeClass: TClass;
-    FFilters: TWiRLFilterList;
-    procedure ProcessResource(AInfo: TWiRLConstructorInfo);
+    FFilters: TWiRLProxyFilters;
 
     procedure ProcessAttributes;
     procedure ProcessMethods;
-
-    function MatchProduces(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;
-    function MatchConsumes(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;
   public
-    constructor Create(AContext: TWiRLContext);
+    constructor Create(const AName: string; AContext: TWiRLResourceRegistry);
     destructor Destroy; override;
+  public
+    procedure Process(); override;
 
     function CreateInstance: TObject;
-    function GetResourceMethod: TWiRLResourceMethod;
-    function GetRequestMethod(AContext: TWiRLContext; const ARequestedPath: string): TWiRLResourceMethod;
+
+    function MatchProduces(AMethod: TWiRLProxyMethod; AMediaType: TMediaType): Boolean;
+    function MatchConsumes(AMethod: TWiRLProxyMethod; AMediaType: TMediaType): Boolean;
+    function IsSwagger(const ASwaggerResource: string): Boolean;
+    function NewMethod(AMethod: TRttiMethod; const AVerb: string): TWiRLProxyMethod;
     function GetSanitizedPath: string;
   public
     property Path: string read FPath;
-    property Methods: TWiRLResourceMethodList read FMethods;
+    property Auth: Boolean read FAuth write FAuth;
+    property Methods: TWiRLProxyMethods read FMethods;
     property Produces: TMediaTypeList read FProduces;
     property Consumes: TMediaTypeList read FConsumes;
-    property Filters: TWiRLFilterList read FFilters;
-    property Found: Boolean read FFound write FFound;
-
-    { TODO -opaolo -c : Remove if we chache the structure 20/01/2017 17:52:40 }
-    property Method: TWiRLResourceMethod read FMethod;
+    property Filters: TWiRLProxyFilters read FFilters;
 
     // Rtti-based properties (to be removed)
-    property TypeClass: TClass read FTypeClass;
-    property RttiObject: TRttiType read FRttiType;
+    // Introduce: ClassName, UnitName
+    property ResourceClass: TClass read FResourceClass write FResourceClass;
   end;
+
+  //TWiRLProxyResources = class(TObjectList<TWiRLProxyResource>);
+  TWiRLProxyResources = class(TObjectDictionary<string, TWiRLProxyResource>);
+
+  TWiRLProxyApplication = class(TWiRLProxyBase)
+  private
+    FContext: TWiRLResourceRegistry;
+    FResources: TWiRLProxyResources;
+  public
+    constructor Create(AContext: TWiRLResourceRegistry);
+    destructor Destroy; override;
+    procedure ProcessResources;
+  public
+    procedure Process(); override;
+    function NewResource(const AName: string): TWiRLProxyResource;
+    function GetResource(const AName: string): TWiRLProxyResource;
+
+    property Resources: TWiRLProxyResources read FResources write FResources;
+  end;
+
+  TWiRLAPIDoc = class(TWiRLProxyApplication)
+
+  end;
+
+  TWiRLProxyContext = record
+  private
+    FProxy: TWiRLProxyApplication;
+    FXMLDocFolder: string;
+  public
+    property Proxy: TWiRLProxyApplication read FProxy write FProxy;
+    property XMLDocFolder: string read FXMLDocFolder write FXMLDocFolder;
+  end;
+
+  TWiRLProxyEngine = class
+  protected
+    FContext: TWiRLProxyContext;
+  public
+    constructor Create(AContext: TWiRLProxyContext); virtual;
+  end;
+
 
 implementation
 
 uses
+  WiRL.Core.Auth.Resource,
   WiRL.http.URL,
-  WiRL.Rtti.Utils,
-  WiRL.Core.Engine,
-  WiRL.Core.Application;
+  WiRL.Rtti.Utils;
 
 
 function IsFilter(AAttribute: TCustomAttribute): Boolean;
@@ -219,104 +281,55 @@ begin
       Result := True;
 end;
 
-{ TWiRLResource }
+{ TWiRLProxyResource }
 
-constructor TWiRLResource.Create(AContext: TWiRLContext);
-var
-  LApp: TWiRLApplication;
+constructor TWiRLProxyResource.Create(const AName: string; AContext: TWiRLResourceRegistry);
 begin
+  FName := AName;
   FContext := AContext;
 
-  FMethods := TWiRLResourceMethodList.Create(True);
-  FFilters := TWiRLFilterList.Create(True);
+  FMethods := TWiRLProxyMethods.Create(True);
+  FFilters := TWiRLProxyFilters.Create(True);
 
-  LApp := (FContext.Application as TWiRLApplication);
+  FContext.TryGetValue(AName, FConstructor);
+  if not Assigned(FConstructor) then
+    EWiRLServerException.CreateFmt('Resource [%s] not found', [AName]);
 
-  FEnginePath := (FContext.Engine as TWiRLEngine).BasePath;
-  FAppPath := LApp.BasePath;
-  FInfo := LApp.GetResourceInfo(FContext.RequestURL.Resource);
+  FResourceClass := FConstructor.TypeTClass;
 
-  ProcessResource(FInfo);
+  FRttiType := TRttiHelper.Context.GetType(FResourceClass);
 
-  FMethod := GetResourceMethod;
+  // If a Resource inherits from Add TWiRLAuth* add a SecurityDefinition
+  if FResourceClass.InheritsFrom(TWiRLAuthBasicResource) then
+    FAuth := True;
 end;
 
-destructor TWiRLResource.Destroy;
+destructor TWiRLProxyResource.Destroy;
 begin
   FFilters.Free;
   FMethods.Free;
   inherited;
 end;
 
-function TWiRLResource.CreateInstance: TObject;
+function TWiRLProxyResource.CreateInstance: TObject;
 begin
-  Result := FInfo.ConstructorFunc();
+  Result := FConstructor.ConstructorFunc();
 end;
 
-function TWiRLResource.GetRequestMethod(AContext: TWiRLContext;
-  const ARequestedPath: string): TWiRLResourceMethod;
-begin
-  Result := nil;
-end;
-
-function TWiRLResource.GetResourceMethod: TWiRLResourceMethod;
-var
-  LConsumesMatch: Boolean;
-  LMethod: TWiRLResourceMethod;
-  LPrototypeURL: TWiRLURL;
-  LPathMatches,
-  LProducesMatch,
-  LHttpMethodMatches: Boolean;
-  LMedia: TMediaType;
-begin
-  Result := nil;
-
-  for LMedia in FContext.Request.AcceptableMediaTypes do
-  begin
-
-    for LMethod in FMethods do
-    begin
-      // Skip the non-REST methods (no GET/POST/PUT methods)
-      if not LMethod.Rest then
-        Continue;
-
-      LHttpMethodMatches := LMethod.HttpMethod = FContext.Request.Method;
-
-      if not LHttpMethodMatches then
-        Continue;
-
-      LPrototypeURL := TWiRLURL.MockURL(FEnginePath, FAppPath, FPath, LMethod.Path);
-      try
-        LPathMatches := LPrototypeURL.MatchPath(FContext.RequestURL);
-      finally
-        LPrototypeURL.Free;
-      end;
-
-      if not LPathMatches then
-        Continue;
-
-      LProducesMatch := MatchProduces(LMethod, LMedia);
-      LConsumesMatch := MatchConsumes(LMethod, FContext.Request.ContentMediaType);
-
-      if LProducesMatch and LConsumesMatch then
-      begin
-        Result := LMethod;
-        Break;
-      end;
-    end;
-
-    // Already found for the first MediaType, no further search
-    if Assigned(Result) then
-      Break;
-  end;
-end;
-
-function TWiRLResource.GetSanitizedPath: string;
+function TWiRLProxyResource.GetSanitizedPath: string;
 begin
   Result := Path.Trim(['/']);
 end;
 
-function TWiRLResource.MatchConsumes(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;
+function TWiRLProxyResource.IsSwagger(const ASwaggerResource: string): Boolean;
+begin
+  if SameText(FName.Trim(['/']), ASwaggerResource.Trim(['/'])) then
+    Result := True
+  else
+    Result := False;
+end;
+
+function TWiRLProxyResource.MatchConsumes(AMethod: TWiRLProxyMethod; AMediaType: TMediaType): Boolean;
 begin
   Result := False;
 
@@ -330,7 +343,7 @@ begin
     Exit(True);
 end;
 
-function TWiRLResource.MatchProduces(AMethod: TWiRLResourceMethod; AMediaType: TMediaType): Boolean;
+function TWiRLProxyResource.MatchProduces(AMethod: TWiRLProxyMethod; AMediaType: TMediaType): Boolean;
 begin
   Result := False;
 
@@ -351,7 +364,25 @@ begin
     Exit(True);
 end;
 
-procedure TWiRLResource.ProcessAttributes;
+function TWiRLProxyResource.NewMethod(AMethod: TRttiMethod; const AVerb: string): TWiRLProxyMethod;
+begin
+  Result := TWiRLProxyMethod.Create(Self, AMethod);
+  Result.HttpVerb := AVerb;
+  FMethods.Add(Result);
+end;
+
+procedure TWiRLProxyResource.Process;
+begin
+  inherited;
+
+  ProcessAttributes;
+  ProcessMethods;
+  //FSummary := FindReadXMLDoc();
+
+  FProcessed := True;
+end;
+
+procedure TWiRLProxyResource.ProcessAttributes;
 var
   LAttribute: TCustomAttribute;
   LMediaList: TArray<string>;
@@ -385,69 +416,60 @@ begin
     // Filters
     else if IsFilter(LAttribute) then
     begin
-      FFilters.Add(TWiRLFilter.Create(LAttribute));
+      FFilters.Add(TWiRLProxyFilter.Create(LAttribute));
     end
   end;
 end;
 
-procedure TWiRLResource.ProcessMethods;
+procedure TWiRLProxyResource.ProcessMethods;
 var
-  LRttiMethod: TRttiMethod;
-  LMethod: TWiRLResourceMethod;
+  LResourceMethod: TRttiMethod;
+  LHttpVerb: string;
+  LResMeth: TWiRLProxyMethod;
 begin
-  // Get all the methods in resource
-  if Assigned(FRttiType) then
-    for LRttiMethod in FRttiType.GetMethods do
-    begin
-      // Only REST methods get added
-      if Length(LRttiMethod.GetAttributes) > 0 then
-      begin
-        LMethod := TWiRLResourceMethod.Create(Self, LRttiMethod);
-        FMethods.Add(LMethod);
-      end;
-    end;
-end;
-
-procedure TWiRLResource.ProcessResource(AInfo: TWiRLConstructorInfo);
-begin
-  if Assigned(AInfo) then
+  // Loop on every method of the current resource object
+  for LResourceMethod in FRttiType.GetMethods do
   begin
-    FTypeClass := AInfo.TypeTClass;
-    // Get the RttiType of the resource
-    FRttiType := TWiRLApplication.RttiContext.GetType(FTypeClass);
 
-    ProcessAttributes;
+    LHttpVerb := '';
+    TRttiHelper.HasAttribute<HttpMethodAttribute>(LResourceMethod,
+      procedure (AAttr: HttpMethodAttribute)
+      begin
+        LHttpVerb := AAttr.ToString.ToLower;
+      end
+    );
 
-    ProcessMethods;
-
-    FFound := True;
-  end
-  else
-    FFound := False;
+    // This method is a REST handler
+    if not LHttpVerb.IsEmpty then
+    begin
+      LResMeth := NewMethod(LResourceMethod, LHttpverb);
+      LResMeth.Process();
+    end;
+  end;
 end;
 
-{ TWiRLResourceMethod }
+{ TWiRLProxyMethod }
 
-constructor TWiRLResourceMethod.Create(AResource: TWiRLResource; ARttiMethod: TRttiMethod);
+constructor TWiRLProxyMethod.Create(AResource: TWiRLProxyResource; ARttiMethod: TRttiMethod);
 begin
   FResource := AResource;
   FRttiMethod := ARttiMethod;
   FConsumes := TMediaTypeList.Create;
   FProduces := TMediaTypeList.Create;
-  FFilters := TWiRLFilterList.Create(True);
-  FAuth := TWiRLMethodAuthorization.Create;
+  FFilters := TWiRLProxyFilters.Create(True);
+  FAuth := TWiRLProxyMethodAuth.Create;
   FStatus := TWiRLHttpStatus.Create;
-  FParams := TWiRLMethodParamList.Create(True);
-  FMethodResult := TWiRLMethodResult.Create(FRttiMethod.ReturnType);
+  FParams := TWiRLProxyParameters.Create(True);
+  FMethodResult := TWiRLProxyMethodResult.Create(FRttiMethod.ReturnType);
   FName := FRttiMethod.Name;
 
   FIsFunction := Assigned(FRttiMethod.ReturnType);
 
-  ProcessAttributes;
-  ProcessParams;
+  //ProcessAttributes;
+  //ProcessParams;
 end;
 
-destructor TWiRLResourceMethod.Destroy;
+destructor TWiRLProxyMethod.Destroy;
 begin
   FParams.Free;
   FStatus.Free;
@@ -459,9 +481,9 @@ begin
   inherited;
 end;
 
-function TWiRLResourceMethod.HasFilter(AAttribute: TCustomAttribute): Boolean;
+function TWiRLProxyMethod.HasFilter(AAttribute: TCustomAttribute): Boolean;
 var
-  LFilter: TWiRLFilter;
+  LFilter: TWiRLProxyFilter;
 begin
   // Any non decorated filter should be used
   if not Assigned(AAttribute) then
@@ -488,7 +510,23 @@ begin
 
 end;
 
-procedure TWiRLResourceMethod.ProcessAttributes;
+function TWiRLProxyMethod.NewParam(AParam: TRttiParameter): TWiRLProxyParameter;
+begin
+  Result := TWiRLProxyParameter.Create(AParam);
+  FParams.Add(Result);
+end;
+
+procedure TWiRLProxyMethod.Process;
+begin
+  inherited;
+
+  ProcessAttributes;
+  ProcessParams;
+
+  FProcessed := True;
+end;
+
+procedure TWiRLProxyMethod.ProcessAttributes;
 var
   LAttribute: TCustomAttribute;
   LStatus: ResponseStatusAttribute;
@@ -501,13 +539,12 @@ begin
   for LAttribute in FRttiMethod.GetAttributes do
   begin
     // Add the attribute in the AllAttribute array
-    SetLength(FAllAttributes, Length(FAllAttributes) + 1);
-    FAllAttributes[Length(FAllAttributes) - 1] := LAttribute;
+    FAllAttributes := FAllAttributes + [LAttribute];
 
     // Method HTTP Method
     if LAttribute is HttpMethodAttribute then
     begin
-      FHttpMethod := HttpMethodAttribute(LAttribute).ToString;
+      FHttpVerb := HttpMethodAttribute(LAttribute).ToString;
       FRest := True;
     end
 
@@ -531,6 +568,10 @@ begin
     else if LAttribute is DenyAllAttribute then
       FAuth.SetDenyAll
 
+    // Method that handles Authorization (via CustomAttribute)
+    else if LAttribute is BasicAuthAttribute then
+      FAuthHandler := True
+
     // Method Consumes
     else if LAttribute is ConsumesAttribute then
     begin
@@ -552,7 +593,7 @@ begin
     // Filters
     else if IsFilter(LAttribute) then
     begin
-      FFilters.Add(TWiRLFilter.Create(LAttribute));
+      FFilters.Add(TWiRLProxyFilter.Create(LAttribute));
     end
 
     // ResponseRedirection
@@ -575,61 +616,81 @@ begin
   end;
 end;
 
-procedure TWiRLResourceMethod.ProcessParams;
+procedure TWiRLProxyMethod.ProcessParams;
 var
   LParam: TRttiParameter;
-  LWiRLParam: TWiRLMethodParam;
+  LWiRLParameter: TWiRLProxyParameter;
 begin
-  // Global loop to retrieve and process ALL params at once
   for LParam in FRttiMethod.GetParameters do
   begin
-    LWiRLParam := TWiRLMethodParam.Create(LParam);
-    if not LWiRLParam.Rest then
-    begin
-      LWiRLParam.Free;
-      raise EWiRLServerException.Create('Non annotated params are not allowed');
-    end;
-    FParams.Add(LWiRLParam);
+    LWiRLParameter := NewParam(LParam);
+    LWiRLParameter.Process();
+    if not LWiRLParameter.Rest then
+      raise EWiRLServerException.CreateFmt(
+        'Non annotated params [%s] are not allowed. Method-> [%s.%s]',
+        [LWiRLParameter.Name, FResource.ResourceClass.ClassName, FName]
+      );
   end;
 end;
 
-{ TWiRLMethodResult }
+{ TWiRLProxyMethodResult }
 
-constructor TWiRLMethodResult.Create(AResultType: TRttiType);
+constructor TWiRLProxyMethodResult.Create(AResultType: TRttiType);
 begin
-  if Assigned(AResultType) then
+  FRttiObject := AResultType;
+end;
+
+procedure TWiRLProxyMethodResult.Process;
+begin
+  inherited;
+
+  if Assigned(FRttiObject) then
   begin
-    FRttiObject := AResultType;
-    FResultType := AResultType.TypeKind;
+    FResultType := FRttiObject.TypeKind;
     case FResultType of
       tkClass:  FIsClass := True;
       tkRecord: FIsRecord := True;
+      tkArray,
+      tkDynArray: FIsArray := True;
+    else
+      FIsSimple := True;
     end;
-  end;
+  end
+  else
+    FIsProcedure := True;
+
+  FProcessed := True;
 end;
 
-procedure TWiRLMethodResult.SetAsSingleton;
+procedure TWiRLProxyMethodResult.SetAsSingleton;
 begin
   FIsSingleton := True;
 end;
 
-{ TWiRLMethodAuthorization }
+{ TWiRLProxyMethodAuth }
 
-procedure TWiRLMethodAuthorization.SetDenyAll;
+procedure TWiRLProxyMethodAuth.Process;
+begin
+  inherited;
+
+  FProcessed := True;
+end;
+
+procedure TWiRLProxyMethodAuth.SetDenyAll;
 begin
   FHasAuth := True;
   FDenyAll := True;
   FPermitAll := False;
 end;
 
-procedure TWiRLMethodAuthorization.SetPermitAll;
+procedure TWiRLProxyMethodAuth.SetPermitAll;
 begin
   FHasAuth := True;
   FDenyAll := False;
   FPermitAll := True;
 end;
 
-procedure TWiRLMethodAuthorization.SetRoles(ARoles: TStrings);
+procedure TWiRLProxyMethodAuth.SetRoles(ARoles: TStrings);
 begin
   FHasAuth := True;
   FDenyAll := False;
@@ -637,24 +698,39 @@ begin
   FRoles := ARoles.ToStringArray;
 end;
 
-{ TWiRLFilter }
+{ TWiRLProxyFilter }
 
-constructor TWiRLFilter.Create(AAttribute: TCustomAttribute);
+constructor TWiRLProxyFilter.Create(AAttribute: TCustomAttribute);
 begin
   FAttribute := AAttribute;
   FFilterType := FAttribute.ClassType;
 end;
 
-{ TWiRLMethodParam }
+procedure TWiRLProxyFilter.Process;
+begin
+  inherited;
 
-constructor TWiRLMethodParam.Create(AParam: TRttiParameter);
+  FProcessed := True;
+end;
+
+{ TWiRLProxyParameter }
+
+constructor TWiRLProxyParameter.Create(AParam: TRttiParameter);
 begin
   FParam := AParam;
-
+  FName := FParam.Name;
   ProcessAttributes;
 end;
 
-procedure TWiRLMethodParam.ProcessAttributes;
+procedure TWiRLProxyParameter.Process;
+begin
+  inherited;
+
+  ProcessAttributes;
+  FProcessed := True;
+end;
+
+procedure TWiRLProxyParameter.ProcessAttributes;
 var
   LAttr: TCustomAttribute;
 begin
@@ -700,6 +776,68 @@ begin
     if (FName = '') or (LAttr is BodyParamAttribute) then
       FName := FParam.Name;
   end;
+end;
+
+{ TWiRLProxyApplication }
+
+constructor TWiRLProxyApplication.Create(AContext: TWiRLResourceRegistry);
+begin
+  FResources := TWiRLProxyResources.Create([doOwnsValues]);
+  FContext := AContext;
+end;
+
+destructor TWiRLProxyApplication.Destroy;
+begin
+  FResources.Free;
+  inherited;
+end;
+
+function TWiRLProxyApplication.GetResource(const AName: string): TWiRLProxyResource;
+begin
+  if not FResources.TryGetValue(AName, Result) then
+    raise EWiRLNotFoundException.CreateFmt('Resource [%s] not found', [AName]);
+end;
+
+function TWiRLProxyApplication.NewResource(const AName: string): TWiRLProxyResource;
+begin
+  Result := TWiRLProxyResource.Create(AName, FContext);
+  FResources.Add(AName, Result);
+end;
+
+procedure TWiRLProxyApplication.Process;
+begin
+  inherited;
+
+  ProcessResources;
+  FProcessed := True;
+end;
+
+procedure TWiRLProxyApplication.ProcessResources;
+var
+  LResourceName: string;
+  LResource: TWiRLProxyResource;
+begin
+  // Loop on every resource of the application
+  for LResourceName in FContext.Keys do
+  begin
+    LResource := NewResource(LResourceName);
+    LResource.Process();
+  end;
+end;
+
+{ TWiRLProxyEngine }
+
+constructor TWiRLProxyEngine.Create(AContext: TWiRLProxyContext);
+begin
+  FContext := AContext;
+end;
+
+{ TWiRLProxyBase }
+
+procedure TWiRLProxyBase.Process;
+begin
+  if FProcessed then
+    raise EWiRLServerException.Create(Self.ClassName + ' already processed');
 end;
 
 end.

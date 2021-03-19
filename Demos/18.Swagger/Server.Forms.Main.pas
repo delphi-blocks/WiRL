@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -37,6 +37,8 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
+    Button1: TButton;
+    Memo1: TMemo;
     procedure FormDestroy(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
@@ -56,6 +58,7 @@ var
 implementation
 
 uses
+  WiRL.Core.Metadata.XMLDoc,
   WiRL.Core.OpenAPI.Resource;
 
 {$R *.dfm}
@@ -70,10 +73,16 @@ begin
   StopServerAction.Execute;
 end;
 
+  /// <summary>
+  /// Bla bla bla
+  /// </summary>
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   FRESTServer := TWiRLServer.Create(Self);
 
+  /// <summary>
+  /// subsubsub
+  /// </summary>
   FRESTServer.AddEngine<TWiRLEngine>('/rest')
     .SetEngineName('RESTEngine')
 

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -24,6 +24,7 @@ uses
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
   WiRL.Core.Context,
+  WiRL.Core.Metadata,
   WiRL.Core.Auth.Context,
   WiRL.http.Filters,
   WiRL.Core.Injection;
@@ -38,10 +39,8 @@ type
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
     FConfigRegistry: TWiRLConfigRegistry;
-
-    //FFomatSettingDictionary: TWiRLFomatSettingDictionary;
-
     FAppConfigurator: TAppConfigurator;
+    FProxy: TWiRLProxyApplication;
     FBasePath: string;
     FAppName: string;
     FSystemApp: Boolean;
@@ -62,6 +61,7 @@ type
     procedure WriteWriters(Writer: TWriter);
     procedure ReadReaders(Reader: TReader);
     procedure WriteReaders(Writer: TWriter);
+    function GetEnginePath: string;
   protected
     procedure SetParentComponent(AParent: TComponent); override;
     procedure DefineProperties(Filer: TFiler); override;
@@ -97,7 +97,8 @@ type
     function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
     function GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
 
-    function GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
+    { TODO -opaolo -c : Remove from here? 16/03/2021 15:13:12 }
+    function GetResourceCtor(const AResourceName: string): TWiRLConstructorProxy;
 
     // Handles the parent/child relationship for the designer
     function GetParentComponent: TComponent; override;
@@ -115,10 +116,12 @@ type
     class property RttiContext: TRttiContext read FRttiContext;
   published
     property Path: string read GetPath;
+    property EnginePath: string read GetEnginePath;
     property AppName: string read FAppName write FAppName;
     property BasePath: string read FBasePath write FBasePath;
     property ErrorMediaType: string read FErrorMediaType write FErrorMediaType;
 
+    property Proxy: TWiRLProxyApplication read FProxy write FProxy;
     // Fake property to display the right property editors
     property Resources: TWiRLResourceRegistry read FResourceRegistry write FResourceRegistry;
     property Filters: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
@@ -247,7 +250,7 @@ end;
 
 function TWiRLApplication.AddResource(const AResource: string): Boolean;
 
-  function AddResourceToApplicationRegistry(const AInfo: TWiRLConstructorInfo): Boolean;
+  function AddResourceToApplicationRegistry(const AInfo: TWiRLConstructorProxy): Boolean;
   var
     LClass: TClass;
     LResult: Boolean;
@@ -276,7 +279,7 @@ function TWiRLApplication.AddResource(const AResource: string): Boolean;
 
 var
   LRegistry: TWiRLResourceRegistry;
-  LInfo: TWiRLConstructorInfo;
+  LInfo: TWiRLConstructorProxy;
   LKey: string;
 begin
   if csDesigning in ComponentState then
@@ -440,6 +443,8 @@ begin
 
   if FReaderRegistry.Count = 0 then
     FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
+
+  FProxy.Process();
 end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
@@ -519,8 +524,8 @@ begin
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
-
   FAppConfigurator := TAppConfiguratorImpl.Create(Self);
+  FProxy := TWiRLProxyApplication.Create(FResourceRegistry);
 
   FErrorMediaType := TMediaType.APPLICATION_JSON;
   if csDesigning in ComponentState then
@@ -542,6 +547,7 @@ end;
 destructor TWiRLApplication.Destroy;
 begin
   Engine := nil;
+  FProxy.Free;
   FReaderRegistry.Free;
   FWriterRegistry.Free;
   FFilterRegistry.Free;
@@ -559,6 +565,11 @@ end;
 function TWiRLApplication.GetConfiguration<T>: T;
 begin
   Result := GetConfigByClassRef(TWiRLConfigurationClass(T)) as T;
+end;
+
+function TWiRLApplication.GetEnginePath: string;
+begin
+  Result := (Engine as TWiRLEngine).BasePath;
 end;
 
 function TWiRLApplication.GetFormatSettingFor(ATypeInfo: PTypeInfo): string;
@@ -579,7 +590,7 @@ begin
     Result := TWiRLURL.CombinePath([(FEngine as TWiRLEngine).BasePath, BasePath]);
 end;
 
-function TWiRLApplication.GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
+function TWiRLApplication.GetResourceCtor(const AResourceName: string): TWiRLConstructorProxy;
 begin
   FResourceRegistry.TryGetValue(AResourceName, Result);
 end;

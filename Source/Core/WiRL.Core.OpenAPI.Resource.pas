@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -27,7 +27,7 @@ uses
   WiRL.Rtti.Utils,
   WiRL.http.Request,
   WiRL.http.Response,
-  WiRL.Core.Resource;
+  WiRL.Core.Metadata;
 
 type
   TWiRLProcessEvent = function(const AFileName: string): TStream of object;
@@ -67,7 +67,7 @@ type
     [Context] Conf: TWiRLConfigurationOpenAPI;
     [Context] Request: TWiRLRequest;
     [Context] Response: TWiRLResponse;
-    [Context] Resource: TWiRLResource;
+    [Context] Resource: TWiRLProxyResource;
     function FilterContent(const AFileName: string): TStream;
   public
     [GET, Produces(TMediaType.APPLICATION_JSON)]

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,7 +16,7 @@ uses
   System.Rtti,
 
   Neon.Core.Persistence.Swagger,
-
+  WiRL.Core.Metadata,
   WiRL.Configuration.Auth,
   WiRL.Configuration.Neon,
   WiRL.Configuration.OpenAPI,
@@ -55,7 +55,6 @@ type
     property OpenAPIResource: string read FOpenAPIResource write FOpenAPIResource;
   end;
 
-
   TOpenAPIv2Engine = class
   private
     const OPENAPI_VERSION = '2.0';
@@ -71,11 +70,13 @@ type
     procedure AddSecurityDefinition(AJson: TJSONObject; AResource: TClass);
     procedure AddSecurity(AJson: TJSONObject; const AName: string);
     function AddOperation(AJsonPath: TJSONObject; const AMethodName, ATagName: string; AResourceMethod: TRttiMethod): TJSONObject;
-    procedure AddResource(const AName: string; APaths: TJSONObject; AApplication: TWiRLApplication; LResource: TClass);
+    procedure AddResource(const AName: string; APaths: TJSONObject; AApplication: TWiRLApplication; AResource: TClass);
     function CreateParameter(ARttiParameter: TRttiParameter): TJSONObject;
   protected
     constructor Create(AApplication: TWiRLApplication; const ASwaggerResource: string); overload;
     constructor Create(AInfo: TOpenAPIInfo); overload;
+
+    function BuildInfoObject(): TWiRLProxyApplication;
 
     function Build(): TJSONObject;
   public
@@ -191,7 +192,7 @@ begin
 end;
 
 procedure TOpenAPIv2Engine.AddResource(const AName: string; APaths:
-    TJSONObject; AApplication: TWiRLApplication; LResource: TClass);
+    TJSONObject; AApplication: TWiRLApplication; AResource: TClass);
 
   function FindOrCreatePath(APaths: TJSONObject; const AResourcePath: string): TJSONObject;
   begin
@@ -213,7 +214,7 @@ var
   LJsonPath: TJSONObject;
   LOperation: TJSONObject;
 begin
-  LResourceType := TRttiHelper.Context.GetType(LResource);
+  LResourceType := TRttiHelper.Context.GetType(AResource);
   LResourcePath := GetPath(LResourceType);
   if LResourcePath <> '' then
   begin
@@ -297,10 +298,16 @@ var
   LPaths: TJSONObject;
   LSchemes: TJSONArray;
   LSecurityDefinitions: TJSONObject;
-  LResourceName: string;
   LResource: TClass;
+
+  LAPIDoc: TWiRLProxyApplication;
+
+  LRes: TWiRLProxyResource;
+  LPair: TPair<string, TWiRLProxyResource>;
 begin
   // Info object
+  LAPIDoc := BuildInfoObject();
+
   { TODO -opaolo -c : manage the empty strings scenario 07/01/2021 16:29:30 }
   LInfo := TJSONObject.Create
     .AddPair('title', FConfigurationOpenAPI.Title)
@@ -313,19 +320,19 @@ begin
 
   LSecurityDefinitions := TJSONObject.Create;
 
-  // Loop on every resource of the application
-  for LResourceName in FApplication.Resources.Keys do
+  for LPair in LAPIDoc.Resources do
   begin
-    if SameText(LResourceName.Trim(['/']), FSwaggerResource.Trim(['/'])) then
+    LRes := LPair.Value;
+    if LRes.IsSwagger(FSwaggerResource) then
       Continue;
-    LTags.Add(TJSONObject.Create.AddPair('name', LResourceName));
-    LResource := FApplication.GetResourceInfo(LResourceName).TypeTClass;
 
-    // If a Resource inherits from Add TWiRLAuth* add a SecurityDefinition
-    if LResource.InheritsFrom(TWiRLAuthBasicResource) then
+    LTags.Add(TJSONObject.Create.AddPair('name', LRes.Name));
+    LResource := FApplication.GetResourceCtor(LRes.Name).TypeTClass;
+
+    if LRes.Auth then
       AddSecurityDefinition(LSecurityDefinitions, LResource);
 
-    AddResource(LResourceName, LPaths, FApplication, LResource);
+    AddResource(LRes.Name, LPaths, FApplication, LResource);
   end;
 
   LSchemes := TJSONArray.Create;
@@ -339,6 +346,12 @@ begin
     .AddPair('securityDefinitions', LSecurityDefinitions)
     .AddPair('tags', LTags)
     .AddPair('paths', LPaths)
+end;
+
+function TOpenAPIv2Engine.BuildInfoObject: TWiRLProxyApplication;
+begin
+  Result := TWiRLProxyApplication.Create(FApplication.Resources);
+  Result.Process();
 end;
 
 constructor TOpenAPIv2Engine.Create(AApplication: TWiRLApplication; const
@@ -362,7 +375,7 @@ end;
 
 function TOpenAPIv2Engine.CreateParameter(ARttiParameter: TRttiParameter): TJSONObject;
 
-  function GetParamPosition(ARttiParameter: TRttiParameter): string;
+  function GetParamLocation(ARttiParameter: TRttiParameter): string;
   begin
     if TRttiHelper.HasAttribute<PathParamAttribute>(ARttiParameter) then
       Result := 'path'
@@ -393,7 +406,7 @@ function TOpenAPIv2Engine.CreateParameter(ARttiParameter: TRttiParameter): TJSON
 var
   LParamType: string;
 begin
-  LParamType := GetParamPosition(ARttiParameter);
+  LParamType := GetParamLocation(ARttiParameter);
   if LParamType.IsEmpty then
     Result := nil
   else

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -18,7 +18,7 @@ uses
   WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Response,
-  WiRL.Core.Resource,
+  WiRL.Core.Metadata,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
@@ -102,7 +102,7 @@ type
     procedure Assign(ARegistry: TWiRLWriterRegistry);
     procedure Enumerate(const AProc: TProc<TWriterInfo>);
 
-    procedure FindWriter(AMethod: TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList;
+    procedure FindWriter(AMethod: TWiRLProxyMethod; AAcceptMediaTypes: TMediaTypeList;
       out AWriter: IMessageBodyWriter; out AMediaType: TMediaType); overload;
 
     function FindWriter(AType: TRttiType; AMediaType: TMediaType): IMessageBodyWriter; overload;
@@ -205,7 +205,7 @@ begin
   Result := InternalFindWriter(AType, AMediaType);
 end;
 
-procedure TWiRLWriterRegistry.FindWriter(AMethod: TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList;
+procedure TWiRLWriterRegistry.FindWriter(AMethod: TWiRLProxyMethod; AAcceptMediaTypes: TMediaTypeList;
   out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
 var
   LMediaType: TMediaType;
