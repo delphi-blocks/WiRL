@@ -20,7 +20,7 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Application.Worker,
   //WiRL.Core.ParamReader,
-  WiRL.Core.Resource,
+  WiRL.Core.Metadata,
   WiRL.Core.MessageBody.Default,
   WiRL.Core.Auth.Context,
   WiRL.http.Accept.MediaType,

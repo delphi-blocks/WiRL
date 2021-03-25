@@ -73,7 +73,6 @@ contains
   WiRL.Core.Application.Worker in '..\..\Source\Core\WiRL.Core.Application.Worker.pas',
   WiRL.Core.Attributes in '..\..\Source\Core\WiRL.Core.Attributes.pas',
   WiRL.Core.Auth.Context in '..\..\Source\Core\WiRL.Core.Auth.Context.pas',
-  WiRL.Core.Auth.Resource in '..\..\Source\Core\WiRL.Core.Auth.Resource.pas',
   WiRL.Core.Cache in '..\..\Source\Core\WiRL.Core.Cache.pas',
   WiRL.Core.Classes in '..\..\Source\Core\WiRL.Core.Classes.pas',
   WiRL.Core.Context in '..\..\Source\Core\WiRL.Core.Context.pas',
@@ -87,7 +86,6 @@ contains
   WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
   WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
-  WiRL.Core.Resource in '..\..\Source\Core\WiRL.Core.Resource.pas',
   WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
   WiRL.Core.Validators in '..\..\Source\Core\WiRL.Core.Validators.pas',
@@ -123,7 +121,9 @@ contains
   WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
-  WiRL.Client.Resource.Obj in '..\..\Source\Client\WiRL.Client.Resource.Obj.pas';
+  WiRL.Client.Resource.Obj in '..\..\Source\Client\WiRL.Client.Resource.Obj.pas',
+  WiRL.Core.Metadata in '..\..\Source\Core\WiRL.Core.Metadata.pas',
+  WiRL.Core.Auth.Resource in '..\..\Source\Core\WiRL.Core.Auth.Resource.pas';
 
 end.
 

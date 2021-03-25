@@ -78,6 +78,8 @@ type
     function AddWriter(const AWriter: string): Boolean;
     function AddReader(const AReader: string): Boolean;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    // Handles the parent/child relationship for the designer
+    procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
   public
     property Resources: TObjectList read FResources;
     constructor Create(AOwner: TComponent); override;
@@ -274,6 +276,18 @@ end;
 function TWiRLClientApplication.GetAppConfigurator: TAppConfigurator;
 begin
   Result := FAppConfigurator;
+end;
+
+procedure TWiRLClientApplication.GetChildren(Proc: TGetChildProc;
+  Root: TComponent);
+var
+  LResource: TObject;
+begin
+  inherited;
+  for LResource in FResources do
+  begin
+    Proc(LResource as TWiRLClientCustomResource);
+  end;
 end;
 
 function TWiRLClientApplication.GetConfigByClassRef(

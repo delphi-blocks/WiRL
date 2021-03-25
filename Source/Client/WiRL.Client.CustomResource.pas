@@ -62,6 +62,9 @@ type
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
+    // Handles the parent/child relationship for the designer
+    procedure SetParentComponent(AParent: TComponent); override;
+
     procedure BeforeGET; virtual;
     procedure AfterGET(AResponse: IWiRLResponse); virtual;
 
@@ -88,6 +91,10 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    // Handles the parent/child relationship for the designer
+    function GetParentComponent: TComponent; override;
+    function HasParent: Boolean; override;
 
     function GenericGet<T>: T; overload;
     procedure GenericGet(AResponseEntity: TObject); overload;
@@ -329,6 +336,11 @@ begin
     Result := Application.DefaultMediaType;
 end;
 
+function TWiRLClientCustomResource.GetParentComponent: TComponent;
+begin
+  Result := FApplication;
+end;
+
 function TWiRLClientCustomResource.GetPath: string;
 var
   LEngine: string;
@@ -364,6 +376,11 @@ begin
 
   if FQueryParams.Count > 0 then
     Result := Result + '?' + SmartConcat(TWiRLURL.URLEncode(FQueryParams.ToStringArray), '&');
+end;
+
+function TWiRLClientCustomResource.HasParent: Boolean;
+begin
+  Result := Assigned(FApplication);
 end;
 
 procedure TWiRLClientCustomResource.HEAD(const ABeforeExecute,
@@ -963,6 +980,13 @@ begin
 
   if LValue.IsObject and (LValue.AsObject = AObject) then
     Result := True;
+end;
+
+procedure TWiRLClientCustomResource.SetParentComponent(AParent: TComponent);
+begin
+  inherited;
+  if AParent is TWiRLClientApplication then
+    FApplication := AParent as TWiRLClientApplication;
 end;
 
 procedure TWiRLClientCustomResource.SetPathParamsValues(const Value: TStrings);

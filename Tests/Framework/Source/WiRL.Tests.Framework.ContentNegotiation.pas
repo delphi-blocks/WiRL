@@ -8,7 +8,7 @@ uses
 
   WiRL.Core.Application,
   WiRL.Core.Attributes,
-  WiRL.Core.Resource,
+  WiRL.Core.Metadata,
   WiRL.Core.Registry,
   WiRL.Core.Engine,
   WiRL.Core.Context,

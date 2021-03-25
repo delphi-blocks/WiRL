@@ -124,7 +124,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Injection.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Resource.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Validators.pas"/>
