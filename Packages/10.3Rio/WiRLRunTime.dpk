@@ -58,7 +58,6 @@ contains
   WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
   WiRL.Client.CustomResource in '..\..\Source\Client\WiRL.Client.CustomResource.pas',
   WiRL.Client.FireDAC in '..\..\Source\Client\WiRL.Client.FireDAC.pas',
-  WiRL.Client.Messaging.Resource in '..\..\Source\Client\WiRL.Client.Messaging.Resource.pas',
   WiRL.Client.Resource.JSON in '..\..\Source\Client\WiRL.Client.Resource.JSON.pas',
   WiRL.Client.Resource in '..\..\Source\Client\WiRL.Client.Resource.pas',
   WiRL.Client.Resource.Stream in '..\..\Source\Client\WiRL.Client.Resource.Stream.pas',
@@ -83,7 +82,6 @@ contains
   WiRL.Core.Injection in '..\..\Source\Core\WiRL.Core.Injection.pas',
   WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
-  WiRL.Core.Resource in '..\..\Source\Core\WiRL.Core.Resource.pas',
   WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
   WiRL.Core.Validators in '..\..\Source\Core\WiRL.Core.Validators.pas',
@@ -123,7 +121,8 @@ contains
   WiRL.Core.MessageBody.Classes in '..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
   WiRL.Core.MessageBody.Default in '..\..\Source\Core\WiRL.Core.MessageBody.Default.pas',
   WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
-  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas';
+  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
+  WiRL.Core.Metadata in '..\..\Source\Core\WiRL.Core.Metadata.pas';
 
 end.
 

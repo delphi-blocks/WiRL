@@ -64,7 +64,7 @@ end;
 constructor TWiRLClientResourceStream.Create(AOwner: TComponent);
 begin
   inherited;
-  SpecificAccept := '*/*';
+  //SpecificAccept := '*/*';
   FResponse := TMemoryStream.Create;
 end;
 

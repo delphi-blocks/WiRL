@@ -183,11 +183,10 @@ begin
     FConstructorFunc :=
       function: TObject
       var
-        LContext: TRttiContext;
         LType: TRttiType;
         LValue: TValue;
       begin
-        LType := LContext.GetType(FTypeTClass);
+        LType := TRttiHelper.Context.GetType(FTypeTClass);
         LValue := LType.GetMethod('Create').Invoke(LType.AsInstance.MetaclassType, []);
         Result := LValue.AsObject;
       end

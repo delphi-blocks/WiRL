@@ -29,12 +29,10 @@ type
     property ContentType;
     property Application;
     property Client;
-    property SpecificAccept;
-    property SpecificContentType;
     property SpecificClient;
     property Resource;
     property Path;
-    property PathParamsValues;
+    property PathParams;
     property QueryParams;
   end;
 

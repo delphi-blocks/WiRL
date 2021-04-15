@@ -17,6 +17,7 @@ uses
   System.Actions, Vcl.ActnList, Vcl.Menus, Vcl.PlatformDefaultStyleActnCtrls,
   Vcl.ActnPopup, System.ImageList, Vcl.ImgList, DesignIntf, DesignEditors,
 
+  WiRL.Client.CustomResource,
   WiRL.Client.Application,
   WiRL.Client.Resource;
 
@@ -49,6 +50,9 @@ type
     ToolButton4: TToolButton;
     ToolButton5: TToolButton;
     ListView1: TListView;
+    ToolButton6: TToolButton;
+    ToolButton7: TToolButton;
+    RunCmd: TAction;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure AddCmdExecute(Sender: TObject);
@@ -60,6 +64,8 @@ type
     procedure MoveDownCmdUpdate(Sender: TObject);
     procedure ListView1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure RunCmdUpdate(Sender: TObject);
+    procedure RunCmdExecute(Sender: TObject);
   private
     FDesigner: IDesigner;
     FClientApp: TWiRLClientApplication;
@@ -98,6 +104,8 @@ procedure Register;
 implementation
 
 {$R *.dfm}
+
+uses WiRL.Client.ResourceRunner;
 
 { TWiRLClientAppResourceEditor }
 
@@ -327,6 +335,27 @@ begin
   MoveUpCmd.Enabled :=
     Assigned(ListView1.Selected) and
     (ListView1.Selected.Index > 0);
+end;
+
+procedure TWiRLClientAppResourceEditor.RunCmdExecute(Sender: TObject);
+var
+  LSelectedIndex: Integer;
+begin
+  LSelectedIndex := ListView1.Selected.Index;
+  if (LSelectedIndex >= 0) and (LSelectedIndex < ClientApp.Resources.Count) then
+  begin
+    ClientApp.SetWriters('*.*');
+    ClientApp.SetReaders('*.*');
+
+    TWiRLResourceRunnerForm.Edit(ClientApp.Resources[LSelectedIndex] as TWiRLClientCustomResource);
+    FillAppList;
+  end;
+end;
+
+procedure TWiRLClientAppResourceEditor.RunCmdUpdate(Sender: TObject);
+begin
+  MoveUpCmd.Enabled := Assigned(ListView1.Selected);
+
 end;
 
 class procedure TWiRLClientAppResourceEditor.ShowEditor(ADesigner: IDesigner;

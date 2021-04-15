@@ -16,7 +16,7 @@ uses
 
   WiRL.Client.Application,
   WiRL.Client.FireDAC,
-  WiRL.Client.Messaging.Resource,
+  //WiRL.Client.Messaging.Resource,
   WiRL.Client.Resource.JSON,
   WiRL.Client.Resource.Obj,
   WiRL.Client.Resource,

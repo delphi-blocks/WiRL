@@ -72,6 +72,7 @@ type
     procedure SetWWWAuthenticate(const AValue: string);
 
     procedure Clear;
+    function Count: Integer;
     procedure AddHeader(AHeader: TWiRLHeader);
     function GetEnumerator: TEnumerator<TWiRLHeader>;
     property Values[const AName: string]: string read GetValue write SetValue; default;
@@ -113,6 +114,7 @@ type
     function FindHeader(const AName: string): TWiRLHeader;
 
     { IWiRLHeader }
+    function Count: Integer;
     function GetAccept: string;
     function GetAcceptCharSet: string;
     function GetAcceptEncoding: string;
@@ -212,6 +214,11 @@ begin
   inherited;
   if FRefCount <> 0 then
     System.Error(reInvalidPtr);
+end;
+
+function TWiRLHeaders.Count: Integer;
+begin
+  Result := inherited Count;
 end;
 
 constructor TWiRLHeaders.Create;
