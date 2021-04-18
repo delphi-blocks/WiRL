@@ -4,7 +4,7 @@
         <ProjectVersion>19.0</ProjectVersion>
         <MainSource>WiRL.Tests.Framework.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">TestInsight</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Console</AppType>
@@ -134,6 +134,7 @@
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.Resources.ContextInjection.pas"/>
         <DCCReference Include="..\Mock\WiRL.Tests.Mock.InjectionFactories.pas"/>
         <DCCReference Include="Source\WiRL.Tests.Framework.MultiParts.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

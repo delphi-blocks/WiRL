@@ -309,7 +309,7 @@ begin
     end,
     AIsReadable,
     AGetAffinity,
-    TRttiContext.Create.GetType(AReaderClass)
+    TRttiHelper.Context.GetType(AReaderClass)
   );
 end;
 

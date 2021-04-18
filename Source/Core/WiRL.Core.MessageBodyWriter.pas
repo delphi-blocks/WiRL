@@ -84,7 +84,6 @@ type
     function GetCount: Integer;
   protected
     FRegistry: TObjectList<TWriterInfo>;
-    FRttiContext: TRttiContext;
     function ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
     function InternalFindWriter(AType: TRttiType; AMediaType: TMediaType): IMessageBodyWriter; overload;
   public
@@ -180,7 +179,6 @@ end;
 constructor TWiRLWriterRegistry.Create(AOwnsObjects: Boolean);
 begin
   FRegistry := TObjectList<TWriterInfo>.Create(AOwnsObjects);
-  FRttiContext := TRttiContext.Create;
 end;
 
 destructor TWiRLWriterRegistry.Destroy;

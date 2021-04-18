@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit WiRL.Rtti.Utils;
 
+{$I ..\Core\WiRL.inc}
+
 interface
 
 uses
@@ -98,9 +100,22 @@ type
     class function GetType(AObject: TRttiObject): TRttiType;
 
     class constructor Create;
+    class destructor Destroy;
 
     class property Context: TRttiContext read FContext;
   end;
+
+  {$IFDEF CUSTOM_ATTRIBUTE_BUG}
+  TRttiPatch = class
+  private
+    class function CheckFreeDescs(const APackage: TRTTIPackage;
+      const AHandle: THandle): Boolean; static;
+    class constructor Create;
+    class destructor Destroy;
+  public
+    class var AutoFreeDescs: Boolean;
+  end;
+  {$ENDIF}
 
 function ExecuteMethod(const AInstance: TValue; const AMethodName: string; const AArguments: array of TValue;
   const ABeforeExecuteProc: TProc{ = nil}; const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean; overload;
@@ -116,8 +131,16 @@ function TValueToJSONObject(AObject: TJSONObject; const AName: string; const AVa
 implementation
 
 uses
+  Generics.Collections,
   System.DateUtils,
   WiRL.Core.Utils;
+
+{$IFDEF CUSTOM_ATTRIBUTE_BUG}
+type
+  TRTTIPackageHelper = class Helper for TRTTIPackage
+    function HandleToObject: TDictionary<Pointer,TRttiObject>;
+  end;
+{$ENDIF}
 
 function TValueToJSONObject(AObject: TJSONObject; const AName: string; const AValue: TValue): TJSONObject;
 begin
@@ -229,6 +252,11 @@ begin
   else
     raise Exception.CreateFmt('Error creating type', [AType.Name]);
   end;
+end;
+
+class destructor TRttiHelper.Destroy;
+begin
+  FContext.Free;
 end;
 
 class function TRttiHelper.CreateInstance(AClass: TClass): TObject;
@@ -645,5 +673,60 @@ begin
   LType := Context.FindType(ATypeName);
   Result := CreateInstance(LType, Args);
 end;
+
+{$IFDEF CUSTOM_ATTRIBUTE_BUG}
+// Call back routine
+procedure OnUnloadModule(const AInstance :THandle);
+var
+  LPackage :TRTTIPackage;
+begin
+  { If descriptors related to the AInstance package must be freed now.
+    NOTE: This helps to resolve a bug related to packages with custom
+    attributes (quality report RSP-11620). }
+  if TRttiPatch.AutoFreeDescs then
+    for LPackage In TRttiHelper.Context.GetPackages do
+      if TRttiPatch.CheckFreeDescs(LPackage, AInstance) then
+        Break;
+end;
+
+class constructor TRttiPatch.Create;
+begin
+  AddModuleUnloadProc (TModuleUnloadProcLW (@OnUnloadModule));
+  AutoFreeDescs := False;
+end;
+
+class destructor TRttiPatch.Destroy;
+var
+  LPackage :TRTTIPackage;
+begin
+  for LPackage in TRttiHelper.Context.GetPackages do
+    if not (AutoFreeDescs and CheckFreeDescs (LPackage, HInstance)) then
+      { NOTE: This call must be done here, before the Finalization section of
+        the System unit calls FinalizeMemoryManager. }
+      RemoveModuleUnloadProc(TModuleUnloadProcLW(@OnUnloadModule));
+end;
+
+class function TRttiPatch.CheckFreeDescs(const APackage :TRTTIPackage;
+  const AHandle :THandle) :Boolean;
+begin
+  Result := APackage.Handle = AHandle;
+  if Result then
+    // free the TRTTIObject instances (descriptors) of the package
+    APackage.HandleToObject.Clear;
+end;
+
+{ TRTTIPackageHelper }
+
+function TRTTIPackageHelper.HandleToObject: TDictionary<Pointer, TRttiObject>;
+begin
+  with Self do
+    Result := FHandleToObject;
+end;
+{$ENDIF}
+
+initialization
+{$IFDEF CUSTOM_ATTRIBUTE_BUG}
+  TRttiPatch.ClassName;
+{$ENDIF}
 
 end.

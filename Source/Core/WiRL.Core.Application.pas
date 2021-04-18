@@ -32,8 +32,6 @@ uses
 type
   TWiRLApplication = class(TComponent, IWiRLApplication)
   private
-    class var FRttiContext: TRttiContext;
-  private
     FResourceRegistry: TWiRLResourceRegistry;
     FFilterRegistry: TWiRLFilterRegistry;
     FWriterRegistry: TWiRLWriterRegistry;
@@ -62,13 +60,12 @@ type
     procedure ReadReaders(Reader: TReader);
     procedure WriteReaders(Writer: TWriter);
     function GetEnginePath: string;
+    class function GetRttiContext: TRttiContext; static;
   protected
     procedure SetParentComponent(AParent: TComponent); override;
     procedure DefineProperties(Filer: TFiler); override;
     function GetAppConfigurator: TAppConfigurator;
   public
-    class procedure InitializeRtti;
-
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
@@ -113,7 +110,7 @@ type
     property ReaderRegistry: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
     property Engine: TComponent read FEngine write SetEngine;
 
-    class property RttiContext: TRttiContext read FRttiContext;
+    class property RttiContext: TRttiContext read GetRttiContext;
   published
     property Path: string read GetPath;
     property EnginePath: string read GetEnginePath;
@@ -257,7 +254,7 @@ function TWiRLApplication.AddResource(const AResource: string): Boolean;
   begin
     LResult := False;
     LClass := AInfo.TypeTClass;
-    TRttiHelper.HasAttribute<PathAttribute>(FRttiContext.GetType(LClass),
+    TRttiHelper.HasAttribute<PathAttribute>(RttiContext.GetType(LClass),
       procedure (AAttribute: PathAttribute)
       var
         LURL: TWiRLURL;
@@ -595,14 +592,14 @@ begin
   FResourceRegistry.TryGetValue(AResourceName, Result);
 end;
 
+class function TWiRLApplication.GetRttiContext: TRttiContext;
+begin
+  Result := TRttiHelper.Context;
+end;
+
 function TWiRLApplication.HasParent: Boolean;
 begin
   Result := Assigned(FEngine);
-end;
-
-class procedure TWiRLApplication.InitializeRtti;
-begin
-  FRttiContext := TRttiContext.Create;
 end;
 
 procedure TWiRLApplication.ReadFilters(Reader: TReader);
@@ -661,9 +658,6 @@ function TAppConfiguratorImpl.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IIn
 begin
   Result := FApplication.GetConfigByInterfaceRef(AInterfaceRef);
 end;
-
-initialization
-  TWiRLApplication.InitializeRtti;
 
 end.
 

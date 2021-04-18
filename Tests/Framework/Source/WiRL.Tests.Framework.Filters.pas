@@ -101,7 +101,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/bindingfilter';
   FServer.HandleRequest(FRequest, FResponse);
-  Assert.AreEqual('true', FRequest.HeaderFields['x-request-binded-filter']);
+  Assert.AreEqual('true', FRequest.Headers['x-request-binded-filter']);
 end;
 
 procedure TTestFilter.TestMatchingBindingResponseFilter;
@@ -117,7 +117,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
   FServer.HandleRequest(FRequest, FResponse);
-  Assert.AreNotEqual('true', FRequest.HeaderFields['x-request-binded-filter']);
+  Assert.AreNotEqual('true', FRequest.Headers['x-request-binded-filter']);
 end;
 
 procedure TTestFilter.TestNonMatchingBindingResponseFilter;
@@ -133,7 +133,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
   FServer.HandleRequest(FRequest, FResponse);
-  Assert.AreEqual('true', FRequest.HeaderFields['x-prematching-filter']);
+  Assert.AreEqual('true', FRequest.Headers['x-prematching-filter']);
 end;
 
 procedure TTestFilter.TestPerMatchingFilterWithInvalidResource;
@@ -141,7 +141,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/xxx/yyyy/';
   FServer.HandleRequest(FRequest, FResponse);
-  Assert.AreEqual('true', FRequest.HeaderFields['x-prematching-filter']);
+  Assert.AreEqual('true', FRequest.Headers['x-prematching-filter']);
   Assert.AreEqual(404, FResponse.StatusCode);
 end;
 
@@ -150,7 +150,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
   FServer.HandleRequest(FRequest, FResponse);
-  Assert.AreEqual('true', FRequest.HeaderFields['x-request-filter']);
+  Assert.AreEqual('true', FRequest.Headers['x-request-filter']);
 end;
 
 procedure TTestFilter.TestResponseFilter;

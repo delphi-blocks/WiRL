@@ -14,7 +14,8 @@ unit WiRL.Client.CustomResource;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
+  System.SysUtils, System.Classes, System.Rtti, System.Contnrs, System.Types,
+  System.Generics.Collections,
   WiRL.Core.Context,
   WiRL.Client.Application,
   WiRL.http.Core,
@@ -615,6 +616,9 @@ end;
 
 destructor TWiRLClientCustomResource.Destroy;
 begin
+  if Assigned(FApplication) then
+    FApplication.Resources.Extract(Self);
+
   FPathParams.Free;
   FQueryParams.Free;
   FContext.Free;

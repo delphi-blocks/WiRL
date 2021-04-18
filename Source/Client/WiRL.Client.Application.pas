@@ -328,7 +328,11 @@ begin
   if Operation = opRemove then
   begin
     if AComponent = FClient then
+    begin
       FClient := nil;
+    end;
+    // If it's a resource remove from the list (without free it)
+    FResources.Extract(AComponent);
   end;
 end;
 

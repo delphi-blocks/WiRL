@@ -91,7 +91,6 @@ type
     class function GetServerFileName: string; static;
   private
     FCurrentApp: IWiRLApplication;
-    FRttiContext: TRttiContext;
     FApplications: TWiRLApplicationList;
     FSubscribers: TList<IWiRLHandleListener>;
     FCriticalSection: TCriticalSection;
@@ -183,7 +182,6 @@ end;
 constructor TWiRLEngine.Create(AOwner: TComponent);
 begin
   inherited;
-  FRttiContext := TRttiContext.Create;
   FApplications := TWiRLApplicationList.Create(Self);
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IWiRLHandleListener>.Create;

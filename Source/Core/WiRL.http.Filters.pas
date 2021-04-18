@@ -111,7 +111,6 @@ type
     type
       TWiRLFilterRegistrySingleton = TWiRLSingleton<TWiRLFilterRegistry>;
     var
-      FRttiContext: TRttiContext;
       // True if the list has been sorted since the first item was added
       FSorted: Boolean;
     function GetPriority(FilterClass: TClass) :Integer;
@@ -252,8 +251,6 @@ begin
   );
 
   //TWiRLFilterRegistrySingleton.CheckInstance(Self);
-  FRttiContext := TRttiContext.Create;
-
   inherited Create(LComparer, True);
 end;
 
@@ -268,7 +265,7 @@ begin
   begin
     if Supports(LConstructorInfo.TypeTClass, IWiRLContainerRequestFilter) then
     begin
-      LFilterRttiType := FRttiContext.GetType(LConstructorInfo.TypeTClass);
+      LFilterRttiType := TRttiHelper.Context.GetType(LConstructorInfo.TypeTClass);
 
       if TRttiHelper.HasAttribute<PreMatchingAttribute>(LFilterRttiType) then
         LFilterType := TWiRLFilterType.PreMatching
@@ -294,7 +291,7 @@ begin
   begin
     if Supports(LConstructorInfo.TypeTClass, IWiRLContainerResponseFilter) then
     begin
-      LFilterRttiType := FRttiContext.GetType(LConstructorInfo.TypeTClass);
+      LFilterRttiType := TRttiHelper.Context.GetType(LConstructorInfo.TypeTClass);
 
       if TRttiHelper.HasAttribute<PreMatchingAttribute>(LFilterRttiType) then
         LFilterType := TWiRLFilterType.PreMatching
@@ -415,7 +412,7 @@ var
   LPriority: Integer;
 begin
   LPriority := TWiRLPriorities.USER;
-  TRttiHelper.HasAttribute<PriorityAttribute>(FRttiContext.GetType(FilterClass),
+  TRttiHelper.HasAttribute<PriorityAttribute>(TRttiHelper.Context.GetType(FilterClass),
     procedure (Attrib: PriorityAttribute)
     begin
       LPriority := Attrib.Value;

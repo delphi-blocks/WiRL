@@ -75,6 +75,7 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <DllSuffix>260</DllSuffix>
+        <Debugger_HostApplication>C:\Program Files (x86)\Embarcadero\Studio\20.0\bin\bds.exe</Debugger_HostApplication>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>

@@ -9,10 +9,13 @@
 {******************************************************************************}
 unit WiRL.Core.Register;
 
+{$I ..\Core\WiRL.inc}
+
 interface
 
 uses
   System.SysUtils, System.Classes,
+  WiRL.Rtti.Utils,
   WiRL.Core.Engine,
   WiRL.http.Engines,
   WiRL.http.FileSystemEngine,
@@ -30,5 +33,10 @@ begin
   RegisterComponents('WiRL Server', [TWiRLServer]);
   RegisterComponents('WiRL Server', [TWiRLFileSystemEngine]);
 end;
+
+initialization
+  {$IFDEF CUSTOM_ATTRIBUTE_BUG}
+  TRttiPatch.AutoFreeDescs := True;
+  {$ENDIF}
 
 end.

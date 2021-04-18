@@ -10,6 +10,8 @@
 
 {$IF CompilerVersion >= 27} // Delphi XE6
   {$DEFINE HAS_SYSTEM_JSON}
+  // https://quality.embarcadero.com/browse/RSP-11620
+  {$DEFINE CUSTOM_ATTRIBUTE_BUG}
 {$IFEND}
 
 {$IF CompilerVersion >= 28} // Delphi XE7
