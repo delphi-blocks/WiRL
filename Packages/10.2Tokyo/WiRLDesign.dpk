@@ -51,6 +51,7 @@ contains
   WiRL.Core.Register in '..\..\Source\Core\WiRL.Core.Register.pas',
   WiRL.Data.FireDAC.Editor in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas',
   WiRL.Client.CustomResource.Editor in '..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas',
-  WiRL.Core.Application.Editor in '..\..\Source\Core\WiRL.Core.Application.Editor.pas' {WiRLAppEditor};
+  WiRL.Core.Application.Editor in '..\..\Source\Core\WiRL.Core.Application.Editor.pas' {WiRLAppEditor},
+  WiRL.Client.ResourceRunner in '..\..\Source\Client\WiRL.Client.ResourceRunner.pas' {WiRLResourceRunnerForm};
 
 end.

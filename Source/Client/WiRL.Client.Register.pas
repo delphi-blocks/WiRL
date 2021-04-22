@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -15,16 +15,19 @@ uses
   System.SysUtils, System.Classes,
 
   WiRL.Client.Application,
+  WiRL.http.Headers,
   WiRL.Client.FireDAC,
   //WiRL.Client.Messaging.Resource,
-  WiRL.Client.Resource.JSON,
-  WiRL.Client.Resource.Obj,
+//  WiRL.Client.Resource.JSON,
+//  WiRL.Client.Resource.Obj,
   WiRL.Client.Resource,
-  WiRL.Client.Resource.Stream,
-  WiRL.Client.SubResource.JSON,
-  WiRL.Client.SubResource,
-  WiRL.Client.SubResource.Stream,
+//  WiRL.Client.Resource.Stream,
+//  WiRL.Client.SubResource.JSON,
+//  WiRL.Client.SubResource,
+//  WiRL.Client.SubResource.Stream,
   WiRL.Client.Token,
+  WiRL.Client.Application.Editor,
+  WiRL.Client.CustomResource.Editor,
   WiRL.http.Client,
   WiRL.http.Client.Indy,
   WiRL.http.Client.NetHttp;
@@ -32,6 +35,9 @@ uses
 procedure Register;
 
 implementation
+
+uses
+  DesignIntf;
 
 procedure Register;
 begin
@@ -45,11 +51,13 @@ begin
 //  RegisterComponents('WiRL Client', [TWiRLClientSubResourceJSON]);
 //  RegisterComponents('WiRL Client', [TWiRLClientSubResource]);
 //  RegisterComponents('WiRL Client', [TWiRLClientSubResourceStream]);
-  RegisterComponents('WiRL Client', [TWiRLClientToken]);
+//  RegisterComponents('WiRL Client', [TWiRLClientToken]);
   RegisterComponents('WiRL Client', [TWiRLClient]);
-
   RegisterNoIcon([TWiRLClientResource]);
+  RegisterClass(TWiRLClientResource);
 
+  RegisterComponentEditor(TWiRLClientApplication, TWiRLClientAppEditor);
+  RegisterPropertyEditor(TypeInfo(IWiRLHeaders), nil, '', THeadersProperty);
 end;
 
 

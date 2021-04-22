@@ -128,7 +128,6 @@ type
     function GetContentType: string;
     function GetLocation: string;
     function GetUserAgent: string;
-    function GetValue(const AName: string): string;
     function GetWWWAuthenticate: string;
     procedure SetAccept(const AValue: string);
     procedure SetAcceptCharSet(const AValue: string);
@@ -143,7 +142,6 @@ type
     procedure SetContentType(const AValue: string);
     procedure SetLocation(const AValue: string);
     procedure SetUserAgent(const AValue: string);
-    procedure SetValue(const AName, AValue: string);
     procedure SetWWWAuthenticate(const AValue: string);
     procedure AddHeader(AHeader: TWiRLHeader);
     procedure Assign(AHeaders: IWiRLHeaders);
@@ -153,7 +151,9 @@ type
     function _Release: Integer; stdcall;
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
 
-
+  protected
+    procedure SetValue(const AName, AValue: string); virtual;
+    function GetValue(const AName: string): string; virtual;
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -418,7 +418,10 @@ begin
   begin
     if Items[LIndex].Name = AName then
     begin
-      Items[LIndex].Value := AValue;
+      if AValue = '' then
+        Delete(LIndex)
+      else
+        Items[LIndex].Value := AValue;
       Exit;
     end;
   end;

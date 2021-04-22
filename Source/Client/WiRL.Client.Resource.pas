@@ -34,6 +34,9 @@ type
     property Path;
     property PathParams;
     property QueryParams;
+    property AfterRequest;
+    property BeforeRequest;
+    property Headers;
   end;
 
 implementation

@@ -13,11 +13,11 @@ interface
 
 uses
   System.Classes, System.SysUtils,
-  DesignEditors,
+  DesignEditors, DesignIntf,
   WiRL.http.Client.Interfaces,
+  WiRL.http.Headers,
   WiRL.Core.MessageBody.Default,
-  WiRL.Client.CustomResource,
-  WiRL.Client.Resource.Obj;
+  WiRL.Client.CustomResource;
 
 type
   TWiRLClientCustomResourceEditor = class(TComponentEditor)
@@ -31,12 +31,21 @@ type
     procedure Edit; override;
   end;
 
+  THeadersProperty = class(TPropertyEditor)
+  public
+    function GetAttributes: TPropertyAttributes; override;
+    procedure Edit; override;
+    function GetValue: string; override;
+  end;
+
 procedure Register;
 
 implementation
 
 uses
-  Vcl.Dialogs, DesignIntf, Winapi.Windows, WiRL.Client.ResourceRunner;
+  Vcl.Dialogs, Winapi.Windows,
+  WiRL.Client.ResourceDebugger,
+  WiRL.Client.ResourceHeaderEditor;
 
 procedure Register;
 begin
@@ -85,6 +94,35 @@ end;
 function TWiRLClientCustomResourceEditor.GetVerbCount: Integer;
 begin
   Result := 1;
+end;
+
+{ THeadersProperty }
+
+procedure THeadersProperty.Edit;
+var
+  LHeaders: IWiRLHeaders;
+begin
+  inherited;
+  LHeaders := GetIntfValue() as IWiRLHeaders;
+  TFormHeadersEditor.Execute(LHeaders);
+end;
+
+function THeadersProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paDialog];
+end;
+
+function THeadersProperty.GetValue: string;
+const
+  HeadersValue = '<Headers>';
+var
+  LHeaders: IWiRLHeaders;
+begin
+  LHeaders := GetIntfValue() as IWiRLHeaders;
+  if LHeaders.Count > 0 then
+    Result := HeadersValue.ToUpper
+  else
+    Result := HeadersValue;
 end;
 
 end.

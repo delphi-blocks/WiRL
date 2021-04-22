@@ -99,13 +99,12 @@ type
     procedure Edit; override;
   end;
 
-procedure Register;
-
 implementation
 
 {$R *.dfm}
 
-uses WiRL.Client.ResourceRunner;
+uses
+  WiRL.Client.ResourceDebugger;
 
 { TWiRLClientAppResourceEditor }
 
@@ -117,7 +116,6 @@ begin
   LResource.Name := Designer.UniqueName(TWiRLClientResource.ClassName);
   LResource.Resource := 'resource' + IntToStr(FClientApp.Resources.Count + 1);
   LResource.Application := FClientApp;
-  FClientApp.Resources.Add(LResource);
   FDesigner.Modified;
 end;
 
@@ -390,11 +388,6 @@ procedure TWiRLClientAppEditor.Edit;
 begin
   inherited;
   TWiRLClientAppResourceEditor.ShowEditor(Designer, Component as TWiRLClientApplication);
-end;
-
-procedure Register;
-begin
-  RegisterComponentEditor (TWiRLClientApplication, TWiRLClientAppEditor);
 end;
 
 end.

@@ -24,6 +24,9 @@ uses
   WiRL.http.Client;
 
 type
+  TBeforeRequestEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream) of object;
+  TAfterRequestEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse) of object;
+
   {$IFDEF HAS_NEW_PIDS}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
   {$ELSE}
@@ -38,6 +41,8 @@ type
     FPathParams: TStrings;
     FQueryParams: TStrings;
     FHeaders: IWiRLHeaders;
+    FBeforeRequest: TBeforeRequestEvent;
+    FAfterRequest: TAfterRequestEvent;
     procedure SetPathParams(const Value: TStrings);
     procedure SetQueryParams(const Value: TStrings);
 
@@ -47,6 +52,7 @@ type
     procedure StreamToObject(AObject: TObject; AHeaders: IWiRLHeaders; AStream: TStream); overload;
     procedure ObjectToStream<T>(AHeaders: IWiRLHeaders; AObject: T; AStream: TStream); overload;
     function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
+    procedure SetApplication(const Value: TWiRLClientApplication);
   protected
     function GetClient: TWiRLClient; virtual;
     function GetPath: string; virtual;
@@ -54,6 +60,8 @@ type
     function GetApplication: TWiRLClientApplication; virtual;
     function GetAccept: string;
     function GetContentType: string;
+    procedure DoBeforeRequest(const AHttpMethod: string; ARequestStream: TStream);
+    procedure DoAfterRequest(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse);
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
@@ -114,7 +122,7 @@ type
   public
     property Accept: string read GetAccept;
     property ContentType: string read GetContentType;
-    property Application: TWiRLClientApplication read GetApplication write FApplication;
+    property Application: TWiRLClientApplication read GetApplication write SetApplication;
     property Client: TWiRLClient read GetClient;
     property SpecificClient: TWiRLClient read FSpecificClient write FSpecificClient;
     property Resource: string read FResource write FResource;
@@ -122,9 +130,19 @@ type
     property PathParams: TStrings read FPathParams write SetPathParams;
     property QueryParams: TStrings read FQueryParams write SetQueryParams;
     property URL: string read GetURL;
-    property Headers: IWiRLHeaders read FHeaders;
+    property Headers: IWiRLHeaders read FHeaders write FHeaders;
+    property AfterRequest: TAfterRequestEvent read FAfterRequest write FAfterRequest;
+    property BeforeRequest: TBeforeRequestEvent read FBeforeRequest write FBeforeRequest;
   end;
 
+  TWiRLResourceHeaders = class(TWiRLHeaders)
+  private
+    FCustomResource: TWiRLClientCustomResource;
+  protected
+    procedure SetValue(const AName: string; const AValue: string); override;
+  public
+    constructor Create(ACustomResource: TWiRLClientCustomResource);
+  end;
 
 implementation
 
@@ -269,11 +287,11 @@ begin
   inherited;
   FResource := 'main';
   if TWiRLComponentHelper.IsDesigning(Self) then
-    FApplication := TWiRLComponentHelper.FindDefault<TWiRLClientApplication>(Self);
+    Application := TWiRLComponentHelper.FindDefault<TWiRLClientApplication>(Self);
   FPathParams := TStringList.Create;
   FQueryParams := TStringList.Create;
   FContext := TWiRLContextHttp.Create;
-  FHeaders := TWiRLHeaders.Create;
+  FHeaders := TWiRLResourceHeaders.Create(Self);
 end;
 
 function TWiRLClientCustomResource.GetClient: TWiRLClient;
@@ -527,16 +545,26 @@ function TWiRLClientCustomResource.GenericHttpRequest<T, V>(
 var
   LRequestStream, LResponseStream: TMemoryStream;
   LResponse: IWiRLResponse;
+  LNoProtocolErrorException: Boolean;
 begin
+  if not Assigned(Client) then
+    Exit;
+
   Result := default(V);
   InitHttpRequest;
 
+  LNoProtocolErrorException := Client.NoProtocolErrorException;
+  Client.NoProtocolErrorException := True;
   LRequestStream := TMemoryStream.Create;
   try
     LResponseStream := TGCMemoryStream.Create;
     try
       ObjectToStream<T>(MergeHeaders(AHttpMethod), ARequestEntity, LRequestStream);
+
+      DoBeforeRequest(AHttpMethod, LRequestStream);
       LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
+      DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
+
       Result := StreamToObject<V>(LResponse.Headers, LResponseStream);
     finally
       if not SameObject<V>(Result, LResponseStream) then
@@ -544,6 +572,7 @@ begin
     end;
   finally
     LRequestStream.Free;
+    Client.NoProtocolErrorException := LNoProtocolErrorException;
   end;
 end;
 
@@ -552,15 +581,25 @@ procedure TWiRLClientCustomResource.GenericHttpRequest<T>(
 var
   LRequestStream, LResponseStream: TMemoryStream;
   LResponse: IWiRLResponse;
+  LNoProtocolErrorException: Boolean;
 begin
+  if not Assigned(Client) then
+    Exit;
+
   InitHttpRequest;
 
+  LNoProtocolErrorException := Client.NoProtocolErrorException;
+  Client.NoProtocolErrorException := True;
   LRequestStream := TMemoryStream.Create;
   try
     LResponseStream := TGCMemoryStream.Create;
     try
       ObjectToStream<T>(MergeHeaders(AHttpMethod), ARequestEntity, LRequestStream);
+
+      DoBeforeRequest(AHttpMethod, LRequestStream);
       LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
+      DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
+
       if Assigned(AResponseEntity) then
         StreamToObject(AResponseEntity, LResponse.Headers, LResponseStream);
     finally
@@ -568,6 +607,7 @@ begin
     end;
   finally
     LRequestStream.Free;
+    Client.NoProtocolErrorException := LNoProtocolErrorException;
   end;
 end;
 
@@ -625,6 +665,44 @@ begin
   inherited;
 end;
 
+procedure TWiRLClientCustomResource.DoAfterRequest(const AHttpMethod: string;
+  ARequestStream: TStream; AResponse: IWiRLResponse);
+var
+  LRequestPosition: Integer;
+  LResponsePosition: Integer;
+begin
+  LRequestPosition := 0;
+  LResponsePosition := 0;
+  if Assigned(FAfterRequest) then
+  begin
+    if Assigned(ARequestStream) then
+      LRequestPosition := ARequestStream.Position;
+    if Assigned(AResponse.ContentStream) then
+      LResponsePosition := AResponse.ContentStream.Position;
+    FAfterRequest(Self, AHttpMethod, ARequestStream, AResponse);
+    if Assigned(ARequestStream) then
+      ARequestStream.Position := LRequestPosition;
+    if Assigned(AResponse.ContentStream) then
+      AResponse.ContentStream.Position := LResponsePosition;
+  end;
+end;
+
+procedure TWiRLClientCustomResource.DoBeforeRequest(const AHttpMethod: string;
+  ARequestStream: TStream);
+var
+  LPosition: Integer;
+begin
+  LPosition := 0;
+  if Assigned(FBeforeRequest) then
+  begin
+    if Assigned(ARequestStream) then
+      LPosition := ARequestStream.Position;
+    FBeforeRequest(Self, AHttpMethod, ARequestStream);
+    if Assigned(ARequestStream) then
+      ARequestStream.Position := LPosition;
+  end;
+end;
+
 function TWiRLClientCustomResource.GetAccept: string;
 begin
   Result := FHeaders.Accept;
@@ -654,6 +732,20 @@ begin
     Result := True;
 end;
 
+procedure TWiRLClientCustomResource.SetApplication(
+  const Value: TWiRLClientApplication);
+begin
+  if FApplication <> Value then
+  begin
+    if Assigned(FApplication) then
+      FApplication.Resources.Remove(Self);
+
+    FApplication := Value;
+    if Assigned(FApplication) and (FApplication.Resources.IndexOf(Self) < 0) then
+      FApplication.Resources.Add(Self);
+  end;
+end;
+
 procedure TWiRLClientCustomResource.SetParentComponent(AParent: TComponent);
 begin
   inherited;
@@ -669,6 +761,27 @@ end;
 procedure TWiRLClientCustomResource.SetQueryParams(const Value: TStrings);
 begin
   FQueryParams.Assign(Value);
+end;
+
+{ TWiRLResourceHeaders }
+
+constructor TWiRLResourceHeaders.Create(
+  ACustomResource: TWiRLClientCustomResource);
+begin
+  inherited Create;
+  FCustomResource := ACustomResource;
+end;
+
+procedure TWiRLResourceHeaders.SetValue(const AName, AValue: string);
+begin
+  if Assigned(FCustomResource.Application) then
+  begin
+    if SameText(AName, TWiRLHeader.ACCEPT) and SameText(AValue, FCustomResource.Application.DefaultMediaType) then
+      Exit;
+    if SameText(AName, TWiRLHeader.CONTENT_TYPE) and SameText(AValue, FCustomResource.Application.DefaultMediaType) then
+      Exit;
+  end;
+  inherited SetValue(AName, AValue);
 end;
 
 initialization

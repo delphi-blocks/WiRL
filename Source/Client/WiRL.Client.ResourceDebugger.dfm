@@ -14,19 +14,19 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object HeaderPanel: TPanel
+  object PanelHeader: TPanel
     Left = 0
     Top = 0
     Width = 927
     Height = 118
     Align = alTop
     BevelOuter = bvNone
-    Caption = 'HeaderPanel'
+    Caption = 'PanelHeader'
     Color = clWhite
     ParentBackground = False
     ShowCaption = False
     TabOrder = 0
-    object Image1: TImage
+    object ImageLogo: TImage
       Left = 14
       Top = 14
       Width = 105
@@ -1015,52 +1015,55 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       OnClick = WiRLUrlLabelClick
     end
   end
-  object RequestGroupBox: TGroupBox
+  object GroupBoxRequest: TGroupBox
     AlignWithMargins = True
     Left = 3
     Top = 121
     Width = 921
-    Height = 172
+    Height = 193
     Align = alTop
     Caption = 'Request'
     TabOrder = 1
-    object RequestPageControl: TPageControl
+    object PageControlRequest: TPageControl
       AlignWithMargins = True
       Left = 7
       Top = 20
       Width = 907
-      Height = 145
+      Height = 166
       Margins.Left = 5
       Margins.Top = 5
       Margins.Right = 5
       Margins.Bottom = 5
-      ActivePage = HeadersTab
+      ActivePage = RequestTab
       Align = alClient
       TabOrder = 0
       object RequestTab: TTabSheet
         Caption = 'Request'
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           899
-          117)
+          138)
         object Label1: TLabel
           Left = 138
           Top = 10
-          Width = 19
+          Width = 23
           Height = 13
-          Caption = 'URL'
+          Caption = 'URL:'
         end
         object Label3: TLabel
           Left = 16
           Top = 10
-          Width = 36
+          Width = 40
           Height = 13
-          Caption = 'Method'
+          Caption = 'Method:'
         end
-        object BaseUrlEdit: TEdit
+        object Label5: TLabel
+          Left = 16
+          Top = 54
+          Width = 69
+          Height = 13
+          Caption = 'Request data:'
+        end
+        object EditBaseUrl: TEdit
           Left = 138
           Top = 29
           Width = 367
@@ -1069,10 +1072,10 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           TabOrder = 0
           Text = '<WiRLEngineURL>'
         end
-        object MethodComboBox: TComboBox
-          Left = 19
+        object ComboBoxMethod: TComboBox
+          Left = 16
           Top = 29
-          Width = 113
+          Width = 116
           Height = 21
           Style = csDropDownList
           TabOrder = 1
@@ -1082,186 +1085,163 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
             'PUT'
             'DELETE')
         end
-        object ResourcePathEdit: TEdit
+        object EditResourcePath: TEdit
           Left = 520
           Top = 29
           Width = 361
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           TabOrder = 2
-          Text = 'ResourcePathEdit'
+          Text = 'EditResourcePath'
+        end
+        object MemoRequest: TMemo
+          AlignWithMargins = True
+          Left = 16
+          Top = 72
+          Width = 865
+          Height = 63
+          Margins.Left = 10
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Courier New'
+          Font.Style = []
+          ParentFont = False
+          ScrollBars = ssVertical
+          TabOrder = 3
         end
       end
       object HeadersTab: TTabSheet
         Caption = 'Headers'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
-        object HeaderGrid: TStringGrid
+        object HeaderCommandPanel: TPanel
+          Left = 776
+          Top = 0
+          Width = 123
+          Height = 138
+          Align = alRight
+          BevelOuter = bvNone
+          Caption = 'HeaderCommandPanel'
+          ShowCaption = False
+          TabOrder = 0
+          object ButtonAddHeader: TButton
+            AlignWithMargins = True
+            Left = 3
+            Top = 3
+            Width = 117
+            Height = 39
+            Align = alTop
+            Caption = 'Add'
+            TabOrder = 0
+            OnClick = ButtonAddHeaderClick
+          end
+          object ButtonDeleteHeader: TButton
+            AlignWithMargins = True
+            Left = 3
+            Top = 93
+            Width = 117
+            Height = 39
+            Align = alTop
+            Caption = 'Delete'
+            TabOrder = 1
+            OnClick = ButtonDeleteHeaderClick
+          end
+          object ButtonEditHeader: TButton
+            AlignWithMargins = True
+            Left = 3
+            Top = 48
+            Width = 117
+            Height = 39
+            Align = alTop
+            Caption = 'Edit'
+            TabOrder = 2
+            OnClick = ButtonEditHeaderClick
+          end
+        end
+        object ListViewHeader: TListView
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 893
-          Height = 111
+          Width = 770
+          Height = 132
           Align = alClient
-          ColCount = 2
-          FixedCols = 0
-          RowCount = 20
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-          TabOrder = 0
-          ColWidths = (
-            295
-            309)
+          Columns = <
+            item
+              Caption = 'Name'
+              Width = 300
+            end
+            item
+              AutoSize = True
+              Caption = 'Value'
+            end>
+          HideSelection = False
+          ReadOnly = True
+          RowSelect = True
+          TabOrder = 1
+          ViewStyle = vsReport
         end
       end
       object ProxyTab: TTabSheet
         Caption = 'Proxy'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
+        TabVisible = False
       end
     end
   end
   object ResponseGroupBox: TGroupBox
     AlignWithMargins = True
     Left = 3
-    Top = 299
+    Top = 320
     Width = 921
-    Height = 225
+    Height = 204
     Align = alClient
     Caption = 'Response'
     TabOrder = 2
-    object ResponsePageControl: TPageControl
+    DesignSize = (
+      921
+      204)
+    object ResponseLabel: TLabel
       AlignWithMargins = True
-      Left = 7
-      Top = 20
-      Width = 907
-      Height = 198
-      Margins.Left = 5
-      Margins.Top = 5
-      Margins.Right = 5
-      Margins.Bottom = 5
-      ActivePage = StringTab
-      Align = alClient
+      Left = 10
+      Top = 67
+      Width = 35
+      Height = 13
+      Margins.Left = 10
+      Caption = 'Ready.'
+    end
+    object Label4: TLabel
+      Left = 11
+      Top = 21
+      Width = 55
+      Height = 13
+      Caption = 'Component'
+    end
+    object ComboBoxComponents: TComboBox
+      Left = 11
+      Top = 40
+      Width = 385
+      Height = 21
+      Style = csDropDownList
       TabOrder = 0
-      object ErrorTab: TTabSheet
-        Caption = 'Error'
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
-        object ResponseLabel: TLabel
-          AlignWithMargins = True
-          Left = 10
-          Top = 3
-          Width = 886
-          Height = 13
-          Margins.Left = 10
-          Align = alTop
-          Caption = 'ResponseLabel'
-          ExplicitWidth = 72
-        end
-        object ErrorResponseMemo: TMemo
-          AlignWithMargins = True
-          Left = 10
-          Top = 22
-          Width = 886
-          Height = 145
-          Margins.Left = 10
-          Align = alClient
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Courier New'
-          Font.Style = []
-          Lines.Strings = (
-            'ResponseMemo')
-          ParentFont = False
-          ScrollBars = ssVertical
-          TabOrder = 0
-        end
-      end
-      object ComponentTab: TTabSheet
-        Caption = 'Component'
-        ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
-        object Label4: TLabel
-          Left = 16
-          Top = 24
-          Width = 55
-          Height = 13
-          Caption = 'Component'
-        end
-        object ComponentsComboBox: TComboBox
-          Left = 16
-          Top = 43
-          Width = 369
-          Height = 21
-          Style = csDropDownList
-          TabOrder = 0
-        end
-      end
-      object StringTab: TTabSheet
-        Caption = 'String'
-        ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
-        object ResponseMemo: TMemo
-          AlignWithMargins = True
-          Left = 10
-          Top = 3
-          Width = 886
-          Height = 164
-          Margins.Left = 10
-          Align = alClient
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Courier New'
-          Font.Style = []
-          Lines.Strings = (
-            'ResponseMemo')
-          ParentFont = False
-          ScrollBars = ssVertical
-          TabOrder = 0
-        end
-      end
-      object BinaryTab: TTabSheet
-        Caption = 'Binary'
-        ImageIndex = 3
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
-        object Memo2: TMemo
-          AlignWithMargins = True
-          Left = 10
-          Top = 3
-          Width = 886
-          Height = 164
-          Margins.Left = 10
-          Align = alClient
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Courier New'
-          Font.Style = []
-          Lines.Strings = (
-            'ResponseMemo')
-          ParentFont = False
-          ScrollBars = ssVertical
-          TabOrder = 0
-        end
-      end
+    end
+    object MemoResponse: TMemo
+      AlignWithMargins = True
+      Left = 10
+      Top = 86
+      Width = 904
+      Height = 102
+      Margins.Left = 10
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Courier New'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      ScrollBars = ssVertical
+      TabOrder = 1
     end
   end
   object FooterPanel: TPanel
@@ -1274,7 +1254,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     Caption = 'FooterPanel'
     ShowCaption = False
     TabOrder = 3
-    object CloseButton: TButton
+    object ButtonClose: TButton
       AlignWithMargins = True
       Left = 779
       Top = 3
@@ -1283,9 +1263,9 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Align = alRight
       Caption = 'Close'
       TabOrder = 0
-      OnClick = CloseButtonClick
+      OnClick = ButtonCloseClick
     end
-    object SendRequestButton: TButton
+    object ButtonSendRequest: TButton
       AlignWithMargins = True
       Left = 3
       Top = 3
@@ -1294,7 +1274,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Align = alLeft
       Caption = 'SendRequest'
       TabOrder = 1
-      OnClick = SendRequestButtonClick
+      OnClick = ButtonSendRequestClick
     end
   end
 end

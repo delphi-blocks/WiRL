@@ -104,8 +104,16 @@
             <Form>WiRLClientAppResourceEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceRunner.pas">
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceDebugger.pas">
             <Form>WiRLResourceRunnerForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas">
+            <Form>FormEditHeader</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas">
+            <Form>FormHeadersEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Release">
