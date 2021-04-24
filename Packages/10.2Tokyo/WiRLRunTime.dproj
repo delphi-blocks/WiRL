@@ -97,7 +97,6 @@
         <DCCReference Include="JOSE.dcp"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.FireDAC.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.pas"/>

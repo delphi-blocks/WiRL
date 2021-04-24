@@ -57,7 +57,6 @@ requires
 contains
   WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
   WiRL.Client.CustomResource in '..\..\Source\Client\WiRL.Client.CustomResource.pas',
-  WiRL.Client.FireDAC in '..\..\Source\Client\WiRL.Client.FireDAC.pas',
   WiRL.Client.Resource in '..\..\Source\Client\WiRL.Client.Resource.pas',
   WiRL.Client.Utils.LiveBindings in '..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas',
   WiRL.Client.Utils in '..\..\Source\Client\WiRL.Client.Utils.pas',

@@ -29,7 +29,6 @@ type
     property ContentType;
     property Application;
     property Client;
-    property SpecificClient;
     property Resource;
     property Path;
     property PathParams;

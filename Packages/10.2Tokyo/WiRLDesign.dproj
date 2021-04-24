@@ -92,14 +92,25 @@
         <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Register.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Editor.pas">
             <Form>WiRLAppEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceRunner.pas">
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceDebugger.pas">
             <Form>WiRLResourceRunnerForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas">
+            <Form>FormEditHeader</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas">
+            <Form>FormHeadersEditor</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.Editor.pas">
+            <Form>WiRLClientAppResourceEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Release">

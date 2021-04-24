@@ -37,7 +37,6 @@ type
     FContext: TWiRLContextHttp;
     FResource: string;
     FApplication: TWiRLClientApplication;
-    FSpecificClient: TWiRLClient;
     FPathParams: TStrings;
     FQueryParams: TStrings;
     FHeaders: IWiRLHeaders;
@@ -60,34 +59,13 @@ type
     function GetApplication: TWiRLClientApplication; virtual;
     function GetAccept: string;
     function GetContentType: string;
-    procedure DoBeforeRequest(const AHttpMethod: string; ARequestStream: TStream);
-    procedure DoAfterRequest(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse);
+    procedure DoBeforeRequest(const AHttpMethod: string; ARequestStream: TStream); virtual;
+    procedure DoAfterRequest(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse); virtual;
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     // Handles the parent/child relationship for the designer
     procedure SetParentComponent(AParent: TComponent); override;
-
-    procedure BeforeGET; virtual;
-    procedure AfterGET(AResponse: IWiRLResponse); virtual;
-
-    procedure BeforePOST(AContent: TMemoryStream); virtual;
-    procedure AfterPOST(AResponse: IWiRLResponse); virtual;
-
-    procedure BeforePUT(AContent: TMemoryStream); virtual;
-    procedure AfterPUT(AResponse: IWiRLResponse); virtual;
-
-    procedure BeforePATCH(AContent: TMemoryStream); virtual;
-    procedure AfterPATCH(AResponse: IWiRLResponse); virtual;
-
-    procedure BeforeHEAD; virtual;
-    procedure AfterHEAD; virtual;
-
-    procedure BeforeDELETE; virtual;
-    procedure AfterDELETE(AResponse: IWiRLResponse); virtual;
-
-    procedure BeforeOPTIONS; virtual;
-    procedure AfterOPTIONS(AResponse: IWiRLResponse); virtual;
 
     procedure InitHttpRequest; virtual;
     function InternalHttpRequest(const AHttpMethod: string; ARequestStream, AResponseStream: TStream): IWiRLResponse; virtual;
@@ -124,7 +102,6 @@ type
     property ContentType: string read GetContentType;
     property Application: TWiRLClientApplication read GetApplication write SetApplication;
     property Client: TWiRLClient read GetClient;
-    property SpecificClient: TWiRLClient read FSpecificClient write FSpecificClient;
     property Resource: string read FResource write FResource;
     property Path: string read GetPath;
     property PathParams: TStrings read FPathParams write SetPathParams;
@@ -206,76 +183,6 @@ end;
 
 { TWiRLClientCustomResource }
 
-procedure TWiRLClientCustomResource.AfterDELETE(AResponse: IWiRLResponse);
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.AfterGET(AResponse: IWiRLResponse);
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.AfterHEAD;
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.AfterOPTIONS(AResponse: IWiRLResponse);
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.AfterPATCH(AResponse: IWiRLResponse);
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.AfterPOST(AResponse: IWiRLResponse);
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.AfterPUT(AResponse: IWiRLResponse);
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.BeforeDELETE;
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.BeforeGET;
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.BeforeHEAD;
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.BeforeOPTIONS;
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.BeforePATCH(AContent: TMemoryStream);
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.BeforePOST(AContent: TMemoryStream);
-begin
-
-end;
-
-procedure TWiRLClientCustomResource.BeforePUT(AContent: TMemoryStream);
-begin
-
-end;
-
 procedure TWiRLClientCustomResource.ContextInjection(AInstance: TObject);
 begin
   TWiRLContextInjectionRegistry.Instance.
@@ -297,13 +204,8 @@ end;
 function TWiRLClientCustomResource.GetClient: TWiRLClient;
 begin
   Result := nil;
-  if Assigned(FSpecificClient) then
-    Result := FSpecificClient
-  else
-  begin
-    if Assigned(FApplication) then
-      Result := FApplication.Client;
-  end;
+  if Assigned(FApplication) then
+    Result := FApplication.Client;
 end;
 
 function TWiRLClientCustomResource.GetContentType: string;

@@ -57,15 +57,7 @@ requires
 contains
   WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
   WiRL.Client.CustomResource in '..\..\Source\Client\WiRL.Client.CustomResource.pas',
-  WiRL.Client.FireDAC in '..\..\Source\Client\WiRL.Client.FireDAC.pas',
-  WiRL.Client.Messaging.Resource in '..\..\Source\Client\WiRL.Client.Messaging.Resource.pas',
-  WiRL.Client.Resource.JSON in '..\..\Source\Client\WiRL.Client.Resource.JSON.pas',
   WiRL.Client.Resource in '..\..\Source\Client\WiRL.Client.Resource.pas',
-  WiRL.Client.Resource.Stream in '..\..\Source\Client\WiRL.Client.Resource.Stream.pas',
-  WiRL.Client.SubResource.JSON in '..\..\Source\Client\WiRL.Client.SubResource.JSON.pas',
-  WiRL.Client.SubResource in '..\..\Source\Client\WiRL.Client.SubResource.pas',
-  WiRL.Client.SubResource.Stream in '..\..\Source\Client\WiRL.Client.SubResource.Stream.pas',
-  WiRL.Client.Token in '..\..\Source\Client\WiRL.Client.Token.pas',
   WiRL.Client.Utils.LiveBindings in '..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas',
   WiRL.Client.Utils in '..\..\Source\Client\WiRL.Client.Utils.pas',
   WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
@@ -121,7 +113,6 @@ contains
   WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
-  WiRL.Client.Resource.Obj in '..\..\Source\Client\WiRL.Client.Resource.Obj.pas',
   WiRL.Core.Metadata in '..\..\Source\Core\WiRL.Core.Metadata.pas',
   WiRL.Core.Auth.Resource in '..\..\Source\Core\WiRL.Core.Auth.Resource.pas';
 

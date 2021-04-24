@@ -43,6 +43,7 @@ type
     ButtonEditHeader: TButton;
     MemoRequest: TMemo;
     Label5: TLabel;
+    Label6: TLabel;
     procedure WiRLUrlLabelClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
@@ -141,28 +142,10 @@ begin
 end;
 
 procedure TWiRLResourceRunnerForm.ConfigComponent;
-//var
-//  LIndex: Integer;
-//  LName, LValue: string;
 begin
   FResource.Resource := EditResourcePath.Text;
-
-//  FResource.Headers.Clear;
-//  for LIndex := 0 to HeaderGrid.RowCount - 1 do
-//  begin
-//    LName := HeaderGrid.Cells[0, LIndex];
-//    LValue := HeaderGrid.Cells[1, LIndex];
-//    if LName.Trim = '' then
-//      Continue;
-//
-//    if SameText(LName, 'Accept') and SameText(LValue, FResource.Application.DefaultMediaType)  then
-//      Continue;
-//
-//    if SameText(LName, 'Content-Type') and SameText(LValue, FResource.Application.DefaultMediaType)  then
-//      Continue;
-//
-//    FResource.Headers.AddHeader(TWiRLHeader.Create(LName, LValue));
-//  end;
+  if Assigned(FResource.Client) then
+    FResource.Client.WiRLEngineURL := EditBaseUrl.Text;
 end;
 
 procedure TWiRLResourceRunnerForm.DeleteHeader;
@@ -266,9 +249,13 @@ procedure TWiRLResourceRunnerForm.SetResource(const Value: TWiRLClientCustomReso
 var
   LHeader: TWiRLHeader;
 begin
+  EditBaseUrl.ReadOnly := True;
   FResource := Value;
   if Assigned(FResource.Client) then
+  begin
     EditBaseUrl.Text := FResource.Client.WiRLEngineURL;
+    EditBaseUrl.ReadOnly := False;
+  end;
   EditResourcePath.Text := FResource.Resource;
 
   if Assigned(FResource.Application) then

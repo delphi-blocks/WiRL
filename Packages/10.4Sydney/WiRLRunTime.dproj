@@ -121,15 +121,7 @@
         <DCCReference Include="NeonRunTime.dcp"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.FireDAC.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Messaging.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.JSON.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.Stream.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.SubResource.Stream.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Token.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Utils.pas"/>
         <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
@@ -185,7 +177,6 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Context.Server.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.Converter.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Http.Headers.pas"/>
-        <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.Obj.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Resource.pas"/>
         <BuildConfiguration Include="Debug">

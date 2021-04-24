@@ -1045,9 +1045,9 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
         object Label1: TLabel
           Left = 138
           Top = 10
-          Width = 23
+          Width = 85
           Height = 13
-          Caption = 'URL:'
+          Caption = 'WiRL engine URL:'
         end
         object Label3: TLabel
           Left = 16
@@ -1062,6 +1062,13 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           Width = 69
           Height = 13
           Caption = 'Request data:'
+        end
+        object Label6: TLabel
+          Left = 520
+          Top = 10
+          Width = 78
+          Height = 13
+          Caption = 'Resource name:'
         end
         object EditBaseUrl: TEdit
           Left = 138
@@ -1115,6 +1122,10 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       object HeadersTab: TTabSheet
         Caption = 'Headers'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object HeaderCommandPanel: TPanel
           Left = 776
           Top = 0
@@ -1186,6 +1197,10 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
         Caption = 'Proxy'
         ImageIndex = 2
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
       end
     end
   end
@@ -1213,9 +1228,9 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     object Label4: TLabel
       Left = 11
       Top = 21
-      Width = 55
+      Width = 92
       Height = 13
-      Caption = 'Component'
+      Caption = 'Component target:'
     end
     object ComboBoxComponents: TComboBox
       Left = 11
@@ -1272,7 +1287,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Width = 132
       Height = 39
       Align = alLeft
-      Caption = 'SendRequest'
+      Caption = 'Send Request'
       TabOrder = 1
       OnClick = ButtonSendRequestClick
     end

@@ -71,7 +71,7 @@ type
     FReaderRegistry: TWiRLReaderRegistry;
     FConfigRegistry: TWiRLConfigRegistry;
     FAppConfigurator: TAppConfigurator;
-    FResources: TObjectList;
+    FResources: TObjectList<TObject>;
   protected
     function GetPath: string; virtual;
     function AddFilter(const AFilter: string): Boolean;
@@ -81,7 +81,7 @@ type
     // Handles the parent/child relationship for the designer
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
   public
-    property Resources: TObjectList read FResources;
+    property Resources: TObjectList<TObject> read FResources;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   public
@@ -252,7 +252,7 @@ begin
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
 
-  FResources := TObjectList.Create;
+  FResources := TObjectList<TObject>.Create;
 
   FDefaultMediaType := 'application/json';
   FAppName := 'app';
