@@ -33,22 +33,13 @@ uses
 procedure Register;
 begin
   RegisterComponents('WiRL Client', [TWiRLClientApplication]);
-//  RegisterComponents('WiRL Client', [TWiRLFDResource]);
-//  RegisterComponents('WiRL Client', [TWiRLClientMessagingResource]);
-//  RegisterComponents('WiRL Client', [TWiRLClientResourceJSON]);
-//  RegisterComponents('WiRL Client', [TWiRLClientResourceObject]);
-//  RegisterComponents('WiRL Client', [TWiRLClientResource]);
-//  RegisterComponents('WiRL Client', [TWiRLClientResourceStream]);
-//  RegisterComponents('WiRL Client', [TWiRLClientSubResourceJSON]);
-//  RegisterComponents('WiRL Client', [TWiRLClientSubResource]);
-//  RegisterComponents('WiRL Client', [TWiRLClientSubResourceStream]);
-//  RegisterComponents('WiRL Client', [TWiRLClientToken]);
   RegisterComponents('WiRL Client', [TWiRLClient]);
   RegisterNoIcon([TWiRLClientResource]);
   RegisterClass(TWiRLClientResource);
 
   RegisterComponentEditor(TWiRLClientApplication, TWiRLClientAppEditor);
   RegisterPropertyEditor(TypeInfo(IWiRLHeaders), nil, '', THeadersProperty);
+  RegisterPropertyEditor(TypeInfo(TWiRLClient), TWiRLClientApplication, 'Client', TWiRLClientAppClientProperty);
 end;
 
 

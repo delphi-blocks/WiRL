@@ -26,6 +26,7 @@ uses
 type
   TBeforeRequestEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream) of object;
   TAfterRequestEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse) of object;
+  TRequestErrorEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse) of object;
 
   {$IFDEF HAS_NEW_PIDS}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
@@ -42,6 +43,7 @@ type
     FHeaders: IWiRLHeaders;
     FBeforeRequest: TBeforeRequestEvent;
     FAfterRequest: TAfterRequestEvent;
+    FOnRequestError: TRequestErrorEvent;
     procedure SetPathParams(const Value: TStrings);
     procedure SetQueryParams(const Value: TStrings);
 
@@ -61,6 +63,7 @@ type
     function GetContentType: string;
     procedure DoBeforeRequest(const AHttpMethod: string; ARequestStream: TStream); virtual;
     procedure DoAfterRequest(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse); virtual;
+    procedure DoRequestError(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse); virtual;
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
@@ -110,6 +113,7 @@ type
     property Headers: IWiRLHeaders read FHeaders write FHeaders;
     property AfterRequest: TAfterRequestEvent read FAfterRequest write FAfterRequest;
     property BeforeRequest: TBeforeRequestEvent read FBeforeRequest write FBeforeRequest;
+    property OnRequestError: TRequestErrorEvent read FOnRequestError write FOnRequestError;
   end;
 
   TWiRLResourceHeaders = class(TWiRLHeaders)
@@ -217,7 +221,7 @@ end;
 
 function TWiRLClientCustomResource.GetParentComponent: TComponent;
 begin
-  Result := FApplication;
+  Result := Application;
 end;
 
 function TWiRLClientCustomResource.GetPath: string;
@@ -447,7 +451,6 @@ function TWiRLClientCustomResource.GenericHttpRequest<T, V>(
 var
   LRequestStream, LResponseStream: TMemoryStream;
   LResponse: IWiRLResponse;
-  LNoProtocolErrorException: Boolean;
 begin
   if not Assigned(Client) then
     Exit;
@@ -455,8 +458,6 @@ begin
   Result := default(V);
   InitHttpRequest;
 
-  LNoProtocolErrorException := Client.NoProtocolErrorException;
-  Client.NoProtocolErrorException := True;
   LRequestStream := TMemoryStream.Create;
   try
     LResponseStream := TGCMemoryStream.Create;
@@ -464,7 +465,15 @@ begin
       ObjectToStream<T>(MergeHeaders(AHttpMethod), ARequestEntity, LRequestStream);
 
       DoBeforeRequest(AHttpMethod, LRequestStream);
-      LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
+      try
+        LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
+      except
+        on E: EWiRLClientProtocolException do
+        begin
+          DoRequestError(AHttpMethod, LRequestStream, E.Response);
+          raise;
+        end;
+      end;
       DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
 
       Result := StreamToObject<V>(LResponse.Headers, LResponseStream);
@@ -474,7 +483,6 @@ begin
     end;
   finally
     LRequestStream.Free;
-    Client.NoProtocolErrorException := LNoProtocolErrorException;
   end;
 end;
 
@@ -483,15 +491,12 @@ procedure TWiRLClientCustomResource.GenericHttpRequest<T>(
 var
   LRequestStream, LResponseStream: TMemoryStream;
   LResponse: IWiRLResponse;
-  LNoProtocolErrorException: Boolean;
 begin
   if not Assigned(Client) then
     Exit;
 
   InitHttpRequest;
 
-  LNoProtocolErrorException := Client.NoProtocolErrorException;
-  Client.NoProtocolErrorException := True;
   LRequestStream := TMemoryStream.Create;
   try
     LResponseStream := TGCMemoryStream.Create;
@@ -499,7 +504,15 @@ begin
       ObjectToStream<T>(MergeHeaders(AHttpMethod), ARequestEntity, LRequestStream);
 
       DoBeforeRequest(AHttpMethod, LRequestStream);
-      LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
+      try
+        LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
+      except
+        on E: EWiRLClientProtocolException do
+        begin
+          DoRequestError(AHttpMethod, LRequestStream, E.Response);
+          raise;
+        end;
+      end;
       DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
 
       if Assigned(AResponseEntity) then
@@ -509,7 +522,6 @@ begin
     end;
   finally
     LRequestStream.Free;
-    Client.NoProtocolErrorException := LNoProtocolErrorException;
   end;
 end;
 
@@ -605,6 +617,28 @@ begin
   end;
 end;
 
+procedure TWiRLClientCustomResource.DoRequestError(const AHttpMethod: string;
+  ARequestStream: TStream; AResponse: IWiRLResponse);
+var
+  LRequestPosition: Integer;
+  LResponsePosition: Integer;
+begin
+  LRequestPosition := 0;
+  LResponsePosition := 0;
+  if Assigned(FAfterRequest) then
+  begin
+    if Assigned(ARequestStream) then
+      LRequestPosition := ARequestStream.Position;
+    if Assigned(AResponse.ContentStream) then
+      LResponsePosition := AResponse.ContentStream.Position;
+    FOnRequestError(Self, AHttpMethod, ARequestStream, AResponse);
+    if Assigned(ARequestStream) then
+      ARequestStream.Position := LRequestPosition;
+    if Assigned(AResponse.ContentStream) then
+      AResponse.ContentStream.Position := LResponsePosition;
+  end;
+end;
+
 function TWiRLClientCustomResource.GetAccept: string;
 begin
   Result := FHeaders.Accept;
@@ -652,7 +686,7 @@ procedure TWiRLClientCustomResource.SetParentComponent(AParent: TComponent);
 begin
   inherited;
   if AParent is TWiRLClientApplication then
-    FApplication := AParent as TWiRLClientApplication;
+    Application := AParent as TWiRLClientApplication;
 end;
 
 procedure TWiRLClientCustomResource.SetPathParams(const Value: TStrings);

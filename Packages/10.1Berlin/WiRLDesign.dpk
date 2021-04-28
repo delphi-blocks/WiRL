@@ -44,6 +44,7 @@ contains
   WiRL.Core.Application.Editor in '..\..\Source\Core\WiRL.Core.Application.Editor.pas' {WiRLAppEditor},
   WiRL.Client.ResourceDebugger in '..\..\Source\Client\WiRL.Client.ResourceDebugger.pas' {WiRLResourceRunnerForm},
   WiRL.Client.ResourceDebuggerHeader in '..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas' {FormEditHeader},
-  WiRL.Client.ResourceHeaderEditor in '..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas' {FormHeadersEditor};
+  WiRL.Client.ResourceHeaderEditor in '..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas' {FormHeadersEditor},
+  WiRL.Client.Application.Editor in '..\..\Source\Client\WiRL.Client.Application.Editor.pas' {WiRLClientAppResourceEditor};
 
 end.

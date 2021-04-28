@@ -98,6 +98,7 @@ begin
     ResponseLabel.Font.Color := clBlack;
 
   ResponseLabel.Caption := IntToStr(AResponse.StatusCode) + ' - ' + AResponse.StatusText;
+  MemoResponse.Text := AResponse.Content;
 end;
 
 procedure TWiRLResourceRunnerForm.ButtonAddHeaderClick(Sender: TObject);
@@ -186,10 +187,11 @@ end;
 procedure TWiRLResourceRunnerForm.ButtonSendRequestClick(Sender: TObject);
 var
   LOriginalAfterRequestEvent: TAfterRequestEvent;
-  LResponseText: string;
+  LOriginalRequestErrorEvent: TRequestErrorEvent;
   LObject: TObject;
 begin
   LOriginalAfterRequestEvent := FResource.AfterRequest;
+  LOriginalRequestErrorEvent := FResource.OnRequestError;
   try
     LObject := nil;
     if not Assigned(FResource.Application) then
@@ -201,6 +203,7 @@ begin
     try
       ConfigComponent;
       FResource.AfterRequest := AfterRequestHandler;
+      FResource.OnRequestError := AfterRequestHandler;
 
       if (ComboBoxComponents.ItemIndex >= 0) then
         LObject := ComboBoxComponents.Items.Objects[ComboBoxComponents.ItemIndex];
@@ -208,12 +211,10 @@ begin
       if Assigned(LObject) then
       begin
         FResource.GenericHttpRequest<string>(ComboBoxMethod.Text, MemoRequest.Text, LObject);
-        MemoResponse.Text := LResponseText;
       end
       else
       begin
-        LResponseText := FResource.GenericHttpRequest<string, string>(ComboBoxMethod.Text, MemoRequest.Text);
-        MemoResponse.Text := LResponseText;
+        FResource.GenericHttpRequest<string, string>(ComboBoxMethod.Text, MemoRequest.Text);
       end;
     except
       on E: EWiRLClientResourceException do
@@ -226,6 +227,7 @@ begin
     end;
   finally
     FResource.AfterRequest := LOriginalAfterRequestEvent;
+    FResource.OnRequestError := LOriginalRequestErrorEvent;
   end;
 end;
 

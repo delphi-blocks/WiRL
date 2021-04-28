@@ -150,7 +150,7 @@ type
     /// <summary> Maximum number of redirects</summary>
     property MaxRedirects: Integer read FMaxRedirects write FMaxRedirects default DefaultMaxRedirects;
     /// <summary> Raise an exception for every protocol error (StatusCode >= 400) </summary>
-    property NoProtocolErrorException: Boolean read FNoProtocolErrorException write FNoProtocolErrorException;
+    property NoProtocolErrorException: Boolean read FNoProtocolErrorException write FNoProtocolErrorException default false;
     /// <summary> Vendor of the http client implementation </summary>
     property ClientVendor: string read FClientVendor write SetClientVendor;
     /// <summary> Underlying implementation of the client object </summary>
