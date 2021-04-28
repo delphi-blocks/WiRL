@@ -12,7 +12,8 @@ unit WiRL.Client.Application.Editor;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, System.TypInfo, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ToolWin,
   System.Actions, Vcl.ActnList, Vcl.Menus, Vcl.PlatformDefaultStyleActnCtrls,
   Vcl.ActnPopup, System.ImageList, Vcl.ImgList, DesignIntf, DesignEditors,
@@ -99,12 +100,26 @@ type
     procedure Edit; override;
   end;
 
+  TWiRLClientAppClientProperty = class(TComponentProperty)
+  private
+    function GetClientApp: TWiRLClientApplication;
+  public
+    procedure GetValues(Proc: TGetStrProc); override;
+    function GetValue: string; override;
+    procedure SetValue(const Value: string); override;
+    function GetAttributes: TPropertyAttributes; override;
+  end;
+
 implementation
 
 {$R *.dfm}
 
 uses
+  WiRL.http.Client,
   WiRL.Client.ResourceDebugger;
+
+const
+  DefaultClientName = '<default>';
 
 { TWiRLClientAppResourceEditor }
 
@@ -388,6 +403,41 @@ procedure TWiRLClientAppEditor.Edit;
 begin
   inherited;
   TWiRLClientAppResourceEditor.ShowEditor(Designer, Component as TWiRLClientApplication);
+end;
+
+{ TWiRLClientAppClientProperty }
+
+function TWiRLClientAppClientProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := inherited GetAttributes;
+  Result := Result - [paMultiSelect];
+end;
+
+function TWiRLClientAppClientProperty.GetClientApp: TWiRLClientApplication;
+begin
+  Result := GetComponent(0) as TWiRLClientApplication;
+end;
+
+function TWiRLClientAppClientProperty.GetValue: string;
+begin
+  if GetClientApp.HasDefaultClient then
+    Result := DefaultClientName
+  else
+    Result := inherited;
+end;
+
+procedure TWiRLClientAppClientProperty.GetValues(Proc: TGetStrProc);
+begin
+  Proc(DefaultClientName);
+  inherited;
+end;
+
+procedure TWiRLClientAppClientProperty.SetValue(const Value: string);
+begin
+  if Value = DefaultClientName then
+    GetClientApp.Client := nil
+  else
+    inherited SetValue(Value);
 end;
 
 end.

@@ -65,6 +65,7 @@ type
   private
     FAppName: string;
     FDefaultMediaType: string;
+    FDefaultClient: TWiRLClient;
     FClient: TWiRLClient;
     //FFilterRegistry: TWiRLFilterRegistry;
     FWriterRegistry: TWiRLWriterRegistry;
@@ -72,6 +73,9 @@ type
     FConfigRegistry: TWiRLConfigRegistry;
     FAppConfigurator: TAppConfigurator;
     FResources: TObjectList<TObject>;
+    function GetClient: TWiRLClient;
+    procedure SetClient(const Value: TWiRLClient);
+    function GetDefaultClient: TWiRLClient;
   protected
     function GetPath: string; virtual;
     function AddFilter(const AFilter: string): Boolean;
@@ -111,11 +115,12 @@ type
     property Configs: TWiRLConfigRegistry read FConfigRegistry write FConfigRegistry;
     property Plugin: TAppConfigurator read GetAppConfigurator;
 
+    function HasDefaultClient: Boolean;
     function Resource(const AUrl: string): TWiRLInvocation;
   published
     property DefaultMediaType: string read FDefaultMediaType write FDefaultMediaType;
     property AppName: string read FAppName write FAppName;
-    property Client: TWiRLClient read FClient write FClient;
+    property Client: TWiRLClient read GetClient write SetClient;
     property Path: string read GetPath;
   end;
 
@@ -248,6 +253,8 @@ begin
   //FFilterRegistry := TWiRLFilterRegistry.Create;
   //FFilterRegistry.OwnsObjects := False;
 
+  FClient := GetDefaultClient;
+
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
@@ -264,6 +271,7 @@ end;
 
 destructor TWiRLClientApplication.Destroy;
 begin
+  FDefaultClient.Free;
   FReaderRegistry.Free;
   FWriterRegistry.Free;
   //FFilterRegistry.Free;
@@ -289,6 +297,24 @@ begin
   begin
     Proc(LResource as TWiRLClientCustomResource);
   end;
+end;
+
+function TWiRLClientApplication.GetClient: TWiRLClient;
+begin
+  if not Assigned(FClient) then
+    FClient := FDefaultClient;
+  Result := FClient;
+end;
+
+function TWiRLClientApplication.GetDefaultClient: TWiRLClient;
+begin
+  if not Assigned(FDefaultClient) then
+  begin
+    FDefaultClient := TWiRLClient.Create(Self);
+    FDefaultClient.Name := 'WiRLClient1';
+    FDefaultClient.SetSubComponent(True);
+  end;
+  Result := FDefaultClient;
 end;
 
 function TWiRLClientApplication.GetConfigByClassRef(
@@ -319,6 +345,11 @@ begin
     LEngine := FClient.WiRLEngineURL;
 
   Result := TWiRLURL.CombinePath([LEngine, AppName])
+end;
+
+function TWiRLClientApplication.HasDefaultClient: Boolean;
+begin
+  Result := FClient = FDefaultClient;
 end;
 
 procedure TWiRLClientApplication.Notification(AComponent: TComponent;
@@ -362,6 +393,11 @@ function TWiRLClientApplication.SetBasePath(
   const ABasePath: string): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+end;
+
+procedure TWiRLClientApplication.SetClient(const Value: TWiRLClient);
+begin
+  FClient := Value;
 end;
 
 function TWiRLClientApplication.SetErrorMediaType(
