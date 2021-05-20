@@ -114,15 +114,19 @@ type
     function GetContentMediaType: TMediaType;
     /// <summary>Getter for the RawContent Property</summary>
     function GetRawContent: TBytes;
+    /// <summary>Setter for the StatusCode Property</summary>
+    procedure SetStatusCode(AValue: Integer);
+    /// <summary>Setter for the StatusText Property</summary>
+    procedure SetStatusText(const AValue: string);
 
     /// <summary>Property to Get Header values</summary>
     /// <param name="AName">Name of the Header</param>
     /// <returns>The string value associated to the given name.</returns>
     property HeaderValue[const AName: string]: string read GetHeaderValue;
     /// <summary>Get StatusText from server response</summary>
-    property StatusText: string read GetStatusText;
+    property StatusText: string read GetStatusText write SetStatusText;
     /// <summary>Get StatusCode from server response</summary>
-    property StatusCode: Integer read GetStatusCode;
+    property StatusCode: Integer read GetStatusCode write SetStatusCode;
     /// <summary>Get ContentType from server response</summary>
     property ContentType: string read GetContentType;
     /// <summary>Get the body from server response as a string</summary>

@@ -114,7 +114,8 @@ contains
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
   WiRL.Core.Metadata in '..\..\Source\Core\WiRL.Core.Metadata.pas',
-  WiRL.Core.Auth.Resource in '..\..\Source\Core\WiRL.Core.Auth.Resource.pas';
+  WiRL.Core.Auth.Resource in '..\..\Source\Core\WiRL.Core.Auth.Resource.pas',
+  WiRL.Client.Filters in '..\..\Source\Client\WiRL.Client.Filters.pas';
 
 end.
 

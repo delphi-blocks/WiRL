@@ -115,7 +115,8 @@ contains
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
   WiRL.Core.Metadata in '..\..\Source\Core\WiRL.Core.Metadata.pas',
-  WiRL.Core.Metadata.XMLDoc in '..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas';
+  WiRL.Core.Metadata.XMLDoc in '..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas',
+  WiRL.Client.Filters in '..\..\Source\Client\WiRL.Client.Filters.pas';
 
 end.
 

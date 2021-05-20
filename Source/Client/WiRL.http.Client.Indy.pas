@@ -43,6 +43,8 @@ type
     function GetHeaders: IWiRLHeaders;
     function GetContentMediaType: TMediaType;
     function GetRawContent: TBytes;
+    procedure SetStatusCode(AValue: Integer);
+    procedure SetStatusText(const AValue: string);
   public
     constructor Create(AIdHTTPResponse: TIdHTTPResponse);
     destructor Destroy; override;
@@ -343,6 +345,16 @@ end;
 function TWiRLClientResponseIndy.GetStatusText: string;
 begin
   Result := FIdHTTPResponse.ResponseText;
+end;
+
+procedure TWiRLClientResponseIndy.SetStatusCode(AValue: Integer);
+begin
+  FIdHTTPResponse.ResponseCode := AValue;
+end;
+
+procedure TWiRLClientResponseIndy.SetStatusText(const AValue: string);
+begin
+  FIdHTTPResponse.ResponseText := AValue;
 end;
 
 initialization

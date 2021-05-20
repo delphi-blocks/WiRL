@@ -15,12 +15,13 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
-  System.Contnrs,
+  System.Contnrs, System.Types,
   WiRL.Configuration.Core,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
-  WiRL.http.Filters,
+  WiRL.http.Client.Interfaces,
+  WiRL.Client.Filters,
   WiRL.http.Headers,
   WiRL.http.Client;
 
@@ -31,6 +32,7 @@ type
   private
     FWiRLInvocation: IWiRLInvocation;
   public
+    function Filters(const AFilters: TStringDynArray): TWiRLInvocation;
     function Target(const AUrl: string): TWiRLInvocation;
     function Accept(const AAccept: string): TWiRLInvocation;
     function ContentType(const AContentType: string): TWiRLInvocation;
@@ -73,9 +75,11 @@ type
     FConfigRegistry: TWiRLConfigRegistry;
     FAppConfigurator: TAppConfigurator;
     FResources: TObjectList<TObject>;
+    FFilterRegistry: TWiRLClientFilterRegistry;
     function GetClient: TWiRLClient;
     procedure SetClient(const Value: TWiRLClient);
     function GetDefaultClient: TWiRLClient;
+    function CheckFilterNameBinding(AClientResource: TObject; AAttribute: TCustomAttribute): Boolean;
   protected
     function GetPath: string; virtual;
     function AddFilter(const AFilter: string): Boolean;
@@ -86,6 +90,8 @@ type
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
   public
     property Resources: TObjectList<TObject> read FResources;
+    procedure ApplyRequestFilter(AClientResource: TObject; const AHttpMethod: string; ARequestStream: TStream; out AResponse: IWiRLResponse);
+    procedure ApplyResponseFilter(AClientResource: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   public
@@ -109,7 +115,7 @@ type
 
     function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
 
-    //property FilterRegistry: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
+    property FilterRegistry: TWiRLClientFilterRegistry read FFilterRegistry write FFilterRegistry;
     property WriterRegistry: TWiRLWriterRegistry read FWriterRegistry write FWriterRegistry;
     property ReaderRegistry: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
     property Configs: TWiRLConfigRegistry read FConfigRegistry write FConfigRegistry;
@@ -142,7 +148,6 @@ uses
   WiRL.Client.Utils,
   WiRL.Client.CustomResource,
   WiRL.Client.Resource,
-  WiRL.http.Client.Interfaces,
   WiRL.Core.Utils,
   WiRL.Core.Converter,
   WiRL.http.URL;
@@ -183,8 +188,38 @@ begin
 end;
 
 function TWiRLClientApplication.AddFilter(const AFilter: string): Boolean;
+var
+  LRegistry: TWiRLClientFilterRegistry;
+  LInfo: TWiRLClientFilterConstructorInfo;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  if csDesigning in ComponentState then
+  begin
+    FFilterRegistry.AddFilterName(AFilter);
+    Exit(True);
+  end;
+
+  Result := False;
+  LRegistry := TWiRLClientFilterRegistry.Instance;
+
+  if IsMask(AFilter) then // has wildcards and so on...
+  begin
+    for LInfo in LRegistry do
+    begin
+      if MatchesMask(LInfo.TypeTClass.QualifiedClassName, AFilter) then
+      begin
+        FFilterRegistry.Add(LInfo);
+        Result := True;
+      end;
+    end;
+  end
+  else // exact match
+  begin
+    if LRegistry.FilterByClassName(AFilter, LInfo) then
+    begin
+      FFilterRegistry.Add(LInfo);
+      Result := True;
+    end;
+  end;
 end;
 
 function TWiRLClientApplication.AddReader(const AReader: string): Boolean;
@@ -247,11 +282,71 @@ begin
   end;
 end;
 
+procedure TWiRLClientApplication.ApplyRequestFilter(AClientResource: TObject;
+  const AHttpMethod: string; ARequestStream: TStream; out AResponse: IWiRLResponse);
+var
+  LInfo: TWiRLClientFilterConstructorInfo;
+  LRequestContext: TWiRLClientRequestContext;
+begin
+  LRequestContext := TWiRLClientRequestContext.Create(AClientResource, AHttpMethod, ARequestStream);
+  try
+    for LInfo in FFilterRegistry do
+    begin
+      if Supports(LInfo.TypeTClass, IWiRLClientRequestFilter) then
+      begin
+        if CheckFilterNameBinding(AClientResource, LInfo.Attribute) then
+        begin
+          LRequestContext.Response := AResponse;
+          LInfo.GetRequestFilter.Filter(LRequestContext);
+          if LRequestContext.Aborted then
+            AResponse := LRequestContext.Response;
+        end;
+      end;
+    end;
+  finally
+    LRequestContext.Free;
+  end;
+end;
+
+procedure TWiRLClientApplication.ApplyResponseFilter(AClientResource: TObject;
+  const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse);
+var
+  LInfo: TWiRLClientFilterConstructorInfo;
+  LResponseContext: TWiRLClientResponseContext;
+begin
+  LResponseContext := TWiRLClientResponseContext.Create(AClientResource, AHttpMethod, ARequestStream, AResponse);
+  try
+    for LInfo in FFilterRegistry do
+    begin
+      if Supports(LInfo.TypeTClass, IWiRLClientResponseFilter) then
+      begin
+        if CheckFilterNameBinding(AClientResource, LInfo.Attribute) then
+          LInfo.GetResponseFilter.Filter(LResponseContext);
+      end;
+    end;
+  finally
+    LResponseContext.Free;
+  end;
+end;
+
+function TWiRLClientApplication.CheckFilterNameBinding(AClientResource: TObject;
+  AAttribute: TCustomAttribute): Boolean;
+var
+  LResource: TWiRLClientCustomResource;
+begin
+  Result := True;
+  if Assigned(AAttribute) then
+  begin
+    LResource := AClientResource as TWiRLClientCustomResource;
+    Result := LResource.HasFilter(AAttribute);
+  end;
+end;
+
 constructor TWiRLClientApplication.Create(AOwner: TComponent);
 begin
   inherited;
-  //FFilterRegistry := TWiRLFilterRegistry.Create;
-  //FFilterRegistry.OwnsObjects := False;
+  FFilterRegistry := TWiRLClientFilterRegistry.Create;
+  FFilterRegistry.OwnsObjects := False;
 
   FClient := GetDefaultClient;
 
@@ -274,7 +369,7 @@ begin
   FDefaultClient.Free;
   FReaderRegistry.Free;
   FWriterRegistry.Free;
-  //FFilterRegistry.Free;
+  FFilterRegistry.Free;
   FConfigRegistry.Free;
 
   FAppConfigurator.Free;
@@ -409,13 +504,18 @@ end;
 function TWiRLClientApplication.SetFilters(
   const AFilters: string): IWiRLApplication;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  SetFilters(AFilters.Split([',']));
+  Result := Self;
 end;
 
 function TWiRLClientApplication.SetFilters(
   const AFilters: System.TArray<System.string>): IWiRLApplication;
+var
+  LFilter: string;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  for LFilter in AFilters do
+    Self.AddFilter(LFilter);
+  Result := Self;
 end;
 
 function TWiRLClientApplication.SetReaders(const AReaders: string): IWiRLApplication;
@@ -514,6 +614,12 @@ end;
 function TWiRLInvocation.Delete<T>: T;
 begin
   Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).Delete<T>;
+end;
+
+function TWiRLInvocation.Filters(const AFilters: TStringDynArray): TWiRLInvocation;
+begin
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).SetFilters(AFilters);
+  Result := Self;
 end;
 
 procedure TWiRLInvocation.Get(AResponseEntity: TObject);

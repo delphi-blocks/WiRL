@@ -28,6 +28,8 @@ uses
 type
   TWiRLClientResponseNetHttp = class(TInterfacedObject, IWiRLResponse)
   private
+    FStatusCode: Integer;
+    FStatusText: string;
     FResponse: IHTTPResponse;
     FMediaType: TMediaType;
     FHeaders: IWiRLHeaders;
@@ -42,6 +44,8 @@ type
     function GetHeaders: IWiRLHeaders;
     function GetContentMediaType: TMediaType;
     function GetRawContent: TBytes;
+    procedure SetStatusCode(AValue: Integer);
+    procedure SetStatusText(const AValue: string);
   public
     constructor Create(AResponse: IHTTPResponse);
     destructor Destroy; override;
@@ -321,12 +325,28 @@ end;
 
 function TWiRLClientResponseNetHttp.GetStatusCode: Integer;
 begin
-  Result := FResponse.StatusCode;
+  if FStatusCode <> 0 then
+    Result := FStatusCode
+  else
+    Result := FResponse.StatusCode;
 end;
 
 function TWiRLClientResponseNetHttp.GetStatusText: string;
 begin
-  Result := FResponse.StatusText;
+  if FStatusText <> '' then
+    Result := FStatusText
+  else
+    Result := FResponse.StatusText;
+end;
+
+procedure TWiRLClientResponseNetHttp.SetStatusCode(AValue: Integer);
+begin
+  FStatusCode := AValue;
+end;
+
+procedure TWiRLClientResponseNetHttp.SetStatusText(const AValue: string);
+begin
+  FStatusText := AValue;
 end;
 
 initialization

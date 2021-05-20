@@ -24,7 +24,7 @@ uses
   WiRL.http.Client;
 
 type
-  TBeforeRequestEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream) of object;
+  TBeforeRequestEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream; out AResponse: IWiRLResponse) of object;
   TAfterRequestEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse) of object;
   TRequestErrorEvent = procedure (Sender: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse) of object;
 
@@ -44,6 +44,7 @@ type
     FBeforeRequest: TBeforeRequestEvent;
     FAfterRequest: TAfterRequestEvent;
     FOnRequestError: TRequestErrorEvent;
+    FFilters: TStringDynArray;
     procedure SetPathParams(const Value: TStrings);
     procedure SetQueryParams(const Value: TStrings);
 
@@ -61,7 +62,7 @@ type
     function GetApplication: TWiRLClientApplication; virtual;
     function GetAccept: string;
     function GetContentType: string;
-    procedure DoBeforeRequest(const AHttpMethod: string; ARequestStream: TStream); virtual;
+    procedure DoBeforeRequest(const AHttpMethod: string; ARequestStream: TStream; out AResponse: IWiRLResponse); virtual;
     procedure DoAfterRequest(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse); virtual;
     procedure DoRequestError(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse); virtual;
 
@@ -80,6 +81,9 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    procedure SetFilters(const AFilters: TStringDynArray);
+    function HasFilter(AAttribute: TCustomAttribute): Boolean;
 
     // Handles the parent/child relationship for the designer
     function GetParentComponent: TComponent; override;
@@ -259,6 +263,21 @@ begin
 
   if FQueryParams.Count > 0 then
     Result := Result + '?' + SmartConcat(TWiRLURL.URLEncode(FQueryParams.ToStringArray), '&');
+end;
+
+function TWiRLClientCustomResource.HasFilter(
+  AAttribute: TCustomAttribute): Boolean;
+var
+  LFilterName: string;
+  LAttributeName: string;
+begin
+  Result := False;
+  LAttributeName := AAttribute.ClassName;
+  for LFilterName in FFilters do
+  begin
+    if SameText(LFilterName, LAttributeName) or SameText(LFilterName + 'Attribute', LAttributeName) then
+      Exit(True);
+  end;
 end;
 
 function TWiRLClientCustomResource.HasParent: Boolean;
@@ -456,6 +475,7 @@ begin
     Exit;
 
   Result := default(V);
+  LResponse := nil;
   InitHttpRequest;
 
   LRequestStream := TMemoryStream.Create;
@@ -464,9 +484,10 @@ begin
     try
       ObjectToStream<T>(MergeHeaders(AHttpMethod), ARequestEntity, LRequestStream);
 
-      DoBeforeRequest(AHttpMethod, LRequestStream);
+      DoBeforeRequest(AHttpMethod, LRequestStream, LResponse);
       try
-        LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
+        if not Assigned(LResponse) then
+          LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
       except
         on E: EWiRLClientProtocolException do
         begin
@@ -476,7 +497,10 @@ begin
       end;
       DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
 
-      Result := StreamToObject<V>(LResponse.Headers, LResponseStream);
+      if Assigned(LResponse.ContentStream) then
+        Result := StreamToObject<V>(LResponse.Headers, LResponse.ContentStream)
+      else
+        Result := StreamToObject<V>(LResponse.Headers, LResponseStream);
     finally
       if not SameObject<V>(Result, LResponseStream) then
         LResponseStream.Free;
@@ -503,9 +527,10 @@ begin
     try
       ObjectToStream<T>(MergeHeaders(AHttpMethod), ARequestEntity, LRequestStream);
 
-      DoBeforeRequest(AHttpMethod, LRequestStream);
+      DoBeforeRequest(AHttpMethod, LRequestStream, LResponse);
       try
-        LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
+        if not Assigned(LResponse) then
+          LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
       except
         on E: EWiRLClientProtocolException do
         begin
@@ -516,7 +541,12 @@ begin
       DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
 
       if Assigned(AResponseEntity) then
-        StreamToObject(AResponseEntity, LResponse.Headers, LResponseStream);
+      begin
+        if Assigned(LResponse.ContentStream) then
+          StreamToObject(AResponseEntity, LResponse.Headers, LResponse.ContentStream)
+        else
+          StreamToObject(AResponseEntity, LResponse.Headers, LResponseStream);
+      end;
     finally
       LResponseStream.Free;
     end;
@@ -585,14 +615,25 @@ var
   LRequestPosition: Integer;
   LResponsePosition: Integer;
 begin
+  // Call filters
   LRequestPosition := 0;
   LResponsePosition := 0;
+  if Assigned(ARequestStream) then
+    LRequestPosition := ARequestStream.Position;
+  if Assigned(AResponse.ContentStream) then
+    LResponsePosition := AResponse.ContentStream.Position;
+
+  FApplication.ApplyResponseFilter(Self, AHttpMethod, ARequestStream, AResponse);
+
+  if Assigned(ARequestStream) then
+    ARequestStream.Position := LRequestPosition;
+  if Assigned(AResponse.ContentStream) then
+    AResponse.ContentStream.Position := LResponsePosition;
+
+  // Manager event handlers
+
   if Assigned(FAfterRequest) then
   begin
-    if Assigned(ARequestStream) then
-      LRequestPosition := ARequestStream.Position;
-    if Assigned(AResponse.ContentStream) then
-      LResponsePosition := AResponse.ContentStream.Position;
     FAfterRequest(Self, AHttpMethod, ARequestStream, AResponse);
     if Assigned(ARequestStream) then
       ARequestStream.Position := LRequestPosition;
@@ -602,16 +643,23 @@ begin
 end;
 
 procedure TWiRLClientCustomResource.DoBeforeRequest(const AHttpMethod: string;
-  ARequestStream: TStream);
+  ARequestStream: TStream; out AResponse: IWiRLResponse);
 var
   LPosition: Integer;
 begin
+  // Call filters
   LPosition := 0;
+  if Assigned(ARequestStream) then
+    LPosition := ARequestStream.Position;
+  FApplication.ApplyRequestFilter(Self, AHttpMethod, ARequestStream, AResponse);
+  if Assigned(ARequestStream) then
+    ARequestStream.Position := LPosition;
+
+  // Manage event handlers
+
   if Assigned(FBeforeRequest) then
   begin
-    if Assigned(ARequestStream) then
-      LPosition := ARequestStream.Position;
-    FBeforeRequest(Self, AHttpMethod, ARequestStream);
+    FBeforeRequest(Self, AHttpMethod, ARequestStream, AResponse);
     if Assigned(ARequestStream) then
       ARequestStream.Position := LPosition;
   end;
@@ -680,6 +728,11 @@ begin
     if Assigned(FApplication) and (FApplication.Resources.IndexOf(Self) < 0) then
       FApplication.Resources.Add(Self);
   end;
+end;
+
+procedure TWiRLClientCustomResource.SetFilters(const AFilters: TStringDynArray);
+begin
+  FFilters := AFilters;
 end;
 
 procedure TWiRLClientCustomResource.SetParentComponent(AParent: TComponent);
