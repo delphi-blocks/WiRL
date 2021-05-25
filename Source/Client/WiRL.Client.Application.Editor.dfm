@@ -57,18 +57,18 @@ object WiRLClientAppResourceEditor: TWiRLClientAppResourceEditor
       Top = 0
       Action = MoveDownCmd
     end
-    object ToolButton6: TToolButton
+    object ToolButton7: TToolButton
       Left = 104
+      Top = 0
+      Action = RunCmd
+    end
+    object ToolButton6: TToolButton
+      Left = 127
       Top = 0
       Width = 8
       Caption = 'ToolButton6'
       ImageIndex = 4
       Style = tbsSeparator
-    end
-    object ToolButton7: TToolButton
-      Left = 112
-      Top = 0
-      Action = RunCmd
     end
   end
   object ListView1: TListView

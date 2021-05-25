@@ -201,8 +201,8 @@ constructor TWiRLClientCustomResource.Create(AOwner: TComponent);
 begin
   inherited;
   FResource := 'main';
-  if TWiRLComponentHelper.IsDesigning(Self) then
-    Application := TWiRLComponentHelper.FindDefault<TWiRLClientApplication>(Self);
+//  if TWiRLComponentHelper.IsDesigning(Self) then
+//    Application := TWiRLComponentHelper.FindDefault<TWiRLClientApplication>(Self);
   FPathParams := TStringList.Create;
   FQueryParams := TStringList.Create;
   FContext := TWiRLContextHttp.Create;
@@ -486,7 +486,12 @@ begin
 
       DoBeforeRequest(AHttpMethod, LRequestStream, LResponse);
       try
-        if not Assigned(LResponse) then
+        if Assigned(LResponse) then
+        begin
+          if LResponse.StatusCode >= 400 then
+            raise EWiRLClientProtocolException.Create(LResponse);
+        end
+        else
           LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
       except
         on E: EWiRLClientProtocolException do
@@ -529,7 +534,12 @@ begin
 
       DoBeforeRequest(AHttpMethod, LRequestStream, LResponse);
       try
-        if not Assigned(LResponse) then
+        if Assigned(LResponse) then
+        begin
+          if LResponse.StatusCode >= 400 then
+            raise EWiRLClientProtocolException.Create(LResponse);
+        end
+        else
           LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, LResponseStream);
       except
         on E: EWiRLClientProtocolException do

@@ -354,14 +354,17 @@ procedure TWiRLClientAppResourceEditor.RunCmdExecute(Sender: TObject);
 var
   LSelectedIndex: Integer;
 begin
-  LSelectedIndex := ListView1.Selected.Index;
-  if (LSelectedIndex >= 0) and (LSelectedIndex < ClientApp.Resources.Count) then
+  if Assigned(ListView1.Selected) then
   begin
-    ClientApp.SetWriters('*.*');
-    ClientApp.SetReaders('*.*');
+    LSelectedIndex := ListView1.Selected.Index;
+    if (LSelectedIndex >= 0) and (LSelectedIndex < ClientApp.Resources.Count) then
+    begin
+      ClientApp.SetWriters('*.*');
+      ClientApp.SetReaders('*.*');
 
-    TWiRLResourceRunnerForm.Edit(ClientApp.Resources[LSelectedIndex] as TWiRLClientCustomResource);
-    FillAppList;
+      TWiRLResourceRunnerForm.Edit(ClientApp.Resources[LSelectedIndex] as TWiRLClientCustomResource);
+      FillAppList;
+    end;
   end;
 end;
 

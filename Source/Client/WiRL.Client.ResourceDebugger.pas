@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Imaging.pngimage, Winapi.ShellAPI, Vcl.Grids,
+  Vcl.Imaging.pngimage, Winapi.ShellAPI, Vcl.Grids, System.JSON,
 
   WiRL.Client.CustomResource,
   WiRL.Client.Resource,
@@ -44,6 +44,10 @@ type
     MemoRequest: TMemo;
     Label5: TLabel;
     Label6: TLabel;
+    Label7: TLabel;
+    EditAppUrl: TEdit;
+    lblUrl: TLabel;
+    ButtonFormatJson: TButton;
     procedure WiRLUrlLabelClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
@@ -51,6 +55,10 @@ type
     procedure ButtonDeleteHeaderClick(Sender: TObject);
     procedure ButtonAddHeaderClick(Sender: TObject);
     procedure ButtonEditHeaderClick(Sender: TObject);
+    procedure EditBaseUrlChange(Sender: TObject);
+    procedure EditAppUrlChange(Sender: TObject);
+    procedure EditResourcePathChange(Sender: TObject);
+    procedure ButtonFormatJsonClick(Sender: TObject);
   private
     FResource: TWiRLClientCustomResource;
     FContainer: TComponent;
@@ -60,6 +68,7 @@ type
     procedure AddHeader(const AName, AValue: string);
     procedure DeleteHeader;
     procedure SetContainer(const Value: TComponent);
+    procedure ShowUrl;
   public
     class procedure Edit(AResource: TWiRLClientCustomResource);
   public
@@ -70,6 +79,12 @@ type
 implementation
 
 {$R *.dfm}
+
+function NormalizePath(const APath: string): string;
+begin
+  if not APath.EndsWith('/') then
+    Result := APath + '/';
+end;
 
 procedure TWiRLResourceRunnerForm.AddHeader(const AName, AValue: string);
 var
@@ -136,6 +151,19 @@ begin
   end;
 end;
 
+procedure TWiRLResourceRunnerForm.ButtonFormatJsonClick(Sender: TObject);
+var
+  LJson: TJSONValue;
+begin
+  LJson := TJSONObject.ParseJSONValue(MemoResponse.Text);
+  try
+    if Assigned(LJson) then
+      MemoResponse.Text := LJson.Format();
+  finally
+    LJson.Free;
+  end;
+end;
+
 procedure TWiRLResourceRunnerForm.ButtonCloseClick(Sender: TObject);
 begin
   ConfigComponent;
@@ -147,6 +175,8 @@ begin
   FResource.Resource := EditResourcePath.Text;
   if Assigned(FResource.Client) then
     FResource.Client.WiRLEngineURL := EditBaseUrl.Text;
+  if Assigned(FResource.Application) then
+    FResource.Application.AppName := EditAppUrl.Text;
 end;
 
 procedure TWiRLResourceRunnerForm.DeleteHeader;
@@ -176,6 +206,21 @@ begin
   finally
     LEditorForm.Free;
   end;
+end;
+
+procedure TWiRLResourceRunnerForm.EditAppUrlChange(Sender: TObject);
+begin
+  ShowUrl;
+end;
+
+procedure TWiRLResourceRunnerForm.EditBaseUrlChange(Sender: TObject);
+begin
+  ShowUrl;
+end;
+
+procedure TWiRLResourceRunnerForm.EditResourcePathChange(Sender: TObject);
+begin
+  ShowUrl;
 end;
 
 procedure TWiRLResourceRunnerForm.FormCreate(Sender: TObject);
@@ -258,6 +303,11 @@ begin
     EditBaseUrl.Text := FResource.Client.WiRLEngineURL;
     EditBaseUrl.ReadOnly := False;
   end;
+  if Assigned(FResource.Application) then
+  begin
+    EditAppUrl.Text := FResource.Application.AppName;
+    EditAppUrl.ReadOnly := False;
+  end;
   EditResourcePath.Text := FResource.Resource;
 
   if Assigned(FResource.Application) then
@@ -270,6 +320,19 @@ begin
   begin
     AddHeader(LHeader.Name, LHeader.Value);
   end;
+  ShowUrl;
+end;
+
+procedure TWiRLResourceRunnerForm.ShowUrl;
+var
+  LAppPath: string;
+begin
+  LAppPath := EditAppUrl.Text;
+  if (LAppPath = '/') or (LAppPath = '.') or (LAppPath = '') then
+    LAppPath := ''
+  else
+    LAppPath := NormalizePath(LAppPath);
+  lblUrl.Caption := NormalizePath(EditBaseUrl.Text) + LAppPath + EditResourcePath.Text;
 end;
 
 procedure TWiRLResourceRunnerForm.WiRLUrlLabelClick(Sender: TObject);

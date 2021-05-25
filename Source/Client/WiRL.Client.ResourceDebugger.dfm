@@ -2,7 +2,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
   Left = 0
   Top = 0
   Caption = 'WiRLResource'
-  ClientHeight = 572
+  ClientHeight = 618
   ClientWidth = 927
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -1020,7 +1020,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     Left = 3
     Top = 121
     Width = 921
-    Height = 193
+    Height = 222
     Align = alTop
     Caption = 'Request'
     TabOrder = 1
@@ -1029,7 +1029,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Left = 7
       Top = 20
       Width = 907
-      Height = 166
+      Height = 195
       Margins.Left = 5
       Margins.Top = 5
       Margins.Right = 5
@@ -1041,7 +1041,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
         Caption = 'Request'
         DesignSize = (
           899
-          138)
+          167)
         object Label1: TLabel
           Left = 138
           Top = 10
@@ -1058,7 +1058,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
         end
         object Label5: TLabel
           Left = 16
-          Top = 54
+          Top = 76
           Width = 69
           Height = 13
           Caption = 'Request data:'
@@ -1070,14 +1070,32 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           Height = 13
           Caption = 'Resource name:'
         end
+        object Label7: TLabel
+          Left = 391
+          Top = 10
+          Width = 52
+          Height = 13
+          Caption = 'App name:'
+        end
+        object lblUrl: TLabel
+          Left = 16
+          Top = 55
+          Width = 23
+          Height = 13
+          Caption = 'lblUrl'
+          Color = clGray
+          ParentColor = False
+          StyleElements = [seClient, seBorder]
+        end
         object EditBaseUrl: TEdit
           Left = 138
           Top = 29
-          Width = 367
+          Width = 247
           Height = 21
           ReadOnly = True
-          TabOrder = 0
+          TabOrder = 1
           Text = '<WiRLEngineURL>'
+          OnChange = EditBaseUrlChange
         end
         object ComboBoxMethod: TComboBox
           Left = 16
@@ -1085,7 +1103,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           Width = 116
           Height = 21
           Style = csDropDownList
-          TabOrder = 1
+          TabOrder = 0
           Items.Strings = (
             'GET'
             'POST'
@@ -1098,15 +1116,16 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           Width = 361
           Height = 21
           Anchors = [akLeft, akTop, akRight]
-          TabOrder = 2
+          TabOrder = 3
           Text = 'EditResourcePath'
+          OnChange = EditResourcePathChange
         end
         object MemoRequest: TMemo
           AlignWithMargins = True
           Left = 16
-          Top = 72
+          Top = 95
           Width = 865
-          Height = 63
+          Height = 67
           Margins.Left = 10
           Anchors = [akLeft, akTop, akRight, akBottom]
           Font.Charset = DEFAULT_CHARSET
@@ -1116,7 +1135,17 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           Font.Style = []
           ParentFont = False
           ScrollBars = ssVertical
-          TabOrder = 3
+          TabOrder = 4
+        end
+        object EditAppUrl: TEdit
+          Left = 391
+          Top = 29
+          Width = 123
+          Height = 21
+          ReadOnly = True
+          TabOrder = 2
+          Text = '<App>'
+          OnChange = EditAppUrlChange
         end
       end
       object HeadersTab: TTabSheet
@@ -1130,7 +1159,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           Left = 776
           Top = 0
           Width = 123
-          Height = 138
+          Height = 167
           Align = alRight
           BevelOuter = bvNone
           Caption = 'HeaderCommandPanel'
@@ -1175,7 +1204,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           Left = 3
           Top = 3
           Width = 770
-          Height = 132
+          Height = 161
           Align = alClient
           Columns = <
             item
@@ -1207,15 +1236,15 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
   object ResponseGroupBox: TGroupBox
     AlignWithMargins = True
     Left = 3
-    Top = 320
+    Top = 349
     Width = 921
-    Height = 204
+    Height = 221
     Align = alClient
     Caption = 'Response'
     TabOrder = 2
     DesignSize = (
       921
-      204)
+      221)
     object ResponseLabel: TLabel
       AlignWithMargins = True
       Left = 10
@@ -1245,7 +1274,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Left = 10
       Top = 86
       Width = 904
-      Height = 102
+      Height = 119
       Margins.Left = 10
       Anchors = [akLeft, akTop, akRight, akBottom]
       Font.Charset = DEFAULT_CHARSET
@@ -1255,13 +1284,24 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Font.Style = []
       ParentFont = False
       ReadOnly = True
-      ScrollBars = ssVertical
+      ScrollBars = ssBoth
       TabOrder = 1
+      WordWrap = False
+    end
+    object ButtonFormatJson: TButton
+      Left = 816
+      Top = 55
+      Width = 98
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Format JSON'
+      TabOrder = 2
+      OnClick = ButtonFormatJsonClick
     end
   end
   object FooterPanel: TPanel
     Left = 0
-    Top = 527
+    Top = 573
     Width = 927
     Height = 45
     Align = alBottom
