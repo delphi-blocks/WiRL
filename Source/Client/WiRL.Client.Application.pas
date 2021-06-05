@@ -104,17 +104,24 @@ type
     FResources: TObjectList<TObject>;
     FFilterRegistry: TWiRLClientFilterRegistry;
     FOptions: TWiRLClientApplicationOptions;
+    FFilters: TStringList;
+    FReaders: TStringList;
+    FWriters: TStringList;
     function GetClient: TWiRLClient;
     procedure SetClient(const Value: TWiRLClient);
     function GetDefaultClient: TWiRLClient;
     function CheckFilterNameBinding(AClientResource: TObject; AAttribute: TCustomAttribute): Boolean;
     procedure SetOptions(const Value: TWiRLClientApplicationOptions);
     function AppNameIsStored: Boolean;
+    procedure RegistryNotification(Sender: TObject);
   protected
     function GetPath: string; virtual;
     function AddFilter(const AFilter: string): Boolean;
     function AddWriter(const AWriter: string): Boolean;
     function AddReader(const AReader: string): Boolean;
+    procedure SetDesignFilters(AValue: TStringList);
+    procedure SetDesignReaders(AValue: TStringList);
+    procedure SetDesignWriters(AValue: TStringList);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     // Handles the parent/child relationship for the designer
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
@@ -128,12 +135,15 @@ type
     { IWiRLApplication }
     function SetWriters(const AWriters: TArray<string>): IWiRLApplication; overload;
     function SetWriters(const AWriters: string): IWiRLApplication; overload;
+    function SetWriters(AWriters: TStrings): IWiRLApplication; overload;
     function SetReaders(const AReaders: TArray<string>): IWiRLApplication; overload;
     function SetReaders(const AReaders: string): IWiRLApplication; overload;
+    function SetReaders(AReaders: TStrings): IWiRLApplication; overload;
     function SetResources(const AResources: string): IWiRLApplication; overload;
     function SetResources(const AResources: System.TArray<System.string>): IWiRLApplication; overload;
     function SetFilters(const AFilters: System.TArray<System.string>): IWiRLApplication; overload;
     function SetFilters(const AFilters: string): IWiRLApplication; overload;
+    function SetFilters(AFilters: TStrings): IWiRLApplication; overload;
     function SetBasePath(const ABasePath: string): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
@@ -158,6 +168,9 @@ type
     property AppName: string read FAppName write FAppName stored AppNameIsStored nodefault;
     property Client: TWiRLClient read GetClient write SetClient;
     property Path: string read GetPath;
+    property Filters: TStringList read FFilters write SetDesignFilters;
+    property Readers: TStringList read FReaders write SetDesignReaders;
+    property Writers: TStringList read FWriters write SetDesignWriters;
     property Options: TWiRLClientApplicationOptions read FOptions write SetOptions;
   end;
 
@@ -228,12 +241,12 @@ var
   LRegistry: TWiRLClientFilterRegistry;
   LInfo: TWiRLClientFilterConstructorInfo;
 begin
-  if csDesigning in ComponentState then
-  begin
-    FFilterRegistry.AddFilterName(AFilter);
-    Exit(True);
-  end;
-
+//  if csDesigning in ComponentState then
+//  begin
+//    FFilterRegistry.AddFilterName(AFilter);
+//    Exit(True);
+//  end;
+//
   Result := False;
   LRegistry := TWiRLClientFilterRegistry.Instance;
 
@@ -387,6 +400,12 @@ constructor TWiRLClientApplication.Create(AOwner: TComponent);
 begin
   inherited;
   FOptions := TWiRLClientApplicationOptions.Create(Self);
+  FFilters := TStringList.Create;
+  FFilters.OnChange := RegistryNotification;
+  FReaders := TStringList.Create;
+  FReaders.OnChange := RegistryNotification;
+  FWriters := TStringList.Create;
+  FWriters.OnChange := RegistryNotification;
   FFilterRegistry := TWiRLClientFilterRegistry.Create;
   FFilterRegistry.OwnsObjects := False;
 
@@ -404,11 +423,18 @@ begin
     FClient := TWiRLComponentHelper.FindDefault<TWiRLClient>(Self);
 
   FAppConfigurator := TAppConfiguratorImpl.Create(Self);
+
+  FFilters.Text := '*';
+  FReaders.Text := '*';
+  FWriters.Text := '*';
 end;
 
 destructor TWiRLClientApplication.Destroy;
 begin
   FOptions.Free;
+  FFilters.Free;
+  FReaders.Free;
+  FWriters.Free;
   FDefaultClient.Free;
   FReaderRegistry.Free;
   FWriterRegistry.Free;
@@ -505,6 +531,25 @@ begin
   end;
 end;
 
+procedure TWiRLClientApplication.RegistryNotification(Sender: TObject);
+begin
+  if Sender = FFilters then
+  begin
+    FFilterRegistry.Clear;
+    SetFilters(FFilters);
+  end
+  else if Sender = FReaders then
+  begin
+    FReaderRegistry.Clear;
+    SetReaders(FReaders);
+  end
+  else if Sender = FWriters then
+  begin
+    FWriterRegistry.Clear;
+    SetWriters(FWriters);
+  end;
+end;
+
 function TWiRLClientApplication.Resource(
   const AUrl: string): TWiRLInvocation;
 begin
@@ -538,10 +583,49 @@ begin
   FClient := Value;
 end;
 
+procedure TWiRLClientApplication.SetDesignFilters(AValue: TStringList);
+var
+  LFilterName: string;
+begin
+  if FFilters <> AValue then
+  begin
+    FFilters.Assign(AValue);
+    FFilterRegistry.Clear;
+    for LFilterName in FFilters do
+      SetFilters(LFilterName);
+  end;
+end;
+
+procedure TWiRLClientApplication.SetDesignReaders(AValue: TStringList);
+begin
+  if FReaders <> AValue then
+  begin
+    FReaders.Assign(AValue);
+  end;
+end;
+
+procedure TWiRLClientApplication.SetDesignWriters(AValue: TStringList);
+begin
+  if FWriters <> AValue then
+  begin
+    FWriters.Assign(AValue);
+  end;
+end;
+
 function TWiRLClientApplication.SetErrorMediaType(
   const AMediaType: string): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+end;
+
+function TWiRLClientApplication.SetFilters(
+  AFilters: TStrings): IWiRLApplication;
+var
+  LFilterName: string;
+begin
+  for LFilterName in AFilters do
+    SetFilters(LFilterName);
+  Result := Self;
 end;
 
 function TWiRLClientApplication.SetFilters(
@@ -576,6 +660,16 @@ begin
   Result := Self;
 end;
 
+function TWiRLClientApplication.SetReaders(
+  AReaders: TStrings): IWiRLApplication;
+var
+  LReader: string;
+begin
+  for LReader in AReaders do
+    Self.AddReader(LReader);
+  Result := Self;
+end;
+
 function TWiRLClientApplication.SetResources(
   const AResources: System.TArray<System.string>): IWiRLApplication;
 begin
@@ -592,6 +686,16 @@ function TWiRLClientApplication.SetSystemApp(
   ASystem: Boolean): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+end;
+
+function TWiRLClientApplication.SetWriters(
+  AWriters: TStrings): IWiRLApplication;
+var
+  LWriter: string;
+begin
+  for LWriter in AWriters do
+    Self.AddWriter(LWriter);
+  Result := Self;
 end;
 
 function TWiRLClientApplication.SetWriters(const AWriters: TArray<string>): IWiRLApplication;

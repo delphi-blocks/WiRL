@@ -73,11 +73,11 @@ end;
 procedure TWiRLClientCustomResourceEditor.RunResourceEditor;
 begin
   inherited;
-  if Assigned(CurrentObj.Application) then
-  begin
-    CurrentObj.Application.SetWriters('*.*');
-    CurrentObj.Application.SetReaders('*.*');
-  end;
+//  if Assigned(CurrentObj.Application) then
+//  begin
+//    CurrentObj.Application.SetWriters('*.*');
+//    CurrentObj.Application.SetReaders('*.*');
+//  end;
 
   TWiRLResourceRunnerForm.Edit(CurrentObj);
 

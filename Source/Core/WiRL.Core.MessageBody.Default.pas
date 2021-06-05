@@ -34,6 +34,12 @@ uses
 
 type
   /// <summary>
+  ///   This component force the inclusion of the current unit
+  /// </summary>
+  TWiRLMBWDefaultProvider = class(TComponent)
+  end;
+
+  /// <summary>
   ///   This is the <b>default</b> MessageBodyWriter for all Delphi string types.
   /// </summary>
   [Produces(TMediaType.WILDCARD)]

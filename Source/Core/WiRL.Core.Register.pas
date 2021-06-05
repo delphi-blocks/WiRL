@@ -17,6 +17,7 @@ uses
   System.SysUtils, System.Classes,
   WiRL.Rtti.Utils,
   WiRL.Core.Engine,
+  WiRL.Core.MessageBody.Default,
   WiRL.http.Engines,
   WiRL.http.FileSystemEngine,
   WiRL.http.Server,
@@ -32,6 +33,7 @@ begin
   RegisterComponents('WiRL Server', [TWiRLhttpEngine]);
   RegisterComponents('WiRL Server', [TWiRLServer]);
   RegisterComponents('WiRL Server', [TWiRLFileSystemEngine]);
+  RegisterComponents('WiRL Server', [TWiRLMBWDefaultProvider]);
 end;
 
 initialization

@@ -81,6 +81,9 @@ type
     destructor Destroy; override;
   end;
 
+const
+  HttpClientVendorName = 'TNetHttpClient (Native)';
+
 implementation
 
 const
@@ -352,6 +355,6 @@ end;
 initialization
 
   TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientNetHttp>(
-    'TNetHttpClient (Native)'{$IFDEF HAS_NETHTTP_CLIENT}, True{$ENDIF});
+    HttpClientVendorName{$IFDEF HAS_NETHTTP_CLIENT}, True{$ENDIF});
 
 end.

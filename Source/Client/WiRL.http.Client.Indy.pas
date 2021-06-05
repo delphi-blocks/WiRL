@@ -80,6 +80,9 @@ type
     function Patch(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
   end;
 
+const
+  IndyVendorName = 'TIdHttp (Indy)';
+
 implementation
 
 const
@@ -359,6 +362,6 @@ end;
 
 initialization
   TWiRLClientRegistry.Instance.RegisterClient<TWiRLClientIndy>(
-    'TIdHttp (Indy)'{$IFNDEF HAS_NETHTTP_CLIENT}, True{$ENDIF});
+    IndyVendorName{$IFNDEF HAS_NETHTTP_CLIENT}, True{$ENDIF});
 
 end.
