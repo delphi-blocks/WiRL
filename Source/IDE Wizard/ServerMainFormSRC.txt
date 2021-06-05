@@ -3,16 +3,13 @@ unit ServerMainForm;
 interface
 
 uses
+  System.Actions, System.SysUtils, System.Classes, Vcl.Forms, Vcl.ActnList,
+  Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
+
   WiRL.Core.Engine,
+  WiRL.http.Server,
   WiRL.http.Server.Indy,
-  WiRL.Core.Application,
-  Actions,
-  Classes,
-  Forms,
-  ActnList,
-  StdCtrls,
-  Controls,
-  ExtCtrls;
+  WiRL.Core.Application;
 
 type
   TMainForm = class(TForm)
@@ -29,11 +26,9 @@ type
     procedure StopServerActionExecute(Sender: TObject);
     procedure StopServerActionUpdate(Sender: TObject);
   strict private
-    FServer: TWiRLhttpServerIndy;
-    FEngine: TWiRLEngine;
+    FServer: TWiRLServer;
   strict protected
-    property Server: TWiRLhttpServerIndy read FServer;
-    property Engine: TWiRLEngine read FEngine;
+    property Server: TWiRLServer read FServer;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -48,54 +43,57 @@ implementation
 
 uses
   WiRL.Core.JSON,
-  WiRL.Rtti.Utils,
-  WiRL.Core.MessageBodyWriter,
-  WiRL.Core.MessageBodyWriters,
-  WiRL.Utils.Parameters.IniFile,
+  WiRL.Rtti.Utils,%MESSAGE_BODY_UNIT%
   ServerResources;
 
 constructor TMainForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  PortNumberEdit.Text := '%SERVICE_PORT%';
+  FServer := TWiRLServer.Create(Self);
+
+  FServer.AddEngine<TWiRLEngine>('%ENGINE_PATH%')
+    .SetEngineName('RESTEngine')
+    .AddApplication('%APP_PATH%')
+      .SetResources('*')
+      .SetFilters('*');
+
+//      .Plugin.Configure<IWiRLFormatSetting>
+//        .AddFormat(TypeInfo(TDateTime), TWiRLFormatSetting.ISODATE_UTF)
+//        .BackToApp
+//
+//      .Plugin.Configure<IWiRLConfigurationNeon>
+//        .SetUseUTCDate(True)
+//        .SetVisibility([mvPublic, mvPublished])
+//        .SetMemberCase(TNeonCase.PascalCase);
+
   StartServerAction.Execute;
 end;
 
 destructor TMainForm.Destroy;
 begin
   StopServerAction.Execute;
+  FServer.Free;
   inherited Destroy;
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  FEngine := TWiRLEngine.Create;
-
-  // Engine configuration
-  FEngine.Parameters.LoadFromIniFile;
-
-  // Application configuration
-  FEngine.AddApplication('Default', '/default', [ 'ServerResources.*']);
-
-  // Create http server
-  FServer := TWiRLhttpServerIndy.Create(FEngine);
-
+  FServer.Port := StrToIntDef(PortNumberEdit.Text, %SERVICE_PORT%);
   if not FServer.Active then
     FServer.Active := True;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := (FServer = NIL) or (FServer.Active = False);
+  StartServerAction.Enabled := (FServer = nil) or (FServer.Active = False);
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  FServer.Active := False;
-  FServer.Free;
-  FServer := NIL;
-
-  FEngine.Free;
-  FEngine := NIL;
+  FServer.Port := StrToIntDef(PortNumberEdit.Text, %SERVICE_PORT%);
+  if not FServer.Active then
+    FServer.Active := True;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);

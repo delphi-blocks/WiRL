@@ -113,6 +113,41 @@
             <Form>WiRLClientAppResourceEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\Source\IDE Wizard\ServerResources.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas">
+            <Form>formServerProjectDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
+        <RcItem Include="..\..\Source\IDE Wizard\WiRLServerWizardIcon.ico">
+            <ResourceType>ICON</ResourceType>
+            <ResourceId>WiRLServerWizardIcon</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerMainFormDFM</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormSRC.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerMainFormSRC</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Source\IDE Wizard\ServerResources.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerResources</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Source\IDE Wizard\WiRLServerProject.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerProject</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

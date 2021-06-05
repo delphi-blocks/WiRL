@@ -4,7 +4,7 @@ interface
 
 uses
   WiRL.Wizards.Utils,
-  ToolsAPI;
+  ToolsAPI, WiRL.Wizards.Modules.Classes;
 
 resourcestring
   SWiRLServerResources = 'WiRLServerResources';
@@ -12,6 +12,8 @@ resourcestring
 
 type
   TWiRLServerResourcesCreator = class(TInterfacedObject, IOTACreator, IOTAModuleCreator)
+  private
+    FServerConfig: TServerConfig;
   public
     // IOTACreator
     function GetCreatorType: string;
@@ -32,6 +34,8 @@ type
     function NewImplSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
     function NewIntfSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
     procedure FormCreated(const FormEditor: IOTAFormEditor);
+
+    constructor Create(AServerConfig: TServerConfig);
   end;
 
 implementation
@@ -117,6 +121,12 @@ end;
 function TWiRLServerResourcesCreator.NewIntfSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
 begin
   Result := NIL;
+end;
+
+constructor TWiRLServerResourcesCreator.Create(AServerConfig: TServerConfig);
+begin
+  inherited Create;
+  FServerConfig := AServerConfig;
 end;
 
 procedure TWiRLServerResourcesCreator.FormCreated(const FormEditor: IOTAFormEditor);

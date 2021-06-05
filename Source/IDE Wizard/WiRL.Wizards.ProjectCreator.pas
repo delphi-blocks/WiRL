@@ -3,14 +3,15 @@ unit WiRL.Wizards.ProjectCreator;
 interface
 
 uses
-  ToolsAPI;
+  ToolsAPI, WiRL.Wizards.Modules.Classes;
 
 resourcestring
   SWiRLServerProject = 'WiRLServerProject';
 
 type
-  TWiRLServerProjectCreator = class(TInterfacedObject, IOTACreator, IOTAProjectCreator50, IOTAProjectCreator80,
-  IOTAProjectCreator160, IOTAProjectCreator)
+  TWiRLServerProjectCreator = class(TInterfacedObject, IOTACreator, IOTAProjectCreator50, IOTAProjectCreator80,IOTAProjectCreator160, IOTAProjectCreator)
+  private
+    FServerConfig: TServerConfig;
   public
     // IOTACreator
     function GetCreatorType: string;
@@ -21,10 +22,10 @@ type
 
     // IOTAProjectCreator
     function GetFileName: string;
-    function GetOptionFileName: string; deprecated;
+    function GetOptionFileName: string; //deprecated;
     function GetShowSource: Boolean;
-    procedure NewDefaultModule; deprecated;
-    function NewOptionSource(const ProjectName: string): IOTAFile; deprecated;
+    procedure NewDefaultModule; //deprecated;
+    function NewOptionSource(const ProjectName: string): IOTAFile; //deprecated;
     procedure NewProjectResource(const Project: IOTAProject);
     function NewProjectSource(const ProjectName: string): IOTAFile;
 
@@ -39,24 +40,32 @@ type
     function GetPlatforms: TArray<string>;
     function GetPreferredPlatform: string;
     procedure SetInitialOptions(const NewProject: IOTAProject);
+
+    constructor Create(AServerConfig: TServerConfig);
   end;
 
 implementation
 
 uses
-  WiRL.Wizards.Utils,
-  WiRL.Wizards.Modules.MainForm,
-  WiRL.Wizards.Modules.Resources,
-  PlatformAPI,
   System.SysUtils,
   System.Types,
-  System.Classes;
+  System.Classes,
+  PlatformAPI,
+  WiRL.Wizards.Utils,
+  WiRL.Wizards.Modules.MainForm,
+  WiRL.Wizards.Modules.Resources;
 
 {$REGION 'IOTACreator'}
 
+constructor TWiRLServerProjectCreator.Create(AServerConfig: TServerConfig);
+begin
+  inherited Create;
+  FServerConfig := AServerConfig;
+end;
+
 function TWiRLServerProjectCreator.GetCreatorType: string;
 begin
-  Result := '';
+  Result := sApplication;
 end;
 
 function TWiRLServerProjectCreator.GetExisting: Boolean;
@@ -84,7 +93,7 @@ end;
 
 function TWiRLServerProjectCreator.GetFileName: string;
 begin
-  Result := GetCurrentDir + '\' + 'WiRLServerProjectd.dpr';
+  Result := GetCurrentDir + '\' + SWiRLServerProject + '.dpr';
 end;
 
 function TWiRLServerProjectCreator.GetOptionFileName: string; deprecated;
@@ -104,7 +113,7 @@ end;
 
 function TWiRLServerProjectCreator.NewOptionSource(const ProjectName: string): IOTAFile; deprecated;
 begin
-  Result := NIL;
+  Result := nil;
 end;
 
 procedure TWiRLServerProjectCreator.NewDefaultModule; deprecated;
@@ -120,11 +129,11 @@ end;
 
 procedure TWiRLServerProjectCreator.NewDefaultProjectModule(const Project: IOTAProject);
 var
-  ms: IOTAModuleServices;
+  LModuleServices: IOTAModuleServices;
 begin
-  ms := BorlandIDEServices as IOTAModuleServices;
-  ms.CreateModule(TWiRLServerMainFormCreator.Create);
-  ms.CreateModule(TWiRLServerResourcesCreator.Create);
+  LModuleServices := BorlandIDEServices as IOTAModuleServices;
+  LModuleServices.CreateModule(TWiRLServerMainFormCreator.Create(FServerConfig));
+  LModuleServices.CreateModule(TWiRLServerResourcesCreator.Create(FServerConfig));
 end;
 
 {$ENDREGION}

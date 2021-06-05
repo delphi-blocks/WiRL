@@ -52,7 +52,7 @@ object MainForm: TMainForm
       Width = 82
       Height = 21
       TabOrder = 2
-      Text = '8080'
+      Text = '%SERVICE_PORT%'
     end
   end
   object MainActionList: TActionList

@@ -37,7 +37,9 @@ contains
   WiRL.Wizards.ProjectCreator in 'WiRL.Wizards.ProjectCreator.pas',
   WiRL.Wizards.Utils in 'WiRL.Wizards.Utils.pas',
   WiRL.Wizards.Modules.MainForm in 'WiRL.Wizards.Modules.MainForm.pas',
-  WiRL.Wizards.Modules.Resources in 'WiRL.Wizards.Modules.Resources.pas';
+  WiRL.Wizards.Modules.Resources in 'WiRL.Wizards.Modules.Resources.pas',
+  WiRL.Wizards.Dialogs.ServerProject in 'WiRL.Wizards.Dialogs.ServerProject.pas' {formServerProjectDialog},
+  WiRL.Wizards.Modules.Classes in 'WiRL.Wizards.Modules.Classes.pas';
 
 end.
 
