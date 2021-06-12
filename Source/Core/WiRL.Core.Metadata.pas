@@ -54,13 +54,14 @@ type
 
   TWiRLProxyParameter = class(TWiRLProxyBase)
   private
-    FParam: TRttiParameter;
+    FRttiParam: TRttiParameter;
     FAttributes: TArray<TCustomAttribute>;
     FInjected: Boolean;
     FValue: string;
     FKind: TMethodParamType;
     FName: string;
     FRest: Boolean;
+    FContext: TRttiType;
     procedure ProcessAttributes;
   public
     constructor Create(AParam: TRttiParameter);
@@ -73,20 +74,41 @@ type
     property Value: string read FValue write FValue;
     property Injected: Boolean read FInjected write FInjected;
 
-    property RttiParam: TRttiParameter read FParam write FParam;
+    property Context: TRttiType read FContext write FContext;
+
+    property RttiParam: TRttiParameter read FRttiParam write FRttiParam;
     property Attributes: TArray<TCustomAttribute> read FAttributes write FAttributes;
   end;
 
   TWiRLProxyParameters = class(TObjectList<TWiRLProxyParameter>);
 
+  TStatusCategory = (Informational, Success, Redirection, ClientError, ServerError, Custom);
+  TWiRLProxyMethodResponse = class
+  private
+    FCode: Integer;
+    FDescription: string;
+    function GetCategory: TStatusCategory;
+  public
+    property Code: Integer read FCode write FCode;
+    property Description: string read FDescription write FDescription;
+    property Category: TStatusCategory read GetCategory;
+  end;
+
+  TWiRLProxyMethodResponses = class(TObjectList<TWiRLProxyMethodResponse>)
+  public
+    function Contains(ACategory: TStatusCategory): Boolean;
+    function AddResponse(ACode: Integer; const ADescription: string): TWiRLProxyMethodResponse;
+  end;
+
   TWiRLProxyMethodResult = class(TWiRLProxyBase)
   private
-    FRttiObject: TRttiType;
+    FRttiType: TRttiType;
     FResultType: TTypeKind;
     FIsClass: Boolean;
     FIsRecord: Boolean;
     FIsSingleton: Boolean;
     FIsProcedure: Boolean;
+    FIsFunction: Boolean;
     FIsArray: Boolean;
     FIsSimple: Boolean;
   public
@@ -96,6 +118,7 @@ type
     procedure SetAsSingleton;
   public
     property IsProcedure: Boolean read FIsProcedure;
+    property IsFunction: Boolean read FIsFunction;
 
     property ResultType: TTypeKind read FResultType;
     property IsClass: Boolean read FIsClass;
@@ -103,6 +126,7 @@ type
     property IsArray: Boolean read FIsArray;
     property IsSimple: Boolean read FIsSimple;
     property IsSingleton: Boolean read FIsSingleton;
+    property RttiType: TRttiType read FRttiType;
   end;
 
   TWiRLProxyMethodAuth = class(TWiRLProxyBase)
@@ -143,6 +167,7 @@ type
     FParams: TWiRLProxyParameters;
     FName: string;
     FAuthHandler: Boolean;
+    FResponses: TWiRLProxyMethodResponses;
 
     procedure ProcessAttributes;
     procedure ProcessParams;
@@ -170,6 +195,7 @@ type
     property Filters: TWiRLProxyFilters read FFilters;
     property Status: TWiRLHttpStatus read FStatus write FStatus;
     property Params: TWiRLProxyParameters read FParams write FParams;
+    property Responses: TWiRLProxyMethodResponses read FResponses write FResponses;
 
     property AllAttributes: TArray<TCustomAttribute> read FAllAttributes;
     property RttiObject: TRttiMethod read FRttiMethod;
@@ -236,27 +262,6 @@ type
 
     property Resources: TWiRLProxyResources read FResources write FResources;
   end;
-
-  TWiRLAPIDoc = class(TWiRLProxyApplication)
-
-  end;
-
-  TWiRLProxyContext = record
-  private
-    FProxy: TWiRLProxyApplication;
-    FXMLDocFolder: string;
-  public
-    property Proxy: TWiRLProxyApplication read FProxy write FProxy;
-    property XMLDocFolder: string read FXMLDocFolder write FXMLDocFolder;
-  end;
-
-  TWiRLProxyEngine = class
-  protected
-    FContext: TWiRLProxyContext;
-  public
-    constructor Create(AContext: TWiRLProxyContext); virtual;
-  end;
-
 
 implementation
 
@@ -460,9 +465,9 @@ begin
   FAuth := TWiRLProxyMethodAuth.Create;
   FStatus := TWiRLHttpStatus.Create;
   FParams := TWiRLProxyParameters.Create(True);
+  FResponses := TWiRLProxyMethodResponses.Create(True);
   FMethodResult := TWiRLProxyMethodResult.Create(FRttiMethod.ReturnType);
   FName := FRttiMethod.Name;
-
   FIsFunction := Assigned(FRttiMethod.ReturnType);
 
   //ProcessAttributes;
@@ -471,6 +476,7 @@ end;
 
 destructor TWiRLProxyMethod.Destroy;
 begin
+  FResponses.Free;
   FParams.Free;
   FStatus.Free;
   FAuth.Free;
@@ -637,16 +643,17 @@ end;
 
 constructor TWiRLProxyMethodResult.Create(AResultType: TRttiType);
 begin
-  FRttiObject := AResultType;
+  FRttiType := AResultType;
 end;
 
 procedure TWiRLProxyMethodResult.Process;
 begin
   inherited;
 
-  if Assigned(FRttiObject) then
+  if Assigned(FRttiType) then
   begin
-    FResultType := FRttiObject.TypeKind;
+    FIsFunction := True;
+    FResultType := FRttiType.TypeKind;
     case FResultType of
       tkClass:  FIsClass := True;
       tkRecord: FIsRecord := True;
@@ -717,8 +724,9 @@ end;
 
 constructor TWiRLProxyParameter.Create(AParam: TRttiParameter);
 begin
-  FParam := AParam;
-  FName := FParam.Name;
+  FRttiParam := AParam;
+  FName := FRttiParam.Name;
+
   ProcessAttributes;
 end;
 
@@ -734,7 +742,7 @@ procedure TWiRLProxyParameter.ProcessAttributes;
 var
   LAttr: TCustomAttribute;
 begin
-  FAttributes := FParam.GetAttributes;
+  FAttributes := FRttiParam.GetAttributes;
 
   for LAttr in FAttributes do
   begin
@@ -745,7 +753,7 @@ begin
     FRest := True;
 
     // context injection
-    if (LAttr is ContextAttribute) and (FParam.ParamType.IsInstance) then
+    if (LAttr is ContextAttribute) and (FRttiParam.ParamType.IsInstance) then
     begin
       FInjected := True;
       Continue;
@@ -774,7 +782,7 @@ begin
     // Param Name
     FName := (LAttr as MethodParamAttribute).Value;
     if (FName = '') or (LAttr is BodyParamAttribute) then
-      FName := FParam.Name;
+      FName := FRttiParam.Name;
   end;
 end;
 
@@ -825,19 +833,54 @@ begin
   end;
 end;
 
-{ TWiRLProxyEngine }
-
-constructor TWiRLProxyEngine.Create(AContext: TWiRLProxyContext);
-begin
-  FContext := AContext;
-end;
-
 { TWiRLProxyBase }
 
 procedure TWiRLProxyBase.Process;
 begin
   if FProcessed then
     raise EWiRLServerException.Create(Self.ClassName + ' already processed');
+end;
+
+{ TWiRLProxyMethodResponse }
+
+function TWiRLProxyMethodResponse.GetCategory: TStatusCategory;
+begin
+  case Self.FCode of
+    100..199: Result := TStatusCategory.Informational;
+    200..299: Result := TStatusCategory.Success;
+    300..399: Result := TStatusCategory.Redirection;
+    400..499: Result := TStatusCategory.ClientError;
+    500..599: Result := TStatusCategory.ServerError;
+  else
+    Result := TStatusCategory.Custom;
+  end;
+end;
+
+{ TWiRLProxyMethodResponses }
+
+function TWiRLProxyMethodResponses.AddResponse(ACode: Integer;
+    const ADescription: string): TWiRLProxyMethodResponse;
+begin
+  Result := TWiRLProxyMethodResponse.Create;
+  Result.Code := ACode;
+  Result.Description := ADescription;
+  Self.Add(Result);
+end;
+
+function TWiRLProxyMethodResponses.Contains(ACategory: TStatusCategory): Boolean;
+var
+  LRes: TWiRLProxyMethodResponse;
+begin
+  Result := False;
+  for LRes in Self do
+  begin
+    if LRes.Category = ACategory then
+    begin
+      Result := True;
+      Break;
+    end;
+  end;
+
 end;
 
 end.

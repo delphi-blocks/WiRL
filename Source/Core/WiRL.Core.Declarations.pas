@@ -28,8 +28,9 @@ type
   {$IFDEF NO_ARRAY_HELPER_BUG}
   TStringArrayHelper = record helper for TStringArray
   public
-    function Size: Integer;
-    function IsEmpty: Boolean;
+    function Size(): Integer;
+    function Length(): Integer;
+    function IsEmpty(): Boolean;
   end;
   {$ENDIF}
 
@@ -42,13 +43,19 @@ implementation
 
 function TStringArrayHelper.IsEmpty: Boolean;
 begin
-  Result := Length(Self) = 0;
+  Result := System.Length(Self) = 0;
 end;
 
 function TStringArrayHelper.Size: Integer;
 begin
-  Result := Length(Self);
+  Result := System.Length(Self);
 end;
+
+function TStringArrayHelper.Length(): Integer;
+begin
+  Result := System.Length(Self);
+end;
+
 {$ENDIF}
 
 end.

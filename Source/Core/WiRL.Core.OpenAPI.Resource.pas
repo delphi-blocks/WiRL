@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Rtti,
 
-  Neon.Core.Persistence.Swagger,
+  Neon.Core.Persistence.JSON.Schema,
 
   WiRL.Configuration.OpenAPI,
   WiRL.Core.JSON,
@@ -130,19 +130,21 @@ begin
 end;
 
 function TOpenAPIResourceCustom.GetSwaggerJSON: TJSONObject;
-var
-  LInfo: TOpenAPIInfo;
+//var
+//  LInfo: TOpenAPIInfo;
 begin
-  LInfo := TOpenAPIInfo.Create(App, Resource.Path);
-  LInfo.Title := Conf.Title;
-  LInfo.Description := Conf.Description;
-  LInfo.Version := Conf.Version;
-  LInfo.Schemes := Conf.Schemes;
-  LInfo.Host := Conf.Host;
-  if Conf.Host.IsEmpty then
-    Conf.Host := Request.Host;
+//  LInfo := TOpenAPIInfo.Create(App, Resource.Path);
+//  LInfo.Title := Conf.Title;
+//  LInfo.Description := Conf.Description;
+//  LInfo.Version := Conf.Version;
+//  LInfo.Schemes := Conf.Schemes;
+//  LInfo.Host := Conf.Host;
+//  if Conf.Host.IsEmpty then
+//    Conf.Host := Request.Host;
 
-  Result := TOpenAPIv2Engine.Generate(LInfo);
+  //Result := TOpenAPIv2Engine.Generate(LInfo);
+
+  Result := TOpenAPIv3Engine.Generate(App, Resource.Path);
 end;
 
 function TOpenAPIResourceCustom.GetSwaggerAssets: TStream;
