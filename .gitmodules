@@ -4,3 +4,6 @@
 [submodule "Libs/Neon"]
 	path = Libs/Neon
 	url = https://github.com/paolo-rossi/delphi-neon
+[submodule "Libs/OpenAPI"]
+	path = Libs/OpenAPI
+	url = https://github.com/paolo-rossi/OpenAPI-Delphi
