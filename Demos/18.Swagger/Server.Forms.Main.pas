@@ -64,6 +64,7 @@ var
 implementation
 
 uses
+  WiRL.Core.Utils,
   WiRL.Core.Metadata.XMLDoc,
   WiRL.Core.OpenAPI.Resource;
 
@@ -71,19 +72,13 @@ uses
 
 procedure TMainForm.Button1Click(Sender: TObject);
 var
-  LXMLDoc: TWiRLProxyEngineXMLDoc;
   LContext: TWiRLXMLDocContext;
   LApp: TWiRLApplication;
 begin
   LApp := FEng.GetApplicationByName('demo');
   LContext.Proxy := LApp.Proxy;
-  LContext.XMLDocFolder := 'D:\projects\GitHub\Project WiRL\WiRL\Demos\18.Swagger\Docs';
-  LXMLDoc := TWiRLProxyEngineXMLDoc.Create(LContext);
-  try
-    LXMLDoc.Process();
-  finally
-    LXMLDoc.Free;
-  end;
+  LContext.XMLDocFolder := TWiRLTemplatePaths.Render('{AppPath}\..\..\Docs');
+  TWiRLProxyEngineXMLDoc.Process(LContext);
 end;
 
 procedure TMainForm.Button2Click(Sender: TObject);
@@ -93,12 +88,12 @@ var
   LApp: TWiRLApplication;
 var
   LDoc: IXMLDocument;
-  LDevNotes, LNodeClass: IXMLNode;
-
+  //LDevNotes, LNodeClass: IXMLNode;
 begin
   LApp := FEng.GetApplicationByName('demo');
   LContext.Proxy := LApp.Proxy;
-  LContext.XMLDocFolder := 'D:\projects\GitHub\Project WiRL\WiRL\Demos\18.Swagger\Docs';
+  LContext.XMLDocFolder := TWiRLTemplatePaths.Render('{AppPath}\..\..\Docs');
+
   LXMLDoc := TWiRLProxyEngineXMLDoc.Create(LContext);
   try
     LDoc := LXMLDoc.LoadXMLUnit('Server.Resources.Demo');

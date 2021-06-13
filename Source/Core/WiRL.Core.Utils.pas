@@ -45,9 +45,11 @@ type
     FEndChars: string;
     procedure InitMacros; virtual;
   public
+    class function Render(const ATemplate: string): string;
+  public
     constructor Create(AStartChars: string = '{'; AEndChars: string = '}');
     destructor Destroy; override;
-    function Render(const ATemplate: string): string;
+    function RenderTemplate(const ATemplate: string): string;
 
     property Macros: TDictionary<string, TStringFunc> read FMacros write FMacros;
   end;
@@ -345,7 +347,7 @@ begin
   inherited;
 end;
 
-function TWiRLTemplateEngine.Render(const ATemplate: string): string;
+function TWiRLTemplateEngine.RenderTemplate(const ATemplate: string): string;
 var
   LMacroPair: TPair<string,TFunc<string>>;
 begin
@@ -359,6 +361,18 @@ end;
 procedure TWiRLTemplateEngine.InitMacros;
 begin
 
+end;
+
+class function TWiRLTemplateEngine.Render(const ATemplate: string): string;
+var
+  LMacroEngine: TWiRLTemplateEngine;
+begin
+  LMacroEngine := Self.Create();
+  try
+    Result := LMacroEngine.RenderTemplate(ATemplate);
+  finally
+    LMacroEngine.Free;
+  end;
 end;
 
 { TWiRLTemplatePaths }

@@ -61,11 +61,13 @@ type
   public
     constructor Create(AContext: TWiRLXMLDocContext);
     destructor Destroy; override;
-    procedure Process();
+    procedure ProcessXMLDoc;
     procedure ProcessParams(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
     procedure ProcessResponses(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
     procedure ProcessMethods(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
     procedure ProcessResource(AResource: TWiRLProxyResource);
+  public
+    class procedure Process(AContext: TWiRLXMLDocContext);
   end;
 
 
@@ -180,9 +182,9 @@ begin
   Result.LoadFromFile(LFileName);
 end;
 
-procedure TWiRLProxyEngineXMLDoc.Process();
+procedure TWiRLProxyEngineXMLDoc.ProcessXMLDoc;
 var
-  LResource: TWiRLProxyResource;
+  //LResource: TWiRLProxyResource;
   LPair: TPair<string, TWiRLProxyResource>;
 begin
   //1. Riempire l'oggetto TWiRLProxyApplication con i valori della classe scelta
@@ -192,9 +194,22 @@ begin
     ProcessResource(LPair.Value);
 end;
 
+class procedure TWiRLProxyEngineXMLDoc.Process(AContext: TWiRLXMLDocContext);
+var
+  LEngine: TWiRLProxyEngineXMLDoc;
+begin
+  LEngine := Self.Create(AContext);
+  try
+    LEngine.ProcessXMLDoc();
+  finally
+    LEngine.Free;
+  end;
+end;
+
 procedure TWiRLProxyEngineXMLDoc.ProcessMethods(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
 var
-  LDevNotes, LAttributes, LParameters: IXMLNode;
+  LDevNotes: IXMLNode;
+  //LAttributes, LParameters: IXMLNode;
 begin
   if not Assigned(ANode) then
     Exit;
