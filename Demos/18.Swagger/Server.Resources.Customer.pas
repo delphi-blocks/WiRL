@@ -7,29 +7,39 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit Server.Resources.Swagger;
+unit Server.Resources.Customer;
 
 interface
 
 uses
-  System.Classes, System.SysUtils,
+  System.Classes, System.SysUtils, System.JSON,
 
   WiRL.Core.OpenAPI.Resource,
+  WiRL.Core.Engine,
+  WiRL.Core.Application,
   WiRL.Core.Registry,
-  WiRL.Core.Attributes;
+  WiRL.Core.Attributes,
+  WiRL.Core.Application.Worker,
+  WiRL.Core.MessageBody.Default,
+  WiRL.Core.Auth.Context,
+  WiRL.Core.Auth.Resource,
+  WiRL.http.Accept.MediaType,
+  WiRL.http.URL,
+  WiRL.http.Request,
+  WiRL.http.Response,
+
+  Server.Entities.Customer;
 
 type
-  // 1. You must inherit a resource from the base class TOpenAPIResourceCustom
-  // 2. You must decide the path of this new resource
-  // 3. You must register the resource (look at the initialization section)
-  [Path('swagger')]
-  TDocumentationResource = class(TOpenAPIResourceCustom);
+  [Path('addressbook')]
+  TAddressBookResource = class
+
+  end;
+
 
 implementation
 
 initialization
-
-  // Remember to register the OpenAPI resource
-  TWiRLResourceRegistry.Instance.RegisterResource<TDocumentationResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TAddressBookResource>;
 
 end.

@@ -55,7 +55,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>./$(Platform)/$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>./$(Platform)/$(Config)</DCC_ExeOutput>
-        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;../../Source/Extensions;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data;../../Libs/Neon/Source;../../Source/Extensions;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;../../Libs/OpenAPI/Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -109,7 +109,6 @@
         <BT_BuildType>Debug</BT_BuildType>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
@@ -128,6 +127,9 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Worker.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.OpenAPI.pas"/>
+        <DCCReference Include="Server.Resources.Customer.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

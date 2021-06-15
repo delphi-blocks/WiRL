@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
 
+  WiRL.Configuration.Core,
   WiRL.Configuration.Neon,
   WiRL.Configuration.CORS,
   WiRL.Configuration.OpenAPI,
@@ -25,7 +26,7 @@ uses
   WiRL.http.Server,
   WiRL.http.Server.Indy,
 
-  Server.Resources.Swagger;
+  Server.Resources.Swagger, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc;
 
 type
   TMainForm = class(TForm)
@@ -39,6 +40,10 @@ type
     Label1: TLabel;
     Button1: TButton;
     Memo1: TMemo;
+    Button2: TButton;
+    XMLDocument1: TXMLDocument;
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
@@ -47,6 +52,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    FEng: TWiRLEngine;
     FRESTServer: TWiRLServer;
   public
     { Public declarations }
@@ -58,10 +64,45 @@ var
 implementation
 
 uses
+  WiRL.Core.Utils,
   WiRL.Core.Metadata.XMLDoc,
   WiRL.Core.OpenAPI.Resource;
 
 {$R *.dfm}
+
+procedure TMainForm.Button1Click(Sender: TObject);
+var
+  LContext: TWiRLXMLDocContext;
+  LApp: TWiRLApplication;
+begin
+  LApp := FEng.GetApplicationByName('demo');
+  LContext.Proxy := LApp.Proxy;
+  LContext.XMLDocFolder := TWiRLTemplatePaths.Render('{AppPath}\..\..\Docs');
+  TWiRLProxyEngineXMLDoc.Process(LContext);
+end;
+
+procedure TMainForm.Button2Click(Sender: TObject);
+var
+  LXMLDoc: TWiRLProxyEngineXMLDoc;
+  LContext: TWiRLXMLDocContext;
+  LApp: TWiRLApplication;
+var
+  LDoc: IXMLDocument;
+  //LDevNotes, LNodeClass: IXMLNode;
+begin
+  LApp := FEng.GetApplicationByName('demo');
+  LContext.Proxy := LApp.Proxy;
+  LContext.XMLDocFolder := TWiRLTemplatePaths.Render('{AppPath}\..\..\Docs');
+
+  LXMLDoc := TWiRLProxyEngineXMLDoc.Create(LContext);
+  try
+    LDoc := LXMLDoc.LoadXMLUnit('Server.Resources.Demo');
+    //LNodeClass :=
+    //Memo1.Lines.Text := LXMLDoc.FindClassWithAttribute(LDoc.DocumentElement, 'TParametersResource');
+  finally
+    LXMLDoc.Free;
+  end;
+end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
@@ -73,9 +114,9 @@ begin
   StopServerAction.Execute;
 end;
 
-  /// <summary>
-  /// Bla bla bla
-  /// </summary>
+/// <summary>
+/// Bla bla bla
+/// </summary>
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   FRESTServer := TWiRLServer.Create(Self);
@@ -83,11 +124,12 @@ begin
   /// <summary>
   /// subsubsub
   /// </summary>
+  FEng :=
   FRESTServer.AddEngine<TWiRLEngine>('/rest')
-    .SetEngineName('RESTEngine')
+    .SetEngineName('RESTEngine');
 
-    .AddApplication('/app')
-
+  FEng.AddApplication('/app')
+      .SetAppName('demo')
       // Test for namespaces
       .SetResources('Server.Resources.Demo.*')
       //.SetResources('Server.Resources.Swagger.*')
@@ -95,7 +137,7 @@ begin
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
-        .SetMemberCase(TNeonCase.SnakeCase)
+        .SetMemberCase(TNeonCase.CamelCase)
       .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationCORS>

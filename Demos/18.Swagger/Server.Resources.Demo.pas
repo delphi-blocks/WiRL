@@ -31,17 +31,20 @@ uses
   Server.Entities;
 
 type
+{$SCOPEDENUMS ON}
+  TEntity = (First, Second);
+
   /// <summary>
-  ///   This resource serves to test the OpenAPI 2.0 documentation generation
+  ///   This **resource** serves to test the *OpenAPI 3* documentation generation
   /// </summary>
   [Path('/params')]
   TParametersResource = class(TObject)
     [Context] Response: TWiRLResponse;
   public
     /// <summary>
-    ///   Method with a sample documentation
+    ///   Method with a *sample* documentation
     /// </summary>
-    /// <param name="AParam">
+    /// <param name="AParam" required="true">
     ///   The first parameter
     /// </param>
     /// <returns>
@@ -50,7 +53,10 @@ type
     /// <remarks>
     ///   Here is a sample remarks placeholder.
     /// </remarks>
-    /// <response code="200">Responde description</response>
+    /// <response code="200">Succesful response description</response>
+    ///  <header name="X-Header" type="string">Description of the header</header>
+    /// <response code="400">Bad request</response>
+    /// <response code="404">[resource] not found in the database</response>
     [GET, Path('/test/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
     function ParamTest([PathParam] AParam: string): string;
 
@@ -81,6 +87,8 @@ type
     [POST, Path('/record')]
     [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
     function ParamRecord([BodyParam] AParam: TRecordParam): TRecordParam;
+
+    procedure Test;
   end;
 
   [Path('/entities')]
@@ -142,6 +150,11 @@ end;
 function TParametersResource.ParamTime(AParam: TTime): TTime;
 begin
   Result := AParam;
+end;
+
+procedure TParametersResource.Test;
+begin
+  //
 end;
 
 function TParametersResource.ParamInt(AParam: Integer): Integer;

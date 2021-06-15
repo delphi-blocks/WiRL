@@ -112,6 +112,7 @@ type
     procedure Shutdown; override;
 
     function GetApplication(AURL: TWiRLURL): TWiRLApplication;
+    function GetApplicationByName(const AName: string): TWiRLApplication;
 
     procedure HandleRequest(AContext: TWiRLContext); override;
     procedure HandleException(AContext: TWiRLContext; E: Exception);
@@ -314,6 +315,21 @@ begin
       Format('Application [%s] not found. URL [%s]', [LApplicationPath, AURL.URL]),
       Self.ClassName, 'GetApplication'
     );
+end;
+
+function TWiRLEngine.GetApplicationByName(const AName: string): TWiRLApplication;
+var
+  LApp: TWiRLApplicationInfo;
+begin
+  Result := nil;
+  for LApp in FApplications do
+  begin
+    if LApp.Application.AppName = AName then
+    begin
+      Result := LApp.Application;
+      Break;
+    end;
+  end;
 end;
 
 procedure TWiRLEngine.HandleException(AContext: TWiRLContext; E: Exception);
