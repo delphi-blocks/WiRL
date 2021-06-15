@@ -55,6 +55,7 @@ type
     procedure ObjectToStream<T>(AHeaders: IWiRLHeaders; AObject: T; AStream: TStream); overload;
     function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
     procedure SetApplication(const Value: TWiRLClientApplication);
+    function ValueToString(const AValue: TValue): string;
   protected
     function GetClient: TWiRLClient; virtual;
     function GetPath: string; virtual;
@@ -105,6 +106,9 @@ type
     procedure GenericHttpRequest<T>(const AHttpMethod: string; const ARequestEntity: T; AResponseEntity: TObject); overload;
 
   public
+    procedure QueryParam(const AName: string; const AValue: TValue);
+    procedure PathParam(const AName: string; const AValue: TValue);
+
     property Accept: string read GetAccept;
     property ContentType: string read GetContentType;
     property Application: TWiRLClientApplication read GetApplication write SetApplication;
@@ -134,9 +138,11 @@ implementation
 uses
   WiRL.Configuration.Core,
   WiRL.Configuration.Neon,
+  WiRL.Configuration.Converter,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Classes,
   WiRL.Core.Injection,
+  WiRL.Core.Converter,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Client.Utils,
@@ -586,6 +592,20 @@ begin
   GenericHttpRequest<T>('PATCH', ARequestEntity, AResponseEntity);
 end;
 
+function TWiRLClientCustomResource.ValueToString(const AValue: TValue): string;
+var
+  LConfig: TWiRLFormatSettingConfig;
+begin
+  LConfig := FApplication.GetConfigByClassRef(TWiRLFormatSettingConfig) as TWiRLFormatSettingConfig;
+  Result := TWiRLConvert.From(AValue, AValue.TypeInfo, LConfig.GetFormatSettingFor(AValue.TypeInfo));
+end;
+
+procedure TWiRLClientCustomResource.PathParam(const AName: string;
+  const AValue: TValue);
+begin
+  PathParams.Values[AName] := ValueToString(AValue);
+end;
+
 function TWiRLClientCustomResource.Post<T, V>(const ARequestEntity: T): V;
 begin
   Result := GenericHttpRequest<T, V>('POST', ARequestEntity);
@@ -606,6 +626,12 @@ procedure TWiRLClientCustomResource.Put<T>(const ARequestEntity: T;
   AResponseEntity: TObject);
 begin
   GenericHttpRequest<T>('PUT', ARequestEntity, AResponseEntity);
+end;
+
+procedure TWiRLClientCustomResource.QueryParam(const AName: string;
+  const AValue: TValue);
+begin
+  QueryParams.Values[AName] := ValueToString(AValue);
 end;
 
 destructor TWiRLClientCustomResource.Destroy;

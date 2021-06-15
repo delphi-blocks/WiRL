@@ -157,8 +157,8 @@ var
 begin
   LJson := TJSONObject.ParseJSONValue(MemoResponse.Text);
   try
-//    if Assigned(LJson) then
-//      MemoResponse.Text := LJson.Format();
+    if Assigned(LJson) then
+      MemoResponse.Text := LJson.Format();
   finally
     LJson.Free;
   end;
