@@ -75,7 +75,7 @@ type
     function ResponseObject: TPerson;
   end;
 
-  [Path('basic_auth')]
+  [Path('auth')]
   TBasicAuthResource = class(TWiRLAuthBasicResource)
   private
   protected
@@ -134,6 +134,6 @@ end;
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<TParametersResource>;
   //TWiRLResourceRegistry.Instance.RegisterResource<TEntitiesResource>;
-  //TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
 
 end.

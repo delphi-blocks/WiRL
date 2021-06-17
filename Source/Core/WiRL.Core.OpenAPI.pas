@@ -203,10 +203,12 @@ begin
         LMediaType := LRequestBody.AddMediaType(LConsume.Value);
         if Assigned(LParam.Entity) then
         begin
-          FDocument.Components
-            .AddSchema(LParam.Entity.Name)
-            .SetJSONObject(TypeToSchemaJSON(LParam.RttiParam.ParamType));
-
+          if not FDocument.Components.SchemaExists(LParam.Entity.Name) then
+          begin
+            FDocument.Components
+              .AddSchema(LParam.Entity.Name)
+              .SetJSONObject(TypeToSchemaJSON(LParam.RttiParam.ParamType));
+          end;
           LMediaType.Schema.SetSchemaReference(LParam.Entity.Name);
         end
         else
@@ -262,9 +264,12 @@ begin
 
             if Assigned(AMethod.MethodResult.Entity) then
             begin
-              FDocument.Components
-                .AddSchema(AMethod.MethodResult.RttiType.Name)
-                .SetJSONObject(TypeToSchemaJSON(AMethod.MethodResult.RttiType));
+              if not FDocument.Components.SchemaExists(AMethod.MethodResult.RttiType.Name) then
+              begin
+                FDocument.Components
+                  .AddSchema(AMethod.MethodResult.RttiType.Name)
+                  .SetJSONObject(TypeToSchemaJSON(AMethod.MethodResult.RttiType));
+              end;
               LMediaType.Schema.SetSchemaReference(AMethod.MethodResult.Entity.Name);
             end;
             LMediaType.Schema.SetJSONObject(TypeToSchemaJSON(AMethod.MethodResult.RttiType));
