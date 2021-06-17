@@ -12,8 +12,9 @@ unit WiRL.Configuration.OpenAPI;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Defaults,
+  System.SysUtils, System.Classes, System.Generics.Collections, System.Generics.Defaults,
 
+  WiRL.Core.Declarations,
   WiRL.Core.Registry,
   WiRL.Configuration.Core,
   WiRL.Core.Auth.Context;
@@ -34,12 +35,12 @@ type
     function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
     function SetAPIDescription(const ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIVersion(const AVersion: string): IWiRLConfigurationOpenAPI;
-    function SetAPIScheme(const AScheme: string): IWiRLConfigurationOpenAPI;
-    function SetAPISchemes(const ASchemes: TArray<string>): IWiRLConfigurationOpenAPI;
-    function SetAPIHost(const AHost: string): IWiRLConfigurationOpenAPI;
+    function AddAPIServer(const AURL, ADescription: string): IWiRLConfigurationOpenAPI;
   end;
 
   TConfigurator = reference to procedure(AOpenAPIConf: IWiRLConfigurationOpenAPI);
+
+  TServerPair = TPair<string, string>;
 
   [Implements(IWiRLConfigurationOpenAPI)]
   TWiRLConfigurationOpenAPI = class sealed(TWiRLConfiguration, IWiRLConfigurationOpenAPI)
@@ -50,10 +51,9 @@ type
     FClass: TClass;
     FDescription: string;
     FFolderXMLDoc: string;
-    FSchemes: TArray<string>;
+    FServers: TArray<TServerPair>;
     FTitle: string;
     FVersion: string;
-    FHost: string;
     FFolderDocumentation: string;
     FFolderSwaggerUI: string;
     FLogo: string;
@@ -73,16 +73,13 @@ type
     function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
     function SetAPIDescription(const ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIVersion(const AVersion: string): IWiRLConfigurationOpenAPI;
-    function SetAPIScheme(const AScheme: string): IWiRLConfigurationOpenAPI;
-    function SetAPISchemes(const ASchemes: TArray<string>): IWiRLConfigurationOpenAPI;
-    function SetAPIHost(const AHost: string): IWiRLConfigurationOpenAPI;
+    function AddAPIServer(const AURL, ADescription: string): IWiRLConfigurationOpenAPI;
   published
     property Title: string read FTitle write FTitle;
     property Logo: string read FLogo write FLogo;
     property Version: string read FVersion write FVersion;
     property Description: string read FDescription write FDescription;
-    property Host: string read FHost write FHost;
-    property Schemes: TArray<string> read FSchemes write FSchemes;
+    property Servers: TArray<TServerPair> read FServers write FServers;
 
     property FolderXMLDoc: string read FFolderXMLDoc write FFolderXMLDoc;
     property FolderSwaggerUI: string read FFolderSwaggerUI write FFolderSwaggerUI;
@@ -123,27 +120,15 @@ begin
   Result := Self;
 end;
 
-function TWiRLConfigurationOpenAPI.SetAPIHost(const AHost: string): IWiRLConfigurationOpenAPI;
-begin
-  FHost := AHost;
-  Result := Self;
-end;
-
 function TWiRLConfigurationOpenAPI.SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
 begin
   FLogo := ALogo;
   Result := Self;
 end;
 
-function TWiRLConfigurationOpenAPI.SetAPIScheme(const AScheme: string): IWiRLConfigurationOpenAPI;
+function TWiRLConfigurationOpenAPI.AddAPIServer(const AURL, ADescription: string): IWiRLConfigurationOpenAPI;
 begin
-  FSchemes := FSchemes + [AScheme];
-  Result := Self;
-end;
-
-function TWiRLConfigurationOpenAPI.SetAPISchemes(const ASchemes: TArray<string>): IWiRLConfigurationOpenAPI;
-begin
-  FSchemes := ASchemes;
+  FServers := FServers + [TServerPair.Create(AURL, ADescription)];
   Result := Self;
 end;
 

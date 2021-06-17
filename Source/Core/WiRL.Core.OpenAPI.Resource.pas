@@ -90,7 +90,7 @@ implementation
 
 uses
   System.StrUtils, System.TypInfo, System.IOUtils,
-  WiRl.Core.Exceptions;
+  WiRL.Core.Exceptions;
 
 { TOpenAPIResourceCustom }
 
@@ -100,16 +100,17 @@ var
   LReader: TStreamReader;
   LWriter: TStreamWriter;
 begin
+  LURL := '';
+
   // Filters only html files
   if not SameText('.html', ExtractFileExt(AFileName)) then
     Exit(TFileStream.Create(AFileName, fmOpenRead));
 
-  if Length(Conf.Schemes) > 0 then
-    LURL := Conf.Schemes[0] + '://'
+  if Length(Conf.Servers) > 0 then
+    LURL :=  IncludeTrailingSlash(Conf.Servers[0].Key)
   else
-    LURL := 'http' + '://';
+    LURL := 'http://localhost/';
 
-  LURL := LURL + Conf.Host + '/';
   LURL := LURL + App.Path + '/' + Resource.GetSanitizedPath;
 
   Result := TMemoryStream.Create;

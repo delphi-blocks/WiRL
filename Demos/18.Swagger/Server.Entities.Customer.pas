@@ -21,128 +21,119 @@ uses
 {$M+}
 
 type
+  TOrderItem = class
+  private
+    FDate: TDateTime;
+    FID: Integer;
+    FIDArticle: Integer;
+    FQuantity: Double;
+  public
+    property ID: Integer read FID write FID;
+    property IDArticle: Integer read FIDArticle write FIDArticle;
+    property Date: TDateTime read FDate write FDate;
+    property Quantity: Double read FQuantity write FQuantity;
+  end;
+
+  TOrderItems = class(TObjectList<TOrderItem>)
+  end;
+
+  TOrder = class
+  private
+    FID: Integer;
+    FIDCustomer: Integer;
+    FItems: TOrderItems;
+    FTotal: Double;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function AddItem(AArticle: Integer; AQuantity: Double; ADate: TDateTime): TOrderItem;
+
+    property ID: Integer read FID write FID;
+    property IDCustomer: Integer read FIDCustomer write FIDCustomer;
+    property Items: TOrderItems read FItems write FItems;
+    property Total: Double read FTotal write FTotal;
+  end;
+
+  TOrders = class(TObjectList<TOrder>)
+  end;
+
+  /// <summary>
+  ///   Customer class
+  /// </summary>
   TCustomer = class
   private
     FCompanyName: string;
     FID: Integer;
+    FOrders: TOrders;
   public
+    constructor Create;
+    destructor Destroy; override;
+    function AddOrder: TOrder;
+
     property ID: Integer read FID write FID;
     property CompanyName: string read FCompanyName write FCompanyName;
-
+    property Orders: TOrders read FOrders write FOrders;
   end;
 
-  TAddress = class
-  private
-    FCity: string;
-    FCountry: string;
-  published
-    property City: string read FCity write FCity;
-    property Country: string read FCountry write FCountry;
-  end;
-
-  TAddresses = TArray<TAddress>;
-  TAddressList = TList<TAddress>;
-
-  TNote = class
-  private
-    FDate: TDateTime;
-    FText: string;
+  TCustomers = class(TObjectList<TCustomer>)
   public
-    constructor Create(ADate: TDateTime; const AText: string); overload;
-  published
-    property Date: TDateTime read FDate write FDate;
-    property Text: string read FText write FText;
-  end;
-
-  TPerson = class
-  private
-    FAddresses: TAddresses;
-    FBirthdate: TDateTime;
-    FName: string;
-    FSurname: string;
-    FNotes: TObjectDictionary<string, TNote>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure AddAddress(const ACity, ACountry: string);
-  published
-    property Name: string read FName write FName;
-    [NeonProperty('LastName')]
-    property Surname: string read FSurname write FSurname;
-    property Birthdate: TDateTime read FBirthdate write FBirthdate;
-
-    property Addresses: TAddresses read FAddresses write FAddresses;
-    property Notes: TObjectDictionary<string, TNote> read FNotes write FNotes;
-  end;
-
-  TPersons = class(TObjectList<TPerson>);
-
-  TAddressBook = class
-  private
-    FOwner: string;
-    FPurpose: string;
-    FContacts: TPersons;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    property Owner: string read FOwner write FOwner;
-    property Purpose: string read FPurpose write FPurpose;
-    property Contacts: TPersons read FContacts write FContacts;
+    function AddCustomer(const ACompanyName: string): TCustomer;
   end;
 
 implementation
 
-{ TPerson }
+{ TCustomer }
 
-procedure TPerson.AddAddress(const ACity, ACountry: string);
-var
-  LAddress: TAddress;
+function TCustomer.AddOrder: TOrder;
 begin
-  LAddress := TAddress.Create;
-  LAddress.City := ACity;
-  LAddress.Country:= ACountry;
-
-  SetLength(FAddresses, Length(FAddresses) + 1);
-  FAddresses[Length(FAddresses) - 1] := LAddress;
+  Result := TOrder.Create;
+  Result.ID := Random(1000);
+  Result.IDCustomer := FID;
+  FOrders.Add(Result);
 end;
 
-constructor TPerson.Create;
+constructor TCustomer.Create;
 begin
-  FBirthdate := Now;
-  FNotes := TObjectDictionary<string, TNote>.Create([doOwnsValues]);
+  FOrders := TOrders.Create(True);
 end;
 
-destructor TPerson.Destroy;
-var
-  LIndex: Integer;
+destructor TCustomer.Destroy;
 begin
-  for LIndex := High(FAddresses) downto Low(FAddresses) do
-    FAddresses[LIndex].Free;
-  SetLength(FAddresses, 0);
-  FNotes.Free;
+  FOrders.Free;
   inherited;
 end;
 
-{ TNote }
+{ TOrder }
 
-constructor TNote.Create(ADate: TDateTime; const AText: string);
+function TOrder.AddItem(AArticle: Integer; AQuantity: Double; ADate: TDateTime): TOrderItem;
 begin
-  FDate := ADate;
-  FText := AText;
+  Result := TOrderItem.Create;
+  Result.ID := Random(10000);
+  Result.IDArticle := AArticle;
+  Result.Quantity := AQuantity;
+  Result.Date := ADate;
+  FItems.Add(Result);
 end;
 
-{ TAddressBook }
-
-constructor TAddressBook.Create;
+constructor TOrder.Create;
 begin
-  FContacts := TPersons.Create(True);
+  FItems := TOrderItems.Create(True);
 end;
 
-destructor TAddressBook.Destroy;
+destructor TOrder.Destroy;
 begin
-  FContacts.Free;
+  FItems.Free;
   inherited;
+end;
+
+{ TCustomers }
+
+function TCustomers.AddCustomer(const ACompanyName: string): TCustomer;
+begin
+  Result := TCustomer.Create;
+  Result.ID := Random(1000);
+  Result.CompanyName := ACompanyName;
+  Self.Add(Result);
 end;
 
 end.

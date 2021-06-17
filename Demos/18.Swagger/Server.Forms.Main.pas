@@ -115,7 +115,7 @@ begin
 end;
 
 /// <summary>
-/// Bla bla bla
+/// Bla *bla* bla
 /// </summary>
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
@@ -132,6 +132,7 @@ begin
       .SetAppName('demo')
       // Test for namespaces
       .SetResources('Server.Resources.Demo.*')
+      //.SetResources('Server.Resources.Customer.*')
       //.SetResources('Server.Resources.Swagger.*')
       .SetFilters('*')
 
@@ -156,10 +157,9 @@ begin
         .SetAPILogo('api-logo.png')
         .SetAPITitle('WiRL Swagger Demo')
         .SetAPIVersion('1.0.0')
-        .SetAPIDescription('This is a demo API to test WiRL documentation features')
-        .SetAPIScheme('http')
-        .SetAPIScheme('https')
-        .SetAPIHost('localhost:8080')
+        .SetAPIDescription('This is a **demo API** to test WiRL OpenAPI documentation features')
+        .AddAPIServer('http://localhost:8080/rest/app', 'Testing Server')
+        .AddAPIServer('https://api.example.com/rest/app', 'Production Server')
       .ApplyConfig
   ;
 

@@ -1,11 +1,11 @@
 object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
   Left = 0
   Top = 0
-  Caption = 'WiRLResource'
+  Caption = 'WiRL Client Editor'
   ClientHeight = 618
   ClientWidth = 927
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
@@ -18,7 +18,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     Left = 0
     Top = 0
     Width = 927
-    Height = 118
+    Height = 73
     Align = alTop
     BevelOuter = bvNone
     Caption = 'PanelHeader'
@@ -29,8 +29,8 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     object ImageLogo: TImage
       Left = 14
       Top = 14
-      Width = 105
-      Height = 91
+      Width = 56
+      Height = 51
       Picture.Data = {
         0954506E67496D61676589504E470D0A1A0A0000000D49484452000000E90000
         00CB08060000008B53B4DE000000017352474200AECE1CE90000000467414D41
@@ -984,31 +984,32 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
         D4745682B47F83F7D33C2006BF0D43EA08077C3FB0019403E505673990B69635
         0E8DD319779AA2A939887A3394EA5F7340EC68960369CE7296E5960369CE7296
         E5F6FFDFAB2439381EAB010000000049454E44AE426082}
+      Proportional = True
       Stretch = True
     end
     object Label2: TLabel
-      Left = 152
-      Top = 24
-      Width = 219
-      Height = 23
-      Caption = 'WiRLClientResource editor'
-      Font.Charset = DEFAULT_CHARSET
+      Left = 88
+      Top = 14
+      Width = 229
+      Height = 25
+      Caption = 'WiRL RESTful API Editor'
+      Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
-      Font.Height = -19
+      Font.Height = -21
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
     end
     object WiRLUrlLabel: TLabel
-      Left = 152
-      Top = 53
-      Width = 183
-      Height = 13
+      Left = 88
+      Top = 43
+      Width = 219
+      Height = 16
       Cursor = crHandPoint
       Caption = 'https://github.com/delphi-blocks/WiRL'
-      Font.Charset = DEFAULT_CHARSET
+      Font.Charset = ANSI_CHARSET
       Font.Color = clBlue
-      Font.Height = -11
+      Font.Height = -13
       Font.Name = 'Tahoma'
       Font.Style = [fsUnderline]
       ParentFont = False
@@ -1018,7 +1019,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
   object GroupBoxRequest: TGroupBox
     AlignWithMargins = True
     Left = 3
-    Top = 121
+    Top = 76
     Width = 921
     Height = 222
     Align = alTop
@@ -1228,15 +1229,15 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
   object ResponseGroupBox: TGroupBox
     AlignWithMargins = True
     Left = 3
-    Top = 349
+    Top = 304
     Width = 921
-    Height = 221
+    Height = 266
     Align = alClient
     Caption = 'Response'
     TabOrder = 2
     DesignSize = (
       921
-      221)
+      266)
     object ResponseLabel: TLabel
       AlignWithMargins = True
       Left = 10
@@ -1266,7 +1267,7 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Left = 10
       Top = 86
       Width = 904
-      Height = 119
+      Height = 164
       Margins.Left = 10
       Anchors = [akLeft, akTop, akRight, akBottom]
       Font.Charset = DEFAULT_CHARSET

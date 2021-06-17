@@ -52,6 +52,16 @@ type
 
   TWiRLProxyFilters = class(TObjectList<TWiRLProxyFilter>);
 
+  TWiRLProxyEntity = class(TWiRLProxyBase)
+  private
+    FRttiType: TRttiType;
+  public
+    constructor Create(AType: TRttiType);
+    procedure Process(); override;
+  public
+    property RttiType: TRttiType read FRttiType write FRttiType;
+  end;
+
   TWiRLProxyParameter = class(TWiRLProxyBase)
   private
     FRttiParam: TRttiParameter;
@@ -59,21 +69,21 @@ type
     FInjected: Boolean;
     FValue: string;
     FKind: TMethodParamType;
-    FName: string;
     FRest: Boolean;
     FContext: TRttiType;
+    FEntity: TWiRLProxyEntity;
     procedure ProcessAttributes;
   public
     constructor Create(AParam: TRttiParameter);
+    destructor Destroy; override;
 
     procedure Process(); override;
   public
     property Rest: Boolean read FRest write FRest;
-    property Name: string read FName write FName;
     property Kind: TMethodParamType read FKind write FKind;
     property Value: string read FValue write FValue;
     property Injected: Boolean read FInjected write FInjected;
-
+    property Entity: TWiRLProxyEntity read FEntity write FEntity;
     property Context: TRttiType read FContext write FContext;
 
     property RttiParam: TRttiParameter read FRttiParam write FRttiParam;
@@ -111,8 +121,10 @@ type
     FIsFunction: Boolean;
     FIsArray: Boolean;
     FIsSimple: Boolean;
+    FEntity: TWiRLProxyEntity;
   public
     constructor Create(AResultType: TRttiType);
+    destructor Destroy; override;
 
     procedure Process(); override;
     procedure SetAsSingleton;
@@ -127,6 +139,7 @@ type
     property IsSimple: Boolean read FIsSimple;
     property IsSingleton: Boolean read FIsSingleton;
     property RttiType: TRttiType read FRttiType;
+    property Entity: TWiRLProxyEntity read FEntity write FEntity;
   end;
 
   TWiRLProxyMethodAuth = class(TWiRLProxyBase)
@@ -165,10 +178,10 @@ type
     FAllAttributes: TArray<TCustomAttribute>;
     FStatus: TWiRLHttpStatus;
     FParams: TWiRLProxyParameters;
-    FName: string;
     FAuthHandler: Boolean;
     FResponses: TWiRLProxyMethodResponses;
 
+    procedure ProcessMethodResult;
     procedure ProcessAttributes;
     procedure ProcessParams;
   public
@@ -182,7 +195,6 @@ type
     function HasFilter(AAttribute: TCustomAttribute): Boolean;
   public
     property Rest: Boolean read FRest;
-    property Name: string read FName;
     property Path: string read FPath;
     property Async: Boolean read FAsync;
     property Auth: TWiRLProxyMethodAuth read FAuth;
@@ -469,9 +481,6 @@ begin
   FMethodResult := TWiRLProxyMethodResult.Create(FRttiMethod.ReturnType);
   FName := FRttiMethod.Name;
   FIsFunction := Assigned(FRttiMethod.ReturnType);
-
-  //ProcessAttributes;
-  //ProcessParams;
 end;
 
 destructor TWiRLProxyMethod.Destroy;
@@ -526,8 +535,9 @@ procedure TWiRLProxyMethod.Process;
 begin
   inherited;
 
-  ProcessAttributes;
-  ProcessParams;
+  ProcessAttributes();
+  ProcessParams();
+  ProcessMethodResult();
 
   FProcessed := True;
 end;
@@ -622,6 +632,11 @@ begin
   end;
 end;
 
+procedure TWiRLProxyMethod.ProcessMethodResult;
+begin
+  FMethodResult.Process();
+end;
+
 procedure TWiRLProxyMethod.ProcessParams;
 var
   LParam: TRttiParameter;
@@ -646,6 +661,13 @@ begin
   FRttiType := AResultType;
 end;
 
+destructor TWiRLProxyMethodResult.Destroy;
+begin
+  FEntity.Free;
+
+  inherited;
+end;
+
 procedure TWiRLProxyMethodResult.Process;
 begin
   inherited;
@@ -655,8 +677,18 @@ begin
     FIsFunction := True;
     FResultType := FRttiType.TypeKind;
     case FResultType of
-      tkClass:  FIsClass := True;
-      tkRecord: FIsRecord := True;
+      tkClass:
+      begin
+        FIsClass := True;
+        FEntity := TWiRLProxyEntity.Create(FRttiType);
+        FEntity.Process();
+      end;
+      tkRecord:
+      begin
+        FIsRecord := True;
+        FEntity := TWiRLProxyEntity.Create(FRttiType);
+        FEntity.Process();
+      end;
       tkArray,
       tkDynArray: FIsArray := True;
     else
@@ -726,8 +758,13 @@ constructor TWiRLProxyParameter.Create(AParam: TRttiParameter);
 begin
   FRttiParam := AParam;
   FName := FRttiParam.Name;
+end;
 
-  ProcessAttributes;
+destructor TWiRLProxyParameter.Destroy;
+begin
+  FEntity.Free;
+
+  inherited;
 end;
 
 procedure TWiRLProxyParameter.Process;
@@ -773,7 +810,12 @@ begin
     else if LAttr is CookieParamAttribute then
       Kind := TMethodParamType.Cookie
     else if LAttr is BodyParamAttribute then
-      Kind := TMethodParamType.Body
+    begin
+      Kind := TMethodParamType.Body;
+
+      FEntity := TWiRLProxyEntity.Create(FRttiParam.ParamType);
+      FEntity.Process();
+    end
     else if LAttr is FormDataParamAttribute then
       Kind := TMethodParamType.FormData
     else if LAttr is MultipartAttribute then
@@ -881,6 +923,25 @@ begin
     end;
   end;
 
+end;
+
+{ TWiRLProxyEntity }
+
+constructor TWiRLProxyEntity.Create(AType: TRttiType);
+begin
+  FRttiType := AType;
+end;
+
+procedure TWiRLProxyEntity.Process;
+begin
+  inherited;
+
+  FName := FRttiType.Name;
+
+  //ProcessAttributes;
+  //FSummary := FindReadXMLDoc();
+
+  FProcessed := True;
 end;
 
 end.

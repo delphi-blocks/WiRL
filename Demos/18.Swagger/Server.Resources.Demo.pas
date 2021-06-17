@@ -44,7 +44,7 @@ type
     /// <summary>
     ///   Method with a *sample* documentation
     /// </summary>
-    /// <param name="AParam" required="true">
+    /// <param name="APathParam" required="true">
     ///   The first parameter
     /// </param>
     /// <returns>
@@ -57,36 +57,12 @@ type
     ///  <header name="X-Header" type="string">Description of the header</header>
     /// <response code="400">Bad request</response>
     /// <response code="404">[resource] not found in the database</response>
-    [GET, Path('/test/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamTest([PathParam] AParam: string): string;
-
-    [GET, Path('/str/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamStr([PathParam] AParam: string): string;
-
-    [GET, Path('/int/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamInt([PathParam] AParam: Integer): Integer;
-
-    [GET, Path('/float/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamFloat([PathParam] AParam: Double): Double;
-
-    [GET, Path('/bool/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamBool([PathParam] AParam: Boolean): Boolean;
-
-    [GET, Path('/enum/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamEnum([PathParam] AParam: TMyEnum): TMyEnum;
-
-    [GET, Path('/date/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamDate([PathParam] AParam: TDate): TDate;
-
-    [GET, Path('/time/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamTime([PathParam] AParam: TTime): TTime;
-
-    [GET, Path('/datetime/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
-    function ParamDateTime([PathParam] AParam: TDateTime): TDateTime;
+    [GET, Path('/test/{p}'), Produces(TMediaType.TEXT_PLAIN)]
+    function ParamTest([PathParam('p')] APathParam: string): string;
 
     [POST, Path('/record')]
     [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
-    function ParamRecord([BodyParam] AParam: TRecordParam): TRecordParam;
+    function ParamRecord([BodyParam] ABodyParam: TRecordParam): TRecordParam;
 
     procedure Test;
   end;
@@ -115,61 +91,19 @@ uses
   WiRL.Core.JSON,
   WiRL.http.Accept.Language;
 
-{ TParametersResource }
-
-function TParametersResource.ParamFloat(AParam: Double): Double;
-begin
-  Result := AParam;
-end;
-
-function TParametersResource.ParamStr(AParam: string): string;
-begin
-  Result := AParam;
-end;
-
-function TParametersResource.ParamDate(AParam: TDate): TDate;
-begin
-  Result := AParam;
-end;
-
-function TParametersResource.ParamBool(AParam: Boolean): Boolean;
-begin
-  Result := AParam;
-end;
-
-function TParametersResource.ParamDateTime(AParam: TDateTime): TDateTime;
-begin
-  Result := AParam;
-end;
-
-function TParametersResource.ParamEnum(AParam: TMyEnum): TMyEnum;
-begin
-  Result := AParam;
-end;
-
-function TParametersResource.ParamTime(AParam: TTime): TTime;
-begin
-  Result := AParam;
-end;
-
 procedure TParametersResource.Test;
 begin
   //
 end;
 
-function TParametersResource.ParamInt(AParam: Integer): Integer;
+function TParametersResource.ParamRecord(ABodyParam: TRecordParam): TRecordParam;
 begin
-  Result := AParam;
+  Result := ABodyParam;
 end;
 
-function TParametersResource.ParamRecord(AParam: TRecordParam): TRecordParam;
+function TParametersResource.ParamTest(APathParam: string): string;
 begin
-  Result := AParam;
-end;
-
-function TParametersResource.ParamTest(AParam: string): string;
-begin
-  Result := AParam;
+  Result := APathParam;
 end;
 
 { TEntitiesResource }
@@ -199,7 +133,7 @@ end;
 
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<TParametersResource>;
-  TWiRLResourceRegistry.Instance.RegisterResource<TEntitiesResource>;
-  TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
+  //TWiRLResourceRegistry.Instance.RegisterResource<TEntitiesResource>;
+  //TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
 
 end.

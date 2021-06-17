@@ -20,7 +20,8 @@ uses
   WiRL.Core.Metadata.XMLDoc in '..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas',
   WiRL.Core.Application in '..\..\Source\Core\WiRL.Core.Application.pas',
   WiRL.Core.OpenAPI in '..\..\Source\Core\WiRL.Core.OpenAPI.pas',
-  Server.Resources.Customer in 'Server.Resources.Customer.pas';
+  Server.Resources.Customer in 'Server.Resources.Customer.pas',
+  Server.Entities.Customer in 'Server.Entities.Customer.pas';
 
 {$R *.res}
 

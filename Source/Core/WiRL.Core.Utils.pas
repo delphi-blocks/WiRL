@@ -99,6 +99,10 @@ type
 
   function ExistsInArray(AArray: TJSONArray; const AValue: string): Boolean;
   function IncludeLeadingSlash(const AValue: string): string;
+  function IncludeTrailingSlash(const AValue: string): string;
+  function ExcludeLeadingSlash(const AValue: string): string;
+  function ExcludeTrailingSlash(const AValue: string): string;
+  function CombineURL(const APathLeft, APathRight: string): string;
 
 implementation
 
@@ -123,6 +127,35 @@ begin
     Result := '/' + AValue
   else
     Result := AValue;
+end;
+
+function IncludeTrailingSlash(const AValue: string): string;
+begin
+  if not AValue.EndsWith('/') then
+    Result := AValue + '/'
+  else
+    Result := AValue;
+end;
+
+function ExcludeLeadingSlash(const AValue: string): string;
+begin
+  if AValue.StartsWith('/') then
+    Result := AValue.Substring(1)
+  else
+    Result := AValue;
+end;
+
+function ExcludeTrailingSlash(const AValue: string): string;
+begin
+  if AValue.EndsWith('/') then
+    Result := AValue.Substring(0, AValue.Length - 2)
+  else
+    Result := AValue;
+end;
+
+function CombineURL(const APathLeft, APathRight: string): string;
+begin
+  Result := IncludeTrailingSlash(APathLeft) + ExcludeLeadingSlash(APathRight);
 end;
 
 function StreamToString(AStream: TStream): string;

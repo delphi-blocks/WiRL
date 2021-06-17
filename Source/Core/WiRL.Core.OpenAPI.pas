@@ -16,27 +16,24 @@ uses
   System.Rtti, System.RegularExpressions,
 
   OpenAPI.Model.Classes,
+  OpenAPI.Model.Schema,
   OpenAPI.Neon.Serializers,
+
   Neon.Core.Types,
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON,
   Neon.Core.Persistence.JSON.Schema,
   Neon.Core.Serializers.RTL,
+
+  WiRL.Core.Declarations,
   WiRL.Core.Exceptions,
   WiRL.Core.Metadata,
   WiRL.Core.Metadata.XMLDoc,
   WiRL.Configuration.Auth,
   WiRL.Configuration.Neon,
   WiRL.Configuration.OpenAPI,
-  WiRL.Core.JSON,
   WiRL.Core.Application,
-  WiRL.Core.Engine,
-  WiRL.Core.Context.Server,
-  WiRL.Core.Registry,
-  WiRL.Core.Attributes,
-  WiRL.Core.Auth.Resource,
   WiRL.http.Accept.MediaType,
-  WiRL.Rtti.Utils,
   WiRL.http.Filters;
 
 type
@@ -73,6 +70,7 @@ implementation
 uses
   System.StrUtils, System.TypInfo,
 
+  WiRL.Rtti.Utils,
   WiRL.Core.Utils,
   WiRL.http.Server;
 
@@ -81,12 +79,18 @@ uses
 function TOpenAPIv3Engine.Build: TJSONObject;
 var
   LRes: TWiRLProxyResource;
+  LSchema: TOpenAPISchema;
   LPair: TPair<string, TWiRLProxyResource>;
+  LServer: TServerPair;
 begin
   ProcessXMLDoc();
 
   FDocument.Info.Title := FConfigurationOpenAPI.Title;
   FDocument.Info.Description := FConfigurationOpenAPI.Description;
+  FDocument.Info.Version := FConfigurationOpenAPI.Version;
+
+  for LServer in FConfigurationOpenAPI.Servers do
+    FDocument.AddServer(LServer.Key, LServer.Value);
 
   for LPair in FApplication.Proxy.Resources do
   begin
@@ -103,6 +107,9 @@ begin
       FDocument.Components.AddSecurityHttp('basic_auth', 'Basic Authentication', 'basic', '');
       FDocument.Components.AddSecurityHttp('jwt_auth', 'JWT (Bearer) Authentication', 'bearer', 'JWT');
     end;
+
+    LSchema := FDocument.Components.AddSchema('Error');
+    LSchema.SetJSONObject(ClassToSchemaJSON(TWebExceptionSchema));
 
     AddResource(LRes);
   end;
@@ -194,13 +201,22 @@ begin
       for LConsume in AMethod.Consumes do
       begin
         LMediaType := LRequestBody.AddMediaType(LConsume.Value);
-        LMediaType.Schema.SetJSONObject(TypeToSchemaJSON(LParam.RttiParam.ParamType));
+        if Assigned(LParam.Entity) then
+        begin
+          FDocument.Components
+            .AddSchema(LParam.Entity.Name)
+            .SetJSONObject(TypeToSchemaJSON(LParam.RttiParam.ParamType));
+
+          LMediaType.Schema.SetSchemaReference(LParam.Entity.Name);
+        end
+        else
+          LMediaType.Schema.SetJSONObject(TypeToSchemaJSON(LParam.RttiParam.ParamType));
       end;
 
       Continue;
     end;
 
-    if LParam.Kind = TMethodParamType.FormData then
+    if LParam.Kind = TMethodParamType.MultiPart then
     begin
       { TODO -opaolo -c : finire 09/06/2021 16:06:03 }
       Continue;
@@ -243,6 +259,14 @@ begin
           for LProduce in AMethod.Produces do
           begin
             LMediaType := LResponse.AddMediaType(LProduce.Value);
+
+            if Assigned(AMethod.MethodResult.Entity) then
+            begin
+              FDocument.Components
+                .AddSchema(AMethod.MethodResult.RttiType.Name)
+                .SetJSONObject(TypeToSchemaJSON(AMethod.MethodResult.RttiType));
+              LMediaType.Schema.SetSchemaReference(AMethod.MethodResult.Entity.Name);
+            end;
             LMediaType.Schema.SetJSONObject(TypeToSchemaJSON(AMethod.MethodResult.RttiType));
           end;
         end;
@@ -250,7 +274,9 @@ begin
         ClientError, ServerError:
         begin
           LMediaType := LResponse.AddMediaType('application/json');
-          LMediaType.Schema.SetJSONObject(ClassToSchemaJSON(TWebExceptionSchema));
+
+          LMediaType.Schema.Reference.Ref := '#/components/schemas/' + 'Error';
+          //SetJSONObject(ClassToSchemaJSON(TWebExceptionSchema));
         end;
         Custom: ;
       end;
@@ -270,7 +296,7 @@ end;
 
 procedure TOpenAPIv3Engine.AddResource(AResource: TWiRLProxyResource);
 var
-  LMethodPath: string;
+  LFullPath: string;
   LMethod: TWiRLProxyMethod;
   //LOperation: TOpenAPIOperation;
   LPathItem: TOpenAPIPathItem;
@@ -282,17 +308,13 @@ begin
     begin
       if LMethod.Name <> '' then
       begin
-        LMethodPath := IncludeLeadingSlash(FApplication.EnginePath) +
-          IncludeLeadingSlash(FApplication.BasePath) + IncludeLeadingSlash(AResource.Path);
-        if (not LMethodPath.EndsWith('/')) and (not LMethod.Path.StartsWith('/')) then
-          LMethodPath :=  '/' + LMethodPath + '/';
-        LMethodPath := LMethodPath + LMethod.Path;
+        LFullPath := IncludeLeadingSlash(CombineURL(AResource.Path, LMethod.Path));
 
         // If the resource is already documented add the information on
         // the same json object
 
         //LJsonPath := FindOrCreateNode(APaths, LMethodPath);
-        LPathItem := FDocument.AddPath(LMethodPath);
+        LPathItem := FDocument.AddPath(LFullPath);
 
         //LOperation :=
         AddOperation(LMethod, LPathItem, AResource.Name);
