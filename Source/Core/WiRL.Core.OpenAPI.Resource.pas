@@ -111,8 +111,8 @@ begin
   else
     LURL := 'http://localhost/';
 
-  LURL := LURL + App.Path + '/' + Resource.GetSanitizedPath;
-
+  LURL := CombineURL(LURL, Resource.GetSanitizedPath);
+  
   Result := TMemoryStream.Create;
   LReader := TStreamReader.Create(AFileName);
   LWriter := TStreamWriter.Create(Result);
@@ -131,20 +131,7 @@ begin
 end;
 
 function TOpenAPIResourceCustom.GetSwaggerJSON: TJSONObject;
-//var
-//  LInfo: TOpenAPIInfo;
 begin
-//  LInfo := TOpenAPIInfo.Create(App, Resource.Path);
-//  LInfo.Title := Conf.Title;
-//  LInfo.Description := Conf.Description;
-//  LInfo.Version := Conf.Version;
-//  LInfo.Schemes := Conf.Schemes;
-//  LInfo.Host := Conf.Host;
-//  if Conf.Host.IsEmpty then
-//    Conf.Host := Request.Host;
-
-  //Result := TOpenAPIv2Engine.Generate(LInfo);
-
   Result := TOpenAPIv3Engine.Generate(App, Resource.Path);
 end;
 
@@ -153,7 +140,7 @@ var
   LProvider: TSwaggerUIProvider;
   LPathInfo: string;
 begin
-  LPathInfo := EnsurePrefix(App.Path + EnsurePrefix(Resource.GetSanitizedPath, '/'), '/');
+  LPathInfo := EnsureSuffix(CombineURL(App.Path, Resource.GetSanitizedPath), '/');
   LProvider := TSwaggerUIProvider.Create(LPathInfo, Conf.FolderSwaggerUI);
   try
     Result := LProvider.HandleRequest(Request, Response);
@@ -167,7 +154,7 @@ var
   LProvider: TSwaggerUIProvider;
   LPathInfo: string;
 begin
-  LPathInfo := EnsurePrefix(App.Path + EnsurePrefix(Resource.GetSanitizedPath, '/'), '/');
+  LPathInfo := EnsureSuffix(CombineURL(App.Path, Resource.GetSanitizedPath), '/');
   LProvider := TSwaggerUIProvider.Create(LPathInfo, Conf.FolderSwaggerUI);
   try
     LProvider.OnProcess := FilterContent;
@@ -195,7 +182,7 @@ begin
   InitIndexFileNames;
 
   FBasePath := ABasePath;
-  RootFolder := ARootFolder;
+  FRootFolder := ARootFolder;
   FExpandedRootFolder := FPathEngine.Render(FRootFolder);
 end;
 

@@ -279,9 +279,7 @@ begin
         ClientError, ServerError:
         begin
           LMediaType := LResponse.AddMediaType('application/json');
-
           LMediaType.Schema.Reference.Ref := '#/components/schemas/' + 'Error';
-          //SetJSONObject(ClassToSchemaJSON(TWebExceptionSchema));
         end;
         Custom: ;
       end;
