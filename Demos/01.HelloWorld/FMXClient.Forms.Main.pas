@@ -47,22 +47,12 @@ type
     btnPost: TButton;
     BtnGenericGET: TButton;
     BtnGenericPOST: TButton;
-    Button3: TButton;
-    StringGrid1: TStringGrid;
-    FDMemTable1: TFDMemTable;
-    FDStanStorageJSONLink1: TFDStanStorageJSONLink;
-    BindSourceDB1: TBindSourceDB;
-    BindingsList1: TBindingsList;
-    LinkGridToDataSourceBindSourceDB1: TLinkGridToDataSource;
-    Button4: TButton;
     procedure btnExecuteClick(Sender: TObject);
     procedure btnEchoClick(Sender: TObject);
     procedure btnReverseClick(Sender: TObject);
     procedure btnPostClick(Sender: TObject);
     procedure BtnGenericGETClick(Sender: TObject);
     procedure BtnGenericPOSTClick(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
-    procedure Button4Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -137,61 +127,12 @@ begin
   end;
 end;
 
-procedure TMainForm.Button3Click(Sender: TObject);
-begin
-  MainDataModule.GetDBData(FDMemTable1);
-end;
-
-procedure TMainForm.Button4Click(Sender: TObject);
-var
-  LNewId: Integer;
-begin
-  FDMemTable1.Append;
-  FDMemTable1.FieldByName('id').AsInteger := 3;
-  FDMemTable1.FieldByName('value').AsString := 'Test';
-//  FDMemTable1.AppendRecord([3, 'Test']);
-//  FDMemTable1.AppendRecord([4, 'Test1']);
-  FDMemTable1.Post;
-  LNewId := MainDataModule.PostDBData(FDMemTable1);
-
-  ShowMessage(LNewId.ToString);
-end;
-
 procedure TMainForm.btnPostClick(Sender: TObject);
 var
-  LArray: TJSONArray;
+  LResponse: string;
 begin
-  LArray := TJSONArray.Create;
-  try
-    LArray.Add('Prova 1');
-    LArray.Add('Prova 2');
-    LArray.Add('Prova 3');
-
-    MainDataModule.PostExampleResource.POST(
-      procedure(AContent: TMemoryStream)
-      var
-        LWriter: TStreamWriter;
-      begin
-        LWriter := TStreamWriter.Create(AContent);
-        try
-          LWriter.Write(LArray.ToJSON);
-          AContent.Position := 0;
-        finally
-          LWriter.Free;
-        end;
-      end
-      ,
-      procedure (AResponse: TStream)
-      begin
-        AResponse.Position := 0;
-
-        ShowMessage('OK, ' + AResponse.Size.ToString() + ' bytes: ' + sLineBreak
-          + StreamToString(AResponse));
-      end
-    );
-  finally
-    LArray.Free;
-  end;
+  LResponse := MainDataModule.PostStreamResource.POST<string, string>('Hello, World!');
+  ShowMessage(LResponse);
 end;
 
 procedure TMainForm.btnExecuteClick(Sender: TObject);

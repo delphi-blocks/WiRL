@@ -107,29 +107,24 @@ object Form1: TForm1
     ReadTimeout = -1
     ProxyParams.BasicAuthentication = False
     ProxyParams.ProxyPort = 0
-    NoProtocolErrorException = False
     Left = 688
     Top = 56
   end
   object WiRLClientApplication1: TWiRLClientApplication
     DefaultMediaType = 'application/json'
-    AppName = 'app'
     Client = WiRLClient1
+    Filters.Strings = (
+      '*')
+    Readers.Strings = (
+      '*')
+    Writers.Strings = (
+      '*')
     Left = 688
     Top = 120
-  end
-  object WiRLFDResource1: TWiRLFDResource
-    Application = WiRLClientApplication1
-    Resource = 'maindata'
-    ResourceDataSets = <
-      item
-        DataSetName = 'employee'
-        DataSet = employee1
-        SendDelta = True
-        Synchronize = True
-      end>
-    Left = 688
-    Top = 184
+    object WiRLClientResource1: TWiRLClientResource
+      Application = WiRLClientApplication1
+      Resource = 'maindata/employee'
+    end
   end
   object BindingsList1: TBindingsList
     Methods = <>

@@ -331,7 +331,7 @@ begin
   begin
     LRowHeader := Reader.ReadString;
     LHeaderPair := LRowHeader.Split(['=']);
-    if LHeaderPair.Length > 1 then
+    if Length(LHeaderPair) > 1 then
     begin
       FHeaders.AddHeader(TWiRLHeader.Create(LHeaderPair[0], LHeaderPair[1]));
     end;

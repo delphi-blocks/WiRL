@@ -49,8 +49,6 @@ type
     function IsVisible(Project: IOTAProject): Boolean;
   end;
 
-procedure Register;
-
 implementation
 
 uses
@@ -168,11 +166,6 @@ begin
 end;
 
 {$ENDREGION}
-
-procedure Register;
-begin
-  RegisterPackageWizard(TWiRLServeProjectWizard.Create);
-end;
 
 
 end.

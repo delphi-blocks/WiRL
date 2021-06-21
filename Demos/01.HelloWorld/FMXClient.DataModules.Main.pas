@@ -14,9 +14,8 @@ interface
 uses
   System.SysUtils, System.Classes, System.TypInfo,
   WiRL.Client.CustomResource,
-  WiRL.Client.Resource, WiRL.Client.Resource.JSON, WiRL.Client.Application,
-  WiRL.http.Client, WiRL.Client.SubResource,
-  WiRL.Client.SubResource.JSON, WiRL.Client.Messaging.Resource,
+  WiRL.Client.Resource, WiRL.Client.Application,
+  WiRL.http.Client,
   WiRL.http.Request, WiRL.http.Response,
   System.JSON, System.Net.HttpClient.Win,
   Demo.Entities,
@@ -32,10 +31,9 @@ type
     WiRLClient1: TWiRLClient;
     WiRLClientApplication1: TWiRLClientApplication;
     HelloWorldResource: TWiRLClientResource;
-    EchoStringResource: TWiRLClientSubResource;
-    ReverseStringResource: TWiRLClientSubResource;
-    PostExampleResource: TWiRLClientSubResourceJSON;
-    PersonResource: TWiRLClientSubResource;
+    EchoStringResource: TWiRLClientResource;
+    ReverseStringResource: TWiRLClientResource;
+    PostStreamResource: TWiRLClientResource;
     procedure DataModuleCreate(Sender: TObject);
     procedure WiRLClient1BeforeCommand(ASender: TObject; ARequest: IWiRLRequest);
   private
@@ -46,8 +44,6 @@ type
     function ReverseString(AString: string): string;
     function GetPerson(Id: Integer): TPerson;
     function PostOrder(AOrderProposal: TOrderProposal): TOrder;
-    procedure GetDBData(AMemTable: TFDMemTable);
-    function PostDBData(AMemTable: TFDMemTable): Integer;
   end;
 
 var
@@ -92,31 +88,13 @@ end;
 
 function TMainDataModule.EchoString(AString: string): string;
 begin
-  EchoStringResource.PathParamsValues.Values['AString'] := AString;
-  Result := EchoStringResource.GETAsString();
+  EchoStringResource.PathParam('AString', AString);
+  Result := EchoStringResource.GET<string>;
 end;
 
 function TMainDataModule.ExecuteHelloWorld: string;
 begin
-  Result := HelloWorldResource.GETAsString();
-end;
-
-procedure TMainDataModule.GetDBData(AMemTable: TFDMemTable);
-var
-  LStream: TStream;
-begin
-  LStream := WiRLClientApplication1
-    .Resource('helloworld/db')
-    .Accept('application/json')
-    .Get<TStream>;
-
-  try
-    LStream.Position := 0;
-    AMemTable.LoadFromStream(LStream, sfJSON);
-  finally
-    LStream.Free;
-  end;
-
+  Result := HelloWorldResource.GET<string>;
 end;
 
 function TMainDataModule.GetPerson(Id: Integer): TPerson;
@@ -125,33 +103,9 @@ begin
     .Resource('helloworld/person')
     .Accept('application/json')
     .AcceptLanguage('it_IT')
-//    .AcceptEncoding('application/json')
-//    .Cookie('name', 'value')
     .Header('x-author', 'Luca')
-//    .QueryParam('start', 'now - 5 minutes')
     .QueryParam('Id', Id.ToString)
     .Get<TPerson>;
-end;
-
-function TMainDataModule.PostDBData(AMemTable: TFDMemTable): Integer;
-var
-  LStream: TStream;
-begin
-  LStream := TMemoryStream.Create;
-  try
-
-    AMemTable.SaveToStream(LStream, sfJSON);
-    LStream.Position := 0;
-
-    Result := WiRLClientApplication1
-      .Resource('helloworld/db')
-      .Accept('text/plain')
-      .ContentType('application/json')
-      .Post<TStream, Integer>(LStream);
-
-  finally
-    LStream.Free;
-  end;
 end;
 
 function TMainDataModule.PostOrder(AOrderProposal: TOrderProposal): TOrder;
@@ -160,18 +114,14 @@ begin
     .Resource('helloworld/order')
     .Accept('application/json')
     .ContentType('application/json')
-//    .AcceptEncoding('application/json')
-//    .Cookie('name', 'value')
     .Header('x-author', 'Luca')
-//    .QueryParam('start', 'now - 5 minutes')
-//    .QueryParam('Id', Id.ToString)
     .Post<TOrderProposal, TOrder>(AOrderProposal);
 end;
 
 function TMainDataModule.ReverseString(AString: string): string;
 begin
-  ReverseStringResource.PathParamsValues.Values['AString'] := AString;
-  Result := ReverseStringResource.GETAsString();
+  ReverseStringResource.PathParam('AString', AString);
+  Result := ReverseStringResource.GET<string>;
 end;
 
 procedure TMainDataModule.WiRLClient1BeforeCommand(ASender: TObject; ARequest:

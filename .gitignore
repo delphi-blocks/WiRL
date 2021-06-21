@@ -67,3 +67,5 @@ __recovery/
 # TestInsight config
 /Tests/Framework/Win32/TestInsight
 *.o
+
+/Demos/18.Swagger/Docs/*.xml

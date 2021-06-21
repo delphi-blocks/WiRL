@@ -53,7 +53,7 @@ object Form1: TForm1
     Top = 8
     Width = 75
     Height = 25
-    Caption = 'Button1'
+    Caption = 'Load'
     TabOrder = 3
     OnClick = Button1Click
   end
@@ -61,34 +61,30 @@ object Form1: TForm1
     WiRLEngineURL = 'http://localhost:8080/rest'
     ConnectTimeout = 0
     ReadTimeout = -1
+    ProxyParams.BasicAuthentication = False
+    ProxyParams.ProxyPort = 0
+    ClientVendor = 'TIdHttp (Indy)'
     Left = 48
     Top = 32
   end
   object WiRLClientApplication1: TWiRLClientApplication
     DefaultMediaType = 'application/json'
-    AppName = 'default'
     Client = WiRLClient1
+    Filters.Strings = (
+      '*')
+    Readers.Strings = (
+      '*')
+    Writers.Strings = (
+      '*')
     Left = 48
     Top = 88
-  end
-  object WiRLDatamoduleResource: TWiRLFDResource
-    Application = WiRLClientApplication1
-    Resource = 'maindata'
-    QueryParams.Strings = (
-      '')
-    ResourceDataSets = <
-      item
-        DataSetName = 'employee'
-        DataSet = employee1
-        SendDelta = True
-        Synchronize = True
-      end>
-    Left = 48
-    Top = 152
+    object DBResource: TWiRLClientResource
+      Application = WiRLClientApplication1
+      Resource = 'helloworld/db'
+    end
   end
   object employee1: TFDMemTable
     ActiveStoredUsage = []
-    Active = True
     CachedUpdates = True
     FetchOptions.AssignedValues = [evMode]
     FetchOptions.Mode = fmAll

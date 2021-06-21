@@ -17,19 +17,22 @@ uses
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
   FireDAC.DApt.Intf, Data.DB, Vcl.Grids, Vcl.DBGrids, FireDAC.Comp.DataSet,
   FireDAC.Comp.Client, WiRL.Client.CustomResource, WiRL.Client.Resource,
-  WiRL.Client.FireDAC, WiRL.Client.Application, WiRL.http.Client, Vcl.StdCtrls;
+  WiRL.Client.Application, WiRL.http.Client, Vcl.StdCtrls,
+  System.Net.HttpClient.Win, WiRL.Core.MessageBody.Default,
+  WiRL.Data.FireDAC.MessageBody.Default, WiRL.http.Accept.MediaType,
+  WiRL.http.Client.Indy;
 
 type
   TForm1 = class(TForm)
     WiRLClient1: TWiRLClient;
     WiRLClientApplication1: TWiRLClientApplication;
-    WiRLDatamoduleResource: TWiRLFDResource;
     employee1: TFDMemTable;
     DataSource1: TDataSource;
     DBGrid1: TDBGrid;
     SendToServerButton: TButton;
     FilterEdit: TEdit;
     Button1: TButton;
+    DBResource: TWiRLClientResource;
     procedure FormCreate(Sender: TObject);
     procedure SendToServerButtonClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
@@ -48,18 +51,24 @@ implementation
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  WiRLDatamoduleResource.QueryParams.Values['filter'] := FilterEdit.Text;
-  WiRLDatamoduleResource.GET();
+  DBResource.Headers.Accept := TMediaType.APPLICATION_JSON;
+  DBResource.QueryParam('filter', FilterEdit.Text);
+  DBResource.Get(employee1);
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  WiRLDatamoduleResource.GET();
+  DBResource.Headers.Accept := TMediaType.APPLICATION_JSON;
+  DBResource.Get(employee1);
 end;
 
 procedure TForm1.SendToServerButtonClick(Sender: TObject);
+var
+  LRowChanged: Integer;
 begin
-  WiRLDatamoduleResource.POST();
+  DBResource.Headers.Accept := TMediaType.TEXT_PLAIN;
+  LRowChanged := DBResource.Post<TFDMemTable, Integer>(employee1);
+  ShowMessage(Format('Changed %d rows', [LRowChanged]));
 end;
 
 end.

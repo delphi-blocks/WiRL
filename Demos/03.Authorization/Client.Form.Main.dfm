@@ -38,8 +38,6 @@ object frmClientMain: TfrmClientMain
     TabOrder = 1
     object tsPublicResource: TTabSheet
       Caption = 'Public Resource'
-      ExplicitTop = 24
-      ExplicitHeight = 380
       object Label2: TLabel
         Left = 3
         Top = 8
@@ -134,8 +132,6 @@ object frmClientMain: TfrmClientMain
     object tsLogin: TTabSheet
       Caption = 'Login (Basic Auth)'
       ImageIndex = 1
-      ExplicitTop = 24
-      ExplicitHeight = 380
       object Label1: TLabel
         Left = 3
         Top = 8
@@ -261,8 +257,6 @@ object frmClientMain: TfrmClientMain
     object tsPrivateResource: TTabSheet
       Caption = 'Private Resource'
       ImageIndex = 3
-      ExplicitTop = 24
-      ExplicitHeight = 380
       object Label5: TLabel
         Left = 3
         Top = 8
@@ -380,8 +374,8 @@ object frmClientMain: TfrmClientMain
     Asynchronous = False
     ConnectionTimeout = 60000
     ResponseTimeout = 60000
-    AllowCookies = True
     HandleRedirects = True
+    AllowCookies = True
     UserAgent = 'Embarcadero URI Client/1.0'
     Left = 472
     Top = 104

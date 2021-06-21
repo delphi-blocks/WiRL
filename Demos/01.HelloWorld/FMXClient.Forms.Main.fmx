@@ -19,7 +19,7 @@ object MainForm: TMainForm
     Size.Width = 779.000000000000000000
     Size.Height = 440.000000000000000000
     Size.PlatformDefault = False
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 1
     TabPosition = PlatformDefault
     Sizes = (
@@ -31,7 +31,7 @@ object MainForm: TMainForm
       CustomIcon = <
         item
         end>
-      IsSelected = True
+      IsSelected = False
       Size.Width = 122.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -69,7 +69,7 @@ object MainForm: TMainForm
       CustomIcon = <
         item
         end>
-      IsSelected = False
+      IsSelected = True
       Size.Width = 131.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -215,65 +215,6 @@ object MainForm: TMainForm
         Text = 'Generic POST'
         OnClick = BtnGenericPOSTClick
       end
-      object Button3: TButton
-        Position.X = 312.000000000000000000
-        Position.Y = 158.000000000000000000
-        TabOrder = 5
-        Text = 'DB GET'
-        OnClick = Button3Click
-      end
-      object StringGrid1: TStringGrid
-        CanFocus = True
-        ClipChildren = True
-        Position.X = 24.000000000000000000
-        Position.Y = 158.000000000000000000
-        Size.Width = 273.000000000000000000
-        Size.Height = 155.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 6
-        Viewport.Width = 269.000000000000000000
-        Viewport.Height = 130.000000000000000000
-      end
-      object Button4: TButton
-        Position.X = 312.000000000000000000
-        Position.Y = 198.000000000000000000
-        TabOrder = 7
-        Text = 'DB POST'
-        OnClick = Button4Click
-      end
-    end
-  end
-  object FDMemTable1: TFDMemTable
-    FetchOptions.AssignedValues = [evMode]
-    FetchOptions.Mode = fmAll
-    ResourceOptions.AssignedValues = [rvSilentMode]
-    ResourceOptions.SilentMode = True
-    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
-    UpdateOptions.CheckRequired = False
-    UpdateOptions.AutoCommitUpdates = True
-    Left = 528
-    Top = 304
-  end
-  object FDStanStorageJSONLink1: TFDStanStorageJSONLink
-    Left = 504
-    Top = 216
-  end
-  object BindSourceDB1: TBindSourceDB
-    DataSet = FDMemTable1
-    ScopeMappings = <>
-    Left = 376
-    Top = 224
-  end
-  object BindingsList1: TBindingsList
-    Methods = <>
-    OutputConverters = <>
-    Left = 20
-    Top = 5
-    object LinkGridToDataSourceBindSourceDB1: TLinkGridToDataSource
-      Category = 'Quick Bindings'
-      DataSource = BindSourceDB1
-      GridControl = StringGrid1
-      Columns = <>
     end
   end
 end

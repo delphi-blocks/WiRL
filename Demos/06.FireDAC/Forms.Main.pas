@@ -14,7 +14,7 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  WiRL.Client.CustomResource, WiRL.Client.Resource, WiRL.Client.FireDAC,
+  WiRL.Client.CustomResource, WiRL.Client.Resource,
   WiRL.Client.Application, WiRL.http.Client, FireDAC.Stan.Intf,
   FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
   FireDAC.Phys.Intf, FireDAC.DApt.Intf, System.Rtti, Data.Bind.EngExt,
@@ -23,13 +23,12 @@ uses
   FMX.Grid, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
   FMX.Controls.Presentation, FMX.StdCtrls, Data.Bind.Controls,
   Fmx.Bind.Navigator, FMX.ListView.Types, FMX.ListView, FMX.Grid.Style,
-  FMX.ScrollBox, FMX.Memo, WiRL.http.Client.Indy;
+  FMX.ScrollBox, FMX.Memo, WiRL.http.Client.Indy, System.Net.HttpClient.Win;
 
 type
   TForm1 = class(TForm)
     WiRLClient1: TWiRLClient;
     WiRLClientApplication1: TWiRLClientApplication;
-    WiRLFDResource1: TWiRLFDResource;
     StringGrid1: TStringGrid;
     BindingsList1: TBindingsList;
     btnPUT: TButton;
@@ -42,6 +41,7 @@ type
     btnCloseDataSet: TButton;
     btnOpenDataSet: TButton;
     memoLog: TMemo;
+    WiRLClientResource1: TWiRLClientResource;
     procedure btnGETClick(Sender: TObject);
     procedure btnPUTClick(Sender: TObject);
     procedure btnCloseDataSetClick(Sender: TObject);
