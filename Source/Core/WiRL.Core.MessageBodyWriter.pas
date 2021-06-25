@@ -311,7 +311,7 @@ begin
     Result := AAccept.IntersectionList(AProduces);
 
   if Result.Empty and AAccept.HasWildCard then
-    Result := AProduces.CloneList;
+    Result.Assign(AProduces);
 
   { TODO -opaolo -c : This have to be configuration-related 02/06/2017 18:00:25 }
   if Result.Empty then
@@ -320,7 +320,6 @@ begin
     Result.Add(TMediaType.Create(TMediaType.WILDCARD));
   end;
 end;
-
 
 { TWiRLWriterRegistry.TWriterInfo }
 
