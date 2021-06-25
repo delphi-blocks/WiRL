@@ -22,7 +22,7 @@ uses
   WiRL.Core.Application,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBody.Default,
-  WiRL.Data.FireDAC.MessageBody.Default,
+  //WiRL.Data.FireDAC.MessageBody.Default,
 
   Demo.Entities;
 

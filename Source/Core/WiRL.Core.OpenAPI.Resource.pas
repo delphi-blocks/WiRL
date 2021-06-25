@@ -14,8 +14,6 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Rtti,
 
-  Neon.Core.Persistence.JSON.Schema,
-
   WiRL.Configuration.OpenAPI,
   WiRL.Core.JSON,
   WiRL.Core.OpenAPI,
@@ -101,18 +99,17 @@ var
   LWriter: TStreamWriter;
 begin
   LURL := '';
-
   // Filters only html files
   if not SameText('.html', ExtractFileExt(AFileName)) then
     Exit(TFileStream.Create(AFileName, fmOpenRead));
 
-  if Length(Conf.Servers) > 0 then
-    LURL :=  IncludeTrailingSlash(Conf.Servers[0].Key)
+  if Conf.Document.Servers.Count > 0 then
+    LURL :=  IncludeTrailingSlash(Conf.Document.Servers[0].Url)
   else
     LURL := 'http://localhost/';
 
   LURL := CombineURL(LURL, Resource.GetSanitizedPath);
-  
+
   Result := TMemoryStream.Create;
   LReader := TStreamReader.Create(AFileName);
   LWriter := TStreamWriter.Create(Result);
@@ -120,7 +117,7 @@ begin
     while not LReader.EndOfStream do
     begin
       LLine := LReader.ReadLine.Replace('{%url%}', LURL);
-      LLine := LLine.Replace('{%logo%}', Conf.Logo);
+      LLine := LLine.Replace('{%logo%}', Conf.APILogo);
       LWriter.WriteLine(LLine);
     end;
     Result.Position := 0;
@@ -141,7 +138,8 @@ var
   LPathInfo: string;
 begin
   LPathInfo := EnsureSuffix(CombineURL(App.Path, Resource.GetSanitizedPath), '/');
-  LProvider := TSwaggerUIProvider.Create(LPathInfo, Conf.FolderSwaggerUI);
+
+  LProvider := TSwaggerUIProvider.Create(LPathInfo, Conf.FolderGUIDoc);
   try
     Result := LProvider.HandleRequest(Request, Response);
   finally
@@ -155,7 +153,7 @@ var
   LPathInfo: string;
 begin
   LPathInfo := EnsureSuffix(CombineURL(App.Path, Resource.GetSanitizedPath), '/');
-  LProvider := TSwaggerUIProvider.Create(LPathInfo, Conf.FolderSwaggerUI);
+  LProvider := TSwaggerUIProvider.Create(LPathInfo, Conf.FolderGUIDoc);
   try
     LProvider.OnProcess := FilterContent;
     Result := LProvider.HandleRequest(Request, Response);
@@ -208,7 +206,7 @@ var
   LIndexFullFileName: string;
 begin
   Result := False;
-  for LIndex := 0 to IndexFileNames.Count-1 do
+  for LIndex := 0 to IndexFileNames.Count - 1 do
   begin
     LIndexFileName := IndexFileNames[LIndex];
     LIndexFullFileName := TPath.Combine(ADirectory, LIndexFileName);

@@ -157,8 +157,7 @@ begin
   FAcceptableLanguages.Free;
   FAcceptableMediaTypes.Free;
   FAcceptableEncodings.Free;
-  if Assigned(FMultiPartFormData) then
-    FMultiPartFormData.Free;
+  FMultiPartFormData.Free;
   inherited;
 end;
 

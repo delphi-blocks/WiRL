@@ -14,6 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
+  System.JSON,
 
   WiRL.Configuration.Core,
   WiRL.Configuration.Neon,
@@ -25,7 +26,7 @@ uses
   WiRL.http.FileSystemEngine,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
-
+  OpenAPI.Model.Classes,
   Server.Resources.Swagger, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc;
 
 type
@@ -52,8 +53,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FEng: TWiRLEngine;
+    FEngine: TWiRLEngine;
     FRESTServer: TWiRLServer;
+    function ConfigureOpenAPIDocument: TOpenAPIDocument;
   public
     { Public declarations }
   end;
@@ -75,7 +77,7 @@ var
   LContext: TWiRLXMLDocContext;
   LApp: TWiRLApplication;
 begin
-  LApp := FEng.GetApplicationByName('demo');
+  LApp := FEngine.GetApplicationByName('demo');
   LContext.Proxy := LApp.Proxy;
   LContext.XMLDocFolder := TWiRLTemplatePaths.Render('{AppPath}\..\..\Docs');
   TWiRLProxyEngineXMLDoc.Process(LContext);
@@ -90,7 +92,7 @@ var
   LDoc: IXMLDocument;
   //LDevNotes, LNodeClass: IXMLNode;
 begin
-  LApp := FEng.GetApplicationByName('demo');
+  LApp := FEngine.GetApplicationByName('demo');
   LContext.Proxy := LApp.Proxy;
   LContext.XMLDocFolder := TWiRLTemplatePaths.Render('{AppPath}\..\..\Docs');
 
@@ -102,6 +104,31 @@ begin
   finally
     LXMLDoc.Free;
   end;
+end;
+
+function TMainForm.ConfigureOpenAPIDocument: TOpenAPIDocument;
+var
+  LExtensionObject: TJSONObject;
+begin
+  Result := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
+
+  Result.Info.TermsOfService := 'http://swagger.io/terms/';
+  Result.Info.Title := 'WiRL Swagger Integration Demo';
+  Result.Info.Version := '1.0.2';
+  Result.Info.Description := 'This is a **demo API** to test [WiRL](https://github.com/delphi-blocks/WiRL) OpenAPI documentation features';
+  Result.Info.Contact.Name := 'Paolo Rossi';
+  Result.Info.Contact.Email := 'paolo@mail.it';
+  Result.Info.License.Name := 'Apache 2.0';
+  Result.Info.License.Url :=  'http://www.apache.org/licenses/LICENSE-2.0.html';
+  Result.AddServer('http://localhost:8080/rest/app', 'Testing Server');
+  Result.AddServer('https://api.example.com/rest/app', 'Production Server');
+
+  // Shows how to use Extensions (for ReDoc UI)
+  LExtensionObject := TJSONObject.Create;
+  LExtensionObject.AddPair('url', 'http://localhost:8080/rest/app/swagger/api-logo.png');
+  LExtensionObject.AddPair('backgroundColor', '#FFFFFF');
+  LExtensionObject.AddPair('altText', 'API Logo');
+  Result.Info.Extensions.AddPair('x-logo', LExtensionObject);
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -118,22 +145,22 @@ end;
 /// Bla *bla* bla
 /// </summary>
 procedure TMainForm.FormCreate(Sender: TObject);
+var
+  LDocument: TOpenAPIDocument;
 begin
   FRESTServer := TWiRLServer.Create(Self);
 
-  /// <summary>
-  /// subsubsub
-  /// </summary>
-  FEng :=
-  FRESTServer.AddEngine<TWiRLEngine>('/rest')
-    .SetEngineName('RESTEngine');
+  LDocument := ConfigureOpenAPIDocument;
 
-  FEng.AddApplication('/app')
+  FEngine :=
+    FRESTServer.AddEngine<TWiRLEngine>('/rest')
+      .SetEngineName('RESTEngine');
+
+  FEngine.AddApplication('/app')
       .SetAppName('demo')
       // Test for namespaces
       .SetResources('Server.Resources.Demo.*')
       .SetResources('Server.Resources.Customer.*')
-      //.SetResources('Server.Resources.Swagger.*')
       .SetFilters('*')
 
       .Plugin.Configure<IWiRLConfigurationNeon>
@@ -148,18 +175,13 @@ begin
       .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationOpenAPI>
-        .SetUseSwaggerUI()
         .SetOpenAPIResource(TDocumentationResource)
         .SetXMLDocFolder('{AppPath}\..\..\Docs')
-        .SetSwaggerUIFolder('{AppPath}\..\..\UI')
-        .SetDocumentationFolder('{AppPath}\..\..\Documentation')
-        // Properties for the Swagger document
+        .SetGUIDocFolder('{AppPath}\..\..\UI')
+        //.SetGUIDocFolder('{AppPath}\..\..\ReDoc')
+        // Set the Swagger document
         .SetAPILogo('api-logo.png')
-        .SetAPITitle('WiRL Swagger Integration Demo')
-        .SetAPIVersion('1.0.0')
-        .SetAPIDescription('This is a **demo API** to test [WiRL](https://github.com/delphi-blocks/WiRL) OpenAPI documentation features')
-        .AddAPIServer('http://localhost:8080/rest/app', 'Testing Server')
-        .AddAPIServer('https://api.example.com/rest/app', 'Production Server')
+        .SetAPIDocument(LDocument)
       .ApplyConfig
   ;
 

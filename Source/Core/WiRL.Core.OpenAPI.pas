@@ -60,7 +60,6 @@ type
     procedure ProcessXMLDoc;
     function Build(): TJSONObject;
   public
-    destructor Destroy; override;
     class function Generate(AApplication: TWiRLApplication; const ASwaggerResource: string): TJSONObject; overload;
   end;
 
@@ -81,16 +80,8 @@ var
   LRes: TWiRLProxyResource;
   LSchema: TOpenAPISchema;
   LPair: TPair<string, TWiRLProxyResource>;
-  LServer: TServerPair;
 begin
   ProcessXMLDoc();
-
-  FDocument.Info.Title := FConfigurationOpenAPI.Title;
-  FDocument.Info.Description := FConfigurationOpenAPI.Description;
-  FDocument.Info.Version := FConfigurationOpenAPI.Version;
-
-  for LServer in FConfigurationOpenAPI.Servers do
-    FDocument.AddServer(LServer.Key, LServer.Value);
 
   for LPair in FApplication.Proxy.Resources do
   begin
@@ -113,36 +104,13 @@ begin
 
     AddResource(LRes);
   end;
-  {
-
-  LDefinitions := TJSONObject.Create;
-
-  AddErrorDefinition(LDefinitions);
-
-  LSchemes := TJSONArray.Create;
-  LSchemes.Add('http');
-
-  Result := TJSONObject.Create
-    .AddPair('swagger', OPENAPI_VERSION)
-    .AddPair('info', LInfo)
-    .AddPair('host', FConfigurationOpenAPI.Host)
-    .AddPair('schemes', LSchemes)
-    .AddPair('securityDefinitions', LSecurityDefinitions)
-    .AddPair('tags', LTags)
-    .AddPair('paths', LPaths)
-    .AddPair('definitions', LDefinitions)
-
-
-  }
 
   Result := TNeon.ObjectToJSON(FDocument, GetNeonConfig) as TJSONObject;
 end;
 
 function TOpenAPIv3Engine.ClassToSchemaJSON(AClass: TClass): TJSONObject;
 begin
-  Result := TypeToSchemaJSON(
-    TRttiHelper.Context.GetType(AClass)
-  );
+  Result := TypeToSchemaJSON(TRttiHelper.Context.GetType(AClass));
 end;
 
 constructor TOpenAPIv3Engine.Create(AApplication: TWiRLApplication;
@@ -154,13 +122,7 @@ begin
   FConfigurationNeon := FApplication.GetConfiguration<TWiRLConfigurationNeon>;
   FConfigurationOpenAPI := FApplication.GetConfiguration<TWiRLConfigurationOpenAPI>;
 
-  FDocument := TOpenAPIDocument.Create('3.0.3');
-end;
-
-destructor TOpenAPIv3Engine.Destroy;
-begin
-  FDocument.Free;
-  inherited;
+  FDocument := FConfigurationOpenAPI.Document;
 end;
 
 function TOpenAPIv3Engine.AddOperation(AMethod: TWiRLProxyMethod;
@@ -175,11 +137,6 @@ var
   LParameter: TOpenAPIParameter;
   LRequestBody: TOpenAPIRequestBody;
 begin
-  // Operation = Path + HttpMethod
-  // If more object's method use the same operation add info on the
-  // same operation
-  //LOperation := FindOrCreateNode(AJsonPath, AMethod.HttpVerb.ToLower);
-
   Result := AOpenAPIPath.AddOperation(TOperationType.FromString(AMethod.HttpVerb.ToLower));
   Result.Summary := 'Function ' + AMethod.Name;
   Result.Description := AMethod.Summary;
@@ -227,18 +184,6 @@ begin
     LParameter := CreateParameter(LParam);
     AOpenAPIPath.Parameters.Add(LParameter);
   end;
-
-  {
-  // Add Response's MediaTypes: 1 response n MediaType
-  for LProduce in AMethod.Produces do
-  begin
-    // 200 is the default, parse for others returncodes
-    LResponse := Result.AddResponse(200);
-    //LResponse.Description := Description for all 200 responses (ex: Person Object)
-    LMediaType := LResponse.AddMediaType(LProduce.Value);
-    LMediaType.Schema.SetJSONObject(TypeToSchemaJSON(AMethod.MethodResult.RttiType));
-  end;
-  }
 
   if AMethod.IsFunction then
   begin
@@ -301,7 +246,6 @@ procedure TOpenAPIv3Engine.AddResource(AResource: TWiRLProxyResource);
 var
   LFullPath: string;
   LMethod: TWiRLProxyMethod;
-  //LOperation: TOpenAPIOperation;
   LPathItem: TOpenAPIPathItem;
 begin
   if AResource.Path <> '' then
@@ -315,26 +259,9 @@ begin
 
         // If the resource is already documented add the information on
         // the same json object
-
-        //LJsonPath := FindOrCreateNode(APaths, LMethodPath);
         LPathItem := FDocument.AddPath(LFullPath);
 
-        //LOperation :=
         AddOperation(LMethod, LPathItem, AResource.Name);
-
-        {
-        if Length(LMethod.Auth.Roles) > 0 then
-        begin
-          FDocument.AddSecurity('jwt_auth', []);
-          FDocument.AddSecurity('basic_auth', []);
-        end;
-
-        if LMethod.AuthHandler then
-        begin
-          FDocument.AddSecurity('jwt_auth', []);
-          FDocument.AddSecurity('basic_auth', []);
-        end;
-        }
       end;
     end;
   end;

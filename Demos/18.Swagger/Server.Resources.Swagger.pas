@@ -23,7 +23,9 @@ type
   // 2. You must decide the path of this new resource
   // 3. You must register the resource (look at the initialization section)
   [Path('swagger')]
-  TDocumentationResource = class(TOpenAPIResourceCustom);
+  TDocumentationResource = class(TOpenAPIResourceCustom)
+
+  end;
 
 implementation
 
