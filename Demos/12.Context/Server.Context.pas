@@ -41,26 +41,28 @@ type
   // The class factory is responsable to create the context.
   // It will be released by the system unless it's annotated
   // with the Singleton attribute
-  TMyClassFactory = class(TInterfacedObject, IContextFactory)
+  TMyClassFactory = class(TInterfacedObject, IContextObjectFactory)
   public
-    function CreateContext(const AObject: TRttiObject;
-      AContext: TWiRLContext): TValue;
+    function CreateContextObject(const AObject: TRttiObject;
+      AContext: TWiRLContextBase): TValue;
   end;
 
 
 implementation
 
+uses
+  WiRL.http.Request;
 
 { TMyClassFactory }
 
-function TMyClassFactory.CreateContext(const AObject: TRttiObject;
-  AContext: TWiRLContext): TValue;
+function TMyClassFactory.CreateContextObject(const AObject: TRttiObject;
+  AContext: TWiRLContextBase): TValue;
 var
   LInstance: TMyClass;
 begin
   LInstance := TMyClass.Create;
   LInstance.Value := 0;
-  LInstance.Info := AContext.Request.PathInfo;
+  LInstance.Info := AContext.GetContainerAs<TWiRLRequest>.PathInfo;
   TRttiHelper.HasAttribute<ValueAttribute>(AObject,
     procedure (LAttr: ValueAttribute)
     begin

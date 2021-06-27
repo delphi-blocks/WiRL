@@ -89,6 +89,7 @@ implementation
 
 uses
   WiRL.Configuration.Compression,
+  WiRL.Core.Declarations,
   System.ZLib, System.IOUtils;
 
 { TRequestDecodingFilter }

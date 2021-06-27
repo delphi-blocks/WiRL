@@ -61,14 +61,16 @@ implementation
 
 procedure TForm1.btnGETClick(Sender: TObject);
 begin
-  WiRLFDResource1.GET();
+  // Todo
+  //WiRLFDResource1.GET();
 end;
 
 procedure TForm1.btnPUTClick(Sender: TObject);
 begin
-  WiRLFDResource1.PUT();
+  // Todo
+  //WiRLFDResource1.PUT();
 
-  memoLog.Lines.Add(WiRLFDResource1.JSONResponse.ToJSON);
+  //memoLog.Lines.Add(WiRLFDResource1.JSONResponse.ToJSON);
 end;
 
 procedure TForm1.btnCloseDataSetClick(Sender: TObject);

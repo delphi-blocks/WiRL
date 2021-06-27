@@ -177,7 +177,8 @@ begin
       begin
         LRequestFilter := ConstructorInfo.GetRequestFilter;
         ContextInjection(LRequestFilter as TObject);
-        LRequestContext := TWiRLContainerRequestContext.Create(FContext, FLocator.Resource);
+        LRequestContext := TWiRLContainerRequestContext.Create(FContext,
+          FLocator.Resource, FLocator.Method);
         try
           LRequestFilter.Filter(LRequestContext);
           LAborted := LAborted or LRequestContext.Aborted;

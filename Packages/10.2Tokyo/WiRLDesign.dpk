@@ -56,7 +56,6 @@ contains
   WiRL.Client.ResourceDebuggerHeader in '..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas' {FormEditHeader},
   WiRL.Client.ResourceHeaderEditor in '..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas' {FormHeadersEditor},
   WiRL.Client.Application.Editor in '..\..\Source\Client\WiRL.Client.Application.Editor.pas' {WiRLClientAppResourceEditor},
-  ServerResources in '..\..\Source\IDE Wizard\ServerResources.pas',
   WiRL.Wizards.Dialogs.ServerProject in '..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas' {formServerProjectDialog},
   WiRL.Wizards.Modules.Classes in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas',
   WiRL.Wizards.Modules.MainForm in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas',

@@ -1,4 +1,15 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit WiRL.Client.ResourceDebugger;
+
+{$I ..\Core\WiRL.inc}
 
 interface
 
@@ -6,6 +17,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Imaging.pngimage, Winapi.ShellAPI, Vcl.Grids, System.JSON,
+  {$IFNDEF HAS_NEW_JSON}
+  REST.Json,
+  {$ENDIF}
 
   WiRL.Client.CustomResource,
   WiRL.Client.Resource,
@@ -158,7 +172,11 @@ begin
   LJson := TJSONObject.ParseJSONValue(MemoResponse.Text);
   try
     if Assigned(LJson) then
+    {$IFDEF HAS_NEW_JSON}
       MemoResponse.Text := LJson.Format();
+    {$ELSE}
+      MemoResponse.Text := TJson.Format(LJson);
+    {$ENDIF}
   finally
     LJson.Free;
   end;

@@ -86,10 +86,10 @@ type
     destructor Destroy; override;
   end;
 
-  TSessionFactory = class(TInterfacedObject, IContextFactory)
+  TSessionFactory = class(TInterfacedObject, IContextObjectFactory)
   public
-    function CreateContext(const AObject: TRttiObject;
-      AContext: TWiRLContext): TValue;
+    function CreateContextObject(const AObject: TRttiObject;
+      AContext: TWiRLContextBase): TValue;
   end;
 
   TSessionResponseFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
@@ -119,6 +119,9 @@ const
   SidName = 'sid';  
 
 implementation
+
+uses
+  WiRL.http.Request;
 
 { TSessions }
 
@@ -208,13 +211,13 @@ end;
 
 { TSessionFactory }
 
-function TSessionFactory.CreateContext(const AObject: TRttiObject;
-  AContext: TWiRLContext): TValue;
+function TSessionFactory.CreateContextObject(const AObject: TRttiObject;
+  AContext: TWiRLContextBase): TValue;
 var
   LSid: string;
   LSession: TSession;
 begin
-  LSid := AContext.Request.CookieFields[SidName];
+  LSid := AContext.GetContainerAs<TWiRLRequest>.CookieFields[SidName];
   LSession := TSessions.Instance.Find(LSID);
   if not Assigned(LSession) then
     LSession := TSession.Create;
@@ -248,16 +251,14 @@ end;
 
 function TSessionResponseFilter.GetSession(AResponseContext: TWiRLContainerResponseContext): TSession;
 var
-  LContext: TWiRLContext;
+  LContext: TWiRLContextBase;
   LObject: TObject;
 begin
   Result := nil;
   LContext := AResponseContext.Context;
-  for LObject in LContext.CustomContext do
-  begin
-    if LObject is TSession then
-      Exit(TSession(LObject));
-  end;
+  LObject := LContext.FindContainerAs<TSession>;
+  if Assigned(LObject) then
+    Exit(TSession(LObject));
 end;
 
 { TSession }
@@ -327,7 +328,7 @@ begin
   if not Assigned(LSession) then
     raise EWiRLNotAuthorizedException.Create('Session not found');
 
-  LMethod := ARequestContext.Resource.Method.RttiObject;
+  LMethod := ARequestContext.Method.RttiObject;
   TRttiHelper.HasAttribute<CheckSessionAttribute>(LMethod,
     procedure (AAttr: CheckSessionAttribute)
     begin

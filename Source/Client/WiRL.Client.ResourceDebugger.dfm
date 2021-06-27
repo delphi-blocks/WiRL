@@ -1152,6 +1152,10 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       object HeadersTab: TTabSheet
         Caption = 'Headers'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object HeaderCommandPanel: TPanel
           Left = 776
           Top = 0
@@ -1223,6 +1227,10 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
         Caption = 'Proxy'
         ImageIndex = 2
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
       end
     end
   end

@@ -10,6 +10,7 @@
 program DemoSwagger;
 
 uses
+  FastMM4,
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
   Server.Entities in 'Server.Entities.pas',
@@ -26,8 +27,6 @@ uses
 {$R *.res}
 
 begin
-  ReportMemoryLeaksOnShutdown := True;
-
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TMainForm, MainForm);

@@ -128,6 +128,72 @@
             <Form>WiRLClientAppResourceEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas">
+            <Form>formServerProjectDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
+        <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerMainFormDFM</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormSRC.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerMainFormSRC</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Source\IDE Wizard\ServerResources.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerResources</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\TWiRLClient.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLClient</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\TWiRLClientApplication.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLClientApplication</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\TWiRLEngine.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLEngine</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\TWiRLFileSystemEngine.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLFileSystemEngine</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\TWiRLhttpEngine.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLhttpEngine</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\TWiRLMBWDefaultProvider.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLMBWDefaultProvider</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\TWiRLServer.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLServer</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Source\IDE Wizard\WiRLServerProject.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerProject</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\WiRLServerWizardIcon.ico">
+            <ResourceType>ICON</ResourceType>
+            <ResourceId>WiRLServerWizardIcon</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\media\WiRLSplash.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>WiRLSplash</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -181,16 +247,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployClass Name="DependencyModule">
-                    <Platform Name="Win32">
-                        <Operation>0</Operation>
-                        <Extensions>.dll;.bpl</Extensions>
-                    </Platform>
-                    <Platform Name="OSX32">
-                        <Operation>1</Operation>
-                        <Extensions>.dylib</Extensions>
-                    </Platform>
-                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -529,7 +586,16 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>

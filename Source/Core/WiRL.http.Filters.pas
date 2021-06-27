@@ -35,15 +35,18 @@ type
     FAborted: Boolean;
     FContext: TWiRLContext;
     FResource: TWiRLProxyResource;
+    FMethod: TWiRLProxyMethod;
     function GetResource: TWiRLProxyResource;
+    function GetMethod: TWiRLProxyMethod;
   public
     property Context: TWiRLContext read FContext;
     property Request: TWiRLRequest read FRequest;
     property Response: TWiRLResponse read FResponse;
     property Resource: TWiRLProxyResource read GetResource;
+    property Method: TWiRLProxyMethod read GetMethod;
     property Aborted: Boolean read FAborted;
     procedure Abort;
-    constructor Create(AContext: TWiRLContext; AResource: TWiRLProxyResource = nil);
+    constructor Create(AContext: TWiRLContext; AResource: TWiRLProxyResource = nil; AMethod: TWiRLProxyMethod = nil);
   end;
 
   TWiRLContainerResponseContext = class(TObject)
@@ -457,13 +460,21 @@ begin
   FAborted := True;
 end;
 
-constructor TWiRLContainerRequestContext.Create(AContext: TWiRLContext; AResource: TWiRLProxyResource);
+constructor TWiRLContainerRequestContext.Create(AContext: TWiRLContext; AResource: TWiRLProxyResource; AMethod: TWiRLProxyMethod);
 begin
   inherited Create;
   FContext := AContext;
   FRequest := AContext.Request;
   FResponse := AContext.Response;
   FResource := AResource;
+  FMethod := AMethod;
+end;
+
+function TWiRLContainerRequestContext.GetMethod: TWiRLProxyMethod;
+begin
+  if not Assigned(FMethod) then
+    raise EWiRLException.Create('Method info not available');
+  Result := FMethod;
 end;
 
 function TWiRLContainerRequestContext.GetResource: TWiRLProxyResource;

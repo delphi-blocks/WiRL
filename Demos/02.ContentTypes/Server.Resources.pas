@@ -24,7 +24,6 @@ uses
   WiRL.Data.MessageBody.Default,
   WiRL.Data.FireDAC.MessageBody.Default,
   WiRL.Core.JSON,
-  WiRL.Schemas.Swagger,
 
   Server.Entities;
 

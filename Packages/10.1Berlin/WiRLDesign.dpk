@@ -1,6 +1,7 @@
 package WiRLDesign;
 
 {$R *.res}
+{$R *.dres}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -45,6 +46,13 @@ contains
   WiRL.Client.ResourceDebugger in '..\..\Source\Client\WiRL.Client.ResourceDebugger.pas' {WiRLResourceRunnerForm},
   WiRL.Client.ResourceDebuggerHeader in '..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas' {FormEditHeader},
   WiRL.Client.ResourceHeaderEditor in '..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas' {FormHeadersEditor},
-  WiRL.Client.Application.Editor in '..\..\Source\Client\WiRL.Client.Application.Editor.pas' {WiRLClientAppResourceEditor};
+  WiRL.Client.Application.Editor in '..\..\Source\Client\WiRL.Client.Application.Editor.pas' {WiRLClientAppResourceEditor},
+  WiRL.Wizards.Dialogs.ServerProject in '..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas' {formServerProjectDialog},
+  WiRL.Wizards.Modules.Classes in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas',
+  WiRL.Wizards.Modules.MainForm in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas',
+  WiRL.Wizards.Modules.Resources in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas',
+  WiRL.Wizards in '..\..\Source\IDE Wizard\WiRL.Wizards.pas',
+  WiRL.Wizards.ProjectCreator in '..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas',
+  WiRL.Wizards.Utils in '..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas';
 
 end.
