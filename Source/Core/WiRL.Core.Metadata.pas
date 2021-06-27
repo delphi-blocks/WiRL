@@ -308,6 +308,9 @@ begin
   FMethods := TWiRLProxyMethods.Create(True);
   FFilters := TWiRLProxyFilters.Create(True);
 
+  FProduces := TMediaTypeList.Create;
+  FConsumes := TMediaTypeList.Create;
+
   FContext.TryGetValue(AName, FConstructor);
   if not Assigned(FConstructor) then
     EWiRLServerException.CreateFmt('Resource [%s] not found', [AName]);
@@ -325,6 +328,9 @@ destructor TWiRLProxyResource.Destroy;
 begin
   FFilters.Free;
   FMethods.Free;
+  FProduces.Free;
+  FConsumes.Free;
+
   inherited;
 end;
 

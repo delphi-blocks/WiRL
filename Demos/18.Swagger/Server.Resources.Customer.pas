@@ -47,6 +47,7 @@ type
     [GET][Path('{id}')][Produces(TMediaType.APPLICATION_JSON)]
     function GetOrder([PathParam('id')] AOrderID: Integer): TOrders;
 
+    [RolesAllowed('manager')]
     [GET][Path('/cust/{custid}')][Produces(TMediaType.APPLICATION_JSON)]
     function GetOrders([PathParam('custid')] ACustomerID: Integer): TOrders;
   end;
@@ -58,7 +59,10 @@ implementation
 
 function TOrderResource.GetOrder(AOrderID: Integer): TOrders;
 begin
-
+  Result := TOrders.Create(True);
+  Result.AddOrder(1);
+  Result.AddOrder(2);
+  Result.AddOrder(3);
 end;
 
 function TOrderResource.GetOrders(ACustomerID: Integer): TOrders;
@@ -83,14 +87,20 @@ begin
 end;
 
 function TCustomerResource.GetOrder(ACustomerID: Integer): TCustomer;
+var
+  LOrder: TOrder;
 begin
-
+  Result := TCustomer.Create;
+  Result.ID := ACustomerID;
+  Result.CompanyName := 'Wintech italia';
+  LOrder := Result.AddOrder;
+  LOrder.AddItem(12, 330, Now);
 end;
 
 initialization
   Randomize;
 
-  //TWiRLResourceRegistry.Instance.RegisterResource<TCustomerResource>;
-  //TWiRLResourceRegistry.Instance.RegisterResource<TOrderResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TCustomerResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TOrderResource>;
 
 end.

@@ -17,7 +17,8 @@ uses
   WiRL.Core.Declarations,
   WiRL.Core.Registry,
   WiRL.Configuration.Core,
-  WiRL.Core.Auth.Context;
+  WiRL.Core.Auth.Context,
+  OpenAPI.Model.Classes;
 
 {$SCOPEDENUMS ON}
 
@@ -25,17 +26,12 @@ type
   IWiRLConfigurationOpenAPI = interface(IWiRLConfiguration)
   ['{BB768622-918C-4E54-A9B5-4BF6646B8F7A}']
 
-    function SetUseSwaggerUI(): IWiRLConfigurationOpenAPI;
     function SetOpenAPIResource(AClass: TClass): IWiRLConfigurationOpenAPI;
     function SetXMLDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
-    function SetSwaggerUIFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
-    function SetDocumentationFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
+    function SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
+    function SetAPILogo(const AName: string): IWiRLConfigurationOpenAPI;
 
-    function SetAPITitle(const ATitle: string): IWiRLConfigurationOpenAPI;
-    function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
-    function SetAPIDescription(const ADescription: string): IWiRLConfigurationOpenAPI;
-    function SetAPIVersion(const AVersion: string): IWiRLConfigurationOpenAPI;
-    function AddAPIServer(const AURL, ADescription: string): IWiRLConfigurationOpenAPI;
+    function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
   end;
 
   TConfigurator = reference to procedure(AOpenAPIConf: IWiRLConfigurationOpenAPI);
@@ -45,45 +41,29 @@ type
   [Implements(IWiRLConfigurationOpenAPI)]
   TWiRLConfigurationOpenAPI = class sealed(TWiRLConfiguration, IWiRLConfigurationOpenAPI)
   private
-    const FOLDER_DOC = 'c:\doc';
-    const FOLDER_XMLDOC = 'c:\xmldoc';
-  private
     FClass: TClass;
-    FDescription: string;
+    FDocument: TOpenAPIDocument;
+    FAPILogo: string;
     FFolderXMLDoc: string;
-    FServers: TArray<TServerPair>;
-    FTitle: string;
-    FVersion: string;
-    FFolderDocumentation: string;
-    FFolderSwaggerUI: string;
-    FLogo: string;
+    FFolderGUIDoc: string;
   public
     class function Default: IWiRLConfigurationOpenAPI; static;
   public
     constructor Create; override;
+    destructor Destroy; override;
     procedure DoAfterCreate; override;
 
-    function SetUseSwaggerUI(): IWiRLConfigurationOpenAPI;
     function SetOpenAPIResource(AClass: TClass): IWiRLConfigurationOpenAPI;
     function SetXMLDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
-    function SetSwaggerUIFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
-    function SetDocumentationFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
-
-    function SetAPITitle(const ATitle: string): IWiRLConfigurationOpenAPI;
+    function SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
-    function SetAPIDescription(const ADescription: string): IWiRLConfigurationOpenAPI;
-    function SetAPIVersion(const AVersion: string): IWiRLConfigurationOpenAPI;
-    function AddAPIServer(const AURL, ADescription: string): IWiRLConfigurationOpenAPI;
-  published
-    property Title: string read FTitle write FTitle;
-    property Logo: string read FLogo write FLogo;
-    property Version: string read FVersion write FVersion;
-    property Description: string read FDescription write FDescription;
-    property Servers: TArray<TServerPair> read FServers write FServers;
 
+    function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
+  published
+    property APILogo: string read FAPILogo write FAPILogo;
     property FolderXMLDoc: string read FFolderXMLDoc write FFolderXMLDoc;
-    property FolderSwaggerUI: string read FFolderSwaggerUI write FFolderSwaggerUI;
-    property FolderDocumentation: string read FFolderDocumentation write FFolderDocumentation;
+    property FolderGUIDoc: string read FFolderGUIDoc write FFolderGUIDoc;
+    property Document: TOpenAPIDocument read FDocument write FDocument;
   end;
 
 implementation
@@ -95,14 +75,20 @@ uses
 constructor TWiRLConfigurationOpenAPI.Create;
 begin
   inherited;
+  FDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
 end;
 
 class function TWiRLConfigurationOpenAPI.Default: IWiRLConfigurationOpenAPI;
 begin
   Result := TWiRLConfigurationOpenAPI.Create
-    .SetDocumentationFolder('.')
     .SetXMLDocFolder('.')
   ;
+end;
+
+destructor TWiRLConfigurationOpenAPI.Destroy;
+begin
+  FDocument.Free;
+  inherited;
 end;
 
 procedure TWiRLConfigurationOpenAPI.DoAfterCreate;
@@ -114,59 +100,28 @@ begin
   FApplication.SetResources(FClass.QualifiedClassName);
 end;
 
-function TWiRLConfigurationOpenAPI.SetAPIDescription(const ADescription: string): IWiRLConfigurationOpenAPI;
-begin
-  FDescription := ADescription;
-  Result := Self;
-end;
-
-function TWiRLConfigurationOpenAPI.SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
-begin
-  FLogo := ALogo;
-  Result := Self;
-end;
-
-function TWiRLConfigurationOpenAPI.AddAPIServer(const AURL, ADescription: string): IWiRLConfigurationOpenAPI;
-begin
-  FServers := FServers + [TServerPair.Create(AURL, ADescription)];
-  Result := Self;
-end;
-
-function TWiRLConfigurationOpenAPI.SetAPITitle(const ATitle: string): IWiRLConfigurationOpenAPI;
-begin
-  FTitle := ATitle;
-  Result := Self;
-end;
-
-function TWiRLConfigurationOpenAPI.SetAPIVersion(const AVersion: string): IWiRLConfigurationOpenAPI;
-begin
-  FVersion := AVersion;
-  Result := Self;
-end;
-
-function TWiRLConfigurationOpenAPI.SetDocumentationFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
-begin
-  FFolderDocumentation := AFolder;
-  Result := Self;
-end;
-
 function TWiRLConfigurationOpenAPI.SetOpenAPIResource(AClass: TClass): IWiRLConfigurationOpenAPI;
 begin
   FClass := AClass;
   Result := Self;
 end;
 
-function TWiRLConfigurationOpenAPI.SetSwaggerUIFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
+function TWiRLConfigurationOpenAPI.SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
 begin
-  FFolderSwaggerUI := AFolder;
+  FDocument.Free;
+  FDocument := ADocument;
   Result := Self;
 end;
 
-function TWiRLConfigurationOpenAPI.SetUseSwaggerUI: IWiRLConfigurationOpenAPI;
+function TWiRLConfigurationOpenAPI.SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
 begin
-  //TWiRLFilterRegistry.Instance.RegisterFilter<TSwaggerUIFilter>;
-  //FApplication.SetFilters(TSwaggerUIFilter.QualifiedClassName);
+  FAPILogo := ALogo;
+  Result := Self;
+end;
 
+function TWiRLConfigurationOpenAPI.SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
+begin
+  FFolderGUIDoc := AFolder;
   Result := Self;
 end;
 

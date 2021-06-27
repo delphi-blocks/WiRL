@@ -24,12 +24,12 @@ type
   TOrderItem = class
   private
     FDate: TDateTime;
-    FID: Integer;
-    FIDArticle: Integer;
+    FId: Integer;
+    FIdArticle: Integer;
     FQuantity: Double;
   public
-    property ID: Integer read FID write FID;
-    property IDArticle: Integer read FIDArticle write FIDArticle;
+    property Id: Integer read FId write FId;
+    property IdArticle: Integer read FIdArticle write FIdArticle;
     property Date: TDateTime read FDate write FDate;
     property Quantity: Double read FQuantity write FQuantity;
   end;
@@ -39,38 +39,42 @@ type
 
   TOrder = class
   private
-    FID: Integer;
-    FIDCustomer: Integer;
+    FId: Integer;
+    FIdCustomer: Integer;
     FItems: TOrderItems;
     FTotal: Double;
+    FPippo: string;
   public
     constructor Create;
     destructor Destroy; override;
     function AddItem(AArticle: Integer; AQuantity: Double; ADate: TDateTime): TOrderItem;
 
-    property ID: Integer read FID write FID;
-    property IDCustomer: Integer read FIDCustomer write FIDCustomer;
+    property Id: Integer read FId write FId;
+    property IdCustomer: Integer read FIdCustomer write FIdCustomer;
     property Items: TOrderItems read FItems write FItems;
     property Total: Double read FTotal write FTotal;
+    property Pippo: string read FPippo write FPippo;
   end;
 
   TOrders = class(TObjectList<TOrder>)
+  public
+    function AddOrder(AID: Integer): TOrder;
   end;
 
   /// <summary>
-  ///   Customer class
+  ///   Customer entiry
   /// </summary>
   TCustomer = class
   private
     FCompanyName: string;
-    FID: Integer;
+    FId: Integer;
     FOrders: TOrders;
   public
     constructor Create;
     destructor Destroy; override;
     function AddOrder: TOrder;
 
-    property ID: Integer read FID write FID;
+    property Id: Integer read FId write FId;
     property CompanyName: string read FCompanyName write FCompanyName;
     property Orders: TOrders read FOrders write FOrders;
   end;
@@ -87,8 +91,6 @@ implementation
 function TCustomer.AddOrder: TOrder;
 begin
   Result := TOrder.Create;
-  Result.ID := Random(1000);
-  Result.IDCustomer := FID;
   FOrders.Add(Result);
 end;
 
@@ -108,7 +110,7 @@ end;
 function TOrder.AddItem(AArticle: Integer; AQuantity: Double; ADate: TDateTime): TOrderItem;
 begin
   Result := TOrderItem.Create;
-  Result.ID := Random(10000);
+  Result.Id := Random(10000);
   Result.IDArticle := AArticle;
   Result.Quantity := AQuantity;
   Result.Date := ADate;
@@ -133,6 +135,16 @@ begin
   Result := TCustomer.Create;
   Result.ID := Random(1000);
   Result.CompanyName := ACompanyName;
+  Self.Add(Result);
+end;
+
+{ TOrders }
+
+function TOrders.AddOrder(AID: Integer): TOrder;
+begin
+  Result := TOrder.Create;
+  Result.ID := Random(1000);
+  Result.IDCustomer := AID;
   Self.Add(Result);
 end;
 

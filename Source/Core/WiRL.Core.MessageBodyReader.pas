@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -205,14 +205,7 @@ begin
   begin
     if (LEntry.Consumes.Contains(AMediaType) or LEntry.Consumes.Contains(TMediaType.WILDCARD)) and
        LEntry.IsReadable(AType, AType.GetAttributes, AMediaType) then
-    begin
-      {$IFDEF HAS_NEW_ARRAY}
       LCompatibleEntries := LCompatibleEntries + [LEntry];
-      {$ELSE}
-      SetLength(LCompatibleEntries, Length(LCompatibleEntries) + 1);
-      LCompatibleEntries[High(LCompatibleEntries)] := LEntry;
-      {$ENDIF}
-    end;
   end;
 
   case Length(LCompatibleEntries) of
