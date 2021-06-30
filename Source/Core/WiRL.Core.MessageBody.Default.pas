@@ -522,7 +522,7 @@ var
   LBytes: TBytes;
   LRequest: TWiRLRequest;
 begin
-  LRequest := FContext.GetContainerAs<TWiRLRequest>;
+  LRequest := FContext.GetContextDataAs<TWiRLRequest>;
 
   LCallback := LRequest.QueryFields.Values['callback'];
   if LCallback.IsEmpty then

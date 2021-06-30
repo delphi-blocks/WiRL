@@ -38,7 +38,7 @@ type
       TEntryInfo = record
         ContextClass: TClass;
         FactoryClass: TClass;
-        ConstructorFunc: TFunc<IContextObjectFactory>
+        ConstructorFunc: TFunc<IInterface>
       end;
   private
     FRegistry: TList<TEntryInfo>;
@@ -46,12 +46,13 @@ type
     function CustomContextInjectionByType(const AObject: TRttiObject;
       AContext: TWiRLContextBase; out AValue: TValue): Boolean;
     function IsSigleton(const AObject: TRttiObject): Boolean;
+    function GetContextObject(AEntry: TEntryInfo; const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
   public
     constructor Create; virtual;
     destructor Destroy; override;
 
     procedure RegisterFactory<T: class>(const AFactoryClass: TClass); overload;
-    procedure RegisterFactory<T: class>(const AFactoryClass: TClass; const AConstructorFunc: TFunc<IContextObjectFactory>); overload;
+    procedure RegisterFactory<T: class>(const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>); overload;
 
     procedure ContextInjection(AInstance: TObject; AContext: TWiRLContextBase);
     function ContextInjectionByType(const AObject: TRttiObject;
@@ -85,7 +86,6 @@ function TWiRLContextInjectionRegistry.CustomContextInjectionByType(
 var
   LType: TClass;
   LEntry: TEntryInfo;
-  LContextFactory: IContextObjectFactory;
   LContextOwned: Boolean;
 begin
   Result := False;
@@ -95,12 +95,11 @@ begin
   begin
     if LType.InheritsFrom(LEntry.ContextClass) then
     begin
-      LContextFactory := LEntry.ConstructorFunc();
-      AValue := LContextFactory.CreateContextObject(AObject, AContext);
+      AValue := GetContextObject(LEntry, AObject, AContext);
       if AValue.IsObject then  // Only object should be released
       begin
         LContextOwned := not IsSigleton(AObject); // Singleton should'n be released
-        AContext.Containers.Add(AValue.AsObject, LContextOwned);
+        AContext.ContextData.Add(AValue.AsObject, LContextOwned);
       end;
       Exit(True);
     end;
@@ -111,6 +110,26 @@ destructor TWiRLContextInjectionRegistry.Destroy;
 begin
   FRegistry.Free;
   inherited;
+end;
+
+function TWiRLContextInjectionRegistry.GetContextObject(
+  AEntry: TEntryInfo; const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
+var
+  LFactory: IInterface;
+  LContextFactory: IContextObjectFactory;
+  LContextHttpFactory: IContextHttpFactory;
+begin
+  LFactory := AEntry.ConstructorFunc();
+  if Supports(LFactory, IContextObjectFactory, LContextFactory) then
+  begin
+    Result := LContextFactory.CreateContextObject(AObject, AContext);
+  end
+  else if Supports(LFactory, IContextHttpFactory, LContextHttpFactory) then
+  begin
+    Result := LContextHttpFactory.CreateContextObject(AObject, AContext as TWiRLContextHttp);
+  end
+  else
+    raise Exception.Create('Invalid context factory');
 end;
 
 class function TWiRLContextInjectionRegistry.GetInstance: TWiRLContextInjectionRegistry;
@@ -127,16 +146,33 @@ begin
 end;
 
 procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(
+  const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>);
+var
+  LEntryInfo: TEntryInfo;
+begin
+  LEntryInfo.ContextClass := TClass(T);
+  LEntryInfo.FactoryClass := AFactoryClass;
+  LEntryInfo.ConstructorFunc := AConstructorFunc;
+  FRegistry.Add(LEntryInfo)
+end;
+
+procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(
   const AFactoryClass: TClass);
 begin
   Self.RegisterFactory<T>(AFactoryClass,
-    function: IContextObjectFactory
+    function: IInterface
     var
       LInstance: TObject;
     begin
       LInstance := (TRttiHelper.CreateInstance(AFactoryClass));
-      if not Supports(LInstance, IContextObjectFactory, Result) then
-        raise Exception.Create('Interface IContextObjectFactory not implemented');
+
+      if not Supports(LInstance, IInterface, Result) then
+        raise Exception.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
+
+      if (not Supports(Result, IContextObjectFactory)) and
+         (not Supports(Result, IContextHttpFactory)) then
+        raise Exception.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
+
     end);
 end;
 
@@ -182,22 +218,11 @@ begin
 //    Exit(not AValue.IsEmpty);
 //  end;
 
-  AValue := AContext.FindContainerAs(LType);
+  AValue := AContext.FindContextDataAs(LType);
   if not AValue.IsEmpty then
     Exit(True);
 
   Result := CustomContextInjectionByType(AObject, AContext, AValue);
-end;
-
-procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(
-  const AFactoryClass: TClass; const AConstructorFunc: TFunc<IContextObjectFactory>);
-var
-  LEntryInfo: TEntryInfo;
-begin
-  LEntryInfo.ContextClass := TClass(T);
-  LEntryInfo.FactoryClass := AFactoryClass;
-  LEntryInfo.ConstructorFunc := AConstructorFunc;
-  FRegistry.Add(LEntryInfo)
 end;
 
 // Must be thread safe

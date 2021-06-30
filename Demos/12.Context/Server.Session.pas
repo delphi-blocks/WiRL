@@ -86,10 +86,10 @@ type
     destructor Destroy; override;
   end;
 
-  TSessionFactory = class(TInterfacedObject, IContextObjectFactory)
+  TSessionFactory = class(TInterfacedObject, IContextHttpFactory)
   public
     function CreateContextObject(const AObject: TRttiObject;
-      AContext: TWiRLContextBase): TValue;
+      AContext: TWiRLContextHttp): TValue;
   end;
 
   TSessionResponseFilter = class(TInterfacedObject, IWiRLContainerResponseFilter)
@@ -212,12 +212,12 @@ end;
 { TSessionFactory }
 
 function TSessionFactory.CreateContextObject(const AObject: TRttiObject;
-  AContext: TWiRLContextBase): TValue;
+  AContext: TWiRLContextHttp): TValue;
 var
   LSid: string;
   LSession: TSession;
 begin
-  LSid := AContext.GetContainerAs<TWiRLRequest>.CookieFields[SidName];
+  LSid := AContext.Request.CookieFields[SidName];
   LSession := TSessions.Instance.Find(LSID);
   if not Assigned(LSession) then
     LSession := TSession.Create;
@@ -256,7 +256,7 @@ var
 begin
   Result := nil;
   LContext := AResponseContext.Context;
-  LObject := LContext.FindContainerAs<TSession>;
+  LObject := LContext.FindContextDataAs<TSession>;
   if Assigned(LObject) then
     Exit(TSession(LObject));
 end;

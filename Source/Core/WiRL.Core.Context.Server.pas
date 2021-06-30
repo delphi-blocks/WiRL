@@ -94,22 +94,22 @@ end;
 
 function TWiRLContextServer.GetApplication: TObject;
 begin
-  Result := FindContainerAs<TWiRLApplication>;
+  Result := FindContextDataAs<TWiRLApplication>;
 end;
 
 function TWiRLContextServer.GetAuthContext: TWiRLAuthContext;
 begin
-  Result := FindContainerAs<TWiRLAuthContext>;
+  Result := FindContextDataAs<TWiRLAuthContext>;
 end;
 
 function TWiRLContextServer.GetEngine: TObject;
 begin
-  Result := FindContainerAs<TWiRLEngine>;
+  Result := FindContextDataAs<TWiRLEngine>;
 end;
 
 function TWiRLContextServer.GetResource: TObject;
 begin
-  Result := FindContainerAs<TWiRLProxyResource>;
+  Result := FindContextDataAs<TWiRLProxyResource>;
 end;
 
 function TWiRLContextServer.GetResourceURL: TWiRLURL;
@@ -121,7 +121,7 @@ end;
 
 function TWiRLContextServer.GetServer: TObject;
 begin
-  Result := FindContainerAs<TWiRLServer>;
+  Result := FindContextDataAs<TWiRLServer>;
 end;
 
 procedure TWiRLContextServer.SetApplication(const Value: TObject);

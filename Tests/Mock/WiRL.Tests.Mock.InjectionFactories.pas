@@ -43,7 +43,7 @@ var
   LPerson: TTestPersonObject;
   LQueryFields: TWiRLParam;
 begin
-  LQueryFields := AContext.GetContainerAs<TWiRLRequest>.QueryFields;
+  LQueryFields := AContext.GetContextDataAs<TWiRLRequest>.QueryFields;
 
   LPerson := TTestPersonObject.Create;
   LPerson.Name := LQueryFields.AsType<string>('name');

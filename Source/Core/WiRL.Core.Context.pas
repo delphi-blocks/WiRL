@@ -20,7 +20,7 @@ uses
   WiRL.http.URL;
 
 type
-  TWiRLContainerListEnumerator<T> = class(TEnumerator<T>)
+  TWiRLContextDataListEnumerator<T> = class(TEnumerator<T>)
   private
     FList: TList<T>;
     FIndex: Integer;
@@ -34,7 +34,7 @@ type
     function MoveNext: Boolean;
   end;
 
-  TWiRLContainerList = class
+  TWiRLContextDataList = class
   private
     FList: TObjectList<TObject>;
     FOwnedObjects: TObjectList<TObject>;
@@ -42,14 +42,14 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function GetEnumerator: TWiRLContainerListEnumerator<TObject>;
+    function GetEnumerator: TWiRLContextDataListEnumerator<TObject>;
     procedure Add(AValue: TObject; AOwned: Boolean);
     procedure Delete(AValue: TObject);
   end;
 
   TWiRLContextBase = class
   private
-    FContainers: TWiRLContainerList;
+    FContextDataList: TWiRLContextDataList;
   public
     constructor Create;
     destructor Destroy; override;
@@ -59,15 +59,15 @@ type
     procedure RemoveContainer(AValue: TObject);
 
     // raise an exception if not found
-    function GetContainerAs<T: class>: T;
+    function GetContextDataAs<T: class>: T;
     // return nil if not found
-    function FindContainerAs<T: class>: T; overload;
-    function FindContainerAs(AClass: TClass): TObject; overload;
+    function FindContextDataAs<T: class>: T; overload;
+    function FindContextDataAs(AClass: TClass): TObject; overload;
 
-    function FindContainerAsByIntf(const IID: TGUID): IInterface; overload;
-    function FindContainerAsByIntf<T: IInterface>: T; overload;
+    function FindContextDataAsByIntf(const IID: TGUID): IInterface; overload;
+    function FindContextDataAsByIntf<T: IInterface>: T; overload;
 
-    property Containers: TWiRLContainerList read FContainers;
+    property ContextData: TWiRLContextDataList read FContextDataList;
   end;
 
   TWiRLContextHttp = class(TWiRLContextBase)
@@ -88,28 +88,34 @@ type
     property RequestURL: TWiRLURL read GetRequestURL;
   end;
 
+  IContextHttpFactory = interface
+  ['{152751D7-F806-4EF3-B095-4E0D9545F6C7}']
+    function CreateContextObject(const AObject: TRttiObject; AContext: TWiRLContextHttp): TValue;
+  end;
+
+
 implementation
 
 uses
   WiRL.Configuration.Core;
 
-{ TWiRLContainerList }
+{ TWiRLContextDataList }
 
-procedure TWiRLContainerList.Add(AValue: TObject; AOwned: Boolean);
+procedure TWiRLContextDataList.Add(AValue: TObject; AOwned: Boolean);
 begin
   FList.Add(AValue);
   if AOwned then
     FOwnedObjects.Add(AValue);
 end;
 
-constructor TWiRLContainerList.Create;
+constructor TWiRLContextDataList.Create;
 begin
   inherited;
   FList := TObjectList<TObject>.Create(False);
   FOwnedObjects := TObjectList<TObject>.Create(True);
 end;
 
-procedure TWiRLContainerList.Delete(AValue: TObject);
+procedure TWiRLContextDataList.Delete(AValue: TObject);
 var
   LIndex: Integer;
 begin
@@ -123,43 +129,43 @@ begin
   end;
 end;
 
-destructor TWiRLContainerList.Destroy;
+destructor TWiRLContextDataList.Destroy;
 begin
   FList.Free;
   FOwnedObjects.Free;
   inherited;
 end;
 
-function TWiRLContainerList.GetEnumerator: TWiRLContainerListEnumerator<TObject>;
+function TWiRLContextDataList.GetEnumerator: TWiRLContextDataListEnumerator<TObject>;
 begin
-  Result := TWiRLContainerListEnumerator<TObject>.Create(FList);
+  Result := TWiRLContextDataListEnumerator<TObject>.Create(FList);
 end;
 
-{ TWiRLContainerListEnumerator<T> }
+{ TWiRLContextDataListEnumerator<T> }
 
-constructor TWiRLContainerListEnumerator<T>.Create(const AList: TList<T>);
+constructor TWiRLContextDataListEnumerator<T>.Create(const AList: TList<T>);
 begin
   inherited Create;
   FList := AList;
   FIndex := -1;
 end;
 
-function TWiRLContainerListEnumerator<T>.DoGetCurrent: T;
+function TWiRLContextDataListEnumerator<T>.DoGetCurrent: T;
 begin
   Result := GetCurrent;
 end;
 
-function TWiRLContainerListEnumerator<T>.DoMoveNext: Boolean;
+function TWiRLContextDataListEnumerator<T>.DoMoveNext: Boolean;
 begin
   Result := MoveNext;
 end;
 
-function TWiRLContainerListEnumerator<T>.GetCurrent: T;
+function TWiRLContextDataListEnumerator<T>.GetCurrent: T;
 begin
   Result := FList[FIndex];
 end;
 
-function TWiRLContainerListEnumerator<T>.MoveNext: Boolean;
+function TWiRLContextDataListEnumerator<T>.MoveNext: Boolean;
 begin
   if FIndex >= FList.Count then
     Exit(False);
@@ -171,7 +177,7 @@ end;
 
 procedure TWiRLContextBase.AddContainer(AContainer: TObject; AOwned: Boolean);
 begin
-  FContainers.Add(AContainer, AOwned);
+  FContextDataList.Add(AContainer, AOwned);
 end;
 
 procedure TWiRLContextBase.AddContainerOnce(AContainer: TObject;
@@ -179,62 +185,62 @@ procedure TWiRLContextBase.AddContainerOnce(AContainer: TObject;
 var
   LItem: TObject;
 begin
-  LItem := FindContainerAs(AContainer.ClassType);
+  LItem := FindContextDataAs(AContainer.ClassType);
   if Assigned(LItem) then
-    FContainers.Delete(LItem);
+    FContextDataList.Delete(LItem);
 
-  FContainers.Add(AContainer, AOwned);
+  FContextDataList.Add(AContainer, AOwned);
 end;
 
 constructor TWiRLContextBase.Create;
 begin
-  FContainers := TWiRLContainerList.Create;
+  FContextDataList := TWiRLContextDataList.Create;
   AddContainerOnce(Self, False);
 end;
 
 destructor TWiRLContextBase.Destroy;
 begin
-  FContainers.Free;
+  FContextDataList.Free;
 
   inherited;
 end;
 
-function TWiRLContextBase.FindContainerAs(AClass: TClass): TObject;
+function TWiRLContextBase.FindContextDataAs(AClass: TClass): TObject;
 var
   LItem: TObject;
   LApp: IWiRLApplication;
 begin
   Result := nil;
-  for LItem in FContainers do
+  for LItem in FContextDataList do
   begin
     if LItem.InheritsFrom(AClass) then
       Exit(LItem);
   end;
   if not Assigned(Result) and (AClass.InheritsFrom(TWiRLConfiguration)) then
   begin
-    LApp := FindContainerAsByIntf<IWiRLApplication>;
+    LApp := FindContextDataAsByIntf<IWiRLApplication>;
     Result := LApp.GetConfigByClassRef(TWiRLConfigurationClass(AClass));
   end;
 end;
 
-function TWiRLContextBase.FindContainerAs<T>: T;
+function TWiRLContextBase.FindContextDataAs<T>: T;
 begin
-  Result := FindContainerAs(TClass(T)) as T;
+  Result := FindContextDataAs(TClass(T)) as T;
 end;
 
-function TWiRLContextBase.FindContainerAsByIntf(const IID: TGUID): IInterface;
+function TWiRLContextBase.FindContextDataAsByIntf(const IID: TGUID): IInterface;
 var
   LItem: TObject;
 begin
   Result := nil;
-  for LItem in FContainers do
+  for LItem in FContextDataList do
   begin
     if Supports(LItem, IID, Result) then
       Exit;
   end;
 end;
 
-function TWiRLContextBase.FindContainerAsByIntf<T>: T;
+function TWiRLContextBase.FindContextDataAsByIntf<T>: T;
 var
   LIID: TGUID;
   LRttiType: TRttiType;
@@ -244,23 +250,23 @@ begin
   LRttiType := TRttiHelper.Context.GetType(TypeInfo(T));
 
   LIID := (LRttiType as TRttiInterfaceType).GUID;
-  LInterface := FindContainerAsByIntf(LIID);
+  LInterface := FindContextDataAsByIntf(LIID);
 
   if not Supports(LInterface, LIID, Result) then
     raise EWiRLException.CreateFmt('Interface not supported from [%s]', [LRttiType.Name]);
 
 end;
 
-function TWiRLContextBase.GetContainerAs<T>: T;
+function TWiRLContextBase.GetContextDataAs<T>: T;
 begin
-  Result := FindContainerAs<T>;
+  Result := FindContextDataAs<T>;
   if not Assigned(Result) then
     raise Exception.CreateFmt('Class [%s] not found', [TClass(T).ClassName]);
 end;
 
 procedure TWiRLContextBase.RemoveContainer(AValue: TObject);
 begin
-  FContainers.Delete(AValue);
+  FContextDataList.Delete(AValue);
 end;
 
 { TWiRLContextHttp }
@@ -274,7 +280,7 @@ end;
 
 function TWiRLContextHttp.GetRequest: TWiRLRequest;
 begin
-  Result := FindContainerAs<TWiRLRequest>;
+  Result := FindContextDataAs<TWiRLRequest>;
 end;
 
 function TWiRLContextHttp.GetRequestURL: TWiRLURL;
@@ -286,7 +292,7 @@ end;
 
 function TWiRLContextHttp.GetResponse: TWiRLResponse;
 begin
-  Result := FindContainerAs<TWiRLResponse>;
+  Result := FindContextDataAs<TWiRLResponse>;
 end;
 
 procedure TWiRLContextHttp.InitRequestURL(ARequest: TWiRLRequest);
