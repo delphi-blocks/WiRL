@@ -13,8 +13,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ActnList,
-  Vcl.StdCtrls, Vcl.ExtCtrls, System.Diagnostics, System.Actions, IdContext,
-  System.JSON,
+  Vcl.StdCtrls, Vcl.ExtCtrls, System.Actions, Winapi.Windows, Winapi.ShellAPI, System.JSON,
+  Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc,
 
   WiRL.Configuration.Core,
   WiRL.Configuration.Neon,
@@ -27,7 +27,7 @@ uses
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   OpenAPI.Model.Classes,
-  Server.Resources.Swagger, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc;
+  Server.Resources.Swagger;
 
 type
   TMainForm = class(TForm)
@@ -35,23 +35,31 @@ type
     StartButton: TButton;
     StopButton: TButton;
     MainActionList: TActionList;
-    StartServerAction: TAction;
-    StopServerAction: TAction;
+    actStartServer: TAction;
+    actStopServer: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
     Button1: TButton;
     Memo1: TMemo;
     Button2: TButton;
     XMLDocument1: TXMLDocument;
+    btnDocumentation: TButton;
+    actShowDocumentation: TAction;
+    procedure actShowDocumentationExecute(Sender: TObject);
+    procedure actShowDocumentationUpdate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure StartServerActionExecute(Sender: TObject);
-    procedure StartServerActionUpdate(Sender: TObject);
-    procedure StopServerActionExecute(Sender: TObject);
-    procedure StopServerActionUpdate(Sender: TObject);
+    procedure actStartServerExecute(Sender: TObject);
+    procedure actStartServerUpdate(Sender: TObject);
+    procedure actStopServerExecute(Sender: TObject);
+    procedure actStopServerUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  private const
+    ENG_PATH = 'rest';
+    APP_PATH = 'app';
+    API_PATH = 'pippo';
   private
     FEngine: TWiRLEngine;
     FRESTServer: TWiRLServer;
@@ -71,6 +79,19 @@ uses
   WiRL.Core.OpenAPI.Resource;
 
 {$R *.dfm}
+
+procedure TMainForm.actShowDocumentationExecute(Sender: TObject);
+var
+  LUrl: string;
+begin
+  LUrl := Format('http://localhost:%d/%s/%s/%s/', [FRESTServer.Port, ENG_PATH, APP_PATH, API_PATH]);
+  ShellExecute(Handle, 'open', PChar(LUrl), '', '', SW_NORMAL);
+end;
+
+procedure TMainForm.actShowDocumentationUpdate(Sender: TObject);
+begin
+  (Sender as TAction).Enabled := Assigned(FRESTServer) and FRESTServer.Active;
+end;
 
 procedure TMainForm.Button1Click(Sender: TObject);
 var
@@ -125,7 +146,7 @@ begin
 
   // Shows how to use Extensions (for ReDoc UI)
   LExtensionObject := TJSONObject.Create;
-  LExtensionObject.AddPair('url', 'http://localhost:8080/rest/app/swagger/api-logo.png');
+  LExtensionObject.AddPair('url', 'http://localhost:8080/rest/app/openapi/api-logo.png');
   LExtensionObject.AddPair('backgroundColor', '#FFFFFF');
   LExtensionObject.AddPair('altText', 'API Logo');
   Result.Info.Extensions.AddPair('x-logo', LExtensionObject);
@@ -138,7 +159,7 @@ end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  StopServerAction.Execute;
+  actStopServer.Execute;
 end;
 
 /// <summary>
@@ -153,10 +174,10 @@ begin
   LDocument := ConfigureOpenAPIDocument;
 
   FEngine :=
-    FRESTServer.AddEngine<TWiRLEngine>('/rest')
+    FRESTServer.AddEngine<TWiRLEngine>(ENG_PATH)
       .SetEngineName('RESTEngine');
 
-  FEngine.AddApplication('/app')
+  FEngine.AddApplication(APP_PATH)
       .SetAppName('demo')
       // Test for namespaces
       .SetResources('Server.Resources.Demo.*')
@@ -179,35 +200,35 @@ begin
         .SetXMLDocFolder('{AppPath}\..\..\Docs')
         .SetGUIDocFolder('{AppPath}\..\..\UI')
         //.SetGUIDocFolder('{AppPath}\..\..\ReDoc')
-        // Set the Swagger document
+        // Set the OpenAPI document
         .SetAPILogo('api-logo.png')
         .SetAPIDocument(LDocument)
       .ApplyConfig
   ;
 
-  StartServerAction.Execute;
+  actStartServer.Execute;
 end;
 
-procedure TMainForm.StartServerActionExecute(Sender: TObject);
+procedure TMainForm.actStartServerExecute(Sender: TObject);
 begin
   FRESTServer.Port := StrToIntDef(PortNumberEdit.Text, 8080);
   if not FRESTServer.Active then
     FRESTServer.Active := True;
 end;
 
-procedure TMainForm.StartServerActionUpdate(Sender: TObject);
+procedure TMainForm.actStartServerUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := not Assigned(FRESTServer) or not FRESTServer.Active;
+  (Sender as TAction).Enabled := not Assigned(FRESTServer) or not FRESTServer.Active;
 end;
 
-procedure TMainForm.StopServerActionExecute(Sender: TObject);
+procedure TMainForm.actStopServerExecute(Sender: TObject);
 begin
   FRESTServer.Active := False;
 end;
 
-procedure TMainForm.StopServerActionUpdate(Sender: TObject);
+procedure TMainForm.actStopServerUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(FRESTServer) and FRESTServer.Active;
+  (Sender as TAction).Enabled := Assigned(FRESTServer) and FRESTServer.Active;
 end;
 
 end.

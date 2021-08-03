@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'WiRL HelloWorld'
-  ClientHeight = 289
+  ClientHeight = 317
   ClientWidth = 554
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -24,6 +24,9 @@ object MainForm: TMainForm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    DesignSize = (
+      554
+      73)
     object Label1: TLabel
       Left = 28
       Top = 17
@@ -36,7 +39,7 @@ object MainForm: TMainForm
       Top = 41
       Width = 75
       Height = 25
-      Action = StartServerAction
+      Action = actStartServer
       TabOrder = 0
     end
     object StopButton: TButton
@@ -44,7 +47,7 @@ object MainForm: TMainForm
       Top = 41
       Width = 75
       Height = 25
-      Action = StopServerAction
+      Action = actStopServer
       TabOrder = 1
     end
     object PortNumberEdit: TEdit
@@ -55,6 +58,15 @@ object MainForm: TMainForm
       TabOrder = 2
       Text = '8080'
     end
+    object btnDocumentation: TButton
+      Left = 393
+      Top = 41
+      Width = 153
+      Height = 25
+      Action = actShowDocumentation
+      Anchors = [akTop, akRight]
+      TabOrder = 3
+    end
   end
   object Button1: TButton
     Left = 8
@@ -63,6 +75,7 @@ object MainForm: TMainForm
     Height = 25
     Caption = 'Button1'
     TabOrder = 1
+    Visible = False
     OnClick = Button1Click
   end
   object Memo1: TMemo
@@ -73,6 +86,7 @@ object MainForm: TMainForm
     Lines.Strings = (
       'Memo1')
     TabOrder = 2
+    Visible = False
   end
   object Button2: TButton
     Left = 8
@@ -81,20 +95,26 @@ object MainForm: TMainForm
     Height = 25
     Caption = 'Button2'
     TabOrder = 3
+    Visible = False
     OnClick = Button2Click
   end
   object MainActionList: TActionList
     Left = 104
     Top = 96
-    object StartServerAction: TAction
+    object actStartServer: TAction
       Caption = 'Start Server'
-      OnExecute = StartServerActionExecute
-      OnUpdate = StartServerActionUpdate
+      OnExecute = actStartServerExecute
+      OnUpdate = actStartServerUpdate
     end
-    object StopServerAction: TAction
+    object actStopServer: TAction
       Caption = 'Stop Server'
-      OnExecute = StopServerActionExecute
-      OnUpdate = StopServerActionUpdate
+      OnExecute = actStopServerExecute
+      OnUpdate = actStopServerUpdate
+    end
+    object actShowDocumentation: TAction
+      Caption = 'Show Documentation'
+      OnExecute = actShowDocumentationExecute
+      OnUpdate = actShowDocumentationUpdate
     end
   end
   object XMLDocument1: TXMLDocument

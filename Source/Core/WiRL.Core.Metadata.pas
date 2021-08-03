@@ -215,13 +215,24 @@ type
 
   TWiRLProxyMethods = class(TObjectList<TWiRLProxyMethod>);
 
+  TWiRLProxyAuthType = (None, Unknown, Basic, Cookie);
+
+  TWiRLProxyAuth = class
+  private
+    FAuthType: TWiRLProxyAuthType;
+    FHeaderName: string;
+  public
+    property AuthType: TWiRLProxyAuthType read FAuthType write FAuthType;
+    property HeaderName: string read FHeaderName write FHeaderName;
+  end;
+
   TWiRLProxyResource = class(TWiRLProxyBase)
   private
     FContext: TWiRLResourceRegistry;
     FResourceClass: TClass;
     FConstructor: TWiRLConstructorProxy;
     FPath: string;
-    FAuth: Boolean;
+    FAuth: TWiRLProxyAuth;
     FRttiType: TRttiType;
     FMethods: TWiRLProxyMethods;
     FProduces: TMediaTypeList;
@@ -245,7 +256,7 @@ type
     function GetSanitizedPath: string;
   public
     property Path: string read FPath;
-    property Auth: Boolean read FAuth write FAuth;
+    property Auth: TWiRLProxyAuth read FAuth write FAuth;
     property Methods: TWiRLProxyMethods read FMethods;
     property Produces: TMediaTypeList read FProduces;
     property Consumes: TMediaTypeList read FConsumes;
@@ -305,9 +316,9 @@ begin
   FName := AName;
   FContext := AContext;
 
+  FAuth := TWiRLProxyAuth.Create;
   FMethods := TWiRLProxyMethods.Create(True);
   FFilters := TWiRLProxyFilters.Create(True);
-
   FProduces := TMediaTypeList.Create;
   FConsumes := TMediaTypeList.Create;
 
@@ -321,7 +332,7 @@ begin
 
   // If a Resource inherits from Add TWiRLAuth* add a SecurityDefinition
   if FResourceClass.InheritsFrom(TWiRLAuthBasicResource) then
-    FAuth := True;
+    FAuth.AuthType := TWiRLProxyAuthType.Basic;
 end;
 
 destructor TWiRLProxyResource.Destroy;
@@ -330,6 +341,7 @@ begin
   FMethods.Free;
   FProduces.Free;
   FConsumes.Free;
+  FAuth.Free;
 
   inherited;
 end;
@@ -440,6 +452,17 @@ begin
     else if IsFilter(LAttribute) then
     begin
       FFilters.Add(TWiRLProxyFilter.Create(LAttribute));
+    end
+
+    // BasicAuth handler
+    else if LAttribute is BasicAuthAttribute then
+      FAuth.AuthType := TWiRLProxyAuthType.Basic
+
+    // CookieAuth handler
+    else if LAttribute is CookieAuthAttribute then
+    begin
+      FAuth.AuthType := TWiRLProxyAuthType.Cookie;
+      FAuth.HeaderName := (LAttribute as CookieAuthAttribute).CookieName;
     end
   end;
 end;

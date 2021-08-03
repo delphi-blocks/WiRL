@@ -86,18 +86,33 @@ begin
   for LPair in FApplication.Proxy.Resources do
   begin
     LRes := LPair.Value;
+
+    case LRes.Auth.AuthType of
+      None: ;
+      Unknown: ;
+      Basic:
+      begin
+        FDocument.Components.AddSecurityHttp('basic_auth', 'Basic Authentication', 'basic', '');
+        FDocument.Components.AddSecurityHttp('jwt_auth', 'JWT (Bearer) Authentication', 'bearer', 'JWT');
+      end;
+      Cookie:
+      begin
+        FDocument.Components.AddSecurityApiKey('cookie_auth', 'Cookie Based authentication', LRes.Auth.HeaderName, TAPIKeyLocation.Cookie);
+        //FDocument.Components.AddSecurityHttp('jwt_auth', 'JWT (Bearer) Authentication', 'bearer', 'JWT');
+      end;
+
+    end;
+  end;
+
+  for LPair in FApplication.Proxy.Resources do
+  begin
+    LRes := LPair.Value;
     if LRes.IsSwagger(FSwaggerResource) then
       Continue;
 
     // Adds a tag to the tags array
     // Tags are a group (resource) of operations (methods)
     FDocument.AddTag(LRes.Name, LRes.Summary);
-
-    if LRes.Auth then
-    begin
-      FDocument.Components.AddSecurityHttp('basic_auth', 'Basic Authentication', 'basic', '');
-      FDocument.Components.AddSecurityHttp('jwt_auth', 'JWT (Bearer) Authentication', 'bearer', 'JWT');
-    end;
 
     LSchema := FDocument.Components.AddSchema('Error');
     LSchema.SetJSONObject(ClassToSchemaJSON(TWebExceptionSchema));
@@ -113,8 +128,7 @@ begin
   Result := TypeToSchemaJSON(TRttiHelper.Context.GetType(AClass));
 end;
 
-constructor TOpenAPIv3Engine.Create(AApplication: TWiRLApplication;
-  const ASwaggerResource: string);
+constructor TOpenAPIv3Engine.Create(AApplication: TWiRLApplication; const ASwaggerResource: string);
 begin
   FSwaggerResource := ASwaggerResource;
   FApplication := AApplication;

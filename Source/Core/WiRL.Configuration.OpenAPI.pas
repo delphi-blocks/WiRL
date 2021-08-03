@@ -51,13 +51,13 @@ type
   public
     constructor Create; override;
     destructor Destroy; override;
-    procedure DoAfterCreate; override;
+
+    function ApplyConfig: IWiRLApplication; override;
 
     function SetOpenAPIResource(AClass: TClass): IWiRLConfigurationOpenAPI;
     function SetXMLDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
-
     function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
   published
     property APILogo: string read FAPILogo write FAPILogo;
@@ -71,6 +71,17 @@ implementation
 uses
   WiRL.http.Filters,
   WiRL.Core.OpenAPI.Resource;
+
+function TWiRLConfigurationOpenAPI.ApplyConfig: IWiRLApplication;
+begin
+  if not Assigned(FClass) then
+    FClass := TOpenAPIResourceDefault;
+
+  TWiRLResourceRegistry.Instance.RegisterResource(FClass);
+  FApplication.SetResources(FClass.QualifiedClassName);
+
+  Result := inherited ApplyConfig;
+end;
 
 constructor TWiRLConfigurationOpenAPI.Create;
 begin
@@ -89,15 +100,6 @@ destructor TWiRLConfigurationOpenAPI.Destroy;
 begin
   FDocument.Free;
   inherited;
-end;
-
-procedure TWiRLConfigurationOpenAPI.DoAfterCreate;
-begin
-  if not Assigned(FClass) then
-    FClass := TOpenAPIResourceDefault;
-
-  TWiRLResourceRegistry.Instance.RegisterResource(FClass);
-  FApplication.SetResources(FClass.QualifiedClassName);
 end;
 
 function TWiRLConfigurationOpenAPI.SetOpenAPIResource(AClass: TClass): IWiRLConfigurationOpenAPI;

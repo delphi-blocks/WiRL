@@ -34,11 +34,11 @@ type
   [Path('customer')]
   TCustomerResource = class
   public
-    [GET][Path('{id}')][Produces(TMediaType.APPLICATION_JSON)]
-    function GetOrder([PathParam('id')] ACustomerID: Integer): TCustomer;
-
     [GET][Path('/list')][Produces(TMediaType.APPLICATION_JSON)]
     function GetCustomers(): TCustomers;
+
+    [GET][Path('{id}')][Produces(TMediaType.APPLICATION_JSON)]
+    function GetCustomer([PathParam('id')] ACustomerID: Integer): TCustomer;
   end;
 
   [Path('order')]
@@ -50,6 +50,7 @@ type
     [RolesAllowed('manager')]
     [GET][Path('/cust/{custid}')][Produces(TMediaType.APPLICATION_JSON)]
     function GetOrders([PathParam('custid')] ACustomerID: Integer): TOrders;
+
   end;
 
 
@@ -86,7 +87,8 @@ begin
   //Result.AddCustomer('Wintech Italia').AddOrder(
 end;
 
-function TCustomerResource.GetOrder(ACustomerID: Integer): TCustomer;
+function TCustomerResource.GetCustomer([PathParam('id')] ACustomerID: Integer):
+    TCustomer;
 var
   LOrder: TOrder;
 begin

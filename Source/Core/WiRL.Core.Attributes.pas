@@ -269,10 +269,23 @@ type
   end;
 
   /// <summary>
-  ///   Used to mark a method as the handler of a Basic Auth request. Necessary
-  ///   to the Swagger codegen
+  ///   Used to mark a method as the handler of a Basic Auth request.
+  ///   Used by the OpenAPI codegen.
   /// </summary>
   BasicAuthAttribute = class(AuthorizationAttribute);
+
+  /// <summary>
+  ///   Used to mark a method as the handler of a Cookie (APIKey) Auth request.
+  ///   Used by the OpenAPI codegen.
+  /// </summary>
+  CookieAuthAttribute = class(AuthorizationAttribute)
+  private
+    FCookieName: string;
+  public
+    constructor Create(const ACookieName: string);
+
+    property CookieName: string read FCookieName write FCookieName;
+  end;
 
   /// <summary>
   ///   This attribute tells WiRL not to destroy the resulting object because it's a
@@ -641,6 +654,15 @@ constructor MultiPartAttribute.Create(const AValue: string; const AMediaType: st
 begin
   inherited Create(AValue);
   FMediaType := AMediaType;
+end;
+
+{ CookieAuthAttribute }
+
+{ CookieAuthAttribute }
+
+constructor CookieAuthAttribute.Create(const ACookieName: string);
+begin
+  FCookieName := ACookieName;
 end;
 
 end.
