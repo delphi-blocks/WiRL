@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -80,6 +80,7 @@ begin
   // App base configuration
   LAppConf := LEngineConf.AddApplication('/app');
   LAppConf.SetAppName('Auth Application');
+  LAppConf.SetFilters('*');
   LAppConf.SetResources([
     'Server.Resources.TFormAuthResource',
     'Server.Resources.TBasicAuthResource',
@@ -112,6 +113,7 @@ begin
       // App base configuration
       .AddApplication('/app')
         .SetAppName('Auth Application')
+        .SetFilters('*')
         .SetResources([
           'Server.Resources.TFormAuthResource',
           'Server.Resources.TBasicAuthResource',

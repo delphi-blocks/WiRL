@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -129,6 +129,9 @@ type
 
 implementation
 
+uses
+  System.DateUtils;
+
 { TUserResource }
 
 function TUserResource.DetailsInfo: TDetailsInfo;
@@ -174,8 +177,11 @@ begin
   else
     Result.Roles := 'user,manager'.Split([',']);
 
-  // Here you can set all field of your custom claims object
-  Subject.Language := 'en-US';
+  // Here you can set all claims of the JWT
+  //Subject.Expiration := IncSecond(Now(), 30);
+
+  // Here you can set all custom claims of the JWT
+  Subject.Language := 'it-IT';
 end;
 
 { TFormAuthResource }
@@ -193,9 +199,11 @@ begin
   else
     Result.Roles := 'user,manager'.Split([',']);
 
-  // Here you can set all field of your custom claims object
+  // Here you can set all claims of the JWT
+  //Subject.Expiration := IncSecond(Now(), 30);
+
+  // Here you can set all custom claims of the JWT
   Subject.Language := 'it-IT';
-  Subject.Expiration := Now + 1;
 end;
 
 { TBodyAuthResource }
@@ -213,9 +221,11 @@ begin
   else
     Result.Roles := 'user,manager'.Split([',']);
 
-  // Here you can set all field of your custom claims object
+  // Here you can set all claims of the JWT
+  //Subject.Expiration := IncSecond(Now(), 30);
+
+  // Here you can set all custom claims of the JWT
   Subject.Language := 'it-IT';
-  Subject.Expiration := Now + 1;
 end;
 
 { TUserInfo }
