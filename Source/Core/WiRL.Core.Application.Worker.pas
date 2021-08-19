@@ -73,8 +73,8 @@ type
     procedure FillResourceMethodParameters(AInstance: TObject; var AArgumentArray: TArgumentArray);
     procedure InvokeResourceMethod(AInstance: TObject; const AWriter: IMessageBodyWriter; AMediaType: TMediaType); virtual;
 
-    procedure AuthContextFromConfig(AContext: TWiRLAuthContext);
-    function GetAuthContext: TWiRLAuthContext;
+    function GetAuthToken: string;
+    function CreateAuthContext: TWiRLAuthContext;
   public
     constructor Create(AContext: TWiRLContext);
     destructor Destroy; override;
@@ -220,9 +220,7 @@ begin
   );
 end;
 
-procedure TWiRLApplicationWorker.AuthContextFromConfig(AContext: TWiRLAuthContext);
-var
-  LToken: string;
+function TWiRLApplicationWorker.GetAuthToken: string;
 
   function ExtractJWTToken(const AAuth: string): string;
   var
@@ -238,15 +236,10 @@ var
 
 begin
   case FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenLocation of
-    TAuthTokenLocation.Bearer: LToken := ExtractJWTToken(FContext.Request.Authorization);
-    TAuthTokenLocation.Cookie: LToken := FContext.Request.CookieFields['token'];
-    TAuthTokenLocation.Header: LToken := FContext.Request.Headers.Values[FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenCustomHeader];
+    TAuthTokenLocation.Bearer: Result := ExtractJWTToken(FContext.Request.Authorization);
+    TAuthTokenLocation.Cookie: Result := FContext.Request.CookieFields['token'];
+    TAuthTokenLocation.Header: Result := FContext.Request.Headers.Values[FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenCustomHeader];
   end;
-
-  if LToken.IsEmpty then
-    Exit;
-
-  AContext.Verify(LToken, FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PublicKey.Key);
 end;
 
 procedure TWiRLApplicationWorker.CheckAuthorization(AAuth: TWiRLAuthContext);
@@ -255,14 +248,12 @@ var
   LAllowed: Boolean;
   LRole: string;
 begin
-  // Non Auth-annotated method are "PermitAll"
   if not FLocator.Method.Auth.HasAuth then
     Exit;
 
   if FLocator.Method.Auth.PermitAll then
-    Exit;
-
-  if FLocator.Method.Auth.DenyAll then
+    LAllowed := FAuthContext.Verified
+  else if FLocator.Method.Auth.DenyAll then
     LAllowed := False
   else
   begin
@@ -439,29 +430,36 @@ begin
   end;
 end;
 
-function TWiRLApplicationWorker.GetAuthContext: TWiRLAuthContext;
+function TWiRLApplicationWorker.CreateAuthContext: TWiRLAuthContext;
 begin
   if Assigned(FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.ClaimClass) then
     Result := TWiRLAuthContext.Create(FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.ClaimClass)
   else
     Result := TWiRLAuthContext.Create;
-
-  AuthContextFromConfig(Result);
 end;
 
 procedure TWiRLApplicationWorker.HandleRequest;
 var
   LProcessResource: Boolean;
+  LToken: string;
 begin
-  FAuthContext := GetAuthContext;
+  FAuthContext := CreateAuthContext;
   try
+    LToken := GetAuthToken;
+    if not LToken.IsEmpty then
+      FAuthContext.Verify(LToken, FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PublicKey.Key);
+
     try
       FContext.AuthContext := FAuthContext;
       try
-        // We have the URL so find the resource in the registry
+        // We have the URL so let's find the resource in the registry
         FLocator.Process();
 
+        // Check method authorization with token validity and roles
+        CheckAuthorization(FAuthContext);
+
         LProcessResource := not ApplyRequestFilters;
+
         if LProcessResource then
           InternalHandleRequest;
       except
@@ -502,20 +500,6 @@ var
   LWriter: IMessageBodyWriter;
   LMediaType: TMediaType;
 begin
-  if not Assigned(FLocator.Resource) then
-    raise EWiRLNotFoundException.Create(
-      Format('Resource [%s] not found', [FContext.RequestURL.Resource]),
-      Self.ClassName, 'HandleRequest'
-    );
-
-  if not Assigned(FLocator.Method) then
-    raise EWiRLNotFoundException.Create(
-      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.RequestURL.Resource + FContext.RequestURL.SubResources.ToString]),
-      Self.ClassName, 'HandleRequest'
-    );
-
-  CheckAuthorization(FAuthContext);
-
   LInstance := FLocator.Resource.CreateInstance();
   try
     FAppConfig.WriterRegistry.FindWriter(
@@ -906,13 +890,22 @@ end;
 procedure TWiRLResourceLocator.Process;
 begin
   LocateResource;
+  if not Assigned(FResource) then
+    raise EWiRLNotFoundException.Create(
+      Format('Resource [%s] not found', [FContext.RequestURL.Resource]),
+      Self.ClassName, 'HandleRequest'
+    );
+
   LocateResourceMethod;
-  if Assigned(FResource) and Assigned(FMethod) then
-  begin
-    FContext.Resource := FResource;
-    FContext.ResourceMethod := FMethod;
-    FHasLocated := True;
-  end;
+  if not Assigned(FMethod) then
+    raise EWiRLNotFoundException.Create(
+      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.RequestURL.Resource + FContext.RequestURL.SubResources.ToString]),
+      Self.ClassName, 'HandleRequest'
+    );
+
+  FContext.Resource := FResource;
+  FContext.ResourceMethod := FMethod;
+  FHasLocated := True;
 end;
 
 end.

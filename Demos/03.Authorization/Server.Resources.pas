@@ -83,7 +83,7 @@ type
     // Injects the custom claims into "Subject" object
     [Context] Subject: TServerClaims;
   public
-    [GET, PermitAll]
+    [GET]
     [Produces(TMediaType.APPLICATION_JSON)]
     function PublicInfo: TUserInfo;
 

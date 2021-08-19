@@ -471,7 +471,7 @@ procedure TWiRLProxyResource.ProcessMethods;
 var
   LResourceMethod: TRttiMethod;
   LHttpVerb: string;
-  LResMeth: TWiRLProxyMethod;
+  LResMethod: TWiRLProxyMethod;
 begin
   // Loop on every method of the current resource object
   for LResourceMethod in FRttiType.GetMethods do
@@ -488,8 +488,8 @@ begin
     // This method is a REST handler
     if not LHttpVerb.IsEmpty then
     begin
-      LResMeth := NewMethod(LResourceMethod, LHttpverb);
-      LResMeth.Process();
+      LResMethod := NewMethod(LResourceMethod, LHttpverb);
+      LResMethod.Process();
     end;
   end;
 end;
@@ -735,8 +735,6 @@ begin
   FIsSingleton := True;
 end;
 
-{ TWiRLProxyMethodAuth }
-
 procedure TWiRLProxyMethodAuth.Process;
 begin
   inherited;
@@ -760,10 +758,18 @@ end;
 
 procedure TWiRLProxyMethodAuth.SetRoles(ARoles: TStrings);
 begin
-  FHasAuth := True;
-  FDenyAll := False;
-  FPermitAll := False;
-  FRoles := ARoles.ToStringArray;
+  if ARoles.Count > 0 then
+  begin
+    FHasAuth := True;
+    FDenyAll := False;
+    FPermitAll := False;
+    FRoles := ARoles.ToStringArray;
+  end
+  else
+  begin
+    FHasAuth := False;
+    FRoles := [];
+  end;
 end;
 
 { TWiRLProxyFilter }

@@ -24,9 +24,9 @@ uses
 
 type
   /// <summary>
-  ///   This filter shows how to ckeck the JWT claims
+  ///   This filter is an example of how to ckeck the JWT claims
   /// </summary>
-  TAuthFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
+  TAuthCheckerFilter = class(TInterfacedObject, IWiRLContainerRequestFilter)
   public
     procedure Filter(ARequestContext: TWiRLContainerRequestContext);
   end;
@@ -34,23 +34,31 @@ type
 
 implementation
 
-{ TAuthFilter }
+uses
+  WiRL.Core.Metadata;
 
-procedure TAuthFilter.Filter(ARequestContext: TWiRLContainerRequestContext);
+{ TAuthCheckerFilter }
+
+procedure TAuthCheckerFilter.Filter(ARequestContext: TWiRLContainerRequestContext);
 var
   LClaims: TWiRLSubject;
+  LMethod: TWiRLProxyMethod;
 begin
-  if ARequestContext.Context.AuthContext.CompactToken = '' then
+  LClaims := ARequestContext.Context.AuthContext.Subject;
+  LMethod := ARequestContext.Context.ResourceMethod as TWiRLProxyMethod;
+
+  // If the method has no restrictions (DenyAll, PermitAll, Roles) then there is no point
+  // in checking the (possible) token... But you can, of course!
+  if not LMethod.Auth.HasAuth then
     Exit;
 
-  LClaims := ARequestContext.Context.AuthContext.Subject;
-
+  // Here you can check every claim with your validation algorithm
   if LClaims.Expiration < Now() then
     raise EWiRLNotAuthorizedException.Create('Token expired!');
 
 end;
 
-//initialization
-  //TWiRLFilterRegistry.Instance.RegisterFilter<TAuthFilter>;
+initialization
+  TWiRLFilterRegistry.Instance.RegisterFilter<TAuthCheckerFilter>;
 
 end.
