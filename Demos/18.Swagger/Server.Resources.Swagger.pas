@@ -21,7 +21,7 @@ uses
 type
   // 1. You must inherit a resource from the base class TOpenAPIResourceCustom
   // 2. You must decide the path of this new resource
-  [Path('pippo')]
+  [Path('swagger')]
   TDocumentationResource = class(TOpenAPIResourceCustom);
 
 implementation

@@ -81,7 +81,7 @@ type
     function GetSwaggerAssets: TStream;
   end;
 
-  [Path('swagger')]
+  [Path('openapi')]
   TOpenAPIResourceDefault = class(TOpenAPIResourceCustom);
 
 implementation

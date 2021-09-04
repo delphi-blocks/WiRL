@@ -15,8 +15,6 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.TypInfo,
-
-  WiRL.Core.JSON,
   WiRL.Core.Declarations;
 
 type
@@ -30,11 +28,9 @@ type
 
     class function FindAttribute<T: TCustomAttribute>(AType: TRttiObject): T; overload; static;
 
-    class function HasAttribute<T: TCustomAttribute>(
-      AClass: TClass): Boolean; overload; static;
+    class function HasAttribute<T: TCustomAttribute>(AClass: TClass): Boolean; overload; static;
 
-    class function HasAttribute<T: TCustomAttribute>(
-      ARttiObj: TRttiObject): Boolean; overload; static;
+    class function HasAttribute<T: TCustomAttribute>(ARttiObj: TRttiObject): Boolean; overload; static;
 
     class function HasAttribute<T: TCustomAttribute>(
       ARttiObj: TRttiObject; const ADoSomething: TProc<T>): Boolean; overload; static;
@@ -117,17 +113,6 @@ type
   end;
   {$ENDIF}
 
-function ExecuteMethod(const AInstance: TValue; const AMethodName: string; const AArguments: array of TValue;
-  const ABeforeExecuteProc: TProc{ = nil}; const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean; overload;
-
-function ExecuteMethod(const AInstance: TValue; AMethod: TRttiMethod; const AArguments: array of TValue;
-  const ABeforeExecuteProc: TProc{ = nil}; const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean; overload;
-
-function ReadPropertyValue(AInstance: TObject; const APropertyName: string): TValue;
-
-function TValueToJSONObject(const AName: string; const AValue: TValue): TJSONObject; overload;
-function TValueToJSONObject(AObject: TJSONObject; const AName: string; const AValue: TValue): TJSONObject; overload;
-
 implementation
 
 uses
@@ -141,87 +126,6 @@ type
     function HandleToObject: TDictionary<Pointer,TRttiObject>;
   end;
 {$ENDIF}
-
-function TValueToJSONObject(AObject: TJSONObject; const AName: string; const AValue: TValue): TJSONObject;
-begin
-  Result := AObject;
-
-  if (AValue.Kind in [tkString])  then
-    Result.AddPair(AName, AValue.AsString)
-
-  else if (AValue.Kind in [tkInteger, tkInt64]) then
-    Result.AddPair(AName, TJSONNumber.Create(AValue.AsOrdinal))
-
-  else if (AValue.Kind in [tkFloat]) then
-    Result.AddPair(AName, TJSONNumber.Create(AValue.AsExtended))
-
-  else if (AValue.IsType<Boolean>) then
-    Result.AddPair(AName, TJSONHelper.BooleanToTJSON(AValue.AsType<Boolean>))
-
-  else if (AValue.IsType<TDateTime>) then
-    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TDateTime>))
-  else if (AValue.IsType<TDate>) then
-    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TDate>))
-  else if (AValue.IsType<TTime>) then
-    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TTime>))
-
-  else
-    Result.AddPair(AName, AValue.ToString);
-end;
-
-function TValueToJSONObject(const AName: string; const AValue: TValue): TJSONObject;
-begin
-  Result := TValueToJSONObject(TJSONObject.Create(), AName, AValue);
-end;
-
-function ReadPropertyValue(AInstance: TObject; const APropertyName: string): TValue;
-var
-  LContext: TRttiContext;
-  LType: TRttiType;
-  LProperty: TRttiProperty;
-begin
-  Result := TValue.Empty;
-  LType := LContext.GetType(AInstance.ClassType);
-  if Assigned(LType) then
-  begin
-    LProperty := LType.GetProperty(APropertyName);
-    if Assigned(LProperty) then
-      Result := LProperty.GetValue(AInstance);
-  end;
-end;
-
-function ExecuteMethod(const AInstance: TValue; AMethod: TRttiMethod;
-  const AArguments: array of TValue; const ABeforeExecuteProc: TProc{ = nil};
-  const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean;
-var
-  LResult: TValue;
-begin
-  if Assigned(ABeforeExecuteProc) then
-    ABeforeExecuteProc();
-  LResult := AMethod.Invoke(AInstance, AArguments);
-  Result := True;
-  if Assigned(AAfterExecuteProc) then
-    AAfterExecuteProc(LResult);
-end;
-
-function ExecuteMethod(const AInstance: TValue; const AMethodName: string;
-  const AArguments: array of TValue; const ABeforeExecuteProc: TProc{ = nil};
-  const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean;
-var
-  LContext: TRttiContext;
-  LType: TRttiType;
-  LMethod: TRttiMethod;
-begin
-  Result := False;
-
-  LType := LContext.GetType(AInstance.TypeInfo);
-  if Assigned(LType) then
-  begin
-    LMethod := LType.GetMethod(AMethodName);
-    if Assigned(LMethod) then
-      Result := ExecuteMethod(AInstance, LMethod, AArguments, ABeforeExecuteProc, AAfterExecuteProc);
-  end;
-end;
 
 { TRttiHelper }
 
