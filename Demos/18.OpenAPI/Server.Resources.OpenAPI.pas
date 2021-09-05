@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit Server.Resources.Swagger;
+unit Server.Resources.OpenAPI;
 
 interface
 

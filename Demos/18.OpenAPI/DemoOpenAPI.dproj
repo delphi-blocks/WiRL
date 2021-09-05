@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{EC75D637-427E-4D5A-BFC9-602FA6A076B3}</ProjectGuid>
-        <MainSource>DemoSwagger.dpr</MainSource>
+        <MainSource>DemoOpenAPI.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <AppType>Application</AppType>
@@ -43,7 +43,7 @@
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <SanitizedProjectName>DemoSwagger</SanitizedProjectName>
+        <SanitizedProjectName>DemoOpenAPI</SanitizedProjectName>
         <DCC_E>false</DCC_E>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_F>false</DCC_F>
@@ -92,7 +92,7 @@
         </DCCReference>
         <DCCReference Include="Server.Entities.pas"/>
         <DCCReference Include="Server.Resources.Demo.pas"/>
-        <DCCReference Include="Server.Resources.Swagger.pas"/>
+        <DCCReference Include="Server.Resources.OpenAPI.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Worker.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas"/>
@@ -120,7 +120,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">DemoSwagger.dpr</Source>
+                    <Source Name="MainSource">DemoOpenAPI.dpr</Source>
                 </Source>
                 <VersionInfo>
                     <VersionInfo Name="IncludeVerInfo">True</VersionInfo>
@@ -160,9 +160,9 @@
                 <Platform value="Win32">True</Platform>
             </Platforms>
             <Deployment Version="3">
-                <DeployFile LocalName="Win32\Debug\DemoSwagger.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\DemoOpenAPI.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>DemoSwagger.exe</RemoteName>
+                        <RemoteName>DemoOpenAPI.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

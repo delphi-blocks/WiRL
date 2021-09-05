@@ -27,7 +27,7 @@ uses
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   OpenAPI.Model.Classes,
-  Server.Resources.Swagger;
+  Server.Resources.OpenAPI;
 
 type
   TMainForm = class(TForm)

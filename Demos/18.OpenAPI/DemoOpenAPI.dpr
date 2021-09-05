@@ -7,7 +7,7 @@
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-program DemoSwagger;
+program DemoOpenAPI;
 
 uses
   FastMM4,
@@ -15,7 +15,7 @@ uses
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
   Server.Entities in 'Server.Entities.pas',
   Server.Resources.Demo in 'Server.Resources.Demo.pas',
-  Server.Resources.Swagger in 'Server.Resources.Swagger.pas',
+  Server.Resources.OpenAPI in 'Server.Resources.OpenAPI.pas',
   WiRL.Core.Metadata in '..\..\Source\Core\WiRL.Core.Metadata.pas',
   WiRL.Core.Application.Worker in '..\..\Source\Core\WiRL.Core.Application.Worker.pas',
   WiRL.Core.Metadata.XMLDoc in '..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas',
