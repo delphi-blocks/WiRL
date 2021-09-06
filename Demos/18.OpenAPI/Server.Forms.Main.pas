@@ -59,7 +59,7 @@ type
   private const
     ENG_PATH = 'rest';
     APP_PATH = 'app';
-    API_PATH = 'pippo';
+    API_PATH = 'openapi';
   private
     FEngine: TWiRLEngine;
     FRESTServer: TWiRLServer;
