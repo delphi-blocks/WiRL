@@ -63,6 +63,9 @@ type
     const APPLICATION_ATOM_XML = 'application/atom+xml';
     const APPLICATION_OCTET_STREAM = 'application/octet-stream';
     const APPLICATION_FORM_URLENCODED_TYPE = 'application/x-www-form-urlencoded';
+    const APPLICATION_FIREDAC_JSON = 'application/vnd.embarcadero.firedac+json';
+    const APPLICATION_FIREDAC_XML = 'application/vnd.embarcadero.firedac+xml';
+    const APPLICATION_FIREDAC_BIN = 'application/vnd.embarcadero.firedac+bin';
     const MULTIPART_FORM_DATA = 'multipart/form-data';
     const WILDCARD = '*/*';
   public
