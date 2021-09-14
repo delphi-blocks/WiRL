@@ -27,43 +27,12 @@ uses
   WiRL.Core.Auth.Context,
   WiRL.Core.Auth.Resource,
 
+  Common.Entities,
   Server.Auth.Resource,
   // Only if you want to use a custom (claims) class
   Server.Claims;
 
 type
-  TAddress = class
-  private
-    FCity: string;
-    FStreet: string;
-    FZipCode: string;
-  public
-    property City: string read FCity write FCity;
-    property Street: string read FStreet write FStreet;
-    property ZipCode: string read FZipCode write FZipCode;
-  end;
-  TAddresses = TArray<TAddress>;
-
-  TUserInfo = class
-  private
-    FAge: Integer;
-    FFullName: string;
-    FGroup: Integer;
-    FLanguage: string;
-    FAddresses: TAddresses;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    function AddAddress(const AStreet, ACity, AZip: string): TAddress;
-
-    property Age: Integer read FAge write FAge;
-    property FullName: string read FFullName write FFullName;
-    property Group: Integer read FGroup write FGroup;
-    property Language: string read FLanguage write FLanguage;
-    property Addresses: TAddresses read FAddresses write FAddresses;
-  end;
-
   TDetailsInfo = class
   private
     FClaims: TServerClaims;
@@ -178,10 +147,12 @@ begin
     Result.Roles := 'user,manager'.Split([',']);
 
   // Here you can set all claims of the JWT
-  //Subject.Expiration := IncSecond(Now(), 30);
+  Subject.Expiration := IncSecond(Now(), 30);
+  Subject.UserID := AUserName;
 
   // Here you can set all custom claims of the JWT
   Subject.Language := 'it-IT';
+
 end;
 
 { TFormAuthResource }
@@ -200,7 +171,8 @@ begin
     Result.Roles := 'user,manager'.Split([',']);
 
   // Here you can set all claims of the JWT
-  //Subject.Expiration := IncSecond(Now(), 30);
+  Subject.Expiration := IncSecond(Now(), 30);
+  Subject.UserID := AUserName;
 
   // Here you can set all custom claims of the JWT
   Subject.Language := 'it-IT';
@@ -222,38 +194,11 @@ begin
     Result.Roles := 'user,manager'.Split([',']);
 
   // Here you can set all claims of the JWT
-  //Subject.Expiration := IncSecond(Now(), 30);
+  Subject.Expiration := IncSecond(Now(), 30);
+  Subject.UserID := AUserName;
 
   // Here you can set all custom claims of the JWT
   Subject.Language := 'it-IT';
-end;
-
-{ TUserInfo }
-
-function TUserInfo.AddAddress(const AStreet, ACity, AZip: string): TAddress;
-begin
-  Result := TAddress.Create;
-  Result.Street := AStreet;
-  Result.City := ACity;
-  Result.ZipCode := AZip;
-
-  FAddresses := FAddresses + [Result];
-end;
-
-constructor TUserInfo.Create;
-begin
-  SetLength(FAddresses, 0);
-end;
-
-destructor TUserInfo.Destroy;
-var
-  LAddress: TAddress;
-begin
-  for LAddress in FAddresses do
-    LAddress.Free;
-
-  SetLength(FAddresses, 0);
-  inherited;
 end;
 
 { TDetailsInfo }
