@@ -10,7 +10,6 @@ object frmClientMain: TfrmClientMain
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
   object Label8: TLabel
@@ -371,19 +370,11 @@ object frmClientMain: TfrmClientMain
     TabOrder = 3
   end
   object httpRestClient: TNetHTTPClient
-    Asynchronous = False
-    ConnectionTimeout = 60000
-    ResponseTimeout = 60000
-    HandleRedirects = True
-    AllowCookies = True
     UserAgent = 'Embarcadero URI Client/1.0'
     Left = 472
     Top = 104
   end
   object httpRequest: TNetHTTPRequest
-    Asynchronous = False
-    ConnectionTimeout = 60000
-    ResponseTimeout = 60000
     Client = httpRestClient
     Left = 472
     Top = 160

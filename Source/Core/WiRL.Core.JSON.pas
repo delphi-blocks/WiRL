@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -12,7 +12,7 @@ unit WiRL.Core.JSON;
 interface
 
 uses
-  System.JSON, System.SysUtils, System.Generics.Collections;
+  System.JSON, System.SysUtils, System.Classes, System.Generics.Collections;
 
 type
   TJSONAncestor = System.JSON.TJSONAncestor;
@@ -28,7 +28,7 @@ type
 
   TJSONHelper = class
   public
-    class function PrettyPrint(AJSONValue: TJSONValue): string; static;
+    class procedure PrintToWriter(AJSONValue: TJSONValue; AWriter: TTextWriter; APretty: Boolean); static;
 
     class function ToJSON(AJSONValue: TJSONValue): string; static;
     class function StringArrayToJsonArray(const values: TArray<string>): string; static;
@@ -102,11 +102,14 @@ begin
     ADestination.AddPair(TJSONPair(LPair.Clone));
 end;
 
-class function TJSONHelper.PrettyPrint(AJSONValue: TJSONValue): string;
+class procedure TJSONHelper.PrintToWriter(AJSONValue: TJSONValue; AWriter:
+    TTextWriter; APretty: Boolean);
 var
   LJSONString: string;
   LChar: Char;
   LOffset: Integer;
+  LIndex: Integer;
+  LOutsideString: Boolean;
 
   function Spaces(AOffset: Integer): string;
   begin
@@ -114,47 +117,64 @@ var
   end;
 
 begin
-  Result := '';
-  LOffset := 0;
-  LJSONString := AJSONValue.ToString;
-  for LChar in LJSONString do
+  LJSONString := AJSONValue.ToJSON;
+  if not APretty then
   begin
-    if LChar = '{' then
+    AWriter.Write(LJSONString);
+    Exit;
+  end;
+
+  LOffset := 0;
+  LOutsideString := True;
+
+  for LIndex := 0 to Length(LJSONString) - 1 do
+  begin
+    LChar := LJSONString.Chars[LIndex];
+
+    if LChar = '"' then
+      LOutsideString := not LOutsideString;
+
+    if LOutsideString and (LChar = '{') then
     begin
       Inc(LOffset);
-      Result := Result + LChar;
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
+      AWriter.Write(LChar);
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
     end
-    else if LChar = '}' then
+    else if LOutsideString and (LChar = '}') then
     begin
       Dec(LOffset);
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
-      Result := Result + LChar;
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
+      AWriter.Write(LChar);
     end
-    else if LChar = ',' then
+    else if LOutsideString and (LChar = ',') then
     begin
-      Result := Result + LChar;
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
+      AWriter.Write(LChar);
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
     end
-    else if LChar = '[' then
+    else if LOutsideString and (LChar = '[') then
     begin
       Inc(LOffset);
-      Result := Result + LChar;
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
+      AWriter.Write(LChar);
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
     end
-    else if LChar = ']' then
+    else if LOutsideString and (LChar = ']') then
     begin
       Dec(LOffset);
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
-      Result := Result + LChar;
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
+      AWriter.Write(LChar);
+    end
+    else if LOutsideString and (LChar = ':') then
+    begin
+      AWriter.Write(LChar);
+      AWriter.Write(' ');
     end
     else
-      Result := Result + LChar;
+      AWriter.Write(LChar);
   end;
 end;
 
