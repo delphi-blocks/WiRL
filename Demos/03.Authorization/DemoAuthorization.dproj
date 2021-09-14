@@ -49,7 +49,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <SanitizedProjectName>DemoAuthorization</SanitizedProjectName>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_NameSpace>Web;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Soap;Winapi;$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace)</DCC_NameSpace>
+        <DCC_NameSpace>Web;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Soap;Winapi;$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace);$(DCC_NameSpace)</DCC_NameSpace>
         <DCC_E>false</DCC_E>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_F>false</DCC_F>
@@ -96,6 +96,7 @@
         <DCCReference Include="Server.Claims.pas"/>
         <DCCReference Include="Server.Auth.Resource.pas"/>
         <DCCReference Include="Server.Filters.pas"/>
+        <DCCReference Include="Common.Entities.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

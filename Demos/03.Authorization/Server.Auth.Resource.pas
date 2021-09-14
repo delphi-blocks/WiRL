@@ -56,7 +56,6 @@ uses
 function TBodyAuthResource.DoLogin(AHardware: THardwareID): TWiRLLoginResponse;
 begin
   FAuthContext.Clear;
-
   // Custom Validation of the hardware token (simulated)
   if (AHardware.ID > 100) and (AHardware.Token = 'qwerty') then
   begin

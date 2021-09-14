@@ -28,7 +28,8 @@ type
 
   TJSONHelper = class
   public
-    class function PrettyPrint(AJSONValue: TJSONValue): string; static;
+    class function PrettyPrint(AJSONValue: TJSONValue): string; overload; static;
+    class function PrettyPrint(const AJSONString: string): string; overload; static;
 
     class function ToJSON(AJSONValue: TJSONValue): string; static;
     class function StringArrayToJsonArray(const values: TArray<string>): string; static;
@@ -70,6 +71,14 @@ begin
     Result := ISO8601ToDate(ADate, AReturnUTC);
 end;
 
+class function TJSONHelper.PrettyPrint(AJSONValue: TJSONValue): string;
+var
+  LJSONString: string;
+begin
+  LJSONString := AJSONValue.ToString;
+  Result := TJSONHelper.PrettyPrint(LJSONString);
+end;
+
 class function TJSONHelper.ToJSON(AJSONValue: TJSONValue): string;
 var
   LBytes: TBytes;
@@ -102,9 +111,8 @@ begin
     ADestination.AddPair(TJSONPair(LPair.Clone));
 end;
 
-class function TJSONHelper.PrettyPrint(AJSONValue: TJSONValue): string;
+class function TJSONHelper.PrettyPrint(const AJSONString: string): string;
 var
-  LJSONString: string;
   LChar: Char;
   LOffset: Integer;
 
@@ -116,8 +124,7 @@ var
 begin
   Result := '';
   LOffset := 0;
-  LJSONString := AJSONValue.ToString;
-  for LChar in LJSONString do
+  for LChar in AJSONString do
   begin
     if LChar = '{' then
     begin
