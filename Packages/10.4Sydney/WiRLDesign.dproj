@@ -55,7 +55,7 @@
         <GenPackage>true</GenPackage>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>WiRLDesign</SanitizedProjectName>
-        <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>../../Lib/270/$(Platform)/$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>

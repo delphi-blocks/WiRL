@@ -48,7 +48,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>../../Lib/270/$(Platform)/$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>WiRL</SanitizedProjectName>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <DCC_Description>WiRL REST Library</DCC_Description>

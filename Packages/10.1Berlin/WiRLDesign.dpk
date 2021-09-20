@@ -1,7 +1,15 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 package WiRLDesign;
 
 {$R *.res}
-{$R *.dres}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -33,7 +41,9 @@ package WiRLDesign;
 
 requires
   rtl,
-  WiRLRunTime,
+  Neon,
+  JOSE,
+  WiRL,
   DesignIDE;
 
 contains
@@ -43,10 +53,10 @@ contains
   WiRL.Core.Register in '..\..\Source\Core\WiRL.Core.Register.pas',
   WiRL.Client.CustomResource.Editor in '..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas',
   WiRL.Core.Application.Editor in '..\..\Source\Core\WiRL.Core.Application.Editor.pas' {WiRLAppEditor},
+  WiRL.Client.Application.Editor in '..\..\Source\Client\WiRL.Client.Application.Editor.pas' {WiRLClientAppResourceEditor},
   WiRL.Client.ResourceDebugger in '..\..\Source\Client\WiRL.Client.ResourceDebugger.pas' {WiRLResourceRunnerForm},
   WiRL.Client.ResourceDebuggerHeader in '..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas' {FormEditHeader},
   WiRL.Client.ResourceHeaderEditor in '..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas' {FormHeadersEditor},
-  WiRL.Client.Application.Editor in '..\..\Source\Client\WiRL.Client.Application.Editor.pas' {WiRLClientAppResourceEditor},
   WiRL.Wizards.Dialogs.ServerProject in '..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas' {formServerProjectDialog},
   WiRL.Wizards.Modules.Classes in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas',
   WiRL.Wizards.Modules.MainForm in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas',

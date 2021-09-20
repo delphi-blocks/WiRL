@@ -37,7 +37,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>../../Lib/260/$(Platform)/$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>WiRL</SanitizedProjectName>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <DCC_Description>WiRL REST Library</DCC_Description>
@@ -180,6 +180,8 @@
                     <Source Name="MainSource">WiRL.dpk</Source>
                 </Source>
                 <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k260.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp260.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>

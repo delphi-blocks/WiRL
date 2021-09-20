@@ -2,12 +2,12 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-package WiRLRunTime;
+package WiRL;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -52,7 +52,8 @@ requires
   bindengine,
   bindcomp,
   JOSE,
-  NeonRunTime;
+  Neon,
+  OpenAPI;
 
 contains
   WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
@@ -74,10 +75,6 @@ contains
   WiRL.Core.Exceptions in '..\..\Source\Core\WiRL.Core.Exceptions.pas',
   WiRL.Core.Injection in '..\..\Source\Core\WiRL.Core.Injection.pas',
   WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
-  WiRL.Core.MessageBody.Classes in '..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
-  WiRL.Core.MessageBody.Default in '..\..\Source\Core\WiRL.Core.MessageBody.Default.pas',
-  WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
-  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
   WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
@@ -111,11 +108,14 @@ contains
   WiRL.Configuration.JWT in '..\..\Source\Core\WiRL.Configuration.JWT.pas',
   WiRL.Configuration.Neon in '..\..\Source\Core\WiRL.Configuration.Neon.pas',
   WiRL.Core.Converter in '..\..\Source\Core\WiRL.Core.Converter.pas',
-  WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
+  WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
   WiRL.Http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
+  WiRL.Core.MessageBody.Classes in '..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
+  WiRL.Core.MessageBody.Default in '..\..\Source\Core\WiRL.Core.MessageBody.Default.pas',
+  WiRL.Core.MessageBodyReader in '..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
+  WiRL.Core.MessageBodyWriter in '..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
   WiRL.Core.Metadata in '..\..\Source\Core\WiRL.Core.Metadata.pas',
-  WiRL.Core.Metadata.XMLDoc in '..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas',
   WiRL.Client.Filters in '..\..\Source\Client\WiRL.Client.Filters.pas';
 
 end.

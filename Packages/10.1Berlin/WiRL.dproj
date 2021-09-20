@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{EBEA6D21-3813-485E-8BCA-048D1CABD9C1}</ProjectGuid>
-        <MainSource>WiRLRunTime.dpk</MainSource>
+        <MainSource>WiRL.dpk</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <TargetedPlatforms>1</TargetedPlatforms>
@@ -47,8 +47,8 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
-        <SanitizedProjectName>WiRLRunTime</SanitizedProjectName>
+        <DCC_DcuOutput>../../Lib/240/$(Platform)/$(Config)</DCC_DcuOutput>
+        <SanitizedProjectName>WiRL</SanitizedProjectName>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <DCC_Description>WiRL REST Library</DCC_Description>
         <GenDll>true</GenDll>
@@ -110,7 +110,8 @@
         <DCCReference Include="bindengine.dcp"/>
         <DCCReference Include="bindcomp.dcp"/>
         <DCCReference Include="JOSE.dcp"/>
-        <DCCReference Include="NeonRunTime.dcp"/>
+        <DCCReference Include="Neon.dcp"/>
+        <DCCReference Include="OpenAPI.dcp"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Resource.pas"/>
@@ -130,10 +131,6 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Injection.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Default.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Registry.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Singleton.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Utils.pas"/>
@@ -167,11 +164,14 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.JWT.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.Neon.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Converter.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Context.Server.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.Converter.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Context.Server.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Http.Headers.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Default.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Filters.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
@@ -191,12 +191,9 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">WiRLRunTime.dpk</Source>
+                    <Source Name="MainSource">WiRL.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRL240.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRL240.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k240.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp240.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>

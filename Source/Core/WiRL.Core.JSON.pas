@@ -28,6 +28,7 @@ type
 
   TJSONHelper = class
   public
+    class function Print(AJSONValue: TJSONValue; APretty: Boolean): string; static;
     class procedure PrintToWriter(AJSONValue: TJSONValue; AWriter: TTextWriter; APretty: Boolean); static;
 
     class function ToJSON(AJSONValue: TJSONValue): string; static;
@@ -100,6 +101,19 @@ var
 begin
   for LPair in ASource do
     ADestination.AddPair(TJSONPair(LPair.Clone));
+end;
+
+class function TJSONHelper.Print(AJSONValue: TJSONValue; APretty: Boolean): string;
+var
+  LWriter: TStringWriter;
+begin
+  LWriter := TStringWriter.Create;
+  try
+    PrintToWriter(AJSONValue, LWriter, APretty);
+    Result := LWriter.ToString;
+  finally
+    LWriter.Free;
+  end;
 end;
 
 class procedure TJSONHelper.PrintToWriter(AJSONValue: TJSONValue; AWriter:
