@@ -30,7 +30,7 @@ type
     function SetXMLDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetAPILogo(const AName: string): IWiRLConfigurationOpenAPI;
-
+    function SetAPIServer(const AHost, ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
   end;
 
@@ -44,6 +44,7 @@ type
     FClass: TClass;
     FDocument: TOpenAPIDocument;
     FAPILogo: string;
+    FServers: TArray<TOpenAPIServer>;
     FFolderXMLDoc: string;
     FFolderGUIDoc: string;
   public
@@ -58,6 +59,7 @@ type
     function SetXMLDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
+    function SetAPIServer(const AHost, ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
   published
     property APILogo: string read FAPILogo write FAPILogo;
@@ -69,16 +71,24 @@ type
 implementation
 
 uses
+  WiRL.http.URL,
   WiRL.http.Filters,
   WiRL.Core.OpenAPI.Resource;
 
 function TWiRLConfigurationOpenAPI.ApplyConfig: IWiRLApplication;
+var
+  LServer: TOpenAPIServer;
 begin
   if not Assigned(FClass) then
     FClass := TOpenAPIResourceDefault;
 
-  TWiRLResourceRegistry.Instance.RegisterResource(FClass);
+  if not TWiRLResourceRegistry.Instance.ResourceExists(FClass) then
+    TWiRLResourceRegistry.Instance.RegisterResource(FClass);
+
   FApplication.SetResources(FClass.QualifiedClassName);
+
+  for LServer in FServers do
+    FDocument.Servers.Add(LServer);
 
   Result := inherited ApplyConfig;
 end;
@@ -86,6 +96,7 @@ end;
 constructor TWiRLConfigurationOpenAPI.Create;
 begin
   inherited;
+  FServers := [];
   FDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
 end;
 
@@ -118,6 +129,17 @@ end;
 function TWiRLConfigurationOpenAPI.SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
 begin
   FAPILogo := ALogo;
+  Result := Self;
+end;
+
+function TWiRLConfigurationOpenAPI.SetAPIServer(const AHost, ADescription: string): IWiRLConfigurationOpenAPI;
+var
+  LURL: string;
+  LServer: TOpenAPIServer;
+begin
+  LURL := TWiRLURL.CombinePath([AHost, FApplication.GetPath]);
+  LServer := TOpenAPIServer.Create(LURL, ADescription);
+  FServers := FServers + [LServer];
   Result := Self;
 end;
 

@@ -37,9 +37,13 @@ type
   public
     constructor Create; virtual;
     function AddResourceName(const AResourceName: string): TWiRLConstructorProxy;
+
     function RegisterResource(AClass: TClass): TWiRLConstructorProxy; overload;
     function RegisterResource<T: class>: TWiRLConstructorProxy; overload;
     function RegisterResource<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLConstructorProxy; overload;
+
+    function ResourceExists(AClass: TClass): Boolean; overload;
+    function ResourceExists<T: class>: Boolean; overload;
 
     procedure UnregisterResource(AClass: TClass);
 
@@ -96,6 +100,18 @@ end;
 constructor TWiRLResourceRegistry.Create;
 begin
   inherited Create([doOwnsValues]);
+end;
+
+function TWiRLResourceRegistry.ResourceExists(AClass: TClass): Boolean;
+var
+  LItem: TWiRLConstructorProxy;
+begin
+  Result := TryGetValue(AClass.QualifiedClassName, LItem);
+end;
+
+function TWiRLResourceRegistry.ResourceExists<T>: Boolean;
+begin
+  Result := ResourceExists(TClass(T));
 end;
 
 class function TWiRLResourceRegistry.GetInstance: TWiRLResourceRegistry;

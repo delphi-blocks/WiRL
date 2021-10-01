@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -52,10 +52,12 @@ type
     function SetAppName(const AAppName: string): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
-    function GetAppConfigurator: TAppConfigurator;
     function AddApplication(const ABasePath: string): IWiRLApplication;
     function AddConfiguration(const AConfiguration: TWiRLConfiguration): IWiRLApplication;
+
     function GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
+    function GetAppConfigurator: TAppConfigurator;
+    function GetPath: string;
 
     property Plugin: TAppConfigurator read GetAppConfigurator;
   end;
