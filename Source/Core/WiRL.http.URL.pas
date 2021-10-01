@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -287,9 +287,8 @@ begin
       LToken := PathTokens[LIndex];
       LOtherToken := AOtherURL.PathTokens[LIndex];
       if not (
-        (LToken = LOtherToken) // exact match
-        or (StartsStr('{', LToken) and EndsStr('}', LToken)) // LToken is a param
-        or (StartsStr('{', LOtherToken) and EndsStr('}', LOtherToken)) // LOtherToken is a param
+        (LToken = LOtherToken) or // exact match
+        (StartsStr('{', LToken) and EndsStr('}', LToken)) // LToken is a param
       ) then
         Result := False;
     end;
