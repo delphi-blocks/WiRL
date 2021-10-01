@@ -88,7 +88,7 @@ type
 
   TWiRLFilterType = (Normal, PreMatching, PreMatchingResource);
 
-  TWiRLFilterConstructorInfo = class
+  TWiRLFilterConstructorProxy = class
   private
     FConstructorFunc: TFunc<TObject>;
     FFilterQualifiedClassName: string;
@@ -106,10 +106,10 @@ type
     property Priority: Integer read FPriority;
     property ConstructorFunc: TFunc<TObject> read FConstructorFunc write FConstructorFunc;
     property FilterQualifiedClassName: string read FFilterQualifiedClassName;
-    function Clone: TWiRLFilterConstructorInfo;
+    function Clone: TWiRLFilterConstructorProxy;
   end;
 
-  TWiRLFilterRegistry = class(TObjectList<TWiRLFilterConstructorInfo>)
+  TWiRLFilterRegistry = class(TObjectList<TWiRLFilterConstructorProxy>)
   private
     type
       TWiRLFilterRegistrySingleton = TWiRLSingleton<TWiRLFilterRegistry>;
@@ -123,18 +123,18 @@ type
     constructor Create; virtual;
 
     procedure Sort;
-    function AddFilterName(const AFilterName: string): TWiRLFilterConstructorInfo;
+    function AddFilterName(const AFilterName: string): TWiRLFilterConstructorProxy;
 
-    function FilterByClassName(const AClassName: string; out AConstructorInfo: TWiRLFilterConstructorInfo) :Boolean;
-    function RegisterFilter<T: class>: TWiRLFilterConstructorInfo; overload;
-    function RegisterFilter<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLFilterConstructorInfo; overload;
+    function FilterByClassName(const AClassName: string; out AConstructorInfo: TWiRLFilterConstructorProxy) :Boolean;
+    function RegisterFilter<T: class>: TWiRLFilterConstructorProxy; overload;
+    function RegisterFilter<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLFilterConstructorProxy; overload;
 
     function ApplyPreMatchingRequestFilters(AContext: TWiRLContext): Boolean;
     function ApplyPreMatchingResourceFilters(AContext: TWiRLContext): Boolean;
     procedure ApplyPreMatchingResponseFilters(AContext: TWiRLContext);
 
-    procedure FetchRequestFilter(AFilterType: TWiRLFilterType; ARequestProc: TProc<TWiRLFilterConstructorInfo>);
-    procedure FetchResponseFilter(AFilterType: TWiRLFilterType; AResponseProc: TProc<TWiRLFilterConstructorInfo>);
+    procedure FetchRequestFilter(AFilterType: TWiRLFilterType; ARequestProc: TProc<TWiRLFilterConstructorProxy>);
+    procedure FetchResponseFilter(AFilterType: TWiRLFilterType; AResponseProc: TProc<TWiRLFilterConstructorProxy>);
 
     class property Instance: TWiRLFilterRegistry read GetInstance;
   end;
@@ -144,12 +144,12 @@ implementation
 
 { TWiRLConstructorInfo }
 
-function TWiRLFilterConstructorInfo.Clone: TWiRLFilterConstructorInfo;
+function TWiRLFilterConstructorProxy.Clone: TWiRLFilterConstructorProxy;
 begin
-  Result := TWiRLFilterConstructorInfo.Create(FTypeTClass, FConstructorFunc, FPriority);
+  Result := TWiRLFilterConstructorProxy.Create(FTypeTClass, FConstructorFunc, FPriority);
 end;
 
-constructor TWiRLFilterConstructorInfo.Create(AClass: TClass;
+constructor TWiRLFilterConstructorProxy.Create(AClass: TClass;
   const AConstructorFunc: TFunc<TObject>; APriority: Integer);
 var
   LFilterType: TRttiType;
@@ -195,14 +195,14 @@ begin
     ;
 end;
 
-constructor TWiRLFilterConstructorInfo.Create(
+constructor TWiRLFilterConstructorProxy.Create(
   const AFilterQualifiedClassName: string);
 begin
   inherited Create;
   FFilterQualifiedClassName := AFilterQualifiedClassName;
 end;
 
-function TWiRLFilterConstructorInfo.GetRequestFilter: IWiRLContainerRequestFilter;
+function TWiRLFilterConstructorProxy.GetRequestFilter: IWiRLContainerRequestFilter;
 var
   LTempObj: TObject;
 begin
@@ -218,7 +218,7 @@ begin
 
 end;
 
-function TWiRLFilterConstructorInfo.GetResponseFilter: IWiRLContainerResponseFilter;
+function TWiRLFilterConstructorProxy.GetResponseFilter: IWiRLContainerResponseFilter;
 var
   LTempObj: TObject;
 begin
@@ -235,19 +235,19 @@ end;
 { TWiRLFilterRegistry }
 
 function TWiRLFilterRegistry.AddFilterName(
-  const AFilterName: string): TWiRLFilterConstructorInfo;
+  const AFilterName: string): TWiRLFilterConstructorProxy;
 begin
-  Result := TWiRLFilterConstructorInfo.Create(AFilterName);
+  Result := TWiRLFilterConstructorProxy.Create(AFilterName);
   Add(Result);
   FSorted := False;
 end;
 
 constructor TWiRLFilterRegistry.Create;
 var
-  LComparer: IComparer<TWiRLFilterConstructorInfo>;
+  LComparer: IComparer<TWiRLFilterConstructorProxy>;
 begin
-  LComparer := TDelegatedComparer<TWiRLFilterConstructorInfo>.Create(
-    function(const Left, Right: TWiRLFilterConstructorInfo): Integer
+  LComparer := TDelegatedComparer<TWiRLFilterConstructorProxy>.Create(
+    function(const Left, Right: TWiRLFilterConstructorProxy): Integer
     begin
       Result := Left.Priority - Right.Priority;
     end
@@ -257,9 +257,9 @@ begin
   inherited Create(LComparer, True);
 end;
 
-procedure TWiRLFilterRegistry.FetchRequestFilter(AFilterType: TWiRLFilterType; ARequestProc: TProc<TWiRLFilterConstructorInfo>);
+procedure TWiRLFilterRegistry.FetchRequestFilter(AFilterType: TWiRLFilterType; ARequestProc: TProc<TWiRLFilterConstructorProxy>);
 var
-  LConstructorInfo: TWiRLFilterConstructorInfo;
+  LConstructorInfo: TWiRLFilterConstructorProxy;
   LFilterRttiType: TRttiType;
   LFilterType: TWiRLFilterType;
 begin
@@ -283,9 +283,9 @@ begin
   end;
 end;
 
-procedure TWiRLFilterRegistry.FetchResponseFilter(AFilterType: TWiRLFilterType; AResponseProc: TProc<TWiRLFilterConstructorInfo>);
+procedure TWiRLFilterRegistry.FetchResponseFilter(AFilterType: TWiRLFilterType; AResponseProc: TProc<TWiRLFilterConstructorProxy>);
 var
-  LConstructorInfo: TWiRLFilterConstructorInfo;
+  LConstructorInfo: TWiRLFilterConstructorProxy;
   LFilterRttiType: TRttiType;
   LFilterType: TWiRLFilterType;
 begin
@@ -317,7 +317,7 @@ var
 begin
   LAborted := False;
   TWiRLFilterRegistry.Instance.FetchRequestFilter(TWiRLFilterType.PreMatching,
-    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    procedure (ConstructorInfo: TWiRLFilterConstructorProxy)
     begin
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
       if not Supports(ConstructorInfo.ConstructorFunc(), IWiRLContainerRequestFilter, LRequestFilter) then
@@ -345,7 +345,7 @@ var
 begin
   LAborted := False;
   TWiRLFilterRegistry.Instance.FetchRequestFilter(TWiRLFilterType.PreMatchingResource,
-    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    procedure (ConstructorInfo: TWiRLFilterConstructorProxy)
     begin
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
       if not Supports(ConstructorInfo.ConstructorFunc(), IWiRLContainerRequestFilter, LRequestFilter) then
@@ -371,7 +371,7 @@ var
   LResponseContext: TWiRLContainerResponseContext;
 begin
   TWiRLFilterRegistry.Instance.FetchResponseFilter(TWiRLFilterType.PreMatching,
-    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    procedure (ConstructorInfo: TWiRLFilterConstructorProxy)
     begin
       // The check doesn't have any sense but I must use SUPPORT and I hate using it without a check
       if not Supports(ConstructorInfo.ConstructorFunc(), IWiRLContainerResponseFilter, LResponseFilter) then
@@ -390,9 +390,9 @@ begin
 end;
 
 function TWiRLFilterRegistry.FilterByClassName(const AClassName: string;
-  out AConstructorInfo: TWiRLFilterConstructorInfo): Boolean;
+  out AConstructorInfo: TWiRLFilterConstructorProxy): Boolean;
 var
-  LItem: TWiRLFilterConstructorInfo;
+  LItem: TWiRLFilterConstructorProxy;
 begin
   Result := False;
   for LItem in Self do
@@ -425,7 +425,7 @@ begin
 end;
 
 function TWiRLFilterRegistry.RegisterFilter<T>(
-  const AConstructorFunc: TFunc<TObject>): TWiRLFilterConstructorInfo;
+  const AConstructorFunc: TFunc<TObject>): TWiRLFilterConstructorProxy;
 begin
   if not Supports(TClass(T), IWiRLContainerRequestFilter) and not Supports(TClass(T), IWiRLContainerResponseFilter) then
     raise EWiRLServerException.Create(
@@ -434,7 +434,7 @@ begin
       'RegisterFilter'
     );
 
-  Result := TWiRLFilterConstructorInfo.Create(TClass(T), AConstructorFunc, GetPriority(TClass(T)));
+  Result := TWiRLFilterConstructorProxy.Create(TClass(T), AConstructorFunc, GetPriority(TClass(T)));
   Add(Result);
   FSorted := False;
 end;
@@ -448,7 +448,7 @@ begin
   end;
 end;
 
-function TWiRLFilterRegistry.RegisterFilter<T>: TWiRLFilterConstructorInfo;
+function TWiRLFilterRegistry.RegisterFilter<T>: TWiRLFilterConstructorProxy;
 begin
   Result := RegisterFilter<T>(nil);
 end;

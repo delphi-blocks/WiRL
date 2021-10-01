@@ -183,7 +183,7 @@ end;
 function TWiRLApplication.AddFilter(const AFilter: string): Boolean;
 var
   LRegistry: TWiRLFilterRegistry;
-  LInfo: TWiRLFilterConstructorInfo;
+  LInfo: TWiRLFilterConstructorProxy;
 begin
   if csDesigning in ComponentState then
   begin
@@ -446,7 +446,7 @@ end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
 var
-  LFilter: TWiRLFilterConstructorInfo;
+  LFilter: TWiRLFilterConstructorProxy;
 begin
   Writer.WriteListBegin;
   for LFilter in FFilterRegistry do

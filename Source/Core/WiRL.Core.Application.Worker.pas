@@ -169,7 +169,7 @@ begin
 
   // Run filters
   FAppConfig.FilterRegistry.FetchRequestFilter(TWiRLFilterType.Normal,
-    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    procedure (ConstructorInfo: TWiRLFilterConstructorProxy)
     var
       LRequestContext: TWiRLContainerRequestContext;
     begin
@@ -201,7 +201,7 @@ begin
 
   // Run filters
   FAppConfig.FilterRegistry.FetchResponseFilter(TWiRLFilterType.Normal,
-    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+    procedure (ConstructorInfo: TWiRLFilterConstructorProxy)
     var
       LResponseContext: TWiRLContainerResponseContext;
     begin
