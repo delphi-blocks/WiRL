@@ -41,6 +41,9 @@ type
   TParametersResource = class(TObject)
     [Context] Response: TWiRLResponse;
   public
+    [GET, Path('/test/list'), Produces(TMediaType.TEXT_PLAIN)]
+    function ParamTestList: string;
+
     /// <summary>
     ///   Method with a *sample* documentation
     /// </summary>
@@ -104,6 +107,11 @@ end;
 function TParametersResource.ParamTest(APathParam: string): string;
 begin
   Result := APathParam;
+end;
+
+function TParametersResource.ParamTestList: string;
+begin
+  Result := 'Test List';
 end;
 
 { TEntitiesResource }
