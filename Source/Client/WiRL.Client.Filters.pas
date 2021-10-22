@@ -93,7 +93,7 @@ type
     property Priority: Integer read FPriority;
     property ConstructorFunc: TFunc<TObject> read FConstructorFunc write FConstructorFunc;
 //    property FilterQualifiedClassName: string read FFilterQualifiedClassName;
-//    function Clone: TWiRLFilterConstructorInfo;
+//    function Clone: TWiRLFilterConstructorProxy;
   end;
 
   TWiRLClientFilterRegistry = class(TObjectList<TWiRLClientFilterConstructorInfo>)
@@ -120,8 +120,8 @@ type
 //    function ApplyPreMatchingResourceFilters(AContext: TWiRLContext): Boolean;
 //    procedure ApplyPreMatchingResponseFilters(AContext: TWiRLContext);
 //
-//    procedure FetchRequestFilter(AFilterType: TWiRLFilterType; ARequestProc: TProc<TWiRLFilterConstructorInfo>);
-//    procedure FetchResponseFilter(AFilterType: TWiRLFilterType; AResponseProc: TProc<TWiRLFilterConstructorInfo>);
+//    procedure FetchRequestFilter(AFilterType: TWiRLFilterType; ARequestProc: TProc<TWiRLFilterConstructorProxy>);
+//    procedure FetchResponseFilter(AFilterType: TWiRLFilterType; AResponseProc: TProc<TWiRLFilterConstructorProxy>);
 //
     class property Instance: TWiRLClientFilterRegistry read GetInstance;
   end;
