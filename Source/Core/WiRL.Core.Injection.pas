@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -22,9 +22,6 @@ uses
   WiRL.Rtti.Utils;
 
 type
-  // https://stackoverflow.com/questions/27820171/delphi-using-records-as-key-in-tdictionary
-
-
   IContextObjectFactory = interface
   ['{43596462-9B26-4B84-BD5C-0225900F6C93}']
     function CreateContextObject(const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
@@ -64,14 +61,10 @@ type
 implementation
 
 uses
-//  WiRL.Core.Engine,
-//  WiRL.Core.Application,
   WiRL.Configuration.Core,
   WiRL.http.URL,
-//  WiRL.http.Server,
   WiRL.http.Request,
   WiRL.http.Response;
-//  WiRL.Core.Auth.Context;
 
 { TWiRLContextInjectionRegistry }
 
@@ -156,8 +149,7 @@ begin
   FRegistry.Add(LEntryInfo)
 end;
 
-procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(
-  const AFactoryClass: TClass);
+procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(const AFactoryClass: TClass);
 begin
   Self.RegisterFactory<T>(AFactoryClass,
     function: IInterface
@@ -172,7 +164,6 @@ begin
       if (not Supports(Result, IContextObjectFactory)) and
          (not Supports(Result, IContextHttpFactory)) then
         raise Exception.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
-
     end);
 end;
 
@@ -181,42 +172,7 @@ function TWiRLContextInjectionRegistry.ContextInjectionByType(const AObject: TRt
 var
   LType: TClass;
 begin
-  //Result := True;
   LType := TRttiHelper.GetType(AObject).AsInstance.MetaclassType;
-
-
-  {
-  // AuthContext
-  if (LType.InheritsFrom(TWiRLAuthContext)) then
-    AValue := AContext.AuthContext
-  // Claims (Subject)
-  else if (LType.InheritsFrom(TWiRLSubject)) then
-    AValue := AContext.AuthContext.Subject
-  // HTTP Server
-  else if (LType.InheritsFrom(TWiRLServer)) then
-    AValue := AContext.Server as TWiRLServer
-  // HTTP request
-  else if (LType.InheritsFrom(TWiRLRequest)) then
-    AValue := AContext.Request
-  // HTTP response
-  else if (LType.InheritsFrom(TWiRLResponse)) then
-    AValue := AContext.Response
-  // URL info
-  else if (LType.InheritsFrom(TWiRLURL)) then
-    AValue := AContext.RequestURL
-  // Engine
-  else if (LType.InheritsFrom(TWiRLEngine)) then
-    AValue := AContext.Engine as TWiRLEngine
-  // Application
-  else if (LType.InheritsFrom(TWiRLApplication)) then
-    AValue := AContext.Application
-  }
-
-//  if LType.InheritsFrom(TWiRLConfiguration) then
-//  begin
-//    AValue := AContext.GetContainerAs<TWiRLApplication>.GetConfigByClassRef(TWiRLConfigurationClass(LType));
-//    Exit(not AValue.IsEmpty);
-//  end;
 
   AValue := AContext.FindContextDataAs(LType);
   if not AValue.IsEmpty then
@@ -269,6 +225,5 @@ begin
     end
   );
 end;
-
 
 end.

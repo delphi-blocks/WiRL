@@ -19,6 +19,7 @@ uses
   WiRL.Core.Classes,
   WiRL.Core.Metadata,
   WiRL.Core.Application,
+  WiRL.Core.GarbageCollector,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
@@ -53,12 +54,12 @@ type
 
   TWiRLApplicationWorker = class
   private
-    FContext: TWiRLContext;
+    FContext: TWiRLContextServer;
     FAppConfig: TWiRLApplication;
     FAuthContext: TWiRLAuthContext;
     FLocator: TWiRLResourceLocator;
+    FGC: TWiRLGarbageCollector;
 
-    procedure CollectGarbage(const AValue: TValue);
     function HasRowConstraints(const AAttrArray: TAttributeArray): Boolean;
     procedure ValidateMethodParam(const AAttrArray: TAttributeArray; AValue: TValue; ARawConstraint: Boolean);
     function GetConstraintErrorMessage(AAttr: TCustomConstraintAttribute): string;
@@ -76,7 +77,7 @@ type
     function GetAuthToken: string;
     function CreateAuthContext: TWiRLAuthContext;
   public
-    constructor Create(AContext: TWiRLContext);
+    constructor Create(AContext: TWiRLContextServer);
     destructor Destroy; override;
 
     // Filters handling
@@ -138,20 +139,22 @@ type
 
 { TWiRLApplicationWorker }
 
-constructor TWiRLApplicationWorker.Create(AContext: TWiRLContext);
+constructor TWiRLApplicationWorker.Create(AContext: TWiRLContextServer);
 begin
   Assert(Assigned(AContext.Application), 'AContext.Application cannot be nil');
 
   FContext := AContext;
   FAppConfig := AContext.Application as TWiRLApplication;
   FLocator := TWiRLResourceLocator.Create(FAppConfig.Proxy, FContext);
-
+  FGC := TWiRLGarbageCollector.Create;
+  FContext.AddContainerOnce(FGC, False);
   //FResource := TWiRLProxyResource.Create(FAppConfig.Resources);
 end;
 
 destructor TWiRLApplicationWorker.Destroy;
 begin
   FLocator.Free;
+  FGC.Free;
   inherited;
 end;
 
@@ -279,29 +282,6 @@ begin
     raise EWiRLNotAuthorizedException.Create('Method call not authorized', Self.ClassName);
 end;
 
-procedure TWiRLApplicationWorker.CollectGarbage(const AValue: TValue);
-var
-  LIndex: Integer;
-begin
-  case AValue.Kind of
-    tkClass:
-    begin
-      if (AValue.AsObject <> nil) then
-        if not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType) then
-          AValue.AsObject.Free;
-    end;
-
-    //tkInterface: TObject(AValue.AsInterface).Free;
-
-    tkArray,
-    tkDynArray:
-    begin
-      for LIndex := 0 to AValue.GetArrayLength - 1 do
-        CollectGarbage(AValue.GetArrayElement(LIndex));
-    end;
-  end;
-end;
-
 procedure TWiRLApplicationWorker.ContextInjection(AInstance: TObject);
 begin
   TWiRLContextInjectionRegistry.Instance.
@@ -396,7 +376,7 @@ begin
       LParamValue.Free;
     end;
   except
-    CollectGarbage(Result);
+    FGC.CollectSingleGarbage(Result);
     raise;
   end;
 end;
@@ -546,13 +526,13 @@ end;
 procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject;
   const AWriter: IMessageBodyWriter; AMediaType: TMediaType);
 
-  procedure CollectResultGarbage(AMethodResult: TValue);
+  procedure AddResultToGarbage(AMethodResult: TValue);
   begin
     if (not FLocator.Method.MethodResult.IsSingleton) then
-      CollectGarbage(AMethodResult);
+      FGC.AddGarbage(AMethodResult);
   end;
 
-  procedure CollectArgumentsGarbage(AArgumentArray: TArgumentArray);
+  procedure AddArgumentsToGarbage(AArgumentArray: TArgumentArray);
   var
     LArgument: TValue;
     LParameters: TArray<TRttiParameter>;
@@ -564,7 +544,7 @@ procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject;
     begin
       // Context arguments will be released by TWiRLContext if needed
       if not TRttiHelper.HasAttribute<ContextAttribute>(LParameters[LArgIndex]) then
-        CollectGarbage(LArgument);
+        FGC.AddGarbage(LArgument);
       Inc(LArgIndex);
     end;
   end;
@@ -580,8 +560,12 @@ begin
   LContentType := FContext.Response.ContentType;
   try
     LArgumentArray := [];
+
     FillResourceMethodParameters(AInstance, LArgumentArray);
+    AddArgumentsToGarbage(LArgumentArray);
+
     LMethodResult := FLocator.Method.RttiObject.Invoke(AInstance, LArgumentArray);
+    AddResultToGarbage(LMethodResult);
 
     if FLocator.Method.IsFunction then
     begin
@@ -615,8 +599,7 @@ begin
         );
     end;
   finally
-    CollectResultGarbage(LMethodResult);
-    CollectArgumentsGarbage(LArgumentArray);
+    FGC.CollectGarbage;
   end;
 end;
 
@@ -829,9 +812,6 @@ end;
 procedure TWiRLResourceLocator.LocateResource;
 begin
   FApplication := FContext.Application as TWiRLApplication;
-  //FEnginePath := (FContext.Engine as TWiRLEngine).BasePath;
-  //FAppPath := LApp.BasePath;
-
   FResource := FProxy.GetResource(FContext.RequestURL.Resource);
 end;
 

@@ -20,6 +20,7 @@ uses
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.Core.Application,
+  WiRL.Core.GarbageCollector,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBody.Default,
   //WiRL.Data.FireDAC.MessageBody.Default,
@@ -29,6 +30,8 @@ uses
 type
   [Path('/helloworld')]
   THelloWorldResource = class
+  private
+    [Context] GC: TWiRLGarbageCollector;
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
@@ -154,7 +157,11 @@ begin
 end;
 
 function THelloWorldResource.HelloWorld(): string;
+var
+  LObj: TObject;
 begin
+  LObj := TObject.Create;
+  GC.AddGarbage(LObj);
   Result := 'Hello World!';
 end;
 
