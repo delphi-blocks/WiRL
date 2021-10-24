@@ -12,17 +12,17 @@ unit WiRL.Core.GarbageCollector;
 interface
 
 uses
-  System.SysUtils, System.Rtti, System.Generics.Collections;
+  System.SysUtils, System.Rtti, System.Generics.Defaults, System.Generics.Collections;
 
 type
   TWiRLGarbageCollector = class
   private
     FGarbage: TArray<TValue>;
+    procedure CollectSingleGarbage(const AValue: TValue);
   public
     constructor Create;
-    procedure AddGarbage(const AValue: TValue);
-    procedure CollectSingleGarbage(const AValue: TValue);
 
+    procedure AddGarbage(const AValue: TValue);
     procedure CollectGarbage();
   end;
 
@@ -50,11 +50,13 @@ var
 begin
   for LIndex := 0 to High(FGarbage) do
     CollectSingleGarbage(FGarbage[LIndex]);
+  FGarbage := [];
 end;
 
 procedure TWiRLGarbageCollector.CollectSingleGarbage(const AValue: TValue);
 var
   LIndex: Integer;
+  //LIntfObj: TObject;
 begin
   case AValue.Kind of
     tkClass:
@@ -64,7 +66,15 @@ begin
           AValue.AsObject.Free;
     end;
 
-    //tkInterface: TObject(AValue.AsInterface).Free;
+    { TODO -opaolo -c : RefCounted or Not?? 24/10/2021 10:47:46 }
+//    tkInterface:
+//    begin
+//      AValue.AsInterface.QueryInterface()
+//      LIntfObj := TObject(AValue.AsInterface);
+//      // If RefCounted do nothing
+//      // If not RefCounted call free on the implementor (TObject)
+//
+//    end;
 
     tkArray,
     tkDynArray:

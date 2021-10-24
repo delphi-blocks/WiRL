@@ -376,7 +376,7 @@ begin
       LParamValue.Free;
     end;
   except
-    FGC.CollectSingleGarbage(Result);
+    FGC.AddGarbage(Result);
     raise;
   end;
 end;
