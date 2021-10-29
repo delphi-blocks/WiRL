@@ -12,17 +12,27 @@ unit WiRL.Core.GarbageCollector;
 interface
 
 uses
-  System.SysUtils, System.Rtti, System.Generics.Defaults, System.Generics.Collections;
+  System.SysUtils, System.Rtti, System.Classes,
+  System.Generics.Defaults, System.Generics.Collections;
 
 type
-  TWiRLGarbageCollector = class
-  private
-    FGarbage: TArray<TValue>;
-    procedure CollectSingleGarbage(const AValue: TValue);
-  public
-    constructor Create;
+  TDisposeAction = reference to procedure;
 
-    procedure AddGarbage(const AValue: TValue);
+  TGarbageInfo = record
+    Value: TValue;
+    Action: TDisposeAction;
+  end;
+
+  TWiRLGarbageCollector = class(TComponent)
+  private
+    FGarbage: TArray<TGarbageInfo>;
+    procedure CollectSingleGarbage(const AValue: TValue); overload;
+    procedure CollectSingleGarbage(const AGarbage: TGarbageInfo); overload;
+  public
+    constructor Create(AOwner: TComponent); overload; override;
+
+    procedure AddGarbage(const AValue: TValue); overload;
+    procedure AddGarbage(const AValue: TValue; AAction: TDisposeAction); overload;
     procedure CollectGarbage();
   end;
 
@@ -32,16 +42,18 @@ uses
   WiRL.Core.Attributes,
   WiRL.Rtti.Utils;
 
-{ TWiRLGarbageCollector }
-
-constructor TWiRLGarbageCollector.Create;
-begin
-  FGarbage := [];
-end;
-
 procedure TWiRLGarbageCollector.AddGarbage(const AValue: TValue);
 begin
-  FGarbage := FGarbage + [AValue];
+  AddGarbage(AValue, nil);
+end;
+
+procedure TWiRLGarbageCollector.AddGarbage(const AValue: TValue; AAction: TDisposeAction);
+var
+  LItem: TGarbageInfo;
+begin
+  LItem.Value := AValue;
+  LItem.Action := AAction;
+  FGarbage := FGarbage + [LItem];
 end;
 
 procedure TWiRLGarbageCollector.CollectGarbage;
@@ -53,10 +65,17 @@ begin
   FGarbage := [];
 end;
 
+procedure TWiRLGarbageCollector.CollectSingleGarbage(const AGarbage: TGarbageInfo);
+begin
+  if Assigned(AGarbage.Action) then
+    AGarbage.Action()
+  else
+    CollectSingleGarbage(AGarbage.Value);
+end;
+
 procedure TWiRLGarbageCollector.CollectSingleGarbage(const AValue: TValue);
 var
   LIndex: Integer;
-  //LIntfObj: TObject;
 begin
   case AValue.Kind of
     tkClass:
@@ -66,16 +85,6 @@ begin
           AValue.AsObject.Free;
     end;
 
-    { TODO -opaolo -c : RefCounted or Not?? 24/10/2021 10:47:46 }
-//    tkInterface:
-//    begin
-//      AValue.AsInterface.QueryInterface()
-//      LIntfObj := TObject(AValue.AsInterface);
-//      // If RefCounted do nothing
-//      // If not RefCounted call free on the implementor (TObject)
-//
-//    end;
-
     tkArray,
     tkDynArray:
     begin
@@ -83,6 +92,12 @@ begin
         CollectSingleGarbage(AValue.GetArrayElement(LIndex));
     end;
   end;
+end;
+
+constructor TWiRLGarbageCollector.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FGarbage := [];
 end;
 
 end.
