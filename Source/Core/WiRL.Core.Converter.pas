@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -180,10 +180,49 @@ implementation
 uses
   System.DateUtils;
 
-{ TWiRLConvert }
-
 const
   SecsInADay = 24 * 60 * 60;
+
+function IsDate(ARttiType: TRttiType): Boolean;
+begin
+  Result := (ARttiType.TypeKind = tkFloat) and (ARttiType.Handle = TypeInfo(TDate));
+end;
+
+function IsDateTime(ARttiType: TRttiType): Boolean;
+begin
+  Result := (ARttiType.TypeKind = tkFloat) and (ARttiType.Handle = TypeInfo(TDateTime));
+end;
+
+function IsFloat(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind = tkFloat) and
+    (ARttiType.Handle <> TypeInfo(TDate)) and
+    (ARttiType.Handle <> TypeInfo(TDateTime)) and
+    (ARttiType.Handle <> TypeInfo(Currency));
+end;
+
+function IsCurrency(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind = tkFloat) and
+    (ARttiType.Handle = TypeInfo(Currency));
+end;
+
+function IsBoolean(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind = tkEnumeration) and
+    (ARttiType.Handle = TypeInfo(Boolean));
+end;
+
+function IsString(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind in [tkLString, tkUString, tkWString, tkString]);
+end;
+
+{ TWiRLConvert }
 
 class function TWiRLConvert.AsType(const AValue: string; ATypeInfo: PTypeInfo;
   const AFormat: string): TValue;
@@ -281,7 +320,7 @@ end;
 
 function TISODateConverter.ValueFromString(const AValue: string): TValue;
 begin
-  Result := Trunc(ISO8601ToDate(AValue, True));
+  Result := TValue.From<TDate>(Trunc(ISO8601ToDate(AValue, True)));
 end;
 
 function TISODateConverter.ValueToString(const AValue: TValue): string;
@@ -301,7 +340,7 @@ end;
 
 function TISODateTimeConverter.ValueFromString(const AValue: string): TValue;
 begin
-  Result := ISO8601ToDate(AValue, FFormat.UseUTCDate);
+  Result := TValue.From<TDateTime>(ISO8601ToDate(AValue, FFormat.UseUTCDate));
 end;
 
 function TISODateTimeConverter.ValueToString(const AValue: TValue): string;
@@ -309,138 +348,6 @@ begin
   Result := DateToISO8601(AValue.AsExtended, FFormat.UseUTCDate);
 end;
 
-
-function IsDate(ARttiType: TRttiType): Boolean;
-begin
-  Result := (ARttiType.TypeKind = tkFloat) and (ARttiType.Handle = TypeInfo(TDate));
-end;
-
-function IsDateTime(ARttiType: TRttiType): Boolean;
-begin
-  Result := (ARttiType.TypeKind = tkFloat) and (ARttiType.Handle = TypeInfo(TDateTime));
-end;
-
-function IsFloat(ARttiType: TRttiType): Boolean;
-begin
-  Result :=
-    (ARttiType.TypeKind = tkFloat) and
-    (ARttiType.Handle <> TypeInfo(TDate)) and
-    (ARttiType.Handle <> TypeInfo(TDateTime)) and
-    (ARttiType.Handle <> TypeInfo(Currency));
-end;
-
-function IsCurrency(ARttiType: TRttiType): Boolean;
-begin
-  Result :=
-    (ARttiType.TypeKind = tkFloat) and
-    (ARttiType.Handle = TypeInfo(Currency));
-end;
-
-function IsBoolean(ARttiType: TRttiType): Boolean;
-begin
-  Result :=
-    (ARttiType.TypeKind = tkEnumeration) and
-    (ARttiType.Handle = TypeInfo(Boolean));
-end;
-
-function IsString(ARttiType: TRttiType): Boolean;
-begin
-  Result :=
-    (ARttiType.TypeKind in [tkLString, tkUString, tkWString, tkString]);
-end;
-
-procedure RegisterDefaultConverters;
-begin
-  TWiRLConverterRegistry.Instance.RegisterConverter(TISODateConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if AFormat.IsDefault and IsDate(ARttiType) then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TISODateTimeConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if AFormat.IsDefault and IsDateTime(ARttiType) then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TUnixDateTimeConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if (AFormat = TWiRLFormatSetting.UNIX) and IsDateTime(ARttiType) then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TUnixDateConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if (AFormat = TWiRLFormatSetting.UNIX) and IsDate(ARttiType) then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TYMDDateConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if ( (AFormat.Kind = TWiRLFormatSetting.MDY) or (AFormat.Kind = TWiRLFormatSetting.DMY) ) and IsDate(ARttiType) then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultFloatConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if AFormat.IsDefault and IsFloat(ARttiType) then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultIntegerConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if (ARttiType.TypeKind = tkInteger) and AFormat.IsDefault then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultCurrencyConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if IsCurrency(ARttiType) and AFormat.IsDefault then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultBooleanConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if IsBoolean(ARttiType) and AFormat.IsDefault then
-        Exit(True);
-    end
-  );
-
-  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultStringConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
-    begin
-      Result := False;
-      if IsString(ARttiType) and AFormat.IsDefault then
-        Exit(True);
-    end
-  );
-end;
 
 { TUnixDateTimeConverter }
 
@@ -685,6 +592,101 @@ end;
 function TDefaultStringConverter.ValueToString(const AValue: TValue): string;
 begin
   Result := AValue.AsString;
+end;
+
+{ RegisterDefaultConverters }
+
+procedure RegisterDefaultConverters;
+begin
+  TWiRLConverterRegistry.Instance.RegisterConverter(TISODateConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if AFormat.IsDefault and IsDate(ARttiType) then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TISODateTimeConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if AFormat.IsDefault and IsDateTime(ARttiType) then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TUnixDateTimeConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if (AFormat = TWiRLFormatSetting.UNIX) and IsDateTime(ARttiType) then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TUnixDateConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if (AFormat = TWiRLFormatSetting.UNIX) and IsDate(ARttiType) then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TYMDDateConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if ( (AFormat.Kind = TWiRLFormatSetting.MDY) or (AFormat.Kind = TWiRLFormatSetting.DMY) ) and IsDate(ARttiType) then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultFloatConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if AFormat.IsDefault and IsFloat(ARttiType) then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultIntegerConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if (ARttiType.TypeKind = tkInteger) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultCurrencyConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if IsCurrency(ARttiType) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultBooleanConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if IsBoolean(ARttiType) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultStringConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if IsString(ARttiType) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
 end;
 
 initialization

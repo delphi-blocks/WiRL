@@ -154,7 +154,7 @@ begin
       end;
     end;
   else
-    raise Exception.CreateFmt('Error creating type', [AType.Name]);
+    raise Exception.CreateFmt('Error creating type: %s', [AType.Name]);
   end;
 end;
 

@@ -296,7 +296,7 @@ end;
 
 function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; AResourceInstance: TObject): TValue;
 
-  function GetObjectFromParam(AParam: TRttiParameter; AParamValue: TRequestParam) :TValue;
+  function GetObjectFromParam(AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
   var
     LReader: IMessageBodyReader;
     //LContentStream: TStream;
@@ -317,7 +317,7 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; 
 
   end;
 
-  function GetSimpleParam(AParam: TRttiParameter; AParamValue: TRequestParam) :TValue;
+  function GetSimpleParam(AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
   var
     LFormat: string;
   begin
