@@ -12,24 +12,20 @@ unit WiRL.Core.GarbageCollector;
 interface
 
 uses
-  System.SysUtils, System.Rtti, System.Classes,
+  System.SysUtils, System.Rtti, System.Types, System.Classes,
   System.Generics.Defaults, System.Generics.Collections;
 
 type
   TDisposeAction = reference to procedure;
 
-  TGarbageInfo = record
-    Value: TValue;
-    Action: TDisposeAction;
-  end;
-
   TWiRLGarbageCollector = class(TComponent)
   private
-    FGarbage: TArray<TGarbageInfo>;
-    procedure CollectSingleGarbage(const AValue: TValue); overload;
-    procedure CollectSingleGarbage(const AGarbage: TGarbageInfo); overload;
+    FGarbage: TDictionary<TValue, TDisposeAction>;
+    procedure CollectGarbageValue(const AValue: TValue);
+    procedure CollectSingleGarbage(AGarbage: TPair<TValue, TDisposeAction>);
   public
     constructor Create(AOwner: TComponent); overload; override;
+    destructor Destroy; override;
 
     procedure AddGarbage(const AValue: TValue); overload;
     procedure AddGarbage(const AValue: TValue; AAction: TDisposeAction); overload;
@@ -48,32 +44,30 @@ begin
 end;
 
 procedure TWiRLGarbageCollector.AddGarbage(const AValue: TValue; AAction: TDisposeAction);
-var
-  LItem: TGarbageInfo;
 begin
-  LItem.Value := AValue;
-  LItem.Action := AAction;
-  FGarbage := FGarbage + [LItem];
+  if FGarbage.ContainsKey(AValue) then
+    Exit;
+  FGarbage.Add(AValue, AAction);
 end;
 
 procedure TWiRLGarbageCollector.CollectGarbage;
 var
-  LIndex: Integer;
+  LGarbage: TPair<TValue, TDisposeAction>;
 begin
-  for LIndex := 0 to High(FGarbage) do
-    CollectSingleGarbage(FGarbage[LIndex]);
-  FGarbage := [];
+  for LGarbage in FGarbage do
+    CollectSingleGarbage(LGarbage);
+  FGarbage.Clear;
 end;
 
-procedure TWiRLGarbageCollector.CollectSingleGarbage(const AGarbage: TGarbageInfo);
+procedure TWiRLGarbageCollector.CollectSingleGarbage(AGarbage: TPair<TValue, TDisposeAction>);
 begin
-  if Assigned(AGarbage.Action) then
-    AGarbage.Action()
+  if Assigned(AGarbage.Value) then
+    AGarbage.Value()
   else
-    CollectSingleGarbage(AGarbage.Value);
+    CollectGarbageValue(AGarbage.Key);
 end;
 
-procedure TWiRLGarbageCollector.CollectSingleGarbage(const AValue: TValue);
+procedure TWiRLGarbageCollector.CollectGarbageValue(const AValue: TValue);
 var
   LIndex: Integer;
 begin
@@ -89,7 +83,7 @@ begin
     tkDynArray:
     begin
       for LIndex := 0 to AValue.GetArrayLength - 1 do
-        CollectSingleGarbage(AValue.GetArrayElement(LIndex));
+        CollectGarbageValue(AValue.GetArrayElement(LIndex));
     end;
   end;
 end;
@@ -97,7 +91,14 @@ end;
 constructor TWiRLGarbageCollector.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FGarbage := [];
+  FGarbage := TDictionary<TValue, TDisposeAction>.Create;
+end;
+
+destructor TWiRLGarbageCollector.Destroy;
+begin
+  CollectGarbage;
+  FGarbage.Free;
+  inherited;
 end;
 
 end.
