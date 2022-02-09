@@ -67,8 +67,10 @@ type
     FToken: string;
   public
     constructor Create(const AToken: string);
+    property Token: string read FToken;
 
     class operator Implicit(AAuth: TBearerAuth): string;
+    class operator Implicit(AAuth: string): TBearerAuth;
   end;
 
 implementation
@@ -167,6 +169,16 @@ end;
 class operator TBearerAuth.Implicit(AAuth: TBearerAuth): string;
 begin
   Result := 'Bearer ' + AAuth.FToken;
+end;
+
+class operator TBearerAuth.Implicit(AAuth: string): TBearerAuth;
+const
+  AUTH_BEARER = 'Bearer ';
+begin
+  if not AAuth.StartsWith(AUTH_BEARER) then
+    raise EWiRLException.Create('Authentication header error: wrong authentication type');
+
+  Result.FToken := AAuth.Substring(AUTH_BEARER.Length);
 end;
 
 end.
