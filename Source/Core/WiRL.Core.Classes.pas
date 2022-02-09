@@ -63,6 +63,8 @@ type
 
   // Bearer authentication helper
   TBearerAuth = record
+  private const
+    AUTH_BEARER = 'Bearer ';
   private
     FToken: string;
   public
@@ -168,12 +170,10 @@ end;
 
 class operator TBearerAuth.Implicit(AAuth: TBearerAuth): string;
 begin
-  Result := 'Bearer ' + AAuth.FToken;
+  Result := AUTH_BEARER + AAuth.FToken;
 end;
 
 class operator TBearerAuth.Implicit(AAuth: string): TBearerAuth;
-const
-  AUTH_BEARER = 'Bearer ';
 begin
   if not AAuth.StartsWith(AUTH_BEARER) then
     raise EWiRLException.Create('Authentication header error: wrong authentication type');
