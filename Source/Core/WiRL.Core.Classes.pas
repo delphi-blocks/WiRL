@@ -47,6 +47,8 @@ type
 
   // Basic authentication helper
   TBasicAuth = record
+  private const
+    AUTH_BASIC = 'Basic ';
   private
     FUser: string;
     FPassword: string;
@@ -124,13 +126,18 @@ begin
 end;
 
 class operator TBasicAuth.Implicit(AAuth: TBasicAuth): string;
+var
+  LBase64Enc: TBase64Encoding;
 begin
-  Result := 'Basic ' + TNetEncoding.Base64.Encode(AAuth.FUser + ':' + AAuth.FPassword);
+  LBase64Enc := TBase64Encoding.Create(0);
+  try
+    Result := AUTH_BASIC + LBase64Enc.Encode(AAuth.FUser + ':' + AAuth.FPassword);
+  finally
+    LBase64Enc.Free;
+  end;
 end;
 
 class operator TBasicAuth.Implicit(AAuth: string): TBasicAuth;
-const
-  AUTH_BASIC = 'Basic ';
 var
   LAuthField: string;
   LColonIdx: Integer;
