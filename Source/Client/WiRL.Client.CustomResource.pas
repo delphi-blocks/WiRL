@@ -343,7 +343,7 @@ end;
 
 function TWiRLClientCustomResource.MergeHeaders(const AHttpMethod: string): IWiRLHeaders;
 
-  function HasResponseBody(const AHttpMethod: string): Boolean;
+  function HasRequestBody(const AHttpMethod: string): Boolean;
   begin
     if (AHttpMethod = 'POST') or (AHttpMethod = 'PUT') then
       Result := True
@@ -357,7 +357,7 @@ begin
   Result := TWiRLHeaders.Create;
   if Accept <> '' then
     Result.Accept := Accept;
-  if HasResponseBody(AHttpMethod) and (ContentType <> '') then
+  if HasRequestBody(AHttpMethod) and (ContentType <> '') then
     Result.ContentType := ContentType;
 
   for LHeader in FHeaders do
