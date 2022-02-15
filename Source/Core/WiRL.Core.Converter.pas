@@ -46,8 +46,10 @@ type
     procedure SetUseUTCDate(const Value: Boolean);
   public
   const
-    ISODATE_UTF = 'DEFAULT|UTF';
-    ISODATE_NOUTF = 'DEFAULT|NOUTF';
+    UTC = 'UTC';
+    NOUTC = 'NOUTC';
+    ISODATE_UTC = 'DEFAULT|' + UTC;
+    ISODATE_NOUTC = 'DEFAULT|' + NOUTC;
     DEFAULT = 'DEFAULT';
     UNIX = 'UNIX';
     MDY = 'MDY';
@@ -230,6 +232,9 @@ var
   LConverter: TWiRLConverter;
   LRttiType: TRttiType;
 begin
+  if AValue = '' then
+    Exit(TValue.Empty);
+
   LRttiType := TRttiHelper.Context.GetType(ATypeInfo);
   LConverter := TWiRLConverterRegistry.Instance.GetConverter(LRttiType, AFormat);
   try
@@ -491,7 +496,7 @@ end;
 
 function TWiRLFormatSetting.GetUseUTCDate: Boolean;
 begin
-  Result := Params[USE_UTC_DATE_INDEX] <> 'NOUTF';
+  Result := Params[USE_UTC_DATE_INDEX] <> TWiRLFormatSetting.NOUTC;
 end;
 
 class operator TWiRLFormatSetting.Implicit(
@@ -536,9 +541,9 @@ end;
 procedure TWiRLFormatSetting.SetUseUTCDate(const Value: Boolean);
 begin
   if Value then
-    Params[USE_UTC_DATE_INDEX] := 'UTF'
+    Params[USE_UTC_DATE_INDEX] := UTC
   else
-    Params[USE_UTC_DATE_INDEX] := 'NOUTF';
+    Params[USE_UTC_DATE_INDEX] := NOUTC;
 end;
 
 { TDefaultCurrencyConverter }
