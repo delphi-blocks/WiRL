@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -422,12 +422,21 @@ procedure TWiRLApplicationWorker.HandleRequest;
 var
   LProcessResource: Boolean;
   LToken: string;
+  LJWTConf: TWiRLConfigurationJWT;
 begin
   FAuthContext := CreateAuthContext;
   try
     LToken := GetAuthToken;
+
+    LJWTConf := FAppConfig.GetConfiguration<TWiRLConfigurationJWT>;
+
     if not LToken.IsEmpty then
-      FAuthContext.Verify(LToken, FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PublicKey.Key);
+    begin
+      if LJWTConf.VerificationMode = TJWTVerificationMode.Verify then
+        FAuthContext.Verify(LToken, LJWTConf.KeyPair.PublicKey.Key)
+      else
+        FAuthContext.DeserializeOnly(LToken);
+    end;
 
     try
       FContext.AuthContext := FAuthContext;
