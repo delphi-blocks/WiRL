@@ -19,29 +19,32 @@ uses
   OXmlUtils,
 
   // WiRL
-  WiRL.Core.Attributes, 
-  WiRL.Core.Declarations, 
+  WiRL.Core.Attributes,
+  WiRL.Core.Declarations,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
+  WiRL.Core.MessageBody.Classes,
   WiRL.Core.Exceptions,
   WiRL.http.Request,
-  WiRL.http.Response;
+  WiRL.http.Response,
+  WiRL.http.Headers,
+  WiRL.Configuration.Neon;
 
 type
   [Consumes(TMediaType.APPLICATION_XML)]
-  TObjectReaderOXML = class(TInterfacedObject, IMessageBodyReader)
+  [Produces(TMediaType.APPLICATION_XML)]
+  TWiRLXMLProvider = class(TMessageBodyProvider)
+  private
+    [Context] FConfigurationNeon: TWiRLConfigurationNeon;
   private
     procedure Deserialize(const ADocument: string; AObject: TObject);
   public
-    function ReadFrom(AType: TRttiType; AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
-  end;
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+      AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
 
-  [Produces(TMediaType.APPLICATION_XML)]
-  TObjectWriterOXML = class(TInterfacedObject, IMessageBodyWriter)
-  public
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AResponse: TWiRLResponse);
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
   end;
 
 implementation
@@ -50,11 +53,12 @@ uses
   Data.DB,
   System.TypInfo,
   WiRL.Core.Utils,
-  WiRL.Rtti.Utils;
+  WiRL.Rtti.Utils,
+  WiRL.http.Core;
 
-{ TObjectReaderOXML }
+{ TWiRLXMLProvider }
 
-procedure TObjectReaderOXML.Deserialize(const ADocument: string; AObject: TObject);
+procedure TWiRLXMLProvider.Deserialize(const ADocument: string; AObject: TObject);
 var
   LDeserializer : TXMLRTTIDeserializer;
   LClassName: string;
@@ -70,32 +74,30 @@ begin
   end;
 end;
 
-function TObjectReaderOXML.ReadFrom(AType: TRttiType; AMediaType: TMediaType; ARequest: TWiRLRequest): TValue;
+function TWiRLXMLProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType; AHeaders: IWiRLHeaders;
+  AContentStream: TStream): TValue;
 var
   LObj: TObject;
 begin
   LObj := TRttiHelper.CreateInstance(AType);
-  Deserialize(ARequest.Content, LObj);
+  Deserialize(ContentStreamToString(AMediaType.Charset, AContentStream), LObj);
 end;
 
-{ TObjectWriterOXML }
-
-procedure TObjectWriterOXML.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AResponse: TWiRLResponse);
+procedure TWiRLXMLProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray; AMediaType: TMediaType;
+  AHeaders: IWiRLHeaders; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
   LSer: TXMLRTTISerializer;
 begin
-  LStreamWriter := TStreamWriter.Create(AResponse.ContentStream);
+  LStreamWriter := TStreamWriter.Create(AContentStream);
   try
     LSer := TXMLRTTISerializer.Create;
     try
       LSer.UseRoot := False;
       LSer.CollectionStyle := csOXML;
-      LSer.ObjectVisibility := [mvPublished];
+      LSer.ObjectVisibility := FConfigurationNeon.Visibility;
       LSer.WriterSettings.IndentType := itIndent;
-      LSer.InitStream(AResponse.ContentStream);
+      LSer.InitStream(AContentStream);
 
       LSer.WriteObject(AValue.AsObject);
       LSer.ReleaseDocument;
@@ -109,7 +111,7 @@ begin
 end;
 
 initialization
-  TMessageBodyReaderRegistry.Instance.RegisterReader(TObjectReaderOXML,
+  TMessageBodyReaderRegistry.Instance.RegisterReader(TWiRLXMLProvider,
     function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and
@@ -122,7 +124,7 @@ initialization
     end
   );
 
-  TMessageBodyWriterRegistry.Instance.RegisterWriter(TObjectWriterOXML,
+  TMessageBodyWriterRegistry.Instance.RegisterWriter(TWiRLXMLProvider,
     function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and
@@ -134,6 +136,5 @@ initialization
       Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
     end
   );
-
 
 end.
