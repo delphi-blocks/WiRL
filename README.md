@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://www.paolorossi.net/img/images/wirl-logo.png" alt="Delphi RESTful Library" width="200" />
+  <img src="https://www.paolorossi.net/img/wirl-logo.png" alt="Delphi RESTful Library" width="200" />
 </p>
 
 
