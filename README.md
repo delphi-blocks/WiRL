@@ -1,7 +1,5 @@
 <p align="center">
-  <a href="http://wirl.delphiblocks.com/">
-    <img src="http://wirl.delphiblocks.com/assets/images/wirl-300.png" alt="Delphi RESTful Library" width="200" />
-  </a>
+  <img src="https://www.paolorossi.net/img/wirl-logo.png" alt="Delphi RESTful Library" width="200" />
 </p>
 
 
