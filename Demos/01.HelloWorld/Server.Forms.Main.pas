@@ -68,7 +68,7 @@ begin
       .SetFilters('*')
 
       .Plugin.Configure<IWiRLFormatSetting>
-        .AddFormat(TypeInfo(TDateTime), TWiRLFormatSetting.ISODATE_UTF)
+        .AddFormat(TypeInfo(TDateTime), TWiRLFormatSetting.ISODATE_UTC)
         .BackToApp
 
       .Plugin.Configure<IWiRLConfigurationNeon>
