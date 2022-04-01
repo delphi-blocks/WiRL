@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -98,7 +98,6 @@ begin
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase)
         .BackToApp
-
   ;
 
   if not FServer.Active then

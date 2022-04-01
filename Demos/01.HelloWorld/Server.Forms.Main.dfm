@@ -12,7 +12,6 @@ object MainForm: TMainForm
   Font.Style = []
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object TopPanel: TPanel
     Left = 0
