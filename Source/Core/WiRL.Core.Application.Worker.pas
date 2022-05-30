@@ -358,6 +358,13 @@ begin
     Exit;
   end;
 
+  if AParam.RttiParam.ParamType.IsInstance and
+    TRttiHelper.IsObjectOfType(AParam.RttiParam.ParamType, TWiRLFormDataPart) then
+  begin
+    Result := FContext.Request.MultiPartFormData[AParam.Name];
+    Exit;
+  end;
+
   try
     LParamValue := TRequestParam.Create(FContext, AParam, LParamAttr, LDefaultValue);
     try

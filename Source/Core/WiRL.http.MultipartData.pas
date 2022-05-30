@@ -16,6 +16,7 @@ uses
   System.Generics.Collections, System.Generics.Defaults,
 
   WiRL.Core.Classes,
+  WiRL.Core.Attributes,
   WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
@@ -58,6 +59,7 @@ type
     property PreviewType: string read FPreviewType write FPreviewType;
   end;
 
+  [Singleton]
   TWiRLFormDataPart = class
   private
     FContentTransferEncoding: string;
