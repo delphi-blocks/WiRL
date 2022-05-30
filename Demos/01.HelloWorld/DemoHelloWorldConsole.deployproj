@@ -3,32 +3,9 @@
     <ProjectExtensions>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
-    <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'"/>
-    </PropertyGroup>
-    <ItemGroup Condition="'$(Platform)'=='Win32'">
-        <DeployFile Include="Win32\Release\DemoHelloWorldConsole.exe" Condition="'$(Config)'=='Release'">
-            <RemoteDir>DemoHelloWorldConsole\</RemoteDir>
-            <RemoteName>DemoHelloWorldConsole.exe</RemoteName>
-            <DeployClass>ProjectOutput</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-            <Required>True</Required>
-        </DeployFile>
-        <DeployFile Include="Win32\Debug\DemoHelloWorldConsole.exe" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>DemoHelloWorldConsole\</RemoteDir>
-            <RemoteName>DemoHelloWorldConsole.exe</RemoteName>
-            <DeployClass>ProjectOutput</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-            <Required>True</Required>
-        </DeployFile>
-    </ItemGroup>
+    <PropertyGroup/>
     <ItemGroup Condition="'$(Platform)'=='Win64'"/>
+    <ItemGroup Condition="'$(Platform)'=='Win32'"/>
     <ItemGroup Condition="'$(Platform)'=='Linux64'">
         <DeployFile Include="Linux64\Debug\DemoHelloWorldConsole" Condition="'$(Config)'=='Debug'">
             <RemoteDir>DemoHelloWorldConsole\</RemoteDir>
@@ -40,16 +17,5 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="Linux64\Release\DemoHelloWorldConsole" Condition="'$(Config)'=='Release'">
-            <RemoteDir>DemoHelloWorldConsole\</RemoteDir>
-            <RemoteName>DemoHelloWorldConsole</RemoteName>
-            <DeployClass>ProjectOutput</DeployClass>
-            <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-            <Required>True</Required>
-        </DeployFile>
     </ItemGroup>
-    <ItemGroup Condition="'$(Platform)'=='Android'"/>
 </Project>
