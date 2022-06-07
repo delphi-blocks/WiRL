@@ -491,7 +491,7 @@ begin
   );
 
   // TWiRLObjectProvider
-  TMessageBodyReaderRegistry.Instance.RegisterReader<TObject>(TWiRLObjectProvider);
+  TMessageBodyReaderRegistry.Instance.RegisterReader<TObject>(TWiRLObjectProvider, TMessageBodyReaderRegistry.AFFINITY_VERY_LOW);
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TWiRLObjectProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
