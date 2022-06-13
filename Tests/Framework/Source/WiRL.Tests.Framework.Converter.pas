@@ -56,17 +56,17 @@ type
     [TestCase('Twelve', 'DEFAULT,2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
     [TestCase('TwelveFiftyNine', 'DEFAULT,2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
 
-    [TestCase('Basic_UTF', 'DEFAULT|UTF,2020-01-01T01:01:01,2020,1,1,1,1,1,0')]
-    [TestCase('Midnight_UTF', 'DEFAULT|UTF,2020-01-01T00:00:00,2020,1,1,0,0,0,0')]
-    [TestCase('Twelve_UTF', 'DEFAULT|UTF,2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
-    [TestCase('TwelveFiftyNine_UTF', 'DEFAULT|UTF,2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
+    [TestCase('Basic_UTC', 'DEFAULT|UTC,2020-01-01T01:01:01,2020,1,1,1,1,1,0')]
+    [TestCase('Midnight_UTC', 'DEFAULT|UTC,2020-01-01T00:00:00,2020,1,1,0,0,0,0')]
+    [TestCase('Twelve_UTC', 'DEFAULT|UC,2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
+    [TestCase('TwelveFiftyNine_UTC', 'DEFAULT|UTC,2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
 
     procedure Test_ToDateTimeISO(const AFormat, AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
 
-    [TestCase('Basic_NOUTF', 'DEFAULT|NOUTF,2020-01-01T01:01:01,2020,1,1,1,1,1,0')]
-    [TestCase('Midnight_NOUTF', 'DEFAULT|NOUTF,2020-01-01T00:00:00,2020,1,1,0,0,0,0')]
-    [TestCase('Twelve_NOUTF', 'DEFAULT|NOUTF,2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
-    [TestCase('TwelveFiftyNine_NOUTF', 'DEFAULT|NOUTF,2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
+    [TestCase('Basic_NOUTC', 'DEFAULT|NOUTC,2020-01-01T01:01:01,2020,1,1,1,1,1,0')]
+    [TestCase('Midnight_NOUTC', 'DEFAULT|NOUTC,2020-01-01T00:00:00,2020,1,1,0,0,0,0')]
+    [TestCase('Twelve_NOUTC', 'DEFAULT|NOUTC,2020-01-01T12:12:12,2020,1,1,12,12,12,0')]
+    [TestCase('TwelveFiftyNine_NOUTC', 'DEFAULT|NOUTC,2020-01-01T12:59:59,2020,1,1,12,59,59,0')]
     procedure Test_ToDateTimeISO_NOUTC(const AFormat, AStringDate: string; AYear, AMonth, ADay, AHour, AMin, ASec, AMSec: Integer);
 
 
