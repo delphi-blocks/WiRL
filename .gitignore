@@ -42,6 +42,7 @@
 *.cfg
 *Resource.rc
 Win32
+Linux64
 
 # Delphi local files (user-specific info)
 *.local

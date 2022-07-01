@@ -16,6 +16,7 @@ uses
   Data.DB, FireDAC.Comp.Client, FireDAC.Comp.DataSet, FireDAC.Stan.Intf,
 
   WiRL.http.URL,
+  WiRL.http.MultipartData,
   WiRL.Core.Engine,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
@@ -94,7 +95,7 @@ type
     [POST, Path('/multipart'), Consumes(TMediaType.MULTIPART_FORM_DATA), Produces(TMediaType.APPLICATION_JSON)]
     function PostMultiPartExample(
       [FormParam] AValue: string;
-      [FormParam] AContent: TStream;
+      [FormParam] AContent: TWiRLFormDataPart;
       [FormParam] AJSON: TJSONObject
     ): TJSONObject;
   end;
@@ -212,18 +213,18 @@ end;
 
 function THelloWorldResource.PostMultiPartExample(
       [FormParam] AValue: string;
-      [FormParam] AContent: TStream;
+      [FormParam] AContent: TWiRLFormDataPart;
       [FormParam] AJSON: TJSONObject
     ): TJSONObject;
 var
   LContentBuffer: TBytes;
 begin
-  SetLength(LContentBuffer, AContent.Size);
-  AContent.ReadBuffer(LContentBuffer, AContent.Size);
+  LContentBuffer := AContent.RawContent;
   Result := TJSONObject.Create;
   Result
     .AddPair('AValue', AValue)
     .AddPair('AJSON', AJSON.ToJSON)
+    .AddPair('FileName', AContent.FileName)
     .AddPair('AContent', TNetEncoding.Base64.EncodeBytesToString(LContentBuffer));
 end;
 

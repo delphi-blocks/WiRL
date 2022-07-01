@@ -29,7 +29,9 @@ type
   TJSONHelper = class
   public
     class function Print(AJSONValue: TJSONValue; APretty: Boolean): string; static;
-    class procedure PrintToWriter(AJSONValue: TJSONValue; AWriter: TTextWriter; APretty: Boolean); static;
+    class procedure PrintToWriter(AJSONValue: TJSONValue; AWriter: TTextWriter; APretty: Boolean); overload; static;
+    class procedure PrintToWriter(const AJSONString: string; AWriter: TTextWriter; APretty: Boolean); overload; static;
+    class function PrettyPrint(const AJSONString: string): string; static;
 
     class function ToJSON(AJSONValue: TJSONValue): string; static;
     class function StringArrayToJsonArray(const values: TArray<string>): string; static;
@@ -110,6 +112,19 @@ begin
   end;
 end;
 
+class function TJSONHelper.PrettyPrint(const AJSONString: string): string;
+var
+  LWriter: TStringWriter;
+begin
+  LWriter := TStringWriter.Create;
+  try
+    PrintToWriter(AJSONString, LWriter, True);
+    Result := LWriter.ToString;
+  finally
+    LWriter.Free;
+  end;
+end;
+
 class function TJSONHelper.Print(AJSONValue: TJSONValue; APretty: Boolean): string;
 var
   LWriter: TStringWriter;
@@ -123,10 +138,15 @@ begin
   end;
 end;
 
-class procedure TJSONHelper.PrintToWriter(AJSONValue: TJSONValue; AWriter:
+class procedure TJSONHelper.PrintToWriter(AJSONValue: TJSONValue;
+  AWriter: TTextWriter; APretty: Boolean);
+begin
+  PrintToWriter(AJSONValue.ToJSON, AWriter, APretty);
+end;
+
+class procedure TJSONHelper.PrintToWriter(const AJSONString: string; AWriter:
     TTextWriter; APretty: Boolean);
 var
-  LJSONString: string;
   LChar: Char;
   LOffset: Integer;
   LIndex: Integer;
@@ -138,19 +158,18 @@ var
   end;
 
 begin
-  LJSONString := AJSONValue.ToJSON;
   if not APretty then
   begin
-    AWriter.Write(LJSONString);
+    AWriter.Write(AJSONString);
     Exit;
   end;
 
   LOffset := 0;
   LOutsideString := True;
 
-  for LIndex := 0 to Length(LJSONString) - 1 do
+  for LIndex := 0 to Length(AJSONString) - 1 do
   begin
-    LChar := LJSONString.Chars[LIndex];
+    LChar := AJSONString.Chars[LIndex];
 
     if LChar = '"' then
       LOutsideString := not LOutsideString;

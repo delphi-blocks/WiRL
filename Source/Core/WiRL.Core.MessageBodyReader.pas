@@ -130,7 +130,7 @@ type
     procedure RegisterReader(const AReaderClass, ASubjectClass: TClass;
       const AGetAffinity: TGetAffinityFunction); overload;
 
-    procedure RegisterReader<T: class>(const AReaderClass: TClass); overload;
+    procedure RegisterReader<T: class>(const AReaderClass: TClass; AAffinity: Integer = 0); overload;
 
     procedure RegisterReader(const AReaderClass: TClass; ASubjectIntf: TGUID;
       const AGetAffinity: TGetAffinityFunction); overload;
@@ -218,7 +218,7 @@ begin
 
       for LEntry in LCompatibleEntries do
       begin
-        LCurrentAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType);
+        LCurrentAffinity := LEntry.GetAffinity(AType, AType.GetAttributes, AMediaType);
 
         if LCurrentAffinity >= LCandidateAffinity then
         begin
@@ -242,11 +242,11 @@ begin
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
     begin
       if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType, False) then
-        Result := 100
+        Result := AFFINITY_HIGH
       else if Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType) then
-        Result := 99
+        Result := AFFINITY_LOW
       else
-        Result := 0;
+        Result := AFFINITY_ZERO;
     end
 end;
 
@@ -319,15 +319,26 @@ begin
   );
 end;
 
-procedure TMessageBodyReaderRegistry.RegisterReader<T>(const AReaderClass: TClass);
+procedure TMessageBodyReaderRegistry.RegisterReader<T>(const AReaderClass: TClass; AAffinity: Integer = 0);
+var
+  LAffinity: TGetAffinityFunction;
 begin
+  if AAffinity = 0 then
+    LAffinity := Self.GetDefaultClassAffinityFunc<T>()
+  else
+    LAffinity :=
+      function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
+      begin
+        Result := AAffinity;
+      end;
+
   RegisterReader(
     AReaderClass,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsObjectOfType<T>(AType);
     end,
-    Self.GetDefaultClassAffinityFunc<T>()
+    LAffinity
   );
 end;
 
