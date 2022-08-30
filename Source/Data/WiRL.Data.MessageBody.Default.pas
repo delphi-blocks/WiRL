@@ -49,7 +49,7 @@ type
 implementation
 
 uses
-  Data.DB, Datasnap.DBClient,
+  Data.DB,
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON,
   WiRL.Core.JSON,
@@ -65,10 +65,7 @@ var
 begin
   LStreamWriter := TStreamWriter.Create(AContentStream);
   try
-    if AValue.AsObject is TClientDataSet then // CDS
-      LStreamWriter.Write(TClientDataSet(AValue.AsObject).XMLData)
-    else // default
-      LStreamWriter.Write(TDataUtils.DataSetToXML(Avalue.AsObject as TDataSet));
+    LStreamWriter.Write(TDataUtils.DataSetToXML(Avalue.AsObject as TDataSet));
   finally
     LStreamWriter.Free;
   end;
