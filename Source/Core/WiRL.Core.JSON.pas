@@ -99,10 +99,17 @@ end;
 
 class procedure TJSONHelper.JSONCopyFrom(ASource, ADestination: TJSONObject);
 var
-  LPair: TJSONPair;
+  LPairSrc, LPairDst: TJSONPair;
 begin
-  for LPair in ASource do
-    ADestination.AddPair(TJSONPair(LPair.Clone));
+  for LPairSrc in ASource do
+  begin
+    LPairDst := ADestination.Get(LPairSrc.JsonString.Value);
+    if Assigned(LPairDst) then
+      // Replace the JSON Value (the previous is freed by the TJSONPair object)
+      LPairDst.JsonValue := TJSONValue(LPairSrc.JsonValue.Clone)
+    else
+      ADestination.AddPair(TJSONPair(LPairSrc.Clone));
+  end;
 end;
 
 class function TJSONHelper.PrettyPrint(const AJSONString: string): string;

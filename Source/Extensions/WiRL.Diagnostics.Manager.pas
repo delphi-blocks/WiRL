@@ -72,7 +72,7 @@ type
 
   TWiRLDiagnosticsManager = class(TNonInterfacedObject, IWiRLHandleListener, IWiRLHandleRequestEventListener)
   private
-    type TDiagnosticsManagerSingleton = TWiRLSingleton<TWiRLDiagnosticsManager>;
+    type TWiRLDiagnosticsManagerSingleton = TWiRLSingleton<TWiRLDiagnosticsManager>;
   private
     class var FEngine: TWiRLEngine;
     FEngineInfo: TWiRLDiagnosticEngineInfo;
@@ -141,7 +141,7 @@ end;
 
 constructor TWiRLDiagnosticsManager.Create;
 begin
-  TDiagnosticsManagerSingleton.CheckInstance(Self);
+  TWiRLDiagnosticsManagerSingleton.CheckInstance(Self);
   FAppDictionary := TObjectDictionary<string, TWiRLDiagnosticAppInfo>.Create([doOwnsValues]);
   FCriticalSection := TCriticalSection.Create;
 
@@ -194,7 +194,7 @@ end;
 
 class function TWiRLDiagnosticsManager.GetInstance: TWiRLDiagnosticsManager;
 begin
-  Result := TDiagnosticsManagerSingleton.Instance;
+  Result := TWiRLDiagnosticsManagerSingleton.Instance;
 end;
 
 procedure TWiRLDiagnosticsManager.OnTokenEnd(const AToken: string);

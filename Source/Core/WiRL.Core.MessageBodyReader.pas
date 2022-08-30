@@ -41,7 +41,7 @@ type
     ///   Read a type from the HTTP Request stream
     /// </summary>
     function ReadFrom(AType: TRttitype; AMediaType: TMediaType;
-  	  AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; overload;
+      AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; overload;
 
     /// <summary>
     ///   Read a type from the HTTP Request stream.
@@ -51,7 +51,7 @@ type
     ///   already exists!
     /// </remarks>
     procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
-	    AHeaders: IWiRLHeaders; AContentStream: TStream); overload;
+      AHeaders: IWiRLHeaders; AContentStream: TStream); overload;
   end;
 
   TIsReadableFunction = reference to function(AType: TRttiType;
@@ -115,7 +115,7 @@ type
 
   TMessageBodyReaderRegistry = class(TWiRLReaderRegistry)
   private type
-    TWiRLRegistrySingleton = TWiRLSingleton<TMessageBodyReaderRegistry>;
+    TMessageBodyReaderRegistrySingleton = TWiRLSingleton<TMessageBodyReaderRegistry>;
   private
     class function GetInstance: TMessageBodyReaderRegistry; static; inline;
   public
@@ -267,7 +267,7 @@ end;
 
 class function TMessageBodyReaderRegistry.GetInstance: TMessageBodyReaderRegistry;
 begin
-  Result := TWiRLRegistrySingleton.Instance;
+  Result := TMessageBodyReaderRegistrySingleton.Instance;
 end;
 
 procedure TMessageBodyReaderRegistry.RegisterReader(

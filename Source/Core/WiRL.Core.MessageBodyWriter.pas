@@ -111,7 +111,7 @@ type
 
   TMessageBodyWriterRegistry = class(TWiRLWriterRegistry)
   private type
-    TWiRLRegistrySingleton = TWiRLSingleton<TMessageBodyWriterRegistry>;
+    TMessageBodyWriterRegistrySingleton = TWiRLSingleton<TMessageBodyWriterRegistry>;
   private
     class function GetInstance: TMessageBodyWriterRegistry; static; inline;
   public
@@ -365,7 +365,7 @@ end;
 
 class function TMessageBodyWriterRegistry.GetInstance: TMessageBodyWriterRegistry;
 begin
-  Result := TWiRLRegistrySingleton.Instance;
+  Result := TMessageBodyWriterRegistrySingleton.Instance;
 end;
 
 procedure TMessageBodyWriterRegistry.RegisterWriter(const ACreateInstance:
