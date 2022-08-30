@@ -14,7 +14,7 @@ unit WiRL.Client.CustomResource;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Rtti, System.Contnrs, System.Types,
+  System.SysUtils, System.Classes, System.Rtti, System.Contnrs, System.Types, System.TypInfo,
   System.Generics.Collections,
   WiRL.Core.Context,
   WiRL.Client.Application,
