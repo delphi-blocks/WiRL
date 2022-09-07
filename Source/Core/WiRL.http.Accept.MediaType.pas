@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -23,7 +23,7 @@ type
   private
     FMainType: string;
     FSubType: string;
-    FVersion: Integer;
+    FVersion: string;
     FCharset: string;
     FDialect: string;
     FBoundary: string;
@@ -84,7 +84,7 @@ type
     property MediaType: string read GetMediaType;
     property MainType: string read FMainType;
     property SubType: string read FSubType;
-    property Version: Integer read FVersion write FVersion;
+    property Version: string read FVersion write FVersion;
     property Dialect: string read FDialect write FDialect;
     property Charset: string read FCharset write FCharset;
     property Boundary: string read FBoundary write FBoundary;
@@ -197,7 +197,7 @@ begin
   for LPosition := 0 to FParameters.Count - 1 do
   begin
     if FParameters.Names[LPosition] = VERSION_NAME then
-      FVersion := StrToInt(FParameters.ValueFromIndex[LPosition])
+      FVersion := FParameters.ValueFromIndex[LPosition]
     else if FParameters.Names[LPosition] = DIALECT_NAME then
       FDialect := FParameters.ValueFromIndex[LPosition]
     else if FParameters.Names[LPosition] = CHARSET_NAME then
