@@ -134,7 +134,7 @@ begin
   Result := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
 
   Result.Info.TermsOfService := 'http://swagger.io/terms/';
-  Result.Info.Title := 'WiRL Swagger Integration Demo';
+  Result.Info.Title := 'WiRL OpenAPI Integration Demo';
   Result.Info.Version := '1.0.2';
   Result.Info.Description := 'This is a **demo API** to test [WiRL](https://github.com/delphi-blocks/WiRL) OpenAPI documentation features';
   Result.Info.Contact.Name := 'Paolo Rossi';
