@@ -41,24 +41,8 @@ implementation
 
 { TDemoResource }
 
-function GetMemoryUsed: UInt64;
-var
-  st: TMemoryManagerState;
-  sb: TSmallBlockTypeState;
-begin
-  GetMemoryManagerState(st);
-  result :=  st.TotalAllocatedMediumBlockSize
-           + st.TotalAllocatedLargeBlockSize;
-  for sb in st.SmallBlockTypeStates do begin
-    result := result + sb.UseableBlockSize * sb.AllocatedBlockCount;
-  end;
-end;
-
 function TDemoResource.GetMetrics: TWiRLMetrics;
 begin
-  Metrics.AcquireMetric('test_memory', GetMemoryUsed);
-  Metrics.IncMetric('test_num_request', ['api:get_metric','host:myserver']);
-
   Result := Metrics;
 end;
 

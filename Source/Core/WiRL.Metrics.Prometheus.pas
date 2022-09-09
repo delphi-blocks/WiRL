@@ -79,7 +79,7 @@ begin
     end;
 
     Result := Result +
-      '# HELP ' + LSample.Name + ' Total memory used in the node in bytes' + #10 +
+      '# HELP ' + LSample.Name + ' ' + AMetrics.GetDescription(LSample.Name) + #10 +
       '# TYPE ' + LSample.Name + ' gauge' + #10 +
       LSample.Name + LLabelString + ' ' + FloatToStr(LSample.Value, FS) + #10;
   end;

@@ -13,7 +13,7 @@ uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
   Server.Resources in 'Server.Resources.pas',
-  WiRL.Metrics.Prometheus in '..\..\Source\Core\WiRL.Metrics.Prometheus.pas';
+  Server.CustomMetrics in 'Server.CustomMetrics.pas';
 
 {$R *.res}
 

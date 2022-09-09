@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'WiRL Filters Server'
-  ClientHeight = 201
-  ClientWidth = 464
+  ClientHeight = 202
+  ClientWidth = 468
   Color = clBtnFace
   Constraints.MinHeight = 240
   Constraints.MinWidth = 480
@@ -18,11 +18,12 @@ object MainForm: TMainForm
   object TopPanel: TPanel
     Left = 0
     Top = 0
-    Width = 464
+    Width = 468
     Height = 73
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 464
     object Label1: TLabel
       Left = 28
       Top = 17
@@ -58,11 +59,13 @@ object MainForm: TMainForm
   object lstLog: TListBox
     Left = 0
     Top = 73
-    Width = 464
-    Height = 128
+    Width = 468
+    Height = 129
     Align = alClient
     ItemHeight = 13
     TabOrder = 1
+    ExplicitWidth = 464
+    ExplicitHeight = 128
   end
   object MainActionList: TActionList
     Left = 384
