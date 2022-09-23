@@ -302,7 +302,7 @@ var
 begin
   Result := nil;
   for LHeader in Self do
-    if LHeader.Name = AName then
+    if SameText(LHeader.Name, AName) then
       Exit(LHeader);
 end;
 
@@ -416,7 +416,7 @@ var
 begin
   for LIndex := 0 to Count - 1 do
   begin
-    if Items[LIndex].Name = AName then
+    if SameText(Items[LIndex].Name, AName) then
     begin
       if AValue = '' then
         Delete(LIndex)
