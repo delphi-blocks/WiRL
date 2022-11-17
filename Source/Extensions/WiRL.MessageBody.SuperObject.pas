@@ -21,6 +21,7 @@ uses
   WiRL.Rtti.Utils,
   WiRL.http.Request,
   WiRL.http.Response,
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyReader,
@@ -35,25 +36,24 @@ type
   TWiRLSuperObjectProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
   end;
 
 implementation
 
 { TWiRLSuperObjectProvider }
 
-function TWiRLSuperObjectProvider.ReadFrom(AType: TRttiType;
-  AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+function TWiRLSuperObjectProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+      AHeaders: IWiRLHeaders; AContentStream: TStream): TValue;
 begin
   Result := TValue.From<ISuperObject>(TSuperObject.ParseStream(AContentStream, True));
 end;
 
-procedure TWiRLSuperObjectProvider.WriteTo(const AValue: TValue;
-  const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+procedure TWiRLSuperObjectProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
   LSuperObject: ISuperObject;
