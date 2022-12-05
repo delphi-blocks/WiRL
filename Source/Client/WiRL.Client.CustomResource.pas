@@ -15,9 +15,10 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Contnrs, System.Types, System.TypInfo,
-  System.Generics.Collections,
+  System.Generics.Collections, Data.DB,
   WiRL.Core.Context,
   WiRL.Client.Application,
+  WiRL.Data.Utils,
   WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Client.Interfaces,
@@ -58,6 +59,10 @@ type
     function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
     procedure SetApplication(const Value: TWiRLClientApplication);
     function ValueToString(const AValue: TValue): string;
+    procedure StreamToEntity<T>(AEntity: T; AHeaders: IWiRLHeaders;
+      AStream: TStream);
+    procedure StreamToArray(AArray: TValue; AHeaders: IWiRLHeaders;
+      AStream: TStream);
   protected
     function GetClient: TWiRLClient; virtual;
     function GetPath: string; virtual;
@@ -95,6 +100,7 @@ type
     // http verbs
     function Get<T>: T; overload;
     procedure Get(AResponseEntity: TObject); overload;
+    procedure Get<T>(AResponseEntity: T); overload;
     function Post<T, V>(const ARequestEntity: T): V; overload;
     procedure Post<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
     function Put<T, V>(const ARequestEntity: T): V; overload;
@@ -105,7 +111,7 @@ type
     procedure Patch<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
 
     function GenericHttpRequest<T, V>(const AHttpMethod: string; const ARequestEntity: T): V; overload;
-    procedure GenericHttpRequest<T>(const AHttpMethod: string; const ARequestEntity: T; AResponseEntity: TObject); overload;
+    procedure GenericHttpRequest<T, V>(const AHttpMethod: string; const ARequestEntity: T; AResponseEntity: V); overload;
 
   public
     procedure QueryParam(const AName: string; const AValue: TValue);
@@ -410,6 +416,47 @@ begin
   end;
 end;
 
+procedure TWiRLClientCustomResource.StreamToArray(AArray: TValue;
+  AHeaders: IWiRLHeaders; AStream: TStream);
+var
+  LList: TDataSetList;
+  LIndex: Integer;
+  LItem: TValue;
+begin
+  LList := TDataSetList.Create(False);
+  try
+    for LIndex := 0 to AArray.GetArrayLength - 1 do
+    begin
+      LItem := AArray.GetArrayElement(LIndex);
+      if not LItem.IsObject then
+        raise EWiRLClientException.Create('Array of primitive type not supported');
+
+      if not (LItem.AsObject is TDataSet) then
+        raise EWiRLClientException.Create('Error Message');
+
+      LList.Add(TDataSet(LItem.AsObject));
+    end;
+    StreamToObject(LList, AHeaders, AStream);
+  finally
+    LList.Free;
+  end;
+end;
+
+procedure TWiRLClientCustomResource.StreamToEntity<T>(AEntity: T;
+  AHeaders: IWiRLHeaders; AStream: TStream);
+var
+  LValue: TValue;
+begin
+  LValue := TValue.From<T>(AEntity);
+
+  if LValue.IsObject then
+    StreamToObject(LValue.AsObject, AHeaders, AStream)
+  else if LValue.IsArray then
+    StreamToArray(LValue, AHeaders, AStream)
+  else
+    raise EWiRLClientException.Create('Not supported');
+end;
+
 function TWiRLClientCustomResource.StreamToObject<T>(AHeaders: IWiRLHeaders; AStream: TStream): T;
 var
   LType: TRttiType;
@@ -465,7 +512,7 @@ end;
 
 procedure TWiRLClientCustomResource.Delete(AResponseEntity: TObject);
 begin
-  GenericHttpRequest<string>('DELETE', '', AResponseEntity);
+  GenericHttpRequest<string, TObject>('DELETE', '', AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.Delete<T>: T;
@@ -523,8 +570,8 @@ begin
   end;
 end;
 
-procedure TWiRLClientCustomResource.GenericHttpRequest<T>(
-  const AHttpMethod: string; const ARequestEntity: T; AResponseEntity: TObject);
+procedure TWiRLClientCustomResource.GenericHttpRequest<T, V>(
+  const AHttpMethod: string; const ARequestEntity: T; AResponseEntity: V);
 var
   LRequestStream, LResponseStream: TMemoryStream;
   LResponse: IWiRLResponse;
@@ -558,13 +605,11 @@ begin
       end;
       DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
 
-      if Assigned(AResponseEntity) then
-      begin
-        if Assigned(LResponse.ContentStream) then
-          StreamToObject(AResponseEntity, LResponse.Headers, LResponse.ContentStream)
-        else
-          StreamToObject(AResponseEntity, LResponse.Headers, LResponseStream);
-      end;
+      if Assigned(LResponse.ContentStream) then
+        StreamToEntity<V>(AResponseEntity, LResponse.Headers, LResponse.ContentStream)
+      else
+        StreamToEntity<V>(AResponseEntity, LResponse.Headers, LResponseStream);
+
     finally
       LResponseStream.Free;
     end;
@@ -575,7 +620,12 @@ end;
 
 procedure TWiRLClientCustomResource.Get(AResponseEntity: TObject);
 begin
-  GenericHttpRequest<string>('GET', '', AResponseEntity);
+  GenericHttpRequest<string, TObject>('GET', '', AResponseEntity);
+end;
+
+procedure TWiRLClientCustomResource.Get<T>(AResponseEntity: T);
+begin
+  GenericHttpRequest<string, T>('GET', '', AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.Get<T>: T;
@@ -591,7 +641,7 @@ end;
 procedure TWiRLClientCustomResource.Patch<T>(const ARequestEntity: T;
   AResponseEntity: TObject);
 begin
-  GenericHttpRequest<T>('PATCH', ARequestEntity, AResponseEntity);
+  GenericHttpRequest<T, TObject>('PATCH', ARequestEntity, AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.ValueToString(const AValue: TValue): string;
@@ -616,7 +666,7 @@ end;
 procedure TWiRLClientCustomResource.Post<T>(const ARequestEntity: T;
   AResponseEntity: TObject);
 begin
-  GenericHttpRequest<T>('POST', ARequestEntity, AResponseEntity);
+  GenericHttpRequest<T, TObject>('POST', ARequestEntity, AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.Put<T, V>(const ARequestEntity: T): V;
@@ -627,7 +677,7 @@ end;
 procedure TWiRLClientCustomResource.Put<T>(const ARequestEntity: T;
   AResponseEntity: TObject);
 begin
-  GenericHttpRequest<T>('PUT', ARequestEntity, AResponseEntity);
+  GenericHttpRequest<T, TObject>('PUT', ARequestEntity, AResponseEntity);
 end;
 
 procedure TWiRLClientCustomResource.QueryParam(const AName: string;

@@ -1,39 +1,74 @@
 ﻿[WiRLClientApplication1]
-Coordinates=216,1,150,36
+Coordinates=216,1,131,33
 
 [WiRLFDResource1]
 Coordinates=216,56,125,36
 
 [StringGrid1]
-Coordinates=196,21,80,58
+Coordinates=250,20,70,51
 Visible=True
 
 [WiRLClient1]
-Coordinates=117,133,86,36
+Coordinates=117,133,74,33
 
 []
-Coordinates=10,10,106,58
+Coordinates=404,78,95,51
 Visible=False
 
 [BindingsList1]
-Coordinates=135,87,91,36
+Coordinates=135,87,82,33
 
 [Layout1]
-Coordinates=251,116,60,36
-
-[employee1]
-Coordinates=404,1,77,36
-Visible=False
+Coordinates=251,116,53,33
 
 [BindSourceDB2]
-Coordinates=10,10,106,94
-
-[BindNavigator1]
-Coordinates=10,116,103,58
+Coordinates=10,10,92,141
+Visible=True
 
 [btnPUT]
-Coordinates=139,116,58,58
+Coordinates=139,116,50,51
 
-[btnGET]
-Coordinates=135,1,59,58
+[employee]
+Coordinates=404,1,61,33
+Visible=False
+
+[memoLog]
+Coordinates=135,78,63,51
+
+[WiRLClientResource2]
+Coordinates=404,155,121,33
+
+[customers]
+Coordinates=116,145,66,33
+Visible=False
+
+[WiRLClientResource1]
+Coordinates=385,263,121,33
+
+[employeeFirstName]
+Coordinates=246,263,112,33
+
+[employeeLastName]
+Coordinates=117,263,111,33
+
+[StringGrid2]
+Coordinates=690,60,70,51
+
+[employeeEmployeeID]
+Coordinates=583,1,120,33
+
+[BindSourceDB1]
+Coordinates=560,60,92,105
+
+[customersCompanyName]
+Coordinates=213,171,141,33
+
+[BindNavigator1]
+Coordinates=17,170,90,51
+
+[customersCustomerID]
+Coordinates=120,170,124,33
+
+[btnGETALL]
+Coordinates=135,1,51,51
 

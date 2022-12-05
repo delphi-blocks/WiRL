@@ -23,7 +23,8 @@ uses
   WiRL.Data.FireDAC.DataModule,
   WiRL.Core.Attributes,
   WiRL.http.URL,
-  WiRL.Core.Auth.Context, FireDAC.Phys.SQLiteDef;
+  WiRL.Core.Auth.Context, FireDAC.Phys.SQLiteDef,
+  FireDAC.Phys.SQLiteWrapper.Stat;
 
 type
   [Path('/maindata')]
@@ -31,13 +32,14 @@ type
     FDConnection1: TFDConnection;
     employee: TFDQuery;
     FDGUIxWaitCursor1: TFDGUIxWaitCursor;
+    customers: TFDQuery;
   private
   public
-//    [GET, Path('/standard')]
-//    function StandardDataSet: TArray<TDataset>;
+    [GET, Path('/array')]
+    function DataSetArray: TArray<TDataSet>;
 
-//    [GET, Path('/employee')]
-//    function EmployeeDataSet: TDataSet;
+    [GET, Path('/employee')]
+    function EmployeeDataSet: TDataSet;
   end;
 
 implementation
@@ -49,15 +51,15 @@ uses
 
 { TMainDataResource }
 
-//function TMainDataResource.EmployeeDataSet: TDataSet;
-//begin
-//  Result := Employee;
-//end;
-//
-//function TMainDataResource.StandardDataSet: TArray<TDataset>;
-//begin
-//  Result := [employee];
-//end;
+function TMainDataResource.EmployeeDataSet: TDataSet;
+begin
+  Result := employee;
+end;
+
+function TMainDataResource.DataSetArray: TArray<TDataSet>;
+begin
+  Result := [employee, customers];
+end;
 
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<TMainDataResource>(

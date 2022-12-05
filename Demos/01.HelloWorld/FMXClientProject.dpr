@@ -10,7 +10,6 @@
 program FMXClientProject;
 
 uses
-  FastMM4,
   System.StartUpCopy,
   FMX.Forms,
   FMXClient.Forms.Main in 'FMXClient.Forms.Main.pas' {MainForm},

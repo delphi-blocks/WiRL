@@ -12,7 +12,8 @@ unit WiRL.Data.MessageBody.Default;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti,
+  System.Classes, System.SysUtils, System.Rtti, System.Contnrs,
+  WiRL.Core.Classes,
   WiRL.Core.Attributes,
   WiRL.http.Core,
   WiRL.http.Headers,
@@ -26,10 +27,17 @@ uses
 
 type
   [Produces(TMediaType.APPLICATION_JSON)]
-  TArrayDataSetWriter = class(TMessageBodyWriter)
+  [Consumes(TMediaType.APPLICATION_JSON)]
+  TArrayDataSetProvider = class(TMessageBodyProvider)
   private
     [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
   public
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+      AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
+
+    procedure ReadFrom(AObject: TObject; AType: TRttitype; AMediaType: TMediaType;
+	    AHeaders: IWiRLHeaders; AContentStream: TStream); override;
+
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: IWiRLHeaders; AContentStream: TStream); override;
   end;
@@ -71,9 +79,48 @@ begin
   end;
 end;
 
-{ TArrayDataSetWriter }
+{ TArrayDataSetProvider }
 
-procedure TArrayDataSetWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+function TArrayDataSetProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+  AHeaders: IWiRLHeaders; AContentStream: TStream): TValue;
+begin
+  raise Exception.Create('Not implemented');
+end;
+
+procedure TArrayDataSetProvider.ReadFrom(AObject: TObject; AType: TRttitype;
+  AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
+var
+  LJson: TJSONValue;
+  LBuffer: TBytes;
+  LList: TDataSetList;
+  LDataSet: TDataSet;
+begin
+  if not (AObject is TDataSetList) then
+    raise EWiRLException.Create('Invalid entity');
+
+  LList := TDataSetList(AObject);
+    
+  AContentStream.Position := 0;
+  SetLength(LBuffer, AContentStream.Size);
+  AContentStream.Read(LBuffer[0], AContentStream.Size);
+  LJson := TJSONObject.ParseJSONValue(LBuffer, 0);
+  try
+    if not Assigned(LJson) then
+      raise EWiRLException.Create('Invalid JSON');
+
+    for LDataSet in LList do
+    begin
+      if not LDataSet.Active then
+        LDataSet.Open;
+      TNeon.JSONToObject(LDataSet, LJson.GetValue<TJSONValue>(LDataSet.Name), WiRLConfigurationNeon.GetNeonConfig);
+    end;
+    
+  finally
+    LJson.Free;
+  end;
+end;
+
+procedure TArrayDataSetProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaderFields: IWiRLHeaders; AContentStream: TStream);
 var
   LStreamWriter: TStreamWriter;
@@ -118,10 +165,22 @@ end;
 
 procedure RegisterMessageBodyClasses;
 begin
+  // TArrayDataSetProvider (reader and writer for TDataSet array)
+  TMessageBodyReaderRegistry.Instance.RegisterReader(
+    TArrayDataSetProvider,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
+    begin
+      Result := Assigned(AType) and TRttiHelper.IsObjectOfType<TDataSetList>(AType);
+    end,
+    function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Integer
+    begin
+      Result := TMessageBodyWriterRegistry.AFFINITY_HIGH;
+    end
+  );
 
   // TArrayDataSetWriter
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
-    TArrayDataSetWriter,
+    TArrayDataSetProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
     begin
       Result := Assigned(AType) and TRttiHelper.IsDynamicArrayOf<TDataSet>(AType); // and AMediaType = application/json

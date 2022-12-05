@@ -93,7 +93,8 @@ type
     class function ForEachFieldWithAttribute<T: TCustomAttribute>(AInstance: TObject; const ADoSomething: TFunc<TRttiField, T, Boolean>): Integer; overload;
     class function ForEachField(AInstance: TObject; const ADoSomething: TFunc<TRttiField, Boolean>): Integer;
 
-    class function GetType(AObject: TRttiObject): TRttiType;
+    class function GetType(AObject: TRttiObject): TRttiType; overload;
+    class function GetType(ATypeInfo: Pointer): TRttiType; overload;
 
     class constructor Create;
     class destructor Destroy;
@@ -456,6 +457,11 @@ begin
     Result := TRttiManagedField(AObject).FieldType
   else
     raise Exception.Create('Object doesn''t have a type');
+end;
+
+class function TRttiHelper.GetType(ATypeInfo: Pointer): TRttiType;
+begin
+  Result := Context.GetType(ATypeInfo)
 end;
 
 class function TRttiHelper.HasAttribute<T>(AClass: TClass): Boolean;

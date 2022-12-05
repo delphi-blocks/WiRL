@@ -12,7 +12,7 @@ unit WiRL.Data.Utils;
 interface
 
 uses
-  System.Classes, System.SysUtils, Data.DB;
+  System.Classes, System.SysUtils, Generics.Collections, Data.DB;
 
 type
   TDataUtils = class
@@ -26,6 +26,8 @@ type
     class function DataSetToCSV(const ADataSet: TDataSet): string; static;
   end;
 
+  TDataSetList = class(TObjectList<TDataSet>)
+  end;
 
 implementation
 

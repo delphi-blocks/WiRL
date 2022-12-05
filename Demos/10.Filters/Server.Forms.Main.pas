@@ -98,10 +98,12 @@ begin
         .SetResources(
           'Server.Resources.TFilterDemoResource')
 
+      (*
       .Plugin.Configure<IWiRLConfigurationCompression>
         .SetMinSize(300)
         .SetMediaTypes('application/xml,application/json,text/plain')
         .ApplyConfig
+      *)
   ;
 
   if not FServer.Active then
