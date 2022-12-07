@@ -268,7 +268,7 @@ begin
 
       if Assigned(LObject) then
       begin
-        FResource.GenericHttpRequest<string>(ComboBoxMethod.Text, MemoRequest.Text, LObject);
+        FResource.GenericHttpRequest<string, TObject>(ComboBoxMethod.Text, MemoRequest.Text, LObject);
       end
       else
       begin

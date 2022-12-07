@@ -13,7 +13,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.DateUtils,
-  Data.DB, Generics.Collections, System.JSON,
+  Data.DB, Generics.Collections, System.JSON, System.Variants,
 
   WiRL.Core.JSON;
 
@@ -90,7 +90,7 @@ end;
 function ValueToVariant(ADataType: TFieldType; AValue: TJSONValue; AFormats: TWiRLResolverFormats): Variant;
 begin
   if AValue.Null then
-    Exit();
+    Exit(Null);
 
   case ADataType of
 //    ftUnknown: ;
