@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -91,7 +91,7 @@ begin
       AValue := GetContextObject(LEntry, AObject, AContext);
       if AValue.IsObject then  // Only object should be released
       begin
-        LContextOwned := not IsSigleton(AObject); // Singleton should'n be released
+        LContextOwned := not IsSigleton(AObject); // Singleton should not be released
         AContext.ContextData.Add(AValue.AsObject, LContextOwned);
       end;
       Exit(True);
