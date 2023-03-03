@@ -149,6 +149,10 @@ type
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
 
+    procedure ReadFrom(AObject: TObject; AType: TRttiType;
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
+      override;
+
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
       AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
   end;
@@ -373,6 +377,19 @@ begin
     Result := AContentStream
   else
    Result := TWiRLStreamWrapper.Create(AContentStream);
+end;
+
+procedure TWiRLStreamProvider.ReadFrom(AObject: TObject; AType: TRttiType;
+  AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
+var
+  LStream: TStream;
+begin
+  LStream := AObject as TStream;
+  if Assigned(LStream) then
+  begin
+    AContentStream.Position := 0;
+    LStream.CopyFrom(AContentStream, AContentStream.Size);
+  end;
 end;
 
 procedure TWiRLStreamProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
