@@ -22,6 +22,7 @@ object MainForm: TMainForm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 550
     DesignSize = (
       554
       73)
@@ -64,6 +65,7 @@ object MainForm: TMainForm
       Action = actShowDocumentation
       Anchors = [akTop, akRight]
       TabOrder = 3
+      ExplicitLeft = 389
     end
   end
   object Button1: TButton

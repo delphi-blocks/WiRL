@@ -149,7 +149,7 @@ begin
   LExtensionObject.AddPair('url', 'http://localhost:8080/rest/app/openapi/api-logo.png');
   LExtensionObject.AddPair('backgroundColor', '#FFFFFF');
   LExtensionObject.AddPair('altText', 'API Logo');
-  Result.Info.Extensions.AddPair('x-logo', LExtensionObject);
+  Result.Info.Extensions.Add('x-logo', LExtensionObject);
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
