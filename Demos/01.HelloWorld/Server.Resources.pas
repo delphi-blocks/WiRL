@@ -158,11 +158,7 @@ begin
 end;
 
 function THelloWorldResource.HelloWorld(): string;
-var
-  LObj: TObject;
 begin
-  LObj := TObject.Create;
-  GC.AddGarbage(LObj);
   Result := 'Hello World!';
 end;
 
