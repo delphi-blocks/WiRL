@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -26,34 +26,7 @@ uses
   WiRL.http.Client;
 
 type
-  TSerializerCase = (scLowerCase, scUpperCase, scPascalCase, scCamelCase, scSnakeCase);
-  //TSerializerMemberType = (mtUnknown, mtProp, mtField, mtIndexed);
-  TSerializerMembers = (smStandard, smFields, smProperties);
-  TSerializerMembersSet = set of TSerializerMembers;
-  TSerializerVisibility = set of TMemberVisibility;
-
   TWiRLClientApplication = class;
-
-  TWiRLClientApplicationOptions = class(TPersistent)
-  private
-    FSerializerMembers: TSerializerMembersSet;
-    FUseUTCDate: Boolean;
-    FSerializerVisibility: TSerializerVisibility;
-    FSerializerCase: TSerializerCase;
-    FApplication: TWiRLClientApplication;
-    procedure SetSerializerCase(const Value: TSerializerCase);
-    procedure SetSerializerMembers(const Value: TSerializerMembersSet);
-    procedure SetSerializerVisibility(const Value: TSerializerVisibility);
-    procedure SetUseUTCDate(const Value: Boolean);
-  public
-    procedure Assign(ASource: TPersistent); override;
-    constructor Create(AApplication: TWiRLClientApplication);
-  published
-    property SerializerCase :TSerializerCase read FSerializerCase write SetSerializerCase default scPascalCase;
-    property SerializerMembers: TSerializerMembersSet read FSerializerMembers write SetSerializerMembers default [smStandard];
-    property SerializerVisibility: TSerializerVisibility read FSerializerVisibility write SetSerializerVisibility default [mvPublic, mvPublished];
-    property UseUTCDate: Boolean read FUseUTCDate write SetUseUTCDate default True;
-  end;
 
   TWiRLInvocation = record
   private
@@ -65,7 +38,10 @@ type
     function ContentType(const AContentType: string): TWiRLInvocation;
     function AcceptLanguage(const AAcceptLanguage: string): TWiRLInvocation;
     function Header(const AName, AValue: string): TWiRLInvocation;
-    function Authorization(const AValue: string): TWiRLInvocation;
+    function Authorization(const AValue: string): TWiRLInvocation; overload;
+    function AuthBasic(const AName, AValue: string): TWiRLInvocation; overload;
+    function AuthBearer(const AValue: string): TWiRLInvocation; overload;
+
     function QueryParam(const AName: string; const AValue: TValue): TWiRLInvocation; overload;
     function QueryParam<T>(const AName: string; const AValue: T): TWiRLInvocation; overload;
     function PathParam(const AName: string; const AValue: TValue): TWiRLInvocation; overload;
@@ -93,6 +69,8 @@ type
   [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator or pidiOSDevice or pidAndroid)]
   {$ENDIF}
   TWiRLClientApplication = class(TComponent, IWiRLApplication)
+  private const
+    DEFAULT_APPNAME = 'app';
   private
     FAppName: string;
     FDefaultMediaType: string;
@@ -105,7 +83,6 @@ type
     FAppConfigurator: TAppConfigurator;
     FResources: TObjectList<TObject>;
     FFilterRegistry: TWiRLClientFilterRegistry;
-    FOptions: TWiRLClientApplicationOptions;
     FFilters: TStringList;
     FReaders: TStringList;
     FWriters: TStringList;
@@ -113,7 +90,6 @@ type
     procedure SetClient(const Value: TWiRLClient);
     function GetDefaultClient: TWiRLClient;
     function CheckFilterNameBinding(AClientResource: TObject; AAttribute: TCustomAttribute): Boolean;
-    procedure SetOptions(const Value: TWiRLClientApplicationOptions);
     function AppNameIsStored: Boolean;
     procedure RegistryNotification(Sender: TObject);
   protected
@@ -128,11 +104,12 @@ type
     // Handles the parent/child relationship for the designer
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
   public
-    property Resources: TObjectList<TObject> read FResources;
-    procedure ApplyRequestFilter(AClientResource: TObject; const AHttpMethod: string; ARequestStream: TStream; out AResponse: IWiRLResponse);
-    procedure ApplyResponseFilter(AClientResource: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+  public
+    procedure ApplyRequestFilter(AClientResource: TObject; const AHttpMethod: string; ARequestStream: TStream; out AResponse: IWiRLResponse);
+    procedure ApplyResponseFilter(AClientResource: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse);
+    property Resources: TObjectList<TObject> read FResources;
   public
     { IWiRLApplication }
     function SetWriters(const AWriters: TArray<string>): IWiRLApplication; overload;
@@ -173,7 +150,6 @@ type
     property Filters: TStringList read FFilters write SetDesignFilters;
     property Readers: TStringList read FReaders write SetDesignReaders;
     property Writers: TStringList read FWriters write SetDesignWriters;
-    property Options: TWiRLClientApplicationOptions read FOptions write SetOptions;
   end;
 
   TAppConfiguratorImpl = class(TAppConfigurator)
@@ -218,9 +194,6 @@ type
     constructor Create(AApplication: TWiRLClientApplication);
     destructor Destroy; override;
   end;
-
-const
-  DefaultAppName = 'app';
 
 { TWiRLClientApplication }
 
@@ -381,7 +354,7 @@ end;
 
 function TWiRLClientApplication.AppNameIsStored: Boolean;
 begin
-  Result := FAppName <> DefaultAppName;
+  Result := FAppName <> DEFAULT_APPNAME;
 end;
 
 function TWiRLClientApplication.CheckFilterNameBinding(AClientResource: TObject;
@@ -400,7 +373,6 @@ end;
 constructor TWiRLClientApplication.Create(AOwner: TComponent);
 begin
   inherited;
-  FOptions := TWiRLClientApplicationOptions.Create(Self);
   FFilters := TStringList.Create;
   FFilters.OnChange := RegistryNotification;
   FReaders := TStringList.Create;
@@ -419,7 +391,7 @@ begin
   FResources := TObjectList<TObject>.Create;
 
   FDefaultMediaType := 'application/json';
-  FAppName := DefaultAppName;
+  FAppName := DEFAULT_APPNAME;
   if TWiRLComponentHelper.IsDesigning(Self) then
     FClient := TWiRLComponentHelper.FindDefault<TWiRLClient>(Self);
 
@@ -432,7 +404,6 @@ end;
 
 destructor TWiRLClientApplication.Destroy;
 begin
-  FOptions.Free;
   FFilters.Free;
   FReaders.Free;
   FWriters.Free;
@@ -636,15 +607,6 @@ begin
   Result := Self;
 end;
 
-procedure TWiRLClientApplication.SetOptions(
-  const Value: TWiRLClientApplicationOptions);
-begin
-  if FOptions <> Value then
-  begin
-    FOptions.Assign(Value);
-  end;
-end;
-
 function TWiRLClientApplication.SetFilters(
   const AFilters: System.TArray<System.string>): IWiRLApplication;
 var
@@ -722,26 +684,34 @@ begin
   FApplication := AApplication;
 end;
 
-function TAppConfiguratorImpl.GetConfigByInterfaceRef(
-  AInterfaceRef: TGUID): IInterface;
+function TAppConfiguratorImpl.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
 begin
   Result := FApplication.GetConfigByInterfaceRef(AInterfaceRef);
 end;
 
 { TWiRLInvocation }
 
-function TWiRLInvocation.Accept(
-  const AAccept: string): TWiRLInvocation;
+function TWiRLInvocation.Accept(const AAccept: string): TWiRLInvocation;
 begin
   FWiRLInvocation.Accept(AAccept);
   Result := Self;
 end;
 
-function TWiRLInvocation.AcceptLanguage(
-  const AAcceptLanguage: string): TWiRLInvocation;
+function TWiRLInvocation.AcceptLanguage(const AAcceptLanguage: string): TWiRLInvocation;
 begin
-//  Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).Get<T>;
-  Result := Header('Accept-Language', AAcceptLanguage);
+  Header('Accept-Language', AAcceptLanguage);
+  Result := Self;
+end;
+
+function TWiRLInvocation.AuthBasic(const AName, AValue: string): TWiRLInvocation;
+begin
+  Header('Authorization', TBasicAuth.Create(AName, AValue));
+  Result := Self;
+end;
+
+function TWiRLInvocation.AuthBearer(const AValue: string): TWiRLInvocation;
+begin
+  Header('Authorization', TBearerAuth.Create(AValue));
   Result := Self;
 end;
 
@@ -751,8 +721,7 @@ begin
   Result := Self;
 end;
 
-function TWiRLInvocation.ContentType(
-  const AContentType: string): TWiRLInvocation;
+function TWiRLInvocation.ContentType(const AContentType: string): TWiRLInvocation;
 begin
   FWiRLInvocation.ContentType(AContentType);
   Result := Self;
@@ -805,15 +774,13 @@ begin
   (FWiRLInvocation.Resource as TWiRLClientCustomResource).Patch(ARequestEntity, AResponseEntity);
 end;
 
-function TWiRLInvocation.PathParam(const AName: string;
-  const AValue: TValue): TWiRLInvocation;
+function TWiRLInvocation.PathParam(const AName: string; const AValue: TValue): TWiRLInvocation;
 begin
   FWiRLInvocation.PathParam(AName, AValue);
   Result := Self;
 end;
 
-function TWiRLInvocation.PathParam<T>(const AName: string;
-  const AValue: T): TWiRLInvocation;
+function TWiRLInvocation.PathParam<T>(const AName: string; const AValue: T): TWiRLInvocation;
 begin
   FWiRLInvocation.PathParam(AName, TValue.From<T>(AValue));
   Result := Self;
@@ -839,15 +806,13 @@ begin
   (FWiRLInvocation.Resource as TWiRLClientCustomResource).Put(ARequestEntity, AResponseEntity);
 end;
 
-function TWiRLInvocation.QueryParam<T>(const AName: string;
-  const AValue: T): TWiRLInvocation;
+function TWiRLInvocation.QueryParam<T>(const AName: string; const AValue: T): TWiRLInvocation;
 begin
   FWiRLInvocation.QueryParam(AName, TValue.From<T>(AValue));
   Result := Self;
 end;
 
-function TWiRLInvocation.QueryParam(const AName: string;
-  const AValue: TValue): TWiRLInvocation;
+function TWiRLInvocation.QueryParam(const AName: string; const AValue: TValue): TWiRLInvocation;
 begin
   FWiRLInvocation.QueryParam(AName, AValue);
   Result := Self;
@@ -925,84 +890,6 @@ begin
     FResource.Application := FApp;
   end;
   FResource.Resource := AUrl;
-end;
-
-{ TWiRLClientApplicationOptions }
-
-procedure TWiRLClientApplicationOptions.Assign(ASource: TPersistent);
-var
-  LSourceOptions: TWiRLClientApplicationOptions;
-begin
-  inherited;
-  if ASource is TWiRLClientApplicationOptions then
-  begin
-    LSourceOptions := TWiRLClientApplicationOptions(ASource);
-    FSerializerMembers := LSourceOptions.SerializerMembers;
-    FSerializerVisibility := LSourceOptions.SerializerVisibility;
-    FSerializerCase := LSourceOptions.SerializerCase;
-    FUseUTCDate := LSourceOptions.UseUTCDate;
-  end;
-end;
-
-constructor TWiRLClientApplicationOptions.Create(AApplication: TWiRLClientApplication);
-begin
-  inherited Create;
-  FApplication := AApplication;
-  FSerializerCase := scPascalCase;
-  FSerializerMembers := [smStandard];
-  FSerializerVisibility := [mvPublic, mvPublished];
-  FUseUTCDate := True;
-end;
-
-procedure TWiRLClientApplicationOptions.SetSerializerCase(
-  const Value: TSerializerCase);
-var
-  LNeonCase: TNeonCase;
-begin
-  FSerializerCase := Value;
-  LNeonCase := TNeonCase.PascalCase;
-  case FSerializerCase of
-    scLowerCase: LNeonCase := TNeonCase.LowerCase;
-    scUpperCase: LNeonCase := TNeonCase.UpperCase;
-    scPascalCase: LNeonCase := TNeonCase.PascalCase;
-    scCamelCase: LNeonCase := TNeonCase.CamelCase;
-    scSnakeCase: LNeonCase := TNeonCase.SnakeCase;
-  end;
-
-  FApplication.Plugin.Configure<IWiRLConfigurationNeon>.SetMemberCase(LNeonCase);
-end;
-
-procedure TWiRLClientApplicationOptions.SetSerializerMembers(
-  const Value: TSerializerMembersSet);
-var
-  LMembers: TNeonMembersSet;
-begin
-  FSerializerMembers := Value;
-  LMembers := [];
-  if smStandard in FSerializerMembers then
-    LMembers := [TNeonMembers.Standard];
-  if smFields in FSerializerMembers then
-    LMembers := [TNeonMembers.Fields];
-  if smProperties in FSerializerMembers then
-    LMembers := [TNeonMembers.Properties];
-
-  FApplication.Plugin.Configure<IWiRLConfigurationNeon>.SetMembers(LMembers);
-end;
-
-procedure TWiRLClientApplicationOptions.SetSerializerVisibility(
-  const Value: TSerializerVisibility);
-var
-  LVisibility: TNeonVisibility;
-begin
-  FSerializerVisibility := Value;
-  LVisibility := Value;
-  FApplication.Plugin.Configure<IWiRLConfigurationNeon>.SetVisibility(LVisibility);
-end;
-
-procedure TWiRLClientApplicationOptions.SetUseUTCDate(const Value: Boolean);
-begin
-  FUseUTCDate := Value;
-  FApplication.Plugin.Configure<IWiRLConfigurationNeon>.SetUseUTCDate(Value);
 end;
 
 end.
