@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -155,7 +155,8 @@ type
   private
     FStatusCode: Integer;
     FReasonString: string;
-    FJsonResponse: TJSONValue;
+    FResponseJson: TJSONValue;
+    FResponseText: string;
     FServerException: string;
   public
     constructor Create(AResponse: IWiRLResponse); reintroduce; virtual;
@@ -163,7 +164,8 @@ type
 
     property StatusCode: Integer read FStatusCode write FStatusCode;
     property ReasonString: string read FReasonString write FReasonString;
-    property JsonResponse: TJSONValue read FJsonResponse write FJsonResponse;
+    property ResponseText: string read FResponseText write FResponseText;
+    property ResponseJson: TJSONValue read FResponseJson write FResponseJson;
     property ServerException: string read FServerException write FServerException;
   end;
 
@@ -333,17 +335,18 @@ begin
   FStatusCode := AResponse.StatusCode;
   FReasonString := AResponse.StatusText;
   FServerException := Exception.ClassName;
-  LMessage := FReasonString;
+  FResponseText := AResponse.Content;
 
+  LMessage := FReasonString;
   if AResponse.ContentType = TMediaType.APPLICATION_JSON then
   begin
-    FJsonResponse := TJSONObject.ParseJSONValue(AResponse.Content);
-    if Assigned(FJsonResponse) then
+    FResponseJson := TJSONObject.ParseJSONValue(FResponseText);
+    if Assigned(FResponseJson) then
     begin
-      if not FJsonResponse.TryGetValue<string>('message', LMessage) then
+      if not FResponseJson.TryGetValue<string>('message', LMessage) then
         LMessage := FReasonString;
 
-      if not FJsonResponse.TryGetValue<string>('exception', FServerException) then
+      if not FResponseJson.TryGetValue<string>('exception', FServerException) then
         LMessage := FServerException;
     end;
   end;
@@ -353,7 +356,7 @@ end;
 
 destructor EWiRLClientResourceException.Destroy;
 begin
-  FJsonResponse.Free;
+  FResponseJson.Free;
   inherited;
 end;
 
