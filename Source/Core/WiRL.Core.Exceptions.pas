@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -141,7 +141,7 @@ type
     constructor Create(AStatusCode: Integer);
   end;
 
-  // Client errors (400)
+  // Client errors (40x)
 
   EWiRLHttpStatusException = class(EWiRLWebApplicationException)
   public
@@ -158,12 +158,16 @@ type
     constructor Create; override;
   end;
 
-  [StatusCode(404)]
-  EWiRLNotFoundException = class(EWiRLHttpStatusException)
+  [StatusCode(400)]
+  EWiRLBadRequestException = class(EWiRLHttpStatusException)
   end;
 
   [StatusCode(401)]
   EWiRLNotAuthorizedException = class(EWiRLHttpStatusException)
+  end;
+
+  [StatusCode(404)]
+  EWiRLNotFoundException = class(EWiRLHttpStatusException)
   end;
 
   [StatusCode(406)]
@@ -174,7 +178,7 @@ type
   EWiRLUnsupportedMediaTypeException = class(EWiRLHttpStatusException)
   end;
 
-  // Server errors (500)
+  // Server errors (50x)
 
   [StatusCode(500)]
   EWiRLServerException = class(EWiRLHttpStatusException)
