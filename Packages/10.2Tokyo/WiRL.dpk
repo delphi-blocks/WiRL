@@ -2,9 +2,11 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2022 WiRL Team                                      }
-{                                                                              }
+{       Copyright (c) 2015 WiRL Team                                           }
 {       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{       Licensed under the Apache License, Version 2.0                         }
+{       http://www.apache.org/licenses/LICENSE-2.0                             }
 {                                                                              }
 {******************************************************************************}
 package WiRL;
@@ -79,6 +81,7 @@ contains
   WiRL.Core.Registry in '..\..\Source\Core\WiRL.Core.Registry.pas',
   WiRL.Core.Singleton in '..\..\Source\Core\WiRL.Core.Singleton.pas',
   WiRL.Core.Utils in '..\..\Source\Core\WiRL.Core.Utils.pas',
+  WiRL.Core.Tuples in '..\..\Source\Core\WiRL.Core.Tuples.pas',
   WiRL.Core.Validators in '..\..\Source\Core\WiRL.Core.Validators.pas',
   WiRL.Core.Converter in '..\..\Source\Core\WiRL.Core.Converter.pas',
   WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
@@ -101,7 +104,6 @@ contains
   WiRL.http.URL in '..\..\Source\Core\WiRL.http.URL.pas',
   WiRL.http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
   WiRL.http.MultipartData in '..\..\Source\Core\WiRL.http.MultipartData.pas',
-  WiRL.Data.Utils in '..\..\Source\Data\WiRL.Data.Utils.pas',
   WiRL.http.Filters.Compression in '..\..\Source\Core\WiRL.http.Filters.Compression.pas',
   WiRL.http.Filters.CORS in '..\..\Source\Core\WiRL.http.Filters.CORS.pas',
   WiRL.http.FileSystemEngine in '..\..\Source\Core\WiRL.http.FileSystemEngine.pas',
@@ -109,12 +111,19 @@ contains
   WiRL.http.Client.Indy in '..\..\Source\Client\WiRL.http.Client.Indy.pas',
   WiRL.http.Client.NetHttp in '..\..\Source\Client\WiRL.http.Client.NetHttp.pas',
   WiRL.http.Client.Interfaces in '..\..\Source\Client\WiRL.http.Client.Interfaces.pas',
+  WiRL.Data.Utils in '..\..\Source\Data\WiRL.Data.Utils.pas',
   WiRL.Data.MessageBody.Default in '..\..\Source\Data\WiRL.Data.MessageBody.Default.pas',
   WiRL.Data.FireDAC in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas',
   WiRL.Data.FireDAC.Updates in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas',
   WiRL.Data.FireDAC.Persistence in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas',
   WiRL.Data.FireDAC.MessageBody.Default in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBody.Default.pas',
   WiRL.Data.FireDAC.Utils in '..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
+  WiRL.Client.Utils in '..\..\Source\Client\WiRL.Client.Utils.pas',
+  WiRL.Client.Filters in '..\..\Source\Client\WiRL.Client.Filters.pas',
+  WiRL.Client.Resource in '..\..\Source\Client\WiRL.Client.Resource.pas',
+  WiRL.Client.CustomResource in '..\..\Source\Client\WiRL.Client.CustomResource.pas',
+  WiRL.Client.Utils.LiveBindings in '..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas',  
   WiRL.Configuration.Auth in '..\..\Source\Core\WiRL.Configuration.Auth.pas',
   WiRL.Configuration.Core in '..\..\Source\Core\WiRL.Configuration.Core.pas',
   WiRL.Configuration.JWT in '..\..\Source\Core\WiRL.Configuration.JWT.pas',
@@ -123,12 +132,6 @@ contains
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Configuration.Compression in '..\..\Source\Core\WiRL.Configuration.Compression.pas',
   WiRL.Configuration.OpenAPI in '..\..\Source\Core\WiRL.Configuration.OpenAPI.pas',
-  WiRL.Client.Application in '..\..\Source\Client\WiRL.Client.Application.pas',
-  WiRL.Client.Utils in '..\..\Source\Client\WiRL.Client.Utils.pas',
-  WiRL.Client.Filters in '..\..\Source\Client\WiRL.Client.Filters.pas',
-  WiRL.Client.Resource in '..\..\Source\Client\WiRL.Client.Resource.pas',
-  WiRL.Client.CustomResource in '..\..\Source\Client\WiRL.Client.CustomResource.pas',
-  WiRL.Client.Utils.LiveBindings in '..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas',
   WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas';
 
 end.

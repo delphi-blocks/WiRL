@@ -2,9 +2,11 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
-{                                                                              }
+{       Copyright (c) 2015 WiRL Team                                           }
 {       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{       Licensed under the Apache License, Version 2.0                         }
+{       http://www.apache.org/licenses/LICENSE-2.0                             }
 {                                                                              }
 {******************************************************************************}
 package WiRLDesign;
@@ -41,8 +43,6 @@ package WiRLDesign;
 
 requires
   rtl,
-  Neon,
-  JOSE,
   WiRL,
   DesignIDE;
 

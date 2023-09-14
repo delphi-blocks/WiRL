@@ -277,8 +277,8 @@ begin
     except
       on E: EWiRLClientResourceException do
       begin
-        if Assigned(E.JsonResponse) then
-          MemoResponse.Text := E.JsonResponse.ToJSON
+        if Assigned(E.ResponseJson) then
+          MemoResponse.Text := E.ResponseJson.ToJSON
         else
           MemoResponse.Text := E.Message;
       end;
