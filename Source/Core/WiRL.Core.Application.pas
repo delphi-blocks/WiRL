@@ -430,7 +430,7 @@ end;
 
 procedure TWiRLApplication.Shutdown;
 begin
-
+  FProxy.Reset();
 end;
 
 procedure TWiRLApplication.Startup;

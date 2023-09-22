@@ -33,6 +33,7 @@ type
     FSummary: string;
   public
     procedure Process(); virtual;
+    procedure Reset(); virtual;
 
     property Name: string read FName write FName;
     property Summary: string read FSummary write FSummary;
@@ -280,6 +281,7 @@ type
     procedure ProcessResources;
   public
     procedure Process(); override;
+    procedure Reset(); override;
     function NewResource(const AName: string): TWiRLProxyResource;
     function GetResource(const AName: string): TWiRLProxyResource;
 
@@ -897,6 +899,13 @@ begin
   FProcessed := True;
 end;
 
+procedure TWiRLProxyApplication.Reset;
+begin
+  inherited;
+
+  FResources.Clear;
+end;
+
 procedure TWiRLProxyApplication.ProcessResources;
 var
   LResourceName: string;
@@ -916,6 +925,11 @@ procedure TWiRLProxyBase.Process;
 begin
   if FProcessed then
     raise EWiRLServerException.Create(Self.ClassName + ' already processed');
+end;
+
+procedure TWiRLProxyBase.Reset;
+begin
+  FProcessed := False;
 end;
 
 { TWiRLProxyMethodResponse }
