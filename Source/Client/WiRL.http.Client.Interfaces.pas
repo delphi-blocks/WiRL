@@ -334,8 +334,8 @@ var
 begin
   FStatusCode := AResponse.StatusCode;
   FReasonString := AResponse.StatusText;
-  FServerException := Exception.ClassName;
   FResponseText := AResponse.Content;
+  FServerException := Exception.ClassName;
 
   LMessage := FReasonString;
   if AResponse.ContentType = TMediaType.APPLICATION_JSON then
@@ -343,11 +343,9 @@ begin
     FResponseJson := TJSONObject.ParseJSONValue(FResponseText);
     if Assigned(FResponseJson) then
     begin
-      if not FResponseJson.TryGetValue<string>('message', LMessage) then
-        LMessage := FReasonString;
-
-      if not FResponseJson.TryGetValue<string>('exception', FServerException) then
-        LMessage := FServerException;
+      FResponseJson.TryGetValue<string>('message', LMessage);
+      FResponseJson.TryGetValue<string>('exception', FServerException);
+      LMessage := Format('[%] ', [FServerException]) + LMessage;
     end;
   end;
 

@@ -16,6 +16,11 @@ uses
   System.Generics.Defaults, System.Generics.Collections;
 
 type
+  /// <summary>
+  ///   Simple interface for a Tuple used in REST (HTTP) communication. It's
+  ///   not a general purpose Tuple but it's used to get Entities and Errors in
+  ///   a GET/POST/PUT/PATCH command
+  /// </summary>
   IWiRLTuple<T, E> = interface
     function GetEntity: T;
     procedure SetEntity(Value: T);
@@ -26,6 +31,9 @@ type
     property Error: E read GetError write SetError;
   end;
 
+  /// <summary>
+  ///   Default IWiRLTuple implementation
+  /// </summary>
   TWiRLTuple<T, E> = class(TInterfacedObject, IWiRLTuple<T, E>)
   private
     FEntity: T;
@@ -69,7 +77,7 @@ end;
 
 destructor TWiRLTuple<T, E>.Destroy;
 var
-  LEntityHolder, LErrorHolder : TValue;
+  LEntityHolder, LErrorHolder: TValue;
 begin
   if FOwnObjects then
   begin
