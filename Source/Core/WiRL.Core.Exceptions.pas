@@ -290,34 +290,44 @@ begin
 end;
 
 function Pair.ToJSONValue: TJSONValue;
-var
-  LDate: Double;
+
+  function KindEnumeration: TJSONValue;
+  begin
+    if Value.TypeInfo.Name = 'Boolean' then
+      if Value.AsBoolean then
+        Result := TJSONTrue.Create
+      else
+        Result := TJSONFalse.Create
+    else
+      Result := TJSONString.Create('type:enumeration');
+  end;
+
+  function KindFloat: TJSONValue;
+  var
+    LDate: Double;
+  begin
+    if Value.TypeInfo.Name = 'TDateTime' then
+    begin
+      LDate := Value.AsCurrency;
+      if Trunc(LDate) = 0 then
+        Result := TJSONString.Create(FormatDateTime('hh:nn:ss:zzz', LDate))
+      else if Frac(LDate) = 0 then
+        Result := TJSONString.Create(FormatDateTime('yyyy-mm-dd', LDate))
+      else
+        Result := TJSONString.Create(FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', LDate))
+    end
+    else
+      Result := TJSONNumber.Create(Value.AsCurrency);
+  end;
+
 begin
   Result := nil;
-  if Value.IsType<TDateTime> then
-  begin
-    LDate := Value.AsCurrency;
-    if Trunc(LDate) = 0 then
-      Result := TJSONString.Create(FormatDateTime('hh:nn:ss:zzz', LDate))
-    else if Frac(LDate) = 0 then
-      Result := TJSONString.Create(FormatDateTime('yyyy-mm-dd', LDate))
-    else
-      Result := TJSONString.Create(FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', LDate))
-  end
-  else if Value.IsType<Boolean> then
-  begin
-    if Value.AsBoolean then
-      Result := TJSONTrue.Create
-    else
-      Result := TJSONFalse.Create
-  end
-  else
   case Value.Kind of
     tkUnknown:     Result := TJSONString.Create('type:unknown');
-    tkInteger:     Result := TJSONNumber.Create(Value.AsCurrency);
+    tkInteger:     Result := TJSONNumber.Create(Value.AsInteger);
     tkChar:        Result := TJSONString.Create(Value.AsString);
-    tkEnumeration: Result := TJSONString.Create('type:enumeration');
-    tkFloat:       Result := TJSONNumber.Create(Value.AsCurrency);
+    tkEnumeration: Result := KindEnumeration;
+    tkFloat:       Result := KindFloat;
     tkString:      Result := TJSONString.Create(Value.AsString);
     tkSet:         Result := TJSONString.Create(Value.AsString);
     tkClass:       Result := TJSONString.Create(Value.AsObject.ToString);
@@ -335,6 +345,7 @@ begin
     tkClassRef:    Result := TJSONString.Create(Value.AsClass.ClassName);
     tkPointer:     Result := TJSONNumber.Create(Value.AsInteger);
     tkProcedure:   Result := TJSONString.Create('type:procedure');
+    tkMRecord:     Result := TJSONString.Create('type:mrecord');
   end;
 end;
 

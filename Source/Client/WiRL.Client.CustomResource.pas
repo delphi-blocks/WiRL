@@ -351,7 +351,7 @@ function TWiRLClientCustomResource.MergeHeaders(const AHttpMethod: string): IWiR
 
   function HasRequestBody(const AHttpMethod: string): Boolean;
   begin
-    if (AHttpMethod = 'POST') or (AHttpMethod = 'PUT') then
+    if (AHttpMethod = 'POST') or (AHttpMethod = 'PUT') or (AHttpMethod = 'PATCH') then
       Result := True
     else
       Result := False;
