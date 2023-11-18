@@ -26,14 +26,29 @@ uses
 procedure Register;
 
 const
-  PackageName = 'WiRL';
-  AboutDescription = 'WiRL: Delphi RESTful Library';
-  License = 'Apache License, Version 2.0';
+  WIRL_CAPTION = 'WiRL RESTful Library for Delphi 4.5.0';
+  WIRL_LICENSE = 'Apache License, Version 2.0';
+  WIRL_DESCRIPTION =
+    'WiRL: 100% RESTful Library for Delphi' + sLineBreak + sLineBreak +
+    'Copyright © 2015-2023 WiRL Team. All rights reserved.' + sLineBreak +
+    'https://github.com/delphi-blocks/WiRL' + sLineBreak + sLineBreak +
+    '[Powered by]' + sLineBreak + sLineBreak +
+    'Delphi JOSE and JWT Library' + sLineBreak +
+    'https://github.com/paolo-rossi/delphi-jose-jwt' + sLineBreak + sLineBreak +
+    'Neon: JSON Serialization Library' + sLineBreak +
+    'https://github.com/paolo-rossi/delphi-neon' + sLineBreak + sLineBreak +
+    'OpenAPI for Delphi Library' + sLineBreak +
+    'https://github.com/paolo-rossi/OpenAPI-Delphi' + sLineBreak + sLineBreak +
+    'GraphQL for Delphi' + sLineBreak +
+    'https://github.com/lminuti/graphql' + sLineBreak + sLineBreak +
+    'Indy' + sLineBreak +
+    'https://github.com/IndySockets/Indy'
+  ;
 
 implementation
 
 uses
-  Windows, ToolsAPI, WiRL.Wizards;
+  Winapi.Windows, ToolsAPI, WiRL.Wizards;
 
 var
   AboutBoxServices: IOTAAboutBoxServices = nil;
@@ -52,8 +67,7 @@ begin
     ProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'WiRLSplash');
     if ProductImage = 0 then
       Exit;
-    AboutBoxIndex := AboutBoxServices.AddPluginInfo(PackageName, AboutDescription,
-      ProductImage, False);
+    AboutBoxIndex := AboutBoxServices.AddPluginInfo(WIRL_CAPTION, WIRL_DESCRIPTION, ProductImage, False);
   end;
 end;
 
@@ -76,7 +90,7 @@ begin
     ProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'WiRLSplash');
     if ProductImage <> 0 then
     begin
-      SplashScreenServices.AddPluginBitmap(PackageName, ProductImage, False, License);
+      SplashScreenServices.AddPluginBitmap(WIRL_CAPTION, ProductImage, False, WIRL_LICENSE);
     end;
   end;
 end;
