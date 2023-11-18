@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -18,6 +18,7 @@ uses
   WiRL.Core.Registry,
   WiRL.Configuration.Core,
   WiRL.Core.Auth.Context,
+  Neon.Core.Persistence,
   OpenAPI.Model.Classes;
 
 {$SCOPEDENUMS ON}
@@ -32,6 +33,7 @@ type
     function SetAPILogo(const AName: string): IWiRLConfigurationOpenAPI;
     function SetAPIServer(const AHost, ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
+    function SetNeonConfiguration(AConfig: INeonConfiguration): IWiRLConfigurationOpenAPI;
   end;
 
   TConfigurator = reference to procedure(AOpenAPIConf: IWiRLConfigurationOpenAPI);
@@ -42,6 +44,7 @@ type
   TWiRLConfigurationOpenAPI = class sealed(TWiRLConfiguration, IWiRLConfigurationOpenAPI)
   private
     FClass: TClass;
+    FNeonConfig: INeonConfiguration;
     FDocument: TOpenAPIDocument;
     FAPILogo: string;
     FServers: TArray<TOpenAPIServer>;
@@ -61,6 +64,9 @@ type
     function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
     function SetAPIServer(const AHost, ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
+    function SetNeonConfiguration(AConfig: INeonConfiguration): IWiRLConfigurationOpenAPI;
+
+    property NeonConfig: INeonConfiguration read FNeonConfig;
   published
     property APILogo: string read FAPILogo write FAPILogo;
     property FolderXMLDoc: string read FFolderXMLDoc write FFolderXMLDoc;
@@ -146,6 +152,12 @@ end;
 function TWiRLConfigurationOpenAPI.SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
 begin
   FFolderGUIDoc := AFolder;
+  Result := Self;
+end;
+
+function TWiRLConfigurationOpenAPI.SetNeonConfiguration(AConfig: INeonConfiguration): IWiRLConfigurationOpenAPI;
+begin
+  FNeonConfig := AConfig;
   Result := Self;
 end;
 
