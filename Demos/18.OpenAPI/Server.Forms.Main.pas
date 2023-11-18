@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -21,6 +21,7 @@ uses
   WiRL.Configuration.CORS,
   WiRL.Configuration.OpenAPI,
   Neon.Core.Types,
+  Neon.Core.Persistence,
   WiRL.Core.Application,
   WiRL.Core.Engine,
   WiRL.http.FileSystemEngine,
@@ -74,6 +75,7 @@ var
 implementation
 
 uses
+  System.TypInfo,
   WiRL.Core.Utils,
   WiRL.Core.Metadata.XMLDoc,
   WiRL.Core.OpenAPI.Resource;
@@ -182,11 +184,12 @@ begin
       // Test for namespaces
       .SetResources('Server.Resources.Demo.*')
       .SetResources('Server.Resources.Customer.*')
+      .SetResources('Server.Resources.OpenAPI')
       .SetFilters('*')
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
-        .SetMemberCase(TNeonCase.CamelCase)
+        .SetMemberCase(TNeonCase.Unchanged)
       .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationCORS>
@@ -196,12 +199,15 @@ begin
       .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationOpenAPI>
+        // Set the OpenAPI resopource (in order to skip it in the documentation generation)
         .SetOpenAPIResource(TDocumentationResource)
+        // Set the Delphi XML documentation output directory (Project -> Options -> Compiler)
         .SetXMLDocFolder('{AppPath}\..\..\Docs')
-        .SetGUIDocFolder('{AppPath}\..\..\UI')
-        //.SetGUIDocFolder('{AppPath}\..\..\ReDoc')
-        // Set the OpenAPI document
+        // Set the folder where there is the html UI stuff
+        .SetGUIDocFolder('{AppPath}\..\..\UI') //.SetGUIDocFolder('{AppPath}\..\..\ReDoc')
+        // Set the (optional) API logo
         .SetAPILogo('api-logo.png')
+        // Set the OpenAPI document for the OpenAPI engine to fill
         .SetAPIDocument(LDocument)
       .ApplyConfig
   ;

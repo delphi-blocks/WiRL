@@ -66,6 +66,7 @@ type
   /// </summary>
   TCustomer = class
   private
+    FCity: string;
     FCompanyName: string;
     FId: Integer;
     FOrders: TOrders;
@@ -76,6 +77,7 @@ type
 
     property Id: Integer read FId write FId;
     property CompanyName: string read FCompanyName write FCompanyName;
+    property City: string read FCity write FCity;
     property Orders: TOrders read FOrders write FOrders;
   end;
 
@@ -149,3 +151,4 @@ begin
 end;
 
 end.
+
