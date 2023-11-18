@@ -2,12 +2,14 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit WiRL.Configuration.Core;
+
+{$I ..\Core\WiRL.inc}
 
 interface
 
@@ -72,7 +74,11 @@ type
   ///   A non-reference counted IInterface implementation
   /// </summary>
   {$M+}
+  {$IFDEF HAS_NO_REF_COUNT}
+  TWiRLConfiguration = class(TNoRefCountObject, IWiRLConfiguration)
+  {$ELSE}
   TWiRLConfiguration = class(TSingletonImplementation, IWiRLConfiguration)
+  {$ENDIF}
   protected
     FNeonConfig: TNeonConfiguration;
     FApplication: IWiRLApplication;
