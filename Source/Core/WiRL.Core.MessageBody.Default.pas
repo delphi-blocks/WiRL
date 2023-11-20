@@ -373,10 +373,7 @@ end;
 function TWiRLStreamProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaders: IWiRLHeaders; AContentStream: TStream): TValue;
 begin
-  if AContentStream is TGCMemoryStream then
-    Result := AContentStream
-  else
-   Result := TWiRLStreamWrapper.Create(AContentStream);
+  Result := AContentStream
 end;
 
 procedure TWiRLStreamProvider.ReadFrom(AObject: TObject; AType: TRttiType;

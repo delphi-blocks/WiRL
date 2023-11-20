@@ -33,6 +33,7 @@ type
     FResponse: IHTTPResponse;
     FMediaType: TMediaType;
     FHeaders: IWiRLHeaders;
+    FOwnContentStream: Boolean;
 
     { IWiRLResponse }
     function GetHeaderValue(const AName: string): string;
@@ -46,6 +47,7 @@ type
     function GetRawContent: TBytes;
     procedure SetStatusCode(AValue: Integer);
     procedure SetStatusText(const AValue: string);
+    procedure SetOwnContentStream(const AValue: Boolean);
   public
     constructor Create(AResponse: IHTTPResponse);
     destructor Destroy; override;
@@ -266,11 +268,14 @@ constructor TWiRLClientResponseNetHttp.Create(AResponse: IHTTPResponse);
 begin
   inherited Create;
   FResponse := AResponse;
+  FOwnContentStream := True;
 end;
 
 destructor TWiRLClientResponseNetHttp.Destroy;
 begin
   FMediaType.Free;
+  if FOwnContentStream then
+    FreeAndNil(FResponse.ContentStream);
   inherited;
 end;
 
@@ -340,6 +345,11 @@ begin
     Result := FStatusText
   else
     Result := FResponse.StatusText;
+end;
+
+procedure TWiRLClientResponseNetHttp.SetOwnContentStream(const AValue: Boolean);
+begin
+  FOwnContentStream := AValue;
 end;
 
 procedure TWiRLClientResponseNetHttp.SetStatusCode(AValue: Integer);

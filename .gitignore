@@ -70,3 +70,4 @@ __recovery/
 *.o
 
 /Demos/18.Swagger/Docs/*.xml
+/Demos/18.OpenAPI/Docs

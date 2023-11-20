@@ -63,6 +63,7 @@ type
     function HasRowConstraints(const AAttrArray: TAttributeArray): Boolean;
     procedure ValidateMethodParam(const AAttrArray: TAttributeArray; AValue: TValue; ARawConstraint: Boolean);
     function GetConstraintErrorMessage(AAttr: TCustomConstraintAttribute): string;
+    function RequestOwnedObject(const AValue: TValue): Boolean;
   protected
     procedure InternalHandleRequest;
 
@@ -560,7 +561,8 @@ procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject;
     begin
       // Context arguments will be released by TWiRLContext if needed
       if not TRttiHelper.HasAttribute<ContextAttribute>(LParameters[LArgIndex]) then
-        FGC.AddGarbage(LArgument);
+        if not RequestOwnedObject(LArgument) then
+          FGC.AddGarbage(LArgument);
       Inc(LArgIndex);
     end;
   end;
@@ -616,6 +618,25 @@ begin
     end;
   finally
     FGC.CollectGarbage;
+  end;
+end;
+
+function TWiRLApplicationWorker.RequestOwnedObject(
+  const AValue: TValue): Boolean;
+var
+  LObject: TObject;
+  LIndex: Integer;
+begin
+  Result := False;
+  if not AValue.IsObject then
+    Exit(True);
+  LObject := AValue.AsObject;
+  if LObject = FContext.Request.ContentStream then
+    Exit(True);
+  for LIndex := 0 to FContext.Request.MultiPartFormData.Count - 1 do
+  begin
+    if FContext.Request.MultiPartFormData.GetPart(LIndex) = LObject then
+      Exit(True);
   end;
 end;
 

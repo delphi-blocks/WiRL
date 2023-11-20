@@ -138,23 +138,6 @@ type
     property Application: TObject read FApplication write SetApplication;
   end;
 
-  TWiRLStreamWrapper = class(TStream)
-  private
-    FOwnsStream: Boolean;
-    FStream: TStream;
-  protected
-    function GetSize: Int64; override;
-    procedure SetSize(const NewSize: Int64); overload; override;
-  public
-    function Read(var Buffer; Count: Longint): Longint; overload; override;
-    function Write(const Buffer; Count: Longint): Longint; overload; override;
-    function Seek(Offset: Longint; Origin: Word): Longint; overload; override;
-
-    constructor Create(AStream: TStream; AOwnsStream: Boolean = False);
-    destructor Destroy; override;
-    property Stream: TStream read FStream;
-  end;
-
 var
   GetDefaultCharSetEncoding: TEncoding = nil;
 
@@ -311,47 +294,6 @@ end;
 constructor TWiRLHttpStatus.Create;
 begin
   Create(200, '', '');
-end;
-
-{ TWiRLStreamWrapper }
-
-constructor TWiRLStreamWrapper.Create(AStream: TStream; AOwnsStream: Boolean);
-begin
-  inherited Create;
-  FStream := AStream;
-  FOwnsStream := AOwnsStream;
-end;
-
-destructor TWiRLStreamWrapper.Destroy;
-begin
-  if FOwnsStream then
-    FStream.Free;
-  inherited;
-end;
-
-function TWiRLStreamWrapper.GetSize: Int64;
-begin
-  Result := FStream.Size;
-end;
-
-function TWiRLStreamWrapper.Read(var Buffer; Count: Longint): Longint;
-begin
-  Result := FStream.Read(Buffer, Count);
-end;
-
-function TWiRLStreamWrapper.Seek(Offset: Longint; Origin: Word): Longint;
-begin
-  Result := FStream.Seek(Offset, Origin);
-end;
-
-procedure TWiRLStreamWrapper.SetSize(const NewSize: Int64);
-begin
-  FStream.Size := NewSize;
-end;
-
-function TWiRLStreamWrapper.Write(const Buffer; Count: Longint): Longint;
-begin
-  Result := FStream.Write(Buffer, Count);
 end;
 
 end.

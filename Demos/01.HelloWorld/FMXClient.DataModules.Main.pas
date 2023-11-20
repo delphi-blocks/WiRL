@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit FMXClient.DataModules.Main;
 
+{.$I '..\Core\WiRL.inc'}
+
 interface
 
 uses
@@ -44,6 +46,13 @@ type
     function ReverseString(AString: string): string;
     function GetPerson(Id: Integer): TPerson;
     function PostOrder(AOrderProposal: TOrderProposal): TOrder;
+    procedure FillOrder(AOrderProposal: TOrderProposal; AOrder: TOrder);
+    function TestException(): string;
+    function GetImageStreamResource: TStream;
+    procedure FillImageStreamResource(AStream: TStream);
+    function PostStream(AStream: TStream): string;
+    function GetRawResponse: string;
+    function GetStringAndStream(AStream: TStream): string;
   end;
 
 var
@@ -97,6 +106,42 @@ begin
   Result := HelloWorldResource.GET<string>;
 end;
 
+procedure TMainDataModule.FillImageStreamResource(AStream: TStream);
+begin
+  WiRLClientApplication1
+    .Resource('entity/image')
+    .Accept('image/png')
+    .Get(AStream);
+end;
+
+function TMainDataModule.GetStringAndStream(AStream: TStream): string;
+begin
+  Result := WiRLClientApplication1
+    .Resource('helloworld')
+    .SetContentStream(AStream, False)
+    .Accept('text/plain')
+    .Get<string>;
+end;
+
+procedure TMainDataModule.FillOrder(AOrderProposal: TOrderProposal;
+  AOrder: TOrder);
+begin
+  WiRLClientApplication1
+    .Resource('helloworld/order')
+    .Accept('application/json')
+    .ContentType('application/json')
+    .Header('x-author', 'Luca')
+    .Post<TOrderProposal>(AOrderProposal, AOrder);
+end;
+
+function TMainDataModule.GetImageStreamResource: TStream;
+begin
+  Result := WiRLClientApplication1
+    .Resource('entity/image')
+    .Accept('image/png')
+    .Get<TStream>;
+end;
+
 function TMainDataModule.GetPerson(Id: Integer): TPerson;
 begin
   Result := WiRLClientApplication1
@@ -106,6 +151,18 @@ begin
     .Header('x-author', 'Luca')
     .QueryParam('Id', Id.ToString)
     .Get<TPerson>;
+end;
+
+function TMainDataModule.GetRawResponse: string;
+var
+  LResponse: IWiRLResponse;
+begin
+  ReverseStringResource.PathParam('AString', 'Hello, World!');
+  LResponse := ReverseStringResource.GET<IWiRLResponse>;
+  Result :=
+    'StatusCode: ' + LResponse.StatusCode.ToString + sLineBreak +
+    'ReasonString: ' + LResponse.StatusText + sLineBreak +
+    'Content: ' + LResponse.Content;
 end;
 
 function TMainDataModule.PostOrder(AOrderProposal: TOrderProposal): TOrder;
@@ -118,10 +175,30 @@ begin
     .Post<TOrderProposal, TOrder>(AOrderProposal);
 end;
 
+function TMainDataModule.PostStream(AStream: TStream): string;
+begin
+  Result := PostStreamResource.Post<TStream, string>(AStream);
+end;
+
 function TMainDataModule.ReverseString(AString: string): string;
 begin
   ReverseStringResource.PathParam('AString', AString);
   Result := ReverseStringResource.GET<string>;
+end;
+
+function TMainDataModule.TestException: string;
+begin
+  try
+    Result := WiRLClientApplication1
+      .Resource('helloworld/exception')
+      .Accept('application/json')
+      .Get<string>();
+  except
+    on E: EWiRLClientProtocolException do
+    begin
+      Result := E.Response.Content;
+    end;
+  end;
 end;
 
 procedure TMainDataModule.WiRLClient1BeforeCommand(ASender: TObject; ARequest:

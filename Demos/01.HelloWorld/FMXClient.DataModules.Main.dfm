@@ -1,5 +1,4 @@
 object MainDataModule: TMainDataModule
-  OldCreateOrder = False
   OnCreate = DataModuleCreate
   Height = 394
   Width = 604
@@ -40,7 +39,9 @@ object MainDataModule: TMainDataModule
     end
     object PostStreamResource: TWiRLClientResource
       Application = WiRLClientApplication1
-      Resource = 'helloworld/poststring'
+      Resource = 'helloworld/poststream'
+      CustomHeaders = (
+        'Content-Type=application/octet-stream')
     end
   end
 end

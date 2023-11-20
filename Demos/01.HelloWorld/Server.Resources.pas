@@ -31,8 +31,6 @@ uses
 type
   [Path('/helloworld')]
   THelloWorldResource = class
-  private
-    [Context] GC: TWiRLGarbageCollector;
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]

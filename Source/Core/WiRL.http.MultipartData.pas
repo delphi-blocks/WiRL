@@ -99,14 +99,17 @@ type
     FFormDataList: TObjectList<TWiRLFormDataPart>;
     FEpilogue: string;
     FPreamble: string;
-    function GetPart(const AName: string): TWiRLFormDataPart;
+    function GetPart(const AName: string): TWiRLFormDataPart; overload;
     procedure Parse(AStream: TStream);
     function AddPart(AHeaders: IWiRLHeaders; const ABody: string): TWiRLFormDataPart;
+    function GetCount: Integer;
   public
     constructor Create(AStream: TStream; const AMIMEBoundary: string);
     destructor Destroy; override;
     function FindPart(const AName: string): TWiRLFormDataPart;
+    function GetPart(AIndex: Integer): TWiRLFormDataPart; overload;
     property Parts[const AName: string]: TWiRLFormDataPart read GetPart; default;
+    property Count: Integer read GetCount;
     property Preamble: string read FPreamble;
     property Epilogue: string read FEpilogue;
   end;
@@ -296,6 +299,16 @@ begin
     if LPart.Name = AName then
       Exit(LPart);
   end;
+end;
+
+function TWiRLFormDataMultiPart.GetCount: Integer;
+begin
+  Result := FFormDataList.Count;
+end;
+
+function TWiRLFormDataMultiPart.GetPart(AIndex: Integer): TWiRLFormDataPart;
+begin
+  Result := FFormDataList[AIndex];
 end;
 
 function TWiRLFormDataMultiPart.GetPart(const AName: string): TWiRLFormDataPart;

@@ -41,6 +41,7 @@ type
     procedure AcceptLanguage(const AAcceptLanguage: string);
     procedure QueryParam(const AName: string; const AValue: TValue);
     procedure PathParam(const AName: string; const AValue: TValue);
+    procedure SetContentStream(AStream: TStream; AOwnStream: Boolean);
 
     function GetResource: TObject;
 

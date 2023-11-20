@@ -118,6 +118,8 @@ type
     procedure SetStatusCode(AValue: Integer);
     /// <summary>Setter for the StatusText Property</summary>
     procedure SetStatusText(const AValue: string);
+    /// <summary>If the ContentStream its owned by the request</summary>
+    procedure SetOwnContentStream(const AValue: Boolean);
 
     /// <summary>Property to Get Header values</summary>
     /// <param name="AName">Name of the Header</param>

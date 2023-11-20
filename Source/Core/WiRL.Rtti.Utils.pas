@@ -63,6 +63,9 @@ type
     class function IsInterfaceOfType(ARttiType: TRttiType; const IID: TGUID;
       const AAllowInherithance: Boolean = True): Boolean; overload; static;
 
+    class function IsInterfaceOfType(ATypeInfo: Pointer; const IID: TGUID;
+      const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
     // Create new value data
     class function CreateNewValue(AType: TRttiType): TValue; static;
 
@@ -95,6 +98,8 @@ type
 
     class function GetType(AObject: TRttiObject): TRttiType; overload;
     class function GetType(ATypeInfo: Pointer): TRttiType; overload;
+
+    class function ObjectAsType<T>(AObject: TObject): T; static;
 
     class constructor Create;
     class destructor Destroy;
@@ -485,6 +490,15 @@ begin
   Result := TRttiHelper.IsDynamicArrayOf(ARttiType, TClass(T), AAllowInherithance);
 end;
 
+class function TRttiHelper.IsInterfaceOfType(ATypeInfo: Pointer;
+  const IID: TGUID; const AAllowInherithance: Boolean): Boolean;
+var
+  LType: TRttiType;
+begin
+  LType := TRttiHelper.Context.GetType(ATypeInfo);
+  Result := TRttiHelper.IsInterfaceOfType(LType, IID);
+end;
+
 class function TRttiHelper.IsInterfaceOfType(ARttiType: TRttiType;
   const IID: TGUID; const AAllowInherithance: Boolean): Boolean;
 var
@@ -519,6 +533,11 @@ class function TRttiHelper.IsObjectOfType<T>(ARttiType: TRttiType;
   const AAllowInherithance: Boolean): Boolean;
 begin
   Result := TRttiHelper.IsObjectOfType(ARttiType, TClass(T), AAllowInherithance);
+end;
+
+class function TRttiHelper.ObjectAsType<T>(AObject: TObject): T;
+begin
+  Result := TValue.From<TObject>(AObject).AsType<T>;
 end;
 
 class function TRttiHelper.FindAttribute<T>(AType: TRttiObject): T;

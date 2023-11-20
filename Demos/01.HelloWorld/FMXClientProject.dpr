@@ -10,6 +10,7 @@
 program FMXClientProject;
 
 uses
+  //FastMM4,
   System.StartUpCopy,
   FMX.Forms,
   FMXClient.Forms.Main in 'FMXClient.Forms.Main.pas' {MainForm},
@@ -19,6 +20,7 @@ uses
 {$R *.res}
 
 begin
+  ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
   Application.CreateForm(TMainDataModule, MainDataModule);
   Application.CreateForm(TMainForm, MainForm);
