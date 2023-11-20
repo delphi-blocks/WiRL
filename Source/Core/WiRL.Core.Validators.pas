@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -318,7 +318,8 @@ var
   LValidator: TClass;
 begin
   LValidator := TClass(T);
-  Add(TWiRLValidatorConstructorInfo.Create(LValidator, AConstructorFunc, GetConstraintAttribute(LValidator)));
+  Result := TWiRLValidatorConstructorInfo.Create(LValidator, AConstructorFunc, GetConstraintAttribute(LValidator));
+  Add(Result);
 end;
 
 function TWiRLValidatorRegistry.RegisterValidator<T>: TWiRLValidatorConstructorInfo;

@@ -244,7 +244,6 @@ function TWiRLContextBase.FindContextDataAsByIntf<T>: T;
 var
   LIID: TGUID;
   LRttiType: TRttiType;
-  LRttiInterface: TRttiInterfaceType;
   LInterface: IInterface;
 begin
   LRttiType := TRttiHelper.Context.GetType(TypeInfo(T));

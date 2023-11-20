@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -61,6 +61,7 @@ function TWiRLResourceRegistry.GetResourceInstance<T>: T;
 var
   LInfo: TWiRLConstructorProxy;
 begin
+  Result := default(T);
   if Self.TryGetValue(T.ClassName, LInfo) then
   begin
     if LInfo.ConstructorFunc <> nil then

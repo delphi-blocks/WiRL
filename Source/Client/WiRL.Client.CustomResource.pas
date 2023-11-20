@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -526,10 +526,11 @@ var
   LRequestStream, LResponseStream: TMemoryStream;
   LResponse: IWiRLResponse;
 begin
+  Result := default(V);
+
   if not Assigned(Client) then
     Exit;
 
-  Result := default(V);
   LResponse := nil;
   InitHttpRequest;
 
