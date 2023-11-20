@@ -118,7 +118,7 @@ var
   LTempObj: TObject;
 begin
   LTempObj := TObject.Create;
-  //GC.AddGarbage(LTempObj);
+  GC.AddGarbage(LTempObj);
   Result := TPerson.Create;
   Result.Name := AName;
 end;
