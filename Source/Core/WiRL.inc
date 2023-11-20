@@ -37,6 +37,7 @@
 {$IF CompilerVersion >= 33} // Delphi 10.3 Rio
   {$DEFINE HAS_NEW_PIDS}
   {$DEFINE HAS_NEW_JSON}
+  {$DEFINE HAS_MANAGED_RECORD}
 {$ENDIF}
 
 {$IF CompilerVersion >= 35} // Delphi 11.0 Alexandria
@@ -46,6 +47,5 @@
 {$ENDIF}
 
 {$IF CompilerVersion >= 36} // Delphi 12.0 Athens
-
 {$ENDIF}
 

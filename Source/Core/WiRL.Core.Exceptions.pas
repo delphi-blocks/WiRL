@@ -345,7 +345,9 @@ begin
     tkClassRef:    Result := TJSONString.Create(Value.AsClass.ClassName);
     tkPointer:     Result := TJSONNumber.Create(Value.AsInteger);
     tkProcedure:   Result := TJSONString.Create('type:procedure');
+    {$IFDEF HAS_MANAGED_RECORD}
     tkMRecord:     Result := TJSONString.Create('type:mrecord');
+    {$ENDIF}
   end;
 end;
 
