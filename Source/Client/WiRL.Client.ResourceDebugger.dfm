@@ -24,7 +24,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     ParentBackground = False
     ShowCaption = False
     TabOrder = 0
-    ExplicitWidth = 923
     object ImageLogo: TImage
       Left = 14
       Top = 14
@@ -1024,7 +1023,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     Align = alTop
     Caption = 'Request'
     TabOrder = 1
-    ExplicitWidth = 917
     object PageControlRequest: TPageControl
       AlignWithMargins = True
       Left = 7
@@ -1038,7 +1036,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       ActivePage = RequestTab
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 903
       object RequestTab: TTabSheet
         Caption = 'Request'
         DesignSize = (
@@ -1121,7 +1118,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           TabOrder = 3
           Text = 'EditResourcePath'
           OnChange = EditResourcePathChange
-          ExplicitWidth = 357
         end
         object MemoRequest: TMemo
           AlignWithMargins = True
@@ -1139,7 +1135,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
           ParentFont = False
           ScrollBars = ssVertical
           TabOrder = 4
-          ExplicitWidth = 861
         end
         object EditAppUrl: TEdit
           Left = 391
@@ -1238,8 +1233,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     Align = alClient
     Caption = 'Response'
     TabOrder = 2
-    ExplicitWidth = 917
-    ExplicitHeight = 265
     DesignSize = (
       921
       266)
@@ -1285,8 +1278,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       ScrollBars = ssBoth
       TabOrder = 1
       WordWrap = False
-      ExplicitWidth = 900
-      ExplicitHeight = 163
     end
     object ButtonFormatJson: TButton
       Left = 816
@@ -1297,7 +1288,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Caption = 'Format JSON'
       TabOrder = 2
       OnClick = ButtonFormatJsonClick
-      ExplicitLeft = 812
     end
   end
   object FooterPanel: TPanel
@@ -1310,8 +1300,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
     Caption = 'FooterPanel'
     ShowCaption = False
     TabOrder = 3
-    ExplicitTop = 572
-    ExplicitWidth = 923
     object ButtonClose: TButton
       AlignWithMargins = True
       Left = 779
@@ -1322,7 +1310,6 @@ object WiRLResourceRunnerForm: TWiRLResourceRunnerForm
       Caption = 'Close'
       TabOrder = 0
       OnClick = ButtonCloseClick
-      ExplicitLeft = 775
     end
     object ButtonSendRequest: TButton
       AlignWithMargins = True

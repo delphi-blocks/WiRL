@@ -13,7 +13,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, DesignIntf;
 
 type
   TFormEditHeader = class(TForm)
@@ -30,7 +30,6 @@ type
     function GetHeaderValue: string;
     procedure SetHeaderName(const Value: string);
     procedure SetHeaderValue(const Value: string);
-    { Private declarations }
   public
     property HeaderName: string read GetHeaderName write SetHeaderName;
     property HeaderValue: string read GetHeaderValue write SetHeaderValue;

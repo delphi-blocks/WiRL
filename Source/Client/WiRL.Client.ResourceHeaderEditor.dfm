@@ -11,8 +11,6 @@ object FormHeadersEditor: TFormHeadersEditor
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
-  PixelsPerInch = 96
   TextHeight = 13
   object ListViewHeader: TListView
     Left = 0
@@ -35,10 +33,6 @@ object FormHeadersEditor: TFormHeadersEditor
     TabOrder = 0
     ViewStyle = vsReport
     OnDblClick = ButtonEditHeaderClick
-    ExplicitLeft = 3
-    ExplicitTop = 76
-    ExplicitWidth = 506
-    ExplicitHeight = 185
   end
   object ToolBar1: TToolBar
     Left = 0
@@ -51,9 +45,6 @@ object FormHeadersEditor: TFormHeadersEditor
     Indent = 4
     TabOrder = 1
     Wrapable = False
-    ExplicitLeft = 8
-    ExplicitTop = 8
-    ExplicitWidth = 393
     object ButtonAddHeader: TToolButton
       Left = 4
       Top = 0

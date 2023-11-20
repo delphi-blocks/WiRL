@@ -104,7 +104,7 @@ var
 begin
   inherited;
   LHeaders := GetIntfValue() as IWiRLHeaders;
-  TFormHeadersEditor.Execute(LHeaders);
+  TFormHeadersEditor.Execute(Designer, LHeaders);
 end;
 
 function THeadersProperty.GetAttributes: TPropertyAttributes;

@@ -13,7 +13,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, DesignIntf,
 
   WiRL.http.Headers,
   WiRL.Client.CustomResource, Vcl.ToolWin, System.ImageList, Vcl.ImgList;
@@ -30,12 +30,14 @@ type
     procedure ButtonDeleteHeaderClick(Sender: TObject);
   private
     FHeaders: IWiRLHeaders;
+    FDesigner: IDesigner;
     procedure SetHeaders(const AValue: IWiRLHeaders);
     procedure AddHeader(const AName, AValue: string);
   public
     property Headers: IWiRLHeaders read FHeaders write SetHeaders;
+    property Designer: IDesigner read FDesigner write FDesigner;
   public
-    class procedure Execute(AHeaders: IWiRLHeaders);
+    class procedure Execute(ADesigner: IDesigner; AHeaders: IWiRLHeaders);
   end;
 
 
@@ -67,6 +69,7 @@ begin
   if TFormEditHeader.Execute(LName, LValue) then
   begin
     AddHeader(LName, LValue);
+    FDesigner.Modified;
   end;
 end;
 
@@ -99,15 +102,17 @@ begin
   if TFormEditHeader.Execute(LName, LValue) then
   begin
     AddHeader(LName, LValue);
+    FDesigner.Modified;
   end;
 end;
 
-class procedure TFormHeadersEditor.Execute(AHeaders: IWiRLHeaders);
+class procedure TFormHeadersEditor.Execute(ADesigner: IDesigner; AHeaders: IWiRLHeaders);
 var
   FormHeadersEditor: TFormHeadersEditor;
 begin
   FormHeadersEditor := TFormHeadersEditor.Create(nil);
   try
+    FormHeadersEditor.Designer := ADesigner;
     FormHeadersEditor.Headers := AHeaders;
     FormHeadersEditor.ShowModal;
   finally

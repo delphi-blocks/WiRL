@@ -10,11 +10,9 @@ object FormEditHeader: TFormEditHeader
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   DesignSize = (
     468
     147)
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 16
@@ -40,7 +38,6 @@ object FormEditHeader: TFormEditHeader
     Caption = 'Panel1'
     ShowCaption = False
     TabOrder = 0
-    ExplicitWidth = 548
     object ButtonOk: TButton
       AlignWithMargins = True
       Left = 309
@@ -51,9 +48,6 @@ object FormEditHeader: TFormEditHeader
       Caption = 'Ok'
       TabOrder = 0
       OnClick = ButtonOkClick
-      ExplicitLeft = 397
-      ExplicitTop = 0
-      ExplicitHeight = 25
     end
     object ButtonCancel: TButton
       AlignWithMargins = True
@@ -65,9 +59,6 @@ object FormEditHeader: TFormEditHeader
       Caption = 'Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 478
-      ExplicitTop = 0
-      ExplicitHeight = 25
     end
   end
   object ComboBoxName: TComboBox
@@ -89,7 +80,6 @@ object FormEditHeader: TFormEditHeader
       'Content-Encoding'
       'Content-Language'
       'Content-Location')
-    ExplicitWidth = 521
   end
   object ComboBoxValue: TComboBox
     Left = 16
@@ -110,6 +100,5 @@ object FormEditHeader: TFormEditHeader
       'text/html'
       'text/plain'
       'text/xml')
-    ExplicitWidth = 521
   end
 end
