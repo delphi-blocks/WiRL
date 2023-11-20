@@ -286,7 +286,10 @@ destructor TWiRLClientResponseIndy.Destroy;
 begin
   FMediaType.Free;
   if FOwnContentStream then
-    FreeAndNil(FIdHTTPResponse.ContentStream);
+  begin
+    FIdHTTPResponse.ContentStream.Free;
+    FIdHTTPResponse.ContentStream := nil;
+  end;
   inherited;
 end;
 
