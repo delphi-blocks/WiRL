@@ -146,29 +146,26 @@ type
   EWiRLClientProtocolException = class(EWiRLClientException)
   private
     FResponse: IWiRLResponse;
-    function GetStatusCode: Integer;
-  public
-    constructor Create(AResponse: IWiRLResponse); reintroduce; virtual;
-    property StatusCode: Integer read GetStatusCode;
-    property Response: IWiRLResponse read FResponse;
-  end;
-
-  EWiRLClientResourceException = class(EWiRLClientException)
-  private
-    FStatusCode: Integer;
-    FReasonString: string;
     FResponseJson: TJSONValue;
+
+    FReasonString: string;
+    FStatusCode: Integer;
     FResponseText: string;
     FServerException: string;
   public
     constructor Create(AResponse: IWiRLResponse); reintroduce; virtual;
     destructor Destroy; override;
 
-    property StatusCode: Integer read FStatusCode write FStatusCode;
-    property ReasonString: string read FReasonString write FReasonString;
-    property ResponseText: string read FResponseText write FResponseText;
-    property ResponseJson: TJSONValue read FResponseJson write FResponseJson;
-    property ServerException: string read FServerException write FServerException;
+    property StatusCode: Integer read FStatusCode;
+    property Response: IWiRLResponse read FResponse;
+    property ReasonString: string read FReasonString;
+    property ResponseText: string read FResponseText;
+    property ResponseJson: TJSONValue read FResponseJson;
+    property ServerException: string read FServerException;
+  end;
+
+  // deprecated: use EWiRLClientProtocolException
+  EWiRLClientResourceException = class(EWiRLClientProtocolException)
   end;
 
   TWiRLProxyConnectionInfo = class(TPersistent)
@@ -318,28 +315,16 @@ end;
 { EWiRLClientProtocolException }
 
 constructor EWiRLClientProtocolException.Create(AResponse: IWiRLResponse);
-begin
-  inherited Create(AResponse.StatusText);
-  FResponse := AResponse;
-end;
-
-function EWiRLClientProtocolException.GetStatusCode: Integer;
-begin
-  Result := FResponse.StatusCode;
-end;
-
-{ EWiRLClientResourceException }
-
-constructor EWiRLClientResourceException.Create(AResponse: IWiRLResponse);
 var
   LMessage: string;
 begin
+  FResponse := AResponse;
   FStatusCode := AResponse.StatusCode;
   FReasonString := AResponse.StatusText;
   FResponseText := AResponse.Content;
   FServerException := Exception.ClassName;
-
   LMessage := FReasonString;
+
   if AResponse.ContentType = TMediaType.APPLICATION_JSON then
   begin
     FResponseJson := TJSONObject.ParseJSONValue(FResponseText);
@@ -347,14 +332,13 @@ begin
     begin
       FResponseJson.TryGetValue<string>('message', LMessage);
       FResponseJson.TryGetValue<string>('exception', FServerException);
-      LMessage := Format('[%] ', [FServerException]) + LMessage;
     end;
   end;
 
   inherited Create(LMessage);
 end;
 
-destructor EWiRLClientResourceException.Destroy;
+destructor EWiRLClientProtocolException.Destroy;
 begin
   FResponseJson.Free;
   inherited;
