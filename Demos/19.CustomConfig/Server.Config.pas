@@ -16,7 +16,7 @@ type
   end;
 
   [Implements(ITestConfig)]
-  TTestConfig = class(TWiRLConfigurationNRef, ITestConfig)
+  TTestConfig = class(TWiRLConfiguration, ITestConfig)
   private
     FStringValue: string;
     FIntValue: Integer;

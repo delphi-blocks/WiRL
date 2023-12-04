@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -269,17 +269,62 @@ type
   end;
 
   /// <summary>
+  ///   Used to mark a method as the handler of a Basic Auth request.
+  ///   Used by the OpenAPI codegen.
+  /// </summary>
+  BasicAuthAttribute = class(AuthorizationAttribute);
+
+  /// <summary>
+  ///   Used to mark a method as the handler of a Cookie (APIKey) Auth request.
+  ///   Used by the OpenAPI codegen.
+  /// </summary>
+  CookieAuthAttribute = class(AuthorizationAttribute)
+  private
+    FCookieName: string;
+  public
+    constructor Create(const ACookieName: string);
+
+    property CookieName: string read FCookieName write FCookieName;
+  end;
+
+  /// <summary>
   ///   This attribute tells WiRL not to destroy the resulting object because it's a
   ///   "global" object.
   /// </summary>
   SingletonAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   Used to mark a Resource's Method as async. Not fully implemented in the
+  ///   core
+  /// </summary>
   AsyncResponseAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   Attribute to annotate a Filter that gets called before <b>any</b> REST
+  ///   process in WiRL
+  /// </summary>
   PreMatchingAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   Attribute to annotate a Filter that gets called before the <b>Resource
+  ///   Algorithm</b> selection process, but after the <b>Engine</b> and <b>App</b>
+  ///    selection process.
+  /// </summary>
+  PreMatchingResourceAttribute = class(TCustomAttribute);
+
+  /// <summary>
+  ///   Meta-annotation used to create name binding attributes for filters.
+  /// </summary>
+  /// <remarks>
+  ///   More than one filter or interceptor may be decorated with the same
+  ///   name-binding annotation
+  /// </remarks>
   NameBindingAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///   The Priority annotation can be applied to WiRL Filters to indicate in
+  ///   what order they should be used (grouped)
+  /// </summary>
   PriorityAttribute = class(TCustomAttribute)
   private
     FValue: Integer;
@@ -288,6 +333,9 @@ type
     property Value: Integer read FValue write FValue;
   end;
 
+  /// <summary>
+  ///   Attribute to set a default for a given parameter
+  /// </summary>
   DefaultValueAttribute = class(TCustomAttribute)
   private
     FValue: string;
@@ -362,8 +410,8 @@ type
     property ContentType: string read FContentType;
   end;
 
-  RestAttribute = class(TCustomAttribute)
-  end;
+  RESTAttribute = class(TCustomAttribute);
+
 {$ENDREGION}
 
 implementation
@@ -606,6 +654,15 @@ constructor MultiPartAttribute.Create(const AValue: string; const AMediaType: st
 begin
   inherited Create(AValue);
   FMediaType := AMediaType;
+end;
+
+{ CookieAuthAttribute }
+
+{ CookieAuthAttribute }
+
+constructor CookieAuthAttribute.Create(const ACookieName: string);
+begin
+  FCookieName := ACookieName;
 end;
 
 end.

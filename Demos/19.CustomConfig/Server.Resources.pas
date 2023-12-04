@@ -42,6 +42,9 @@ type
     [Path('config')]
     [GET, Produces(TMediaType.APPLICATION_JSON)]
     function Config: TTestObj;
+    [Path('date')]
+    [GET, Produces(TMediaType.TEXT_PLAIN)]
+    function GetCurrentDate: TDateTime;
   end;
 
 implementation
@@ -53,6 +56,11 @@ begin
   Result := TTestObj.Create;
   Result.StringValue := ExtractFileName(ParamStr(0));
   Result.IntValue := Random(1000);
+end;
+
+function TDemoResource.GetCurrentDate: TDateTime;
+begin
+  Result := Now;
 end;
 
 function TDemoResource.SampleText: string;

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -12,25 +12,160 @@ unit WiRL.http.Client.Interfaces;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
+  System.Classes, System.SysUtils, System.JSON, System.Generics.Collections,
 
   WiRL.Rtti.Utils,
+  WiRL.Core.Classes,
   WiRL.Core.Exceptions,
   WiRL.Core.Singleton,
-  WiRL.http.Request,
-  WiRL.http.Response;
+  WiRL.http.Headers,
+  WiRL.http.Accept.MediaType;
 
 type
   EWiRLClientException = class(EWiRLException);
 
   EWiRLSocketException = class(EWiRLClientException);
 
+  IWiRLRequest = interface
+    ['{818B8DD9-C5DB-404B-B886-0959DD8D753E}']
+    /// <summary>Getter for the Accept Property</summary>
+    function GetAccept: string;
+    /// <summary>Getter for the cceptCharSet Property</summary>
+    function GetAcceptCharSet: string;
+    /// <summary>Getter for the AcceptEncoding Property</summary>
+    function GetAcceptEncoding: string;
+    /// <summary>Getter for the AcceptLanguage Property</summary>
+    function GetAcceptLanguage: string;
+    /// <summary>Getter for the UserAgent Property</summary>
+    function GetUserAgent: string;
+    /// <summary>Getter for the Authorization Property</summary>
+    function GetAuthorization: string;
+    /// <summary>Getter for the HeaderValue Property</summary>
+    function GetHeaderValue(const AName: string): string;
+    /// <summary>Getter for the Headers Property</summary>
+    function GetHeaders: IWiRLHeaders;
+    /// <summary>Getter for the Content Property</summary>
+    function GetContent: string;
+    /// <summary>Getter for the ContentStream Property</summary>
+    function GetContentStream: TStream;
+    /// <summary>Getter for the RawContent Property</summary>
+    function GetRawContent: TBytes;
+    /// <summary>Getter for the ContentType Property</summary>
+    function GetContentType: string;
+    /// <summary>Getter for the URL Property</summary>
+    function GetURL: string;
+    /// <summary>Getter for the HttpMethod Property</summary>
+    function GetHttpMethod: string;
+    /// <summary>Getter for the ContentMediaType Property</summary>
+    function GetContentMediaType: TMediaType;
+
+    /// <summary>Get the HTTP method of the request</summary>
+    property HttpMethod: string read GetHttpMethod;
+    /// <summary>Get the URL of the request</summary>
+    property URL: string read GetURL;
+    /// <summary>Get the body of the request as a string</summary>
+    property Content: string read GetContent;
+    /// <summary>Get the body of the request as a stream</summary>
+    property ContentStream: TStream read GetContentStream;
+    /// <summary>Get the body of the request as a bytes</summary>
+    property RawContent: TBytes read GetRawContent;
+    /// <summary>Get all response headers</summary>
+    property Headers: IWiRLHeaders read GetHeaders;
+    /// <summary>Property to Get Header values</summary>
+    /// <param name="AName">Name of the Header</param>
+    /// <returns>The string value associated to the given name.</returns>
+    property HeaderValue[const AName: string]: string read GetHeaderValue;
+    /// <summary>Get ContentType from server response</summary>
+    property ContentType: string read GetContentType;
+    /// <summary>Get media type info</summary>
+    property ContentMediaType: TMediaType read GetContentMediaType;
+    /// <summary>Get the accepted media type of the request</summary>
+    property Accept: string read GetAccept;
+    /// <summary>Get the accepted charset of the request</summary>
+    property AcceptCharSet: string read GetAcceptCharSet;
+    /// <summary>Get the accepted encoding (gzip, deflate, ...) of the request</summary>
+    property AcceptEncoding: string read GetAcceptEncoding;
+    /// <summary>Get the accepted langiages of the request</summary>
+    property AcceptLanguage: string read GetAcceptLanguage;
+    /// <summary>Get the user agent (e.g. the browser) of the request</summary>
+    property UserAgent: string read GetUserAgent;
+    /// <summary>Get the authorization information of the request</summary>
+    property Authorization: string read GetAuthorization;
+
+  end;
+
+  IWiRLResponse = interface
+    ['{F75C65E0-9F58-44EB-98DB-01BB3A5AF9F1}']
+    /// <summary>Getter for the HeaderValue Property</summary>
+    function GetHeaderValue(const AName: string): string;
+    /// <summary>Getter for the StatusCode Property</summary>
+    function GetStatusCode: Integer;
+    /// <summary>Getter for the StatusText Property</summary>
+    function GetStatusText: string;
+    /// <summary>Getter for the ContentType Property</summary>
+    function GetContentType: string;
+    /// <summary>Getter for the Content Property</summary>
+    function GetContent: string;
+    /// <summary>Getter for the ContentStream Property</summary>
+    function GetContentStream: TStream;
+    /// <summary>Getter for the Headers Property</summary>
+    function GetHeaders: IWiRLHeaders;
+    /// <summary>Getter for the ContentMediaType Property</summary>
+    function GetContentMediaType: TMediaType;
+    /// <summary>Getter for the RawContent Property</summary>
+    function GetRawContent: TBytes;
+    /// <summary>Setter for the StatusCode Property</summary>
+    procedure SetStatusCode(AValue: Integer);
+    /// <summary>Setter for the StatusText Property</summary>
+    procedure SetStatusText(const AValue: string);
+    /// <summary>If the ContentStream its owned by the request</summary>
+    procedure SetOwnContentStream(const AValue: Boolean);
+
+    /// <summary>Property to Get Header values</summary>
+    /// <param name="AName">Name of the Header</param>
+    /// <returns>The string value associated to the given name.</returns>
+    property HeaderValue[const AName: string]: string read GetHeaderValue;
+    /// <summary>Get StatusText from server response</summary>
+    property StatusText: string read GetStatusText write SetStatusText;
+    /// <summary>Get StatusCode from server response</summary>
+    property StatusCode: Integer read GetStatusCode write SetStatusCode;
+    /// <summary>Get ContentType from server response</summary>
+    property ContentType: string read GetContentType;
+    /// <summary>Get the body from server response as a string</summary>
+    property Content: string read GetContent;
+    /// <summary>Get the body from server response as a stream</summary>
+    property ContentStream: TStream read GetContentStream;
+    /// <summary>Get the body from server response as a bytes</summary>
+    property RawContent: TBytes read GetRawContent;
+    /// <summary>Get all response headers</summary>
+    property Headers: IWiRLHeaders read GetHeaders;
+    /// <summary>Get media type info</summary>
+    property ContentMediaType: TMediaType read GetContentMediaType;
+  end;
+
   EWiRLClientProtocolException = class(EWiRLClientException)
   private
+    FResponse: IWiRLResponse;
+    FResponseJson: TJSONValue;
+
+    FReasonString: string;
     FStatusCode: Integer;
+    FResponseText: string;
+    FServerException: string;
   public
-    constructor Create(const AStatusCode: Integer; const AMessage: string); reintroduce; virtual;
-    property StatusCode: Integer read FStatusCode write FStatusCode;
+    constructor Create(AResponse: IWiRLResponse); reintroduce; virtual;
+    destructor Destroy; override;
+
+    property StatusCode: Integer read FStatusCode;
+    property Response: IWiRLResponse read FResponse;
+    property ReasonString: string read FReasonString;
+    property ResponseText: string read FResponseText;
+    property ResponseJson: TJSONValue read FResponseJson;
+    property ServerException: string read FServerException;
+  end;
+
+  // deprecated: use EWiRLClientProtocolException
+  EWiRLClientResourceException = class(EWiRLClientProtocolException)
   end;
 
   TWiRLProxyConnectionInfo = class(TPersistent)
@@ -53,8 +188,6 @@ type
   IWiRLClient = interface
   ['{A42C26F5-8B8B-4FE8-A3D4-EF12107F240B}']
     // Setters and getters
-    function GetRequest: TWiRLRequest;
-    function GetResponse: TWiRLResponse;
     function GetConnectTimeout: Integer;
     procedure SetConnectTimeout(Value: Integer);
     function GetReadTimeout: Integer;
@@ -66,17 +199,15 @@ type
     function GetClientImplementation: TObject;
 
     // Http methods
-    procedure Delete(const AURL: string; AResponseContent: TStream);
-    procedure Get(const AURL: string; AResponseContent: TStream);
-    procedure Options(const AURL: string; AResponseContent: TStream);
-    procedure Head(const AURL: string);
-    procedure Patch(const AURL: string; AContent, AResponse: TStream);
-    procedure Post(const AURL: string; AContent, AResponse: TStream);
-    procedure Put(const AURL: string; AContent, AResponse: TStream);
+    function Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Options(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Patch(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Post(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Put(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 
     // Http properties
-    property Request: TWiRLRequest read GetRequest;
-    property Response: TWiRLResponse read GetResponse;
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;
     property ReadTimeout: Integer read GetReadTimeout write SetReadTimeout;
     property ProxyParams: TWiRLProxyConnectionInfo read GetProxyParams write SetProxyParams;
@@ -183,10 +314,34 @@ end;
 
 { EWiRLClientProtocolException }
 
-constructor EWiRLClientProtocolException.Create(const AStatusCode: Integer;
-  const AMessage: string);
+constructor EWiRLClientProtocolException.Create(AResponse: IWiRLResponse);
+var
+  LMessage: string;
 begin
-  inherited Create(AMessage);
+  FResponse := AResponse;
+  FStatusCode := AResponse.StatusCode;
+  FReasonString := AResponse.StatusText;
+  FResponseText := AResponse.Content;
+  FServerException := Exception.ClassName;
+  LMessage := FReasonString;
+
+  if AResponse.ContentType = TMediaType.APPLICATION_JSON then
+  begin
+    FResponseJson := TJSONObject.ParseJSONValue(FResponseText);
+    if Assigned(FResponseJson) then
+    begin
+      FResponseJson.TryGetValue<string>('message', LMessage);
+      FResponseJson.TryGetValue<string>('exception', FServerException);
+    end;
+  end;
+
+  inherited Create(LMessage);
+end;
+
+destructor EWiRLClientProtocolException.Destroy;
+begin
+  FResponseJson.Free;
+  inherited;
 end;
 
 end.

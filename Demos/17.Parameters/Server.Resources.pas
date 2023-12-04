@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -19,8 +19,7 @@ uses
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.Core.Application.Worker,
-  //WiRL.Core.ParamReader,
-  WiRL.Core.Resource,
+  WiRL.Core.Metadata,
   WiRL.Core.MessageBody.Default,
   WiRL.Core.Auth.Context,
   WiRL.http.Accept.MediaType,
@@ -62,9 +61,9 @@ type
     [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
     function ParamRecord([BodyParam] AParam: TRecordParam): TRecordParam;
 
-    [GET, Path('/array')]
+    [GET, Path('/array/{AParam}')]
     [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
-    function ParamArray([QueryParam] AParam: TArrayInt): TArrayInt;
+    function ParamArray([PathParam] AParam: TArrayInt): TArrayInt;
 
     [POST, Path('/arraybody')]
     [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]

@@ -44,7 +44,7 @@
         <GenPackage>true</GenPackage>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>WiRLDesign</SanitizedProjectName>
-        <DCC_DcuOutput>../../Lib/$(DLLSUFFIX)/$(Platform)/$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>../../Lib/250/$(Platform)/$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
@@ -53,7 +53,6 @@
         <DCC_K>false</DCC_K>
         <DCC_Description>WiRL REST components</DCC_Description>
         <DllSuffix>250</DllSuffix>
-        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>rtl;WiRLRunTime;$(DCC_UsePackage)</DCC_UsePackage>
@@ -86,18 +85,39 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="WiRLRunTime.dcp"/>
+        <DCCReference Include="Neon.dcp"/>
+        <DCCReference Include="JOSE.dcp"/>
+        <DCCReference Include="WiRL.dcp"/>
         <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.Register.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Register.pas"/>
-        <DCCReference Include="..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Editor.pas"/>
         <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Editor.pas">
             <Form>WiRLAppEditor</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.Editor.pas">
+            <Form>WiRLClientAppResourceEditor</Form>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceDebugger.pas">
+            <Form>WiRLResourceRunnerForm</Form>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas">
+            <Form>FormEditHeader</Form>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas">
+            <Form>FormHeadersEditor</Form>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas">
+            <Form>formServerProjectDialog</Form>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -119,8 +139,6 @@
                     <Source Name="MainSource">WiRLDesign.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp250.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
@@ -144,7 +162,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\WiRLDesign240.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\WiRLDesign250.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>WiRLDesign.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

@@ -21,6 +21,7 @@ uses
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.Configuration.Core,
+  WiRL.Configuration.Converter,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
 
@@ -128,7 +129,7 @@ end;
 procedure TTestConvertRequest.TestBoolean(const AFormat, ABooleanParam,
   AExpectedValue: string);
 begin
-  FApplication.FormatSetting.Add<Boolean>(AFormat);
+  FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Boolean), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/boolean?value=' + ABooleanParam;
   FServer.HandleRequest(FRequest, FResponse);
@@ -137,7 +138,7 @@ end;
 
 procedure TTestConvertRequest.TestDate(const AFormat, ADateParam, AExpectedValue: string);
 begin
-  FApplication.FormatSetting.Add<TDate>(AFormat);
+  FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(TDate), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/date?value=' + ADateParam;
   FServer.HandleRequest(FRequest, FResponse);
@@ -147,7 +148,7 @@ end;
 procedure TTestConvertRequest.TestDouble(const AFormat, ADoubleParam,
   AExpectedValue: string);
 begin
-  FApplication.FormatSetting.Add<Double>(AFormat);
+  FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Double), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/double?value=' + ADoubleParam;
   FServer.HandleRequest(FRequest, FResponse);
@@ -157,7 +158,7 @@ end;
 procedure TTestConvertRequest.TestDoublePathParam(const AFormat, ADoubleParam,
   AExpectedValue: string);
 begin
-  FApplication.FormatSetting.Add<Double>(AFormat);
+  FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Double), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/doublepath/' + ADoubleParam;
   FServer.HandleRequest(FRequest, FResponse);
@@ -175,7 +176,7 @@ end;
 procedure TTestConvertRequest.TestInteger(const AFormat, AIntegerParam,
   AExpectedValue: string);
 begin
-  FApplication.FormatSetting.Add<Integer>(AFormat);
+  FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Integer), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/intpath/' + AIntegerParam;
   FServer.HandleRequest(FRequest, FResponse);
@@ -185,7 +186,7 @@ end;
 procedure TTestConvertRequest.TestRequest(const AFormat, ADateParam,
   AExpectedValue: string);
 begin
-  FApplication.FormatSetting.Add<TDate>(AFormat);
+  FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(TDate), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/request?date=' + ADateParam;
   FServer.HandleRequest(FRequest, FResponse);
@@ -195,7 +196,7 @@ end;
 procedure TTestConvertRequest.TestReturnDouble(const AFormat,
   AExpectedValue: string);
 begin
-  FApplication.FormatSetting.Add<Double>(AFormat);
+  FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Double), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/returndouble';
   FServer.HandleRequest(FRequest, FResponse);
@@ -204,7 +205,7 @@ end;
 
 procedure TTestConvertRequest.TestReturnInteger(const AFormat, AExpectedValue: string);
 begin
-  FApplication.FormatSetting.Add<Integer>(AFormat);
+  FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Integer), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/returnint';
   FServer.HandleRequest(FRequest, FResponse);

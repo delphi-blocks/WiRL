@@ -13,14 +13,27 @@ interface
 
 uses
   System.Classes, System.SysUtils,
-  WiRL.Core.JSON,
+
   WiRL.Core.Registry,
-  WiRL.http.Accept.MediaType,
-  WiRL.Core.Attributes,
   WiRL.Core.Exceptions,
-  WiRL.Core.Auth.Resource;
+  WiRL.Core.Attributes,
+  WiRL.Core.Auth.Resource,
+  WiRL.http.Accept.MediaType,
+
+  Neon.Core.Attributes;
 
 type
+  THardwareID = class
+  private
+    FID: Integer;
+    FToken: string;
+  public
+    [NeonProperty('id')]
+    property ID: Integer read FID write FID;
+    [NeonProperty('token')]
+    property Token: string read FToken write FToken;
+  end;
+
   /// <summary>
   /// Custom authentication (body) resource
   /// </summary>
@@ -30,9 +43,8 @@ type
   TBodyAuthResource = class(TWiRLAuthResource)
   public
     [POST, Produces(TMediaType.APPLICATION_JSON)]
-    function DoLogin([BodyParam] ABody: TJSONObject): TJSONObject;
+    function DoLogin([BodyParam] AHardware: THardwareID): TWiRLLoginResponse;
   end;
-
 
 implementation
 
@@ -41,27 +53,23 @@ uses
 
 { TBodyAuthResource }
 
-function TBodyAuthResource.DoLogin(ABody: TJSONObject): TJSONObject;
-var
-  LAuthOperation: TWiRLAuthResult;
-  LHardwareToken: string;
+function TBodyAuthResource.DoLogin(AHardware: THardwareID): TWiRLLoginResponse;
 begin
   FAuthContext.Clear;
-
-  LHardwareToken := ABody.GetValue('hardware_token').Value;
-
-  // Validation of the hardware token (simulated)
-  FAuthContext.Subject.Roles := 'admin,manager';
-
-  if not LAuthOperation.Success then
+  // Custom Validation of the hardware token (simulated)
+  if (AHardware.ID > 100) and (AHardware.Token = 'qwerty') then
+  begin
+    FAuthContext.Subject.Roles := 'admin,manager';
+  end
+  else
     raise EWiRLNotAuthorizedException.Create('Invalid credentials', 'TWiRLAuthFormResource', 'DoLogin');
 
   FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
-  Result := GetGeneratedToken;
+
+  Result := TWiRLLoginResponse.Create(True, FAuthContext.CompactToken);
 end;
 
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<TBodyAuthResource>;
-
 
 end.

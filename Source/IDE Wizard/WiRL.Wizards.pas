@@ -3,7 +3,11 @@ unit WiRL.Wizards;
 interface
 
 uses
-  ToolsAPI;
+  SysUtils,
+  ToolsAPI,
+  PlatformAPI,
+  WinApi.Windows,
+  WiRL.Wizards.Dialogs.ServerProject, WiRL.Wizards.Modules.Classes;
 
 resourcestring
   SName = 'WiRL Server Application Wizard';
@@ -45,8 +49,6 @@ type
     function IsVisible(Project: IOTAProject): Boolean;
   end;
 
-procedure Register;
-
 implementation
 
 uses
@@ -66,8 +68,17 @@ end;
 {$REGION 'IOTAWizard'}
 
 procedure TWiRLServeProjectWizard.Execute;
+var
+  LServerConfig: TServerConfig;
+  LModuleServices: IOTAModuleServices;
 begin
-  (BorlandIDEServices as IOTAModuleServices).CreateModule(TWiRLServerProjectCreator.Create);
+  if TformServerProjectDialog.FindConfig(LServerConfig) then
+  begin
+    LModuleServices := BorlandIDEServices as IOTAModuleServices;
+    LModuleServices.CreateModule(TWiRLServerProjectCreator.Create(LServerConfig));
+//    LModuleServices.CreateModule(TWiRLServerMainFormCreator.Create(LServerConfig));
+//    LModuleServices.CreateModule(TWiRLServerResourcesCreator.Create(LServerConfig));
+  end;
 end;
 
 function TWiRLServeProjectWizard.GetIDString: string;
@@ -117,7 +128,7 @@ end;
 function TWiRLServeProjectWizard.GetGlyph: Cardinal;
 begin
 { TODO : function TWiRLServeProjectWizard.GetGlyph: Cardinal; }
-  Result := 0;
+  Result := LoadIcon(HInstance, 'WiRLServerWizardIcon');
 end;
 
 function TWiRLServeProjectWizard.GetPage: string;
@@ -155,11 +166,6 @@ begin
 end;
 
 {$ENDREGION}
-
-procedure Register;
-begin
-  RegisterPackageWizard(TWiRLServeProjectWizard.Create);
-end;
 
 
 end.

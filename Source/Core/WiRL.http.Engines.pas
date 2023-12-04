@@ -16,7 +16,7 @@ uses
   WiRL.http.Server,
   WiRL.http.Request,
   WiRL.http.Response,
-  WiRL.Core.Context;
+  WiRL.Core.Context.Server;
 
 type
   THttpEngineExecuteEvent = procedure (AContext: TWiRLContext; ARequest: TWiRLRequest; AResponse: TWiRLResponse) of object;

@@ -16,6 +16,7 @@ uses
 
   System.Rtti,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.Core.Declarations,
   WiRL.Core.MessageBody.Classes,
   WiRL.Core.MessageBodyReader,
@@ -33,10 +34,10 @@ type
   TWiRLTestPersonObjectProvider = class(TMessageBodyProvider)
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-      AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue; override;
+      AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
 
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream); override;
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
   end;
 
 implementation
@@ -44,7 +45,7 @@ implementation
 { TWiRLTestPersonObjectProvider }
 
 function TWiRLTestPersonObjectProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
-  AHeaderFields: TWiRLHeaderList; AContentStream: TStream): TValue;
+  AHeaders: IWiRLHeaders; AContentStream: TStream): TValue;
 var
   LContent: string;
   LTestPerson: TTestPersonObject;
@@ -70,7 +71,7 @@ end;
 
 procedure TWiRLTestPersonObjectProvider.WriteTo(const AValue: TValue;
   const AAttributes: TAttributeArray; AMediaType: TMediaType;
-  AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+  AHeaders: IWiRLHeaders; AContentStream: TStream);
 var
   LContent: TBytes;
   LStringList: TStringList;

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -24,30 +24,21 @@ uses
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
   WiRL.Core.Context,
+  WiRL.Core.Metadata,
   WiRL.Core.Auth.Context,
   WiRL.http.Filters,
   WiRL.Core.Injection;
 
 type
-  TWiRLFomatSettingDictionary = class(TDictionary<Pointer,string>)
-  public
-    procedure AddFormat(ATypeInfo: PTypeInfo; const AFormat: string);
-  end;
-
   TWiRLApplication = class(TComponent, IWiRLApplication)
-  private
-    class var FRttiContext: TRttiContext;
   private
     FResourceRegistry: TWiRLResourceRegistry;
     FFilterRegistry: TWiRLFilterRegistry;
     FWriterRegistry: TWiRLWriterRegistry;
     FReaderRegistry: TWiRLReaderRegistry;
     FConfigRegistry: TWiRLConfigRegistry;
-
-    FFomatSettingDictionary: TWiRLFomatSettingDictionary;
-
     FAppConfigurator: TAppConfigurator;
-    FFormatSettingConfig: TWiRLFormatSettingConfig;
+    FProxy: TWiRLProxyApplication;
     FBasePath: string;
     FAppName: string;
     FSystemApp: Boolean;
@@ -68,13 +59,13 @@ type
     procedure WriteWriters(Writer: TWriter);
     procedure ReadReaders(Reader: TReader);
     procedure WriteReaders(Writer: TWriter);
+    function GetEnginePath: string;
+    class function GetRttiContext: TRttiContext; static;
   protected
     procedure SetParentComponent(AParent: TComponent); override;
     procedure DefineProperties(Filer: TFiler); override;
     function GetAppConfigurator: TAppConfigurator;
   public
-    class procedure InitializeRtti;
-
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
@@ -95,21 +86,22 @@ type
     function SetErrorMediaType(const AMediaType: string): IWiRLApplication;
     function SetSystemApp(ASystem: Boolean): IWiRLApplication;
     function AddApplication(const ABasePath: string): IWiRLApplication;
-    function FormatSetting: TWiRLFormatSettingConfig;
+    function AddConfiguration(const AConfiguration: TWiRLConfiguration): IWiRLApplication;
 
     function Configure<T: IInterface>: T;
-    function GetConfiguration<T: TWiRLConfigurationNRef>: T;
+    function GetConfiguration<T: TWiRLConfiguration>: T;
 
     function GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
-    function GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
+    function GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
 
-    function GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
+    { TODO -opaolo -c : Remove from here? 16/03/2021 15:13:12 }
+    function GetResourceCtor(const AResourceName: string): TWiRLConstructorProxy;
 
     // Handles the parent/child relationship for the designer
     function GetParentComponent: TComponent; override;
     function HasParent: Boolean; override;
 
-    procedure AddFormat(ATypeInfo: PTypeInfo; const AFormat: string);
+    // Remove???
     function GetFormatSettingFor(ATypeInfo: PTypeInfo): string;
 
     property SystemApp: Boolean read FSystemApp;
@@ -118,13 +110,15 @@ type
     property ReaderRegistry: TWiRLReaderRegistry read FReaderRegistry write FReaderRegistry;
     property Engine: TComponent read FEngine write SetEngine;
 
-    class property RttiContext: TRttiContext read FRttiContext;
+    class property RttiContext: TRttiContext read GetRttiContext;
   published
     property Path: string read GetPath;
+    property EnginePath: string read GetEnginePath;
     property AppName: string read FAppName write FAppName;
     property BasePath: string read FBasePath write FBasePath;
     property ErrorMediaType: string read FErrorMediaType write FErrorMediaType;
 
+    property Proxy: TWiRLProxyApplication read FProxy write FProxy;
     // Fake property to display the right property editors
     property Resources: TWiRLResourceRegistry read FResourceRegistry write FResourceRegistry;
     property Filters: TWiRLFilterRegistry read FFilterRegistry write FFilterRegistry;
@@ -147,6 +141,7 @@ implementation
 
 uses
   System.StrUtils,
+  WiRL.Configuration.Converter,
   WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
@@ -178,10 +173,17 @@ begin
   Result := (FEngine as TWiRLEngine).AddApplication(ABasePath);
 end;
 
+function TWiRLApplication.AddConfiguration(
+  const AConfiguration: TWiRLConfiguration): IWiRLApplication;
+begin
+  FConfigRegistry.Add(AConfiguration);
+  Result := Self;
+end;
+
 function TWiRLApplication.AddFilter(const AFilter: string): Boolean;
 var
   LRegistry: TWiRLFilterRegistry;
-  LInfo: TWiRLFilterConstructorInfo;
+  LInfo: TWiRLFilterConstructorProxy;
 begin
   if csDesigning in ComponentState then
   begin
@@ -211,12 +213,6 @@ begin
       Result := True;
     end;
   end;
-end;
-
-procedure TWiRLApplication.AddFormat(ATypeInfo: PTypeInfo;
-  const AFormat: string);
-begin
-  FFomatSettingDictionary.AddFormat(ATypeInfo, AFormat);
 end;
 
 function TWiRLApplication.AddReader(const AReader: string): Boolean;
@@ -251,14 +247,14 @@ end;
 
 function TWiRLApplication.AddResource(const AResource: string): Boolean;
 
-  function AddResourceToApplicationRegistry(const AInfo: TWiRLConstructorInfo): Boolean;
+  function AddResourceToApplicationRegistry(const AInfo: TWiRLConstructorProxy): Boolean;
   var
     LClass: TClass;
     LResult: Boolean;
   begin
     LResult := False;
     LClass := AInfo.TypeTClass;
-    TRttiHelper.HasAttribute<PathAttribute>(FRttiContext.GetType(LClass),
+    TRttiHelper.HasAttribute<PathAttribute>(RttiContext.GetType(LClass),
       procedure (AAttribute: PathAttribute)
       var
         LURL: TWiRLURL;
@@ -280,7 +276,7 @@ function TWiRLApplication.AddResource(const AResource: string): Boolean;
 
 var
   LRegistry: TWiRLResourceRegistry;
-  LInfo: TWiRLConstructorInfo;
+  LInfo: TWiRLConstructorProxy;
   LKey: string;
 begin
   if csDesigning in ComponentState then
@@ -388,9 +384,27 @@ begin
   Result := SetResources(AResources.Split([',']));
 end;
 
+function TWiRLApplication.SetResources(const AResources: TArray<string>): IWiRLApplication;
+var
+  LResource: string;
+begin
+  Result := Self;
+  for LResource in AResources do
+    Self.AddResource(LResource);
+end;
+
 function TWiRLApplication.SetFilters(const AFilters: string): IWiRLApplication;
 begin
   Result := SetFilters(AFilters.Split([',']));
+end;
+
+function TWiRLApplication.SetFilters(const AFilters: TArray<string>): IWiRLApplication;
+var
+  LFilter: string;
+begin
+  Result := Self;
+  for LFilter in AFilters do
+    Self.AddFilter(LFilter);
 end;
 
 procedure TWiRLApplication.SetParentComponent(AParent: TComponent);
@@ -416,7 +430,7 @@ end;
 
 procedure TWiRLApplication.Shutdown;
 begin
-
+  FProxy.Reset();
 end;
 
 procedure TWiRLApplication.Startup;
@@ -427,12 +441,12 @@ begin
   if FReaderRegistry.Count = 0 then
     FReaderRegistry.Assign(TMessageBodyReaderRegistry.Instance);
 
-  FreeAndNil(FFormatSettingConfig);
+  FProxy.Process();
 end;
 
 procedure TWiRLApplication.WriteFilters(Writer: TWriter);
 var
-  LFilter: TWiRLFilterConstructorInfo;
+  LFilter: TWiRLFilterConstructorProxy;
 begin
   Writer.WriteListBegin;
   for LFilter in FFilterRegistry do
@@ -470,38 +484,15 @@ begin
   Writer.WriteListEnd;
 end;
 
-function TWiRLApplication.SetFilters(const AFilters: TArray<string>): IWiRLApplication;
-var
-  LFilter: string;
+function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationClass): TWiRLConfiguration;
 begin
-  Result := Self;
-  for LFilter in AFilters do
-    Self.AddFilter(LFilter);
-end;
-
-function TWiRLApplication.SetResources(const AResources: TArray<string>): IWiRLApplication;
-var
-  LResource: string;
-begin
-  Result := Self;
-  for LResource in AResources do
-    Self.AddResource(LResource);
-end;
-
-function TWiRLApplication.GetConfigByClassRef(AClass: TWiRLConfigurationNRefClass): TWiRLConfigurationNRef;
-begin
-  if not FConfigRegistry.TryGetValue(AClass, Result) then
-  begin
-    Result := TRttiHelper.CreateInstance(AClass) as TWiRLConfigurationNRef;
-    Result.Application := Self;
-    FConfigRegistry.Add(AClass, Result);
-  end;
+  Result := FConfigRegistry.GetApplicationConfig(AClass, Self);
 end;
 
 function TWiRLApplication.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
 var
-  LConfig: TWiRLConfigurationNRef;
-  LConfigClass: TWiRLConfigurationNRefClass;
+  LConfig: TWiRLConfiguration;
+  LConfigClass: TWiRLConfigurationClass;
 begin
   LConfigClass := TWiRLConfigClassRegistry.Instance.GetImplementationOf(AInterfaceRef);
   LConfig := GetConfigByClassRef(LConfigClass);
@@ -530,10 +521,8 @@ begin
   FWriterRegistry := TWiRLWriterRegistry.Create(False);
   FReaderRegistry := TWiRLReaderRegistry.Create(False);
   FConfigRegistry := TWiRLConfigRegistry.Create([doOwnsValues]);
-
-  FFomatSettingDictionary := TWiRLFomatSettingDictionary.Create;
-
   FAppConfigurator := TAppConfiguratorImpl.Create(Self);
+  FProxy := TWiRLProxyApplication.Create(FResourceRegistry);
 
   FErrorMediaType := TMediaType.APPLICATION_JSON;
   if csDesigning in ComponentState then
@@ -555,23 +544,14 @@ end;
 destructor TWiRLApplication.Destroy;
 begin
   Engine := nil;
+  FProxy.Free;
   FReaderRegistry.Free;
   FWriterRegistry.Free;
   FFilterRegistry.Free;
   FResourceRegistry.Free;
   FConfigRegistry.Free;
   FAppConfigurator.Free;
-  FFormatSettingConfig.Free;
-  FFomatSettingDictionary.Free;
-
   inherited;
-end;
-
-function TWiRLApplication.FormatSetting: TWiRLFormatSettingConfig;
-begin
-  if not Assigned(FFormatSettingConfig) then
-    FFormatSettingConfig := TWiRLFormatSettingConfig.Create(Self);
-  Result := FFormatSettingConfig;
 end;
 
 function TWiRLApplication.GetAppConfigurator: TAppConfigurator;
@@ -581,13 +561,17 @@ end;
 
 function TWiRLApplication.GetConfiguration<T>: T;
 begin
-  Result := GetConfigByClassRef(TWiRLConfigurationNRefClass(T)) as T;
+  Result := GetConfigByClassRef(TWiRLConfigurationClass(T)) as T;
+end;
+
+function TWiRLApplication.GetEnginePath: string;
+begin
+  Result := (Engine as TWiRLEngine).BasePath;
 end;
 
 function TWiRLApplication.GetFormatSettingFor(ATypeInfo: PTypeInfo): string;
 begin
-  if not FFomatSettingDictionary.TryGetValue(ATypeInfo, Result) then
-    Result := TWiRLFormatSetting.DEFAULT;
+  Result := GetConfiguration<TWiRLFormatSettingConfig>.GetFormatSettingFor(ATypeInfo);
 end;
 
 function TWiRLApplication.GetParentComponent: TComponent;
@@ -603,19 +587,19 @@ begin
     Result := TWiRLURL.CombinePath([(FEngine as TWiRLEngine).BasePath, BasePath]);
 end;
 
-function TWiRLApplication.GetResourceInfo(const AResourceName: string): TWiRLConstructorInfo;
+function TWiRLApplication.GetResourceCtor(const AResourceName: string): TWiRLConstructorProxy;
 begin
   FResourceRegistry.TryGetValue(AResourceName, Result);
+end;
+
+class function TWiRLApplication.GetRttiContext: TRttiContext;
+begin
+  Result := TRttiHelper.Context;
 end;
 
 function TWiRLApplication.HasParent: Boolean;
 begin
   Result := Assigned(FEngine);
-end;
-
-class procedure TWiRLApplication.InitializeRtti;
-begin
-  FRttiContext := TRttiContext.Create;
 end;
 
 procedure TWiRLApplication.ReadFilters(Reader: TReader);
@@ -670,22 +654,10 @@ begin
   FApplication := AApplication;
 end;
 
-function TAppConfiguratorImpl.GetConfigByInterfaceRef(
-  AInterfaceRef: TGUID): IInterface;
+function TAppConfiguratorImpl.GetConfigByInterfaceRef(AInterfaceRef: TGUID): IInterface;
 begin
   Result := FApplication.GetConfigByInterfaceRef(AInterfaceRef);
 end;
-
-{ TWiRLFomatSettingDictionary }
-
-procedure TWiRLFomatSettingDictionary.AddFormat(ATypeInfo: PTypeInfo;
-  const AFormat: string);
-begin
-  Add(ATypeInfo, AFormat);
-end;
-
-initialization
-  TWiRLApplication.InitializeRtti;
 
 end.
 

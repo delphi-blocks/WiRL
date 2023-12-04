@@ -267,7 +267,7 @@ var
 begin
   LJSON := TNeon.ObjectToJSON(imgSample, BuildSerializerConfig);
   try
-    Log('Image', TJSONHelper.PrettyPrint(LJSON));
+    Log('Image', TJSONHelper.Print(LJSON, True));
   finally
     LJSON.Free;
   end;
@@ -569,7 +569,7 @@ var
 begin
   LJSON := TNeon.ObjectToJSON(AObject, BuildSerializerConfig);
   try
-    Log(TJSONHelper.PrettyPrint(LJSON));
+    Log(TJSONHelper.Print(LJSON, True));
   finally
     LJSON.Free;
   end;
@@ -588,7 +588,7 @@ begin
 
   LJSON := TNeon.ObjectToJSON(AObject, BuildSerializerConfig);
   try
-    memoDeserialize.Lines.Text := TJSONHelper.PrettyPrint(LJSON);
+    memoDeserialize.Lines.Text := TJSONHelper.Print(LJSON, True);
   finally
     LJSON.Free;
   end;
@@ -692,7 +692,7 @@ begin
 
   LJSON := TNeon.ValueToJSON(TValue.From<TMyRecord>(LRec), TNeonConfiguration.Snake);
   try
-    Log(TJSONHelper.PrettyPrint(LJSON));
+    Log(TJSONHelper.Print(LJSON, True));
   finally
     LJSON.Free;
   end;

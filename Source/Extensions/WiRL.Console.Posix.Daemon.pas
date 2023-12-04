@@ -22,6 +22,7 @@ uses
   Posix.Signal,
   Posix.Fcntl,
   System.IOUtils,
+  WiRL.Console.Types,
   WiRL.Console.Posix.Syslog;
 
   /// <summary>
@@ -174,15 +175,23 @@ end;
 { TPosixDaemon }
 
 class procedure TPosixDaemon.CloseDescriptors;
+var
+  LRet: Integer;
 begin
   // Closing descriptor stdin (standard input)
-  __close(0);
+  LRet := __close(0);
+  if LRet < 0 then
+    EPosixException.Create('Error closing stdin');
 
   // Closing descriptor stdout (standard output)
-  __close(1);
+  LRet := __close(1);
+  if LRet < 0 then
+    EPosixException.Create('Error closing stdout');
 
   // Closing descriptor stderr (standard error)
-  __close(2);
+  LRet := __close(2);
+  if LRet < 0 then
+    EPosixException.Create('Error closing stderr');
 end;
 
 class procedure TPosixDaemon.DetachTerminal;

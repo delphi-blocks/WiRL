@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -13,7 +13,6 @@ uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
   Server.Resources in 'Server.Resources.pas',
-  WiRL.Schemas.Swagger in '..\..\Source\Extensions\WiRL.Schemas.Swagger.pas',
   Demo.Entities in 'Demo.Entities.pas';
 
 {$R *.res}

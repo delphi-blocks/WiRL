@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -49,8 +49,8 @@ type
   private
     FServer: TWiRLServer;
   public
-    procedure ConfigureServer(AServer: TWiRLServer);
     procedure ConfigureServerFluent(AServer: TWiRLServer);
+    procedure ConfigureServerStandard(AServer: TWiRLServer);
   end;
 
 var
@@ -62,42 +62,6 @@ uses
   Server.Claims;
 
 {$R *.dfm}
-
-procedure TMainForm.ConfigureServer(AServer: TWiRLServer);
-var
-  LEngineConf: TWiRLEngine;
-  LAppConf: IWiRLApplication;
-  LAuthConf: IWiRLConfigurationAuth;
-  LJWTConf: IWiRLConfigurationJWT;
-begin
-  // Server & Apps configuration
-  AServer.SetPort(StrToIntDef(PortNumberEdit.Text, 8080));
-
-    // Engine configuration
-  LEngineConf := AServer.AddEngine<TWiRLEngine>('/rest');
-  LEngineConf.SetEngineName('WiRL Auth Demo');
-
-  // App base configuration
-  LAppConf := LEngineConf.AddApplication('/app');
-  LAppConf.SetAppName('Auth Application');
-  LAppConf.SetResources([
-    'Server.Resources.TFormAuthResource',
-    'Server.Resources.TBasicAuthResource',
-    'Server.Resources.TBodyAuthResource',
-    'Server.Resources.TUserResource'
-  ]);
-
-    // Auth configuration
-  LAuthConf := LAppConf.Plugin.Configure<IWiRLConfigurationAuth>;
-  LAuthConf.SetTokenType(TAuthTokenType.JWT);
-  LAuthConf.SetTokenLocation(TAuthTokenLocation.Bearer);
-
-  // JWT configuration (App plugin configuration)
-  LJWTConf := LAppConf.Plugin.Configure<IWiRLConfigurationJWT>;
-  LJWTConf.SetClaimClass(TServerClaims);
-  LJWTConf.SetAlgorithm(TJOSEAlgorithmId.HS256);
-  LJWTConf.SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text));
-end;
 
 procedure TMainForm.ConfigureServerFluent(AServer: TWiRLServer);
 begin
@@ -112,6 +76,7 @@ begin
       // App base configuration
       .AddApplication('/app')
         .SetAppName('Auth Application')
+        .SetFilters('*')
         .SetResources([
           'Server.Resources.TFormAuthResource',
           'Server.Resources.TBasicAuthResource',
@@ -131,6 +96,43 @@ begin
         .SetAlgorithm(TJOSEAlgorithmId.HS256)
         .SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text))
     ;
+end;
+
+procedure TMainForm.ConfigureServerStandard(AServer: TWiRLServer);
+var
+  LEngineConf: TWiRLEngine;
+  LAppConf: IWiRLApplication;
+  LAuthConf: IWiRLConfigurationAuth;
+  LJWTConf: IWiRLConfigurationJWT;
+begin
+  // Server & Apps configuration
+  AServer.SetPort(StrToIntDef(PortNumberEdit.Text, 8080));
+
+  // Engine configuration
+  LEngineConf := AServer.AddEngine<TWiRLEngine>('/rest');
+  LEngineConf.SetEngineName('WiRL Auth Demo');
+
+  // App base configuration
+  LAppConf := LEngineConf.AddApplication('/app');
+  LAppConf.SetAppName('Auth Application');
+  LAppConf.SetFilters('*');
+  LAppConf.SetResources([
+    'Server.Resources.TFormAuthResource',
+    'Server.Resources.TBasicAuthResource',
+    'Server.Resources.TBodyAuthResource',
+    'Server.Resources.TUserResource'
+  ]);
+
+    // Auth configuration
+  LAuthConf := LAppConf.Plugin.Configure<IWiRLConfigurationAuth>;
+  LAuthConf.SetTokenType(TAuthTokenType.JWT);
+  LAuthConf.SetTokenLocation(TAuthTokenLocation.Bearer);
+
+  // JWT configuration (App plugin configuration)
+  LJWTConf := LAppConf.Plugin.Configure<IWiRLConfigurationJWT>;
+  LJWTConf.SetClaimClass(TServerClaims);
+  LJWTConf.SetAlgorithm(TJOSEAlgorithmId.HS256);
+  LJWTConf.SetSecret(TEncoding.UTF8.GetBytes(edtSecret.Text));
 end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);

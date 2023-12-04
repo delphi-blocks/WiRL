@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -17,6 +17,8 @@ uses
 
   Neon.Core.Types,
   WiRL.Configuration.Neon,
+  WiRL.Configuration.Converter,
+  WiRL.Core.Converter,
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
@@ -64,6 +66,10 @@ begin
     .AddApplication('/app')
       .SetResources('*')
       .SetFilters('*')
+
+      .Plugin.Configure<IWiRLFormatSetting>
+        .AddFormat(TypeInfo(TDateTime), TWiRLFormatSetting.ISODATE_UTC)
+        .BackToApp
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)

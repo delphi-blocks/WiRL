@@ -2,19 +2,19 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
 unit WiRL.Rtti.Utils;
 
+{$I ..\Core\WiRL.inc}
+
 interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.TypInfo,
-
-  WiRL.Core.JSON,
   WiRL.Core.Declarations;
 
 type
@@ -28,11 +28,9 @@ type
 
     class function FindAttribute<T: TCustomAttribute>(AType: TRttiObject): T; overload; static;
 
-    class function HasAttribute<T: TCustomAttribute>(
-      AClass: TClass): Boolean; overload; static;
+    class function HasAttribute<T: TCustomAttribute>(AClass: TClass): Boolean; overload; static;
 
-    class function HasAttribute<T: TCustomAttribute>(
-      ARttiObj: TRttiObject): Boolean; overload; static;
+    class function HasAttribute<T: TCustomAttribute>(ARttiObj: TRttiObject): Boolean; overload; static;
 
     class function HasAttribute<T: TCustomAttribute>(
       ARttiObj: TRttiObject; const ADoSomething: TProc<T>): Boolean; overload; static;
@@ -65,6 +63,9 @@ type
     class function IsInterfaceOfType(ARttiType: TRttiType; const IID: TGUID;
       const AAllowInherithance: Boolean = True): Boolean; overload; static;
 
+    class function IsInterfaceOfType(ATypeInfo: Pointer; const IID: TGUID;
+      const AAllowInherithance: Boolean = True): Boolean; overload; static;
+
     // Create new value data
     class function CreateNewValue(AType: TRttiType): TValue; static;
 
@@ -95,108 +96,42 @@ type
     class function ForEachFieldWithAttribute<T: TCustomAttribute>(AInstance: TObject; const ADoSomething: TFunc<TRttiField, T, Boolean>): Integer; overload;
     class function ForEachField(AInstance: TObject; const ADoSomething: TFunc<TRttiField, Boolean>): Integer;
 
-    class function GetType(AObject: TRttiObject): TRttiType;
+    class function GetType(AObject: TRttiObject): TRttiType; overload;
+    class function GetType(ATypeInfo: Pointer): TRttiType; overload;
+
+    class function ObjectAsType<T>(AObject: TObject): T; static;
+
+    class constructor Create;
+    class destructor Destroy;
 
     class property Context: TRttiContext read FContext;
   end;
 
-function ExecuteMethod(const AInstance: TValue; const AMethodName: string; const AArguments: array of TValue;
-  const ABeforeExecuteProc: TProc{ = nil}; const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean; overload;
-
-function ExecuteMethod(const AInstance: TValue; AMethod: TRttiMethod; const AArguments: array of TValue;
-  const ABeforeExecuteProc: TProc{ = nil}; const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean; overload;
-
-function ReadPropertyValue(AInstance: TObject; const APropertyName: string): TValue;
-
-function TValueToJSONObject(const AName: string; const AValue: TValue): TJSONObject; overload;
-function TValueToJSONObject(AObject: TJSONObject; const AName: string; const AValue: TValue): TJSONObject; overload;
+  {$IFDEF CUSTOM_ATTRIBUTE_BUG}
+  TRttiPatch = class
+  private
+    class function CheckFreeDescs(const APackage: TRTTIPackage;
+      const AHandle: THandle): Boolean; static;
+    class constructor Create;
+    class destructor Destroy;
+  public
+    class var AutoFreeDescs: Boolean;
+  end;
+  {$ENDIF}
 
 implementation
 
 uses
+  Generics.Collections,
   System.DateUtils,
   WiRL.Core.Utils;
 
-function TValueToJSONObject(AObject: TJSONObject; const AName: string; const AValue: TValue): TJSONObject;
-begin
-  Result := AObject;
-
-  if (AValue.Kind in [tkString])  then
-    Result.AddPair(AName, AValue.AsString)
-
-  else if (AValue.Kind in [tkInteger, tkInt64]) then
-    Result.AddPair(AName, TJSONNumber.Create(AValue.AsOrdinal))
-
-  else if (AValue.Kind in [tkFloat]) then
-    Result.AddPair(AName, TJSONNumber.Create(AValue.AsExtended))
-
-  else if (AValue.IsType<Boolean>) then
-    Result.AddPair(AName, TJSONHelper.BooleanToTJSON(AValue.AsType<Boolean>))
-
-  else if (AValue.IsType<TDateTime>) then
-    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TDateTime>))
-  else if (AValue.IsType<TDate>) then
-    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TDate>))
-  else if (AValue.IsType<TTime>) then
-    Result.AddPair(AName, TJSONHelper.DateToJSON(AValue.AsType<TTime>))
-
-  else
-    Result.AddPair(AName, AValue.ToString);
-end;
-
-function TValueToJSONObject(const AName: string; const AValue: TValue): TJSONObject;
-begin
-  Result := TValueToJSONObject(TJSONObject.Create(), AName, AValue);
-end;
-
-function ReadPropertyValue(AInstance: TObject; const APropertyName: string): TValue;
-var
-  LContext: TRttiContext;
-  LType: TRttiType;
-  LProperty: TRttiProperty;
-begin
-  Result := TValue.Empty;
-  LType := LContext.GetType(AInstance.ClassType);
-  if Assigned(LType) then
-  begin
-    LProperty := LType.GetProperty(APropertyName);
-    if Assigned(LProperty) then
-      Result := LProperty.GetValue(AInstance);
+{$IFDEF CUSTOM_ATTRIBUTE_BUG}
+type
+  TRTTIPackageHelper = class Helper for TRTTIPackage
+    function HandleToObject: TDictionary<Pointer,TRttiObject>;
   end;
-end;
-
-function ExecuteMethod(const AInstance: TValue; AMethod: TRttiMethod;
-  const AArguments: array of TValue; const ABeforeExecuteProc: TProc{ = nil};
-  const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean;
-var
-  LResult: TValue;
-begin
-  if Assigned(ABeforeExecuteProc) then
-    ABeforeExecuteProc();
-  LResult := AMethod.Invoke(AInstance, AArguments);
-  Result := True;
-  if Assigned(AAfterExecuteProc) then
-    AAfterExecuteProc(LResult);
-end;
-
-function ExecuteMethod(const AInstance: TValue; const AMethodName: string;
-  const AArguments: array of TValue; const ABeforeExecuteProc: TProc{ = nil};
-  const AAfterExecuteProc: TProc<TValue>{ = nil}): Boolean;
-var
-  LContext: TRttiContext;
-  LType: TRttiType;
-  LMethod: TRttiMethod;
-begin
-  Result := False;
-
-  LType := LContext.GetType(AInstance.TypeInfo);
-  if Assigned(LType) then
-  begin
-    LMethod := LType.GetMethod(AMethodName);
-    if Assigned(LMethod) then
-      Result := ExecuteMethod(AInstance, LMethod, AArguments, ABeforeExecuteProc, AAfterExecuteProc);
-  end;
-end;
+{$ENDIF}
 
 { TRttiHelper }
 
@@ -225,8 +160,13 @@ begin
       end;
     end;
   else
-    raise Exception.CreateFmt('Error creating type', [AType.Name]);
+    raise Exception.CreateFmt('Error creating type: %s', [AType.Name]);
   end;
+end;
+
+class destructor TRttiHelper.Destroy;
+begin
+  FContext.Free;
 end;
 
 class function TRttiHelper.CreateInstance(AClass: TClass): TObject;
@@ -433,6 +373,7 @@ var
   LField: TRttiField;
   LBreak: Boolean;
 begin
+  Result := 0;
   for LField in ARttiType.GetFields do
   begin
     LBreak := False;
@@ -524,6 +465,11 @@ begin
     raise Exception.Create('Object doesn''t have a type');
 end;
 
+class function TRttiHelper.GetType(ATypeInfo: Pointer): TRttiType;
+begin
+  Result := Context.GetType(ATypeInfo)
+end;
+
 class function TRttiHelper.HasAttribute<T>(AClass: TClass): Boolean;
 begin
   Result := HasAttribute<T>(Context.GetType(AClass));
@@ -542,6 +488,15 @@ class function TRttiHelper.IsDynamicArrayOf<T>(ARttiType: TRttiType;
   const AAllowInherithance: Boolean): Boolean;
 begin
   Result := TRttiHelper.IsDynamicArrayOf(ARttiType, TClass(T), AAllowInherithance);
+end;
+
+class function TRttiHelper.IsInterfaceOfType(ATypeInfo: Pointer;
+  const IID: TGUID; const AAllowInherithance: Boolean): Boolean;
+var
+  LType: TRttiType;
+begin
+  LType := TRttiHelper.Context.GetType(ATypeInfo);
+  Result := TRttiHelper.IsInterfaceOfType(LType, IID);
 end;
 
 class function TRttiHelper.IsInterfaceOfType(ARttiType: TRttiType;
@@ -578,6 +533,11 @@ class function TRttiHelper.IsObjectOfType<T>(ARttiType: TRttiType;
   const AAllowInherithance: Boolean): Boolean;
 begin
   Result := TRttiHelper.IsObjectOfType(ARttiType, TClass(T), AAllowInherithance);
+end;
+
+class function TRttiHelper.ObjectAsType<T>(AObject: TObject): T;
+begin
+  Result := TValue.From<TObject>(AObject).AsType<T>;
 end;
 
 class function TRttiHelper.FindAttribute<T>(AType: TRttiObject): T;
@@ -630,6 +590,11 @@ begin
     raise Exception.CreateFmt('TRttiHelper.CreateInstance: can''t create object [%s]', [AType.Name]);
 end;
 
+class constructor TRttiHelper.Create;
+begin
+  FContext := TRttiContext.Create;
+end;
+
 class function TRttiHelper.CreateInstance(const ATypeName: string;
   const Args: array of TValue): TObject;
 var
@@ -638,5 +603,60 @@ begin
   LType := Context.FindType(ATypeName);
   Result := CreateInstance(LType, Args);
 end;
+
+{$IFDEF CUSTOM_ATTRIBUTE_BUG}
+// Call back routine
+procedure OnUnloadModule(const AInstance :THandle);
+var
+  LPackage :TRTTIPackage;
+begin
+  { If descriptors related to the AInstance package must be freed now.
+    NOTE: This helps to resolve a bug related to packages with custom
+    attributes (quality report RSP-11620). }
+  if TRttiPatch.AutoFreeDescs then
+    for LPackage In TRttiHelper.Context.GetPackages do
+      if TRttiPatch.CheckFreeDescs(LPackage, AInstance) then
+        Break;
+end;
+
+class constructor TRttiPatch.Create;
+begin
+  AddModuleUnloadProc (TModuleUnloadProcLW (@OnUnloadModule));
+  AutoFreeDescs := False;
+end;
+
+class destructor TRttiPatch.Destroy;
+var
+  LPackage :TRTTIPackage;
+begin
+  for LPackage in TRttiHelper.Context.GetPackages do
+    if not (AutoFreeDescs and CheckFreeDescs (LPackage, HInstance)) then
+      { NOTE: This call must be done here, before the Finalization section of
+        the System unit calls FinalizeMemoryManager. }
+      RemoveModuleUnloadProc(TModuleUnloadProcLW(@OnUnloadModule));
+end;
+
+class function TRttiPatch.CheckFreeDescs(const APackage :TRTTIPackage;
+  const AHandle :THandle) :Boolean;
+begin
+  Result := APackage.Handle = AHandle;
+  if Result then
+    // free the TRTTIObject instances (descriptors) of the package
+    APackage.HandleToObject.Clear;
+end;
+
+{ TRTTIPackageHelper }
+
+function TRTTIPackageHelper.HandleToObject: TDictionary<Pointer, TRttiObject>;
+begin
+  with Self do
+    Result := FHandleToObject;
+end;
+{$ENDIF}
+
+initialization
+{$IFDEF CUSTOM_ATTRIBUTE_BUG}
+  TRttiPatch.ClassName;
+{$ENDIF}
 
 end.

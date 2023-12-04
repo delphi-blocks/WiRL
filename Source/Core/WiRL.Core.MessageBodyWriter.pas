@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,8 +16,9 @@ uses
 
   WiRL.Core.Singleton,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Response,
-  WiRL.Core.Resource,
+  WiRL.Core.Metadata,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
@@ -35,11 +36,12 @@ type
   /// </remarks>
   IMessageBodyWriter = interface
   ['{C22068E1-3085-482D-9EAB-4829C7AE87C0}']
+
     /// <summary>
     ///   Write a type to an HTTP message (body)
     /// </summary>
     procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
-      AMediaType: TMediaType; AHeaderFields: TWiRLHeaderList; AContentStream: TStream);
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
   end;
 
   TIsWritableFunction = reference to function(AType: TRttiType;
@@ -82,7 +84,6 @@ type
     function GetCount: Integer;
   protected
     FRegistry: TObjectList<TWriterInfo>;
-    FRttiContext: TRttiContext;
     function ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
     function InternalFindWriter(AType: TRttiType; AMediaType: TMediaType): IMessageBodyWriter; overload;
   public
@@ -100,7 +101,7 @@ type
     procedure Assign(ARegistry: TWiRLWriterRegistry);
     procedure Enumerate(const AProc: TProc<TWriterInfo>);
 
-    procedure FindWriter(AMethod: TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList;
+    procedure FindWriter(AMethod: TWiRLProxyMethod; AAcceptMediaTypes: TMediaTypeList;
       out AWriter: IMessageBodyWriter; out AMediaType: TMediaType); overload;
 
     function FindWriter(AType: TRttiType; AMediaType: TMediaType): IMessageBodyWriter; overload;
@@ -110,7 +111,7 @@ type
 
   TMessageBodyWriterRegistry = class(TWiRLWriterRegistry)
   private type
-    TWiRLRegistrySingleton = TWiRLSingleton<TMessageBodyWriterRegistry>;
+    TMessageBodyWriterRegistrySingleton = TWiRLSingleton<TMessageBodyWriterRegistry>;
   private
     class function GetInstance: TMessageBodyWriterRegistry; static; inline;
   public
@@ -178,7 +179,6 @@ end;
 constructor TWiRLWriterRegistry.Create(AOwnsObjects: Boolean);
 begin
   FRegistry := TObjectList<TWriterInfo>.Create(AOwnsObjects);
-  FRttiContext := TRttiContext.Create;
 end;
 
 destructor TWiRLWriterRegistry.Destroy;
@@ -203,7 +203,7 @@ begin
   Result := InternalFindWriter(AType, AMediaType);
 end;
 
-procedure TWiRLWriterRegistry.FindWriter(AMethod: TWiRLResourceMethod; AAcceptMediaTypes: TMediaTypeList;
+procedure TWiRLWriterRegistry.FindWriter(AMethod: TWiRLProxyMethod; AAcceptMediaTypes: TMediaTypeList;
   out AWriter: IMessageBodyWriter; out AMediaType: TMediaType);
 var
   LMediaType: TMediaType;
@@ -282,6 +282,9 @@ begin
 
   for LEntry in FRegistry do
   begin
+    if not Assigned(LEntry.Produces) then
+      raise Exception.CreateFmt('Attribute [Produce] required for [%s]', [LEntry.WriterName]);
+
     if LEntry.IsWritable(AType, AType.GetAttributes, AMediaType) and
        (AMediaType.IsWildcard or LEntry.Produces.Contains(TMediaType.WILDCARD) or LEntry.Produces.Contains(AMediaType)) then
     begin
@@ -308,7 +311,7 @@ begin
     Result := AAccept.IntersectionList(AProduces);
 
   if Result.Empty and AAccept.HasWildCard then
-    Result := AProduces.CloneList;
+    Result.Assign(AProduces);
 
   { TODO -opaolo -c : This have to be configuration-related 02/06/2017 18:00:25 }
   if Result.Empty then
@@ -317,7 +320,6 @@ begin
     Result.Add(TMediaType.Create(TMediaType.WILDCARD));
   end;
 end;
-
 
 { TWiRLWriterRegistry.TWriterInfo }
 
@@ -363,7 +365,7 @@ end;
 
 class function TMessageBodyWriterRegistry.GetInstance: TMessageBodyWriterRegistry;
 begin
-  Result := TWiRLRegistrySingleton.Instance;
+  Result := TMessageBodyWriterRegistrySingleton.Instance;
 end;
 
 procedure TMessageBodyWriterRegistry.RegisterWriter(const ACreateInstance:

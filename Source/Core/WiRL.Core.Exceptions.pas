@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,13 +16,31 @@ uses
   System.Rtti,
   System.Generics.Collections,
   WiRL.Rtti.Utils,
+  WiRL.Core.Classes,
   WiRL.Core.Singleton,
   WiRL.Core.JSON,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.http.Request,
   WiRL.http.Response;
 
 type
+  /// <entity>Error</entity>
+  TWebExceptionSchema = class
+  private
+    Fdata: TDictionary<string,string>;
+    Fexception: string;
+    Fmessage: string;
+    Fstatus: Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    property status: Integer read Fstatus write Fstatus;
+    property exception: string read Fexception write Fexception;
+    property message: string read Fmessage write Fmessage;
+    property data: TDictionary<string,string> read Fdata write Fdata;
+  end;
+
   Pair = record
   public
     Name: string;
@@ -45,8 +63,6 @@ type
     class function MakeValueArray(APair1, APair2, APair3: Pair): TExceptionValues; overload; static;
     class function AddValuePair(APairArray: TExceptionValues; APair: Pair): TExceptionValues;
   end;
-
-  EWiRLException = class(Exception);
 
   /// <summary>
   ///   This exception may be thrown by a resource method if a specific HTTP error response needs to be produced.
@@ -125,7 +141,7 @@ type
     constructor Create(AStatusCode: Integer);
   end;
 
-  // Client errors (400)
+  // Client errors (40x)
 
   EWiRLHttpStatusException = class(EWiRLWebApplicationException)
   public
@@ -142,12 +158,16 @@ type
     constructor Create; override;
   end;
 
-  [StatusCode(404)]
-  EWiRLNotFoundException = class(EWiRLHttpStatusException)
+  [StatusCode(400)]
+  EWiRLBadRequestException = class(EWiRLHttpStatusException)
   end;
 
   [StatusCode(401)]
   EWiRLNotAuthorizedException = class(EWiRLHttpStatusException)
+  end;
+
+  [StatusCode(404)]
+  EWiRLNotFoundException = class(EWiRLHttpStatusException)
   end;
 
   [StatusCode(406)]
@@ -158,7 +178,7 @@ type
   EWiRLUnsupportedMediaTypeException = class(EWiRLHttpStatusException)
   end;
 
-  // Server errors (500)
+  // Server errors (50x)
 
   [StatusCode(500)]
   EWiRLServerException = class(EWiRLHttpStatusException)
@@ -270,34 +290,44 @@ begin
 end;
 
 function Pair.ToJSONValue: TJSONValue;
-var
-  LDate: Double;
+
+  function KindEnumeration: TJSONValue;
+  begin
+    if Value.TypeInfo.Name = 'Boolean' then
+      if Value.AsBoolean then
+        Result := TJSONTrue.Create
+      else
+        Result := TJSONFalse.Create
+    else
+      Result := TJSONString.Create('type:enumeration');
+  end;
+
+  function KindFloat: TJSONValue;
+  var
+    LDate: Double;
+  begin
+    if Value.TypeInfo.Name = 'TDateTime' then
+    begin
+      LDate := Value.AsCurrency;
+      if Trunc(LDate) = 0 then
+        Result := TJSONString.Create(FormatDateTime('hh:nn:ss:zzz', LDate))
+      else if Frac(LDate) = 0 then
+        Result := TJSONString.Create(FormatDateTime('yyyy-mm-dd', LDate))
+      else
+        Result := TJSONString.Create(FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', LDate))
+    end
+    else
+      Result := TJSONNumber.Create(Value.AsCurrency);
+  end;
+
 begin
   Result := nil;
-  if Value.IsType<TDateTime> then
-  begin
-    LDate := Value.AsCurrency;
-    if Trunc(LDate) = 0 then
-      Result := TJSONString.Create(FormatDateTime('hh:nn:ss:zzz', LDate))
-    else if Frac(LDate) = 0 then
-      Result := TJSONString.Create(FormatDateTime('yyyy-mm-dd', LDate))
-    else
-      Result := TJSONString.Create(FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', LDate))
-  end
-  else if Value.IsType<Boolean> then
-  begin
-    if Value.AsBoolean then
-      Result := TJSONTrue.Create
-    else
-      Result := TJSONFalse.Create
-  end
-  else
   case Value.Kind of
     tkUnknown:     Result := TJSONString.Create('type:unknown');
-    tkInteger:     Result := TJSONNumber.Create(Value.AsCurrency);
+    tkInteger:     Result := TJSONNumber.Create(Value.AsInteger);
     tkChar:        Result := TJSONString.Create(Value.AsString);
-    tkEnumeration: Result := TJSONString.Create('type:enumeration');
-    tkFloat:       Result := TJSONNumber.Create(Value.AsCurrency);
+    tkEnumeration: Result := KindEnumeration;
+    tkFloat:       Result := KindFloat;
     tkString:      Result := TJSONString.Create(Value.AsString);
     tkSet:         Result := TJSONString.Create(Value.AsString);
     tkClass:       Result := TJSONString.Create(Value.AsObject.ToString);
@@ -315,6 +345,9 @@ begin
     tkClassRef:    Result := TJSONString.Create(Value.AsClass.ClassName);
     tkPointer:     Result := TJSONNumber.Create(Value.AsInteger);
     tkProcedure:   Result := TJSONString.Create('type:procedure');
+    {$IFDEF HAS_MANAGED_RECORD}
+    tkMRecord:     Result := TJSONString.Create('type:mrecord');
+    {$ENDIF}
   end;
 end;
 
@@ -486,7 +519,7 @@ begin
 
   EWiRLWebApplicationException.BuildReponse(E, LErrorMediaType, AContext.Response);
   if (AContext.Response.StatusCode = 401) and (LAuthChallengeHeader <> '') then
-    AContext.Response.HeaderFields['WWW-Authenticate'] := LAuthChallengeHeader;
+    AContext.Response.WWWAuthenticate := LAuthChallengeHeader;
 
   if Assigned(LApplication) then
   begin
@@ -680,6 +713,19 @@ constructor StatusCodeAttribute.Create(AStatusCode: Integer);
 begin
   inherited Create;
   FStatusCode := AStatusCode;
+end;
+
+{ TWebExceptionSchema }
+
+constructor TWebExceptionSchema.Create;
+begin
+  fdata := TDictionary<string,string>.Create;
+end;
+
+destructor TWebExceptionSchema.Destroy;
+begin
+  fdata.Free;
+  inherited;
 end;
 
 end.

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -12,9 +12,15 @@ unit Client.Form.Main;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.TypInfo,
+  System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  System.Net.URLClient, System.Net.HttpClient, System.Net.HttpClientComponent;
+
+  WiRL.http.Client.NetHttp,
+  WiRL.http.Client,
+  WiRL.Client.Application,
+
+  Client.Filters;
 
 type
   TfrmClientMain = class(TForm)
@@ -26,49 +32,35 @@ type
     btnPublicResource: TButton;
     edtResourcePublic: TEdit;
     Label2: TLabel;
-    Label3: TLabel;
-    memoHeadersPublic: TMemo;
-    memoResponsePublic: TMemo;
-    Label4: TLabel;
-    httpRestClient: TNetHTTPClient;
-    httpRequest: TNetHTTPRequest;
     memoLog: TMemo;
     btnLoginBasic: TButton;
     edtResourceLogin: TEdit;
     btnPrivateResource: TButton;
     edtResourcePrivate: TEdit;
     Label1: TLabel;
-    Label6: TLabel;
-    memoHeadersLogin: TMemo;
-    Label7: TLabel;
-    memoResponseLogin: TMemo;
     Label5: TLabel;
     edtToken: TEdit;
     Label8: TLabel;
     Label9: TLabel;
     Label10: TLabel;
     Label11: TLabel;
-    Label12: TLabel;
-    memoHeadersPrivate: TMemo;
-    Label13: TLabel;
-    memoResponsePrivate: TMemo;
-    btnCompileLogin: TButton;
     edtUsername: TEdit;
     edtPassword: TEdit;
     Label14: TLabel;
     Label15: TLabel;
-    btnCompilePrivate: TButton;
-    btnCompilePublic: TButton;
-    procedure btnCompileLoginClick(Sender: TObject);
-    procedure btnCompilePrivateClick(Sender: TObject);
+    memoResponse: TMemo;
+    Label13: TLabel;
+    procedure FormCreate(Sender: TObject);
     procedure btnLoginBasicClick(Sender: TObject);
     procedure btnPrivateResourceClick(Sender: TObject);
     procedure btnPublicResourceClick(Sender: TObject);
+    procedure edtHostChange(Sender: TObject);
   private
-    function DoHttpRequest(const AMethod, AResource: string; AHeaders: TStrings;
-        ARequestBody: TStream = nil): string;
+    FClient: TWiRLClient;
+    FApp: TWiRLClientApplication;
+    procedure WiRLInit;
   public
-    { Public declarations }
+    procedure ShowResponse(const ABody: string);
   end;
 
 var
@@ -77,105 +69,115 @@ var
 implementation
 
 uses
-  System.IOUtils, System.NetEncoding, REST.Json, System.JSON;
+  System.JSON,
+
+  Neon.Core.Types,
+  WiRL.Core.Classes,
+  WiRL.Core.JSON,
+  WiRL.Core.Auth.Resource,
+  WiRL.http.Accept.MediaType,
+  WiRL.Configuration.Neon,
+  WiRL.Core.MessageBody.Default,
+
+  Common.Entities;
 
 {$R *.dfm}
 
-procedure TfrmClientMain.btnCompileLoginClick(Sender: TObject);
-var
-  LBasicAuth: string;
+procedure TfrmClientMain.FormCreate(Sender: TObject);
 begin
-  LBasicAuth := 'Authorization=Basic ' +
-    TNetEncoding.Base64.Encode(edtUsername.Text + ':' + edtPassword.Text);
+  pgcAuthApp.ActivePageIndex := 0;
 
-  memoHeadersLogin.Lines.Add(LBasicAuth);
+  FClient := TWiRLClient.Create(nil);
+  FApp := TWiRLClientApplication.Create(nil);
+  WiRLInit;
 end;
 
-procedure TfrmClientMain.btnCompilePrivateClick(Sender: TObject);
-var
-  LBearerAuth: string;
+procedure TfrmClientMain.ShowResponse(const ABody: string);
 begin
-  LBearerAuth := 'Authorization=Bearer ' + edtToken.Text;
+  memoResponse.Text := ABody;
+end;
 
-  memoHeadersPrivate.Lines.Add(LBearerAuth);
+procedure TfrmClientMain.WiRLInit;
+begin
+  // In this demo the configuration of the client is not needed
+
+  // FApp
+  //   .SetReaders('*.*')
+  //   .SetWriters('*.*')
+  //   .SetFilters('*.*')
+  //   .Plugin.Configure<IWiRLConfigurationNeon>
+  //     .SetUseUTCDate(True)
+  //     .SetVisibility([mvPublic, mvPublished])
+  //     .SetMemberCase(TNeonCase.CamelCase)
+  //     .BackToApp;
+
+  FApp.AppName := 'app';
+  FApp.Client := FClient;
 end;
 
 procedure TfrmClientMain.btnPublicResourceClick(Sender: TObject);
 var
-  LJSON: TJSONValue;
-  LRes: string;
+  LUserInfo: TUserInfo;
 begin
   memoLog.Lines.Add('Getting Public Resource (no auth required)');
-  LRes := DoHttpRequest(sHTTPMethodGet, edtResourcePublic.Text, memoHeadersPublic.Lines);
 
-  LJSON := TJSONObject.ParseJSONValue(LRes);
+  LUserInfo := FApp
+    .Resource(edtResourcePublic.Text)
+    .Accept(TMediaType.APPLICATION_JSON)
+    .Get<TUserInfo>;
+
   try
-    memoResponsePublic.Lines.Text := TJson.Format(LJSON);
+    ShowMessage('FullName: ' + LUserInfo.FullName);
   finally
-    LJSON.Free;
+    LUserInfo.Free;
   end;
+
+  memoLog.Lines.Add('Done.');
 end;
 
 procedure TfrmClientMain.btnLoginBasicClick(Sender: TObject);
 var
-  LJSON: TJSONValue;
-  LRes: string;
+  LLoginResponse: TWiRLLoginResponse;
 begin
   memoLog.Lines.Add('Basic Auth Login');
-  LRes := DoHttpRequest(sHTTPMethodPost, edtResourceLogin.Text, memoHeadersLogin.Lines);
 
-  LJSON := TJSONObject.ParseJSONValue(LRes);
+  LLoginResponse := FApp
+    .Resource(edtResourceLogin.Text)
+    .Authorization(TBasicAuth.Create(edtUsername.Text, edtPassword.Text))
+    .Accept(TMediaType.APPLICATION_JSON)
+    .Post<string, TWiRLLoginResponse>('');
+
   try
-    edtToken.Text := LJSON.GetValue<string>('access_token');
-    memoResponseLogin.Lines.Text := TJson.Format(LJSON);
+    edtToken.Text := LLoginResponse.AccessToken;
+    ShowMessage('Token: ' + LLoginResponse.AccessToken);
   finally
-    LJSON.Free;
+    LLoginResponse.Free;
   end;
+  memoLog.Lines.Add('Login done.');
 end;
 
 procedure TfrmClientMain.btnPrivateResourceClick(Sender: TObject);
 var
   LJSON: TJSONValue;
-  LRes: string;
 begin
   memoLog.Lines.Add('Getting Private Resource (auth required)');
-  LRes := DoHttpRequest(sHTTPMethodGet, edtResourcePrivate.Text, memoHeadersPrivate.Lines);
 
-  LJSON := TJSONObject.ParseJSONValue(LRes);
+  LJSON := FApp
+    .Resource(edtResourcePrivate.Text)
+    .Authorization(TBearerAuth.Create(edtToken.Text))
+    .Accept(TMediaType.APPLICATION_JSON)
+    .Get<TJSONObject>();
   try
-    memoResponsePrivate.Lines.Text := TJson.Format(LJSON);
+    ShowMessage('Message: ' + LJSON.GetValue<string>('Message'));
   finally
     LJSON.Free;
   end;
+  memoLog.Lines.Add('Done.');
 end;
 
-function TfrmClientMain.DoHttpRequest(const AMethod, AResource: string;
-    AHeaders: TStrings; ARequestBody: TStream = nil): string;
-var
-  LURL, LName: string;
-  LHeader: TNetHeader;
-  LHeaders: TNetHeaders;
-  LResponse: IHTTPResponse;
-  LIndex: Integer;
+procedure TfrmClientMain.edtHostChange(Sender: TObject);
 begin
-  LURL := TPath.Combine(edtHost.Text, AResource);
-
-  memoLog.Lines.Add('URL: ' + LURL);
-
-  for LIndex := 0 to AHeaders.Count - 1 do
-  begin
-    LName := AHeaders.Names[LIndex];
-    LHeader := TNetHeader.Create(LName, AHeaders.Values[LName]);
-    LHeaders := LHeaders + [LHeader];
-  end;
-
-  if AMethod = sHTTPMethodGet then
-    LResponse := httpRequest.Get(LURL, nil, LHeaders)
-  else if AMethod = sHTTPMethodPost then
-    LResponse := httpRequest.Post(LURL, ARequestBody, nil, LHeaders);
-  Result := LResponse.ContentAsString();
-
-  memoLog.Lines.Add('Operation done......');
+  FClient.WiRLEngineURL := edtHost.Text;
 end;
 
 end.

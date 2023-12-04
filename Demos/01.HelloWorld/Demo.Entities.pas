@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
+{                                                                              }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{******************************************************************************}
 unit Demo.Entities;
 
 interface
@@ -13,9 +22,11 @@ type
   private
     FName: string;
     FAge: Integer;
+    FDetail: string;
   public
     property Name: string read FName write FName;
     property Age: Integer read FAge write FAge;
+    property Detail: string read FDetail write FDetail;
   end;
 
   TPersonList = class(TObjectList<TPerson>);

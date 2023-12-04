@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -17,7 +17,7 @@ uses
 
   WiRL.Configuration.Core,
   WiRL.Core.Classes,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Rtti.Utils,
   WiRL.Core.Exceptions,
   WiRL.Core.Registry,
@@ -91,7 +91,6 @@ type
     class function GetServerFileName: string; static;
   private
     FCurrentApp: IWiRLApplication;
-    FRttiContext: TRttiContext;
     FApplications: TWiRLApplicationList;
     FSubscribers: TList<IWiRLHandleListener>;
     FCriticalSection: TCriticalSection;
@@ -111,6 +110,9 @@ type
 
     procedure Startup; override;
     procedure Shutdown; override;
+
+    function GetApplication(AURL: TWiRLURL): TWiRLApplication;
+    function GetApplicationByName(const AName: string): TWiRLApplication;
 
     procedure HandleRequest(AContext: TWiRLContext); override;
     procedure HandleException(AContext: TWiRLContext; E: Exception);
@@ -181,7 +183,6 @@ end;
 constructor TWiRLEngine.Create(AOwner: TComponent);
 begin
   inherited;
-  FRttiContext := TRttiContext.Create;
   FApplications := TWiRLApplicationList.Create(Self);
   FCriticalSection := TCriticalSection.Create;
   FSubscribers := TList<IWiRLHandleListener>.Create;
@@ -204,6 +205,7 @@ end;
 
 destructor TWiRLEngine.Destroy;
 begin
+  FCurrentApp := nil;
   FCriticalSection.Free;
   FApplications.Free;
   FSubscribers.Free;
@@ -284,6 +286,52 @@ begin
   end;
 end;
 
+function TWiRLEngine.GetApplication(AURL: TWiRLURL): TWiRLApplication;
+var
+  LApplicationPath: string;
+begin
+  Result := nil;
+
+  if Length(AURL.PathTokens) < 1 then
+    raise EWiRLNotFoundException.Create(
+      Format('Engine [%s] not found. URL [%s]', [BasePath, AURL.BasePath]),
+      Self.ClassName, 'GetApplication'
+    );
+  LApplicationPath := TWiRLURL.CombinePath([AURL.PathTokens[0]]);
+  if (BasePath <> '') and (BasePath <> TWiRLURL.URL_PATH_SEPARATOR) then
+  begin
+    if not AURL.MatchPath(BasePath + TWiRLURL.URL_PATH_SEPARATOR) then
+      raise EWiRLNotFoundException.Create(
+        Format('Engine [%s] not found. URL [%s]', [BasePath, AURL.BasePath]),
+        Self.ClassName, 'GetApplication'
+      );
+    LApplicationPath := TWiRLURL.CombinePath([AURL.PathTokens[0], AURL.PathTokens[1]]);
+  end;
+  // Change the URI BasePath (?)
+  AURL.BasePath := LApplicationPath;
+
+  if not FApplications.TryGetValue(LApplicationPath, Result) then
+    raise EWiRLNotFoundException.Create(
+      Format('Application [%s] not found. URL [%s]', [LApplicationPath, AURL.URL]),
+      Self.ClassName, 'GetApplication'
+    );
+end;
+
+function TWiRLEngine.GetApplicationByName(const AName: string): TWiRLApplication;
+var
+  LApp: TWiRLApplicationInfo;
+begin
+  Result := nil;
+  for LApp in FApplications do
+  begin
+    if LApp.Application.AppName = AName then
+    begin
+      Result := LApp.Application;
+      Break;
+    end;
+  end;
+end;
+
 procedure TWiRLEngine.HandleException(AContext: TWiRLContext; E: Exception);
 begin
   if Assigned(AContext.Application) then
@@ -294,37 +342,19 @@ procedure TWiRLEngine.HandleRequest(AContext: TWiRLContext);
 var
   LApplication: TWiRLApplication;
   LAppWorker: TWiRLApplicationWorker;
-  LApplicationPath: string;
   LStopWatch, LStopWatchEx: TStopWatch;
 begin
   inherited;
 
-  LApplication := nil;
   LStopWatchEx := TStopwatch.StartNew;
   try
     if not DoBeforeRequestStart() then
     begin
-      if Length(AContext.RequestURL.PathTokens) < 1 then
-        raise EWiRLNotFoundException.Create(
-          Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.RequestURL.BasePath]),
-          Self.ClassName, 'HandleRequest'
-        );
-      LApplicationPath := TWiRLURL.CombinePath([AContext.RequestURL.PathTokens[0]]);
-      if (BasePath <> '') and (BasePath <> TWiRLURL.URL_PATH_SEPARATOR) then
-      begin
-        if not AContext.RequestURL.MatchPath(BasePath + TWiRLURL.URL_PATH_SEPARATOR) then
-          raise EWiRLNotFoundException.Create(
-            Format('Engine [%s] not found. URL [%s]', [BasePath, AContext.RequestURL.BasePath]),
-            Self.ClassName, 'HandleRequest'
-          );
-        LApplicationPath := TWiRLURL.CombinePath([AContext.RequestURL.PathTokens[0], AContext.RequestURL.PathTokens[1]]);
-      end;
-      // Change the URI BasePath (?)
-      AContext.RequestURL.BasePath := LApplicationPath;
+      LApplication := GetApplication(AContext.RequestURL);
+      AContext.Application := LApplication;
 
-      if FApplications.TryGetValue(LApplicationPath, LApplication) then
+      if not TWiRLFilterRegistry.Instance.ApplyPreMatchingResourceFilters(AContext) then
       begin
-        AContext.Application := LApplication;
         LAppWorker := TWiRLApplicationWorker.Create(AContext);
         try
           DoBeforeHandleRequest(LApplication);
@@ -336,12 +366,7 @@ begin
           LStopWatch.Stop;
           LAppWorker.Free;
         end;
-      end
-      else
-        raise EWiRLNotFoundException.Create(
-          Format('Application [%s] not found. URL [%s]', [LApplicationPath, AContext.RequestURL.URL]),
-          Self.ClassName, 'HandleRequest'
-        );
+      end;
     end;
   except
     on E: Exception do
@@ -432,8 +457,7 @@ end;
 
 { TWiRLApplicationInfo }
 
-constructor TWiRLApplicationInfo.Create(AApplication: TWiRLApplication;
-  AEngine: TWiRLEngine);
+constructor TWiRLApplicationInfo.Create(AApplication: TWiRLApplication; AEngine: TWiRLEngine);
 begin
   inherited Create;
   FApplication := AApplication;

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -12,30 +12,38 @@ unit Server.Resources;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.JSON, System.NetEncoding, System.Generics.Collections, 
+  System.Classes, System.SysUtils, System.JSON, System.NetEncoding, System.Generics.Collections,
+  Data.DB, FireDAC.Comp.Client, FireDAC.Comp.DataSet, FireDAC.Stan.Intf,
+
+  WiRL.http.URL,
+  WiRL.http.MultipartData,
   WiRL.Core.Engine,
-  WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
+  WiRL.Core.Application,
+  WiRL.Core.GarbageCollector,
   WiRL.http.Accept.MediaType,
-  WiRL.http.URL,
   WiRL.Core.MessageBody.Default,
-  WiRL.Core.Auth.Context,
-  WiRL.http.Request,
-  WiRL.http.Response,
-  
+  //WiRL.Data.FireDAC.MessageBody.Default,
+
   Demo.Entities;
 
 type
   [Path('/helloworld')]
   THelloWorldResource = class
-  private
-    [Context] Request: TWiRLRequest;
-    [Context] AuthContext: TWiRLAuthContext;
   public
     [GET]
     [Produces(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8)]
     function HelloWorld(): string;
+
+    [GET, Path('db')]
+    [Produces(TMediaType.APPLICATION_JSON)]
+    function GetDBData(): TFDMemTable;
+
+    [POST, Path('db')]
+    [Consumes(TMediaType.APPLICATION_JSON)]
+    [Produces(TMediaType.TEXT_PLAIN)]
+    function PostDBData([BodyParam] APostStream: TStream): Integer;
 
     [GET, Path('/time')]
     [Produces(TMediaType.TEXT_PLAIN)]
@@ -53,20 +61,15 @@ type
     [Produces(TMediaType.TEXT_PLAIN)]
     function Params([PathParam] AOne: string; [PathParam] ATwo: string): string;
 
-    [GET, Path('/authinfo'), Produces(TMediaType.APPLICATION_JSON)]
-    function GetAuthInfo: string;
-
-    [GET, Path('/sum/{Addendo1}/{Addendo2}')]
+    [GET, Path('/sum/{Qty1}/{Qty2}')]
     [Produces(TMediaType.TEXT_PLAIN)]
-    function Somma(
-      [PathParam] Addendo1: Integer;
-      [PathParam] Addendo2: Integer): Integer;
+    function Sum([PathParam] Qty1: Integer; [PathParam] Qty2: Integer): Integer;
 
     [GET, Path('/exception'), Produces(TMediaType.APPLICATION_JSON)]
     function TestException: string;
 
     [GET, Path('/person'), Produces(TMediaType.APPLICATION_JSON)]
-    function GetPerson: TPerson;
+    function GetPerson([QueryParam] Id: Integer): TPerson;
 
     [POST, Path('/order'), Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
     function PostOrder([BodyParam] AOrderProposal: TOrderProposal): TOrder;
@@ -90,7 +93,7 @@ type
     [POST, Path('/multipart'), Consumes(TMediaType.MULTIPART_FORM_DATA), Produces(TMediaType.APPLICATION_JSON)]
     function PostMultiPartExample(
       [FormParam] AValue: string;
-      [FormParam] AContent: TStream;
+      [FormParam] AContent: TWiRLFormDataPart;
       [FormParam] AJSON: TJSONObject
     ): TJSONObject;
   end;
@@ -118,7 +121,6 @@ implementation
 
 uses
   System.DateUtils, System.StrUtils, System.IOUtils,
-  WiRL.Core.JSON,
   WiRL.http.Accept.Language;
 
 { THelloWorldResource }
@@ -128,31 +130,34 @@ begin
   Result := AString;
 end;
 
-function THelloWorldResource.GetAuthInfo: string;
+function THelloWorldResource.GetDBData: TFDMemTable;
+var
+  LMemTable: TFDMemTable;
 begin
-  Result := TJSONHelper.ToJSON(AuthContext.Subject.JSON);
+  LMemTable := TFDMemTable.Create(nil);
+  LMemTable.FieldDefs.Add('id', ftInteger);
+  LMemTable.FieldDefs.Add('value', ftString, 100);
+
+  LMemTable.Open;
+
+  LMemTable.AppendRecord([1, 'Luca']);
+  LMemTable.AppendRecord([2, 'Paolo']);
+  LMemTable.MergeChangeLog;
+
+  Result := LMemTable;
 end;
 
-function THelloWorldResource.GetPerson: TPerson;
+function THelloWorldResource.GetPerson(Id: Integer): TPerson;
 begin
   Result := TPerson.Create;
   Result.Name := 'Paolo Rossi';
-  Result.Age := 50;
+  Result.Age := Id;
+  Result.Detail := 'Person Detail';
 end;
 
 function THelloWorldResource.HelloWorld(): string;
-var
-  LLang: TAcceptLanguage;
 begin
-  LLang := TAcceptLanguage.Create('it');
-  try
-    if Request.AcceptableLanguages.Contains(LLang) then
-      Result := 'Ciao Mondo!'
-    else
-      Result := 'Hello World!';
-  finally
-    LLang.Free;
-  end;
+  Result := 'Hello World!';
 end;
 
 function THelloWorldResource.Params(AOne, ATwo: string): string;
@@ -163,6 +168,19 @@ end;
 function THelloWorldResource.PostString(const AContent: string): string;
 begin
   Result := 'PostString: ' + AContent;
+end;
+
+function THelloWorldResource.PostDBData(APostStream: TStream): Integer;
+var
+  LMemTable: TFDMemTable;
+begin
+  LMemTable := TFDMemTable.Create(nil);
+  try
+    LMemTable.LoadFromStream(APostStream, sfJSON);
+    Result := LMemTable.ChangeCount;
+  finally
+    LMemTable.Free;
+  end;
 end;
 
 function THelloWorldResource.PostList(AList: TPersonList): string;
@@ -183,23 +201,24 @@ begin
   Result.Description := AOrderProposal.Description;
   Result.Article := AOrderProposal.Article;
   Result.Quantity := AOrderProposal.Quantity;
+  Result.DueDate := AOrderProposal.DueDate;
 
 end;
 
 function THelloWorldResource.PostMultiPartExample(
       [FormParam] AValue: string;
-      [FormParam] AContent: TStream;
+      [FormParam] AContent: TWiRLFormDataPart;
       [FormParam] AJSON: TJSONObject
     ): TJSONObject;
 var
   LContentBuffer: TBytes;
 begin
-  SetLength(LContentBuffer, AContent.Size);
-  AContent.ReadBuffer(LContentBuffer, AContent.Size);
+  LContentBuffer := AContent.RawContent;
   Result := TJSONObject.Create;
   Result
     .AddPair('AValue', AValue)
     .AddPair('AJSON', AJSON.ToJSON)
+    .AddPair('FileName', AContent.FileName)
     .AddPair('AContent', TNetEncoding.Base64.EncodeBytesToString(LContentBuffer));
 end;
 
@@ -213,9 +232,9 @@ begin
   Result := System.StrUtils.ReverseString(AString);
 end;
 
-function THelloWorldResource.Somma(Addendo1, Addendo2: Integer): Integer;
+function THelloWorldResource.Sum(Qty1, Qty2: Integer): Integer;
 begin
-  Result := Addendo1 + Addendo2;
+  Result := Qty1 + Qty2;
 end;
 
 function THelloWorldResource.TestException: string;

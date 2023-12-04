@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -17,31 +17,53 @@ uses
   WiRL.Configuration.Auth,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
-  WiRL.Core.Resource,
+  WiRL.Core.Metadata,
   WiRL.Core.Application,
+  WiRL.Core.GarbageCollector,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Auth.Context,
   WiRL.Core.Validators,
   WiRL.http.Filters,
   WiRL.Core.Injection;
 
 type
-  TWiRLApplicationWorker = class
+  TWiRLResourceLocator = class
   private
     FContext: TWiRLContext;
+    FApplication: TWiRLApplication;
+    FMethod: TWiRLProxyMethod;
+    FProxy: TWiRLProxyApplication;
+    FResource: TWiRLProxyResource;
+    FHasLocated: Boolean;
+    procedure LocateResource;
+    procedure LocateResourceMethod;
+  public
+    constructor Create(AProxy: TWiRLProxyApplication; AContext: TWiRLContext);
+    procedure Process();
+  public
+    property HasLocated: Boolean read FHasLocated write FHasLocated;
+    property Resource: TWiRLProxyResource read FResource write FResource;
+    property Method: TWiRLProxyMethod read FMethod write FMethod;
+  end;
+
+  TWiRLApplicationWorker = class
+  private
+    FContext: TWiRLContextServer;
     FAppConfig: TWiRLApplication;
     FAuthContext: TWiRLAuthContext;
-    FResource: TWiRLResource;
+    FLocator: TWiRLResourceLocator;
+    FGC: TWiRLGarbageCollector;
 
-    procedure CollectGarbage(const AValue: TValue);
     function HasRowConstraints(const AAttrArray: TAttributeArray): Boolean;
     procedure ValidateMethodParam(const AAttrArray: TAttributeArray; AValue: TValue; ARawConstraint: Boolean);
     function GetConstraintErrorMessage(AAttr: TCustomConstraintAttribute): string;
+    function RequestOwnedObject(const AValue: TValue): Boolean;
   protected
     procedure InternalHandleRequest;
 
@@ -49,14 +71,14 @@ type
     function ContextInjectionByType(const AObject: TRttiObject; out AValue: TValue): Boolean;
 
     procedure CheckAuthorization(AAuth: TWiRLAuthContext);
-    function FillAnnotatedParam(AParam: TWiRLMethodParam; AResourceInstance: TObject): TValue;
+    function FillAnnotatedParam(AParam: TWiRLProxyParameter; AResourceInstance: TObject): TValue;
     procedure FillResourceMethodParameters(AInstance: TObject; var AArgumentArray: TArgumentArray);
     procedure InvokeResourceMethod(AInstance: TObject; const AWriter: IMessageBodyWriter; AMediaType: TMediaType); virtual;
 
-    procedure AuthContextFromConfig(AContext: TWiRLAuthContext);
-    function GetAuthContext: TWiRLAuthContext;
+    function GetAuthToken: string;
+    function CreateAuthContext: TWiRLAuthContext;
   public
-    constructor Create(AContext: TWiRLContext);
+    constructor Create(AContext: TWiRLContextServer);
     destructor Destroy; override;
 
     // Filters handling
@@ -72,6 +94,7 @@ implementation
 uses
   System.StrUtils, System.TypInfo, System.DateUtils,
   WiRL.Configuration.JWT,
+  WiRL.Configuration.Converter,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.http.MultipartData,
@@ -90,7 +113,7 @@ type
     FContentStream: TStream;
     FParamName: string;
     FTypeKind: TTypeKind;
-    FHeaders: TWiRLHeaderList;
+    FHeaders: IWiRLHeaders;
     FMediaType: TMediaType;
     FStringValue: string;
     FStreamValue: TStream;
@@ -103,7 +126,7 @@ type
   public
     property ParamName: string read FParamName;
     property TypeKind: TTypeKind read FTypeKind;
-    property Headers: TWiRLHeaderList read FHeaders;
+    property Headers: IWiRLHeaders read FHeaders;
     property MediaType: TMediaType read FMediaType;
     property StringValue: string read FStringValue;
     property StreamValue: TStream read FStreamValue;
@@ -111,26 +134,28 @@ type
     function AsStream: TStream;
     function AsString: string;
 
-    constructor Create(AContext: TWiRLContext; AParam: TWiRLMethodParam; AAttr: TCustomAttribute; const ADefault: string);
+    constructor Create(AContext: TWiRLContext; AParam: TWiRLProxyParameter; AAttr: TCustomAttribute; const ADefault: string);
     destructor Destroy; override;
   end;
 
 { TWiRLApplicationWorker }
 
-constructor TWiRLApplicationWorker.Create(AContext: TWiRLContext);
+constructor TWiRLApplicationWorker.Create(AContext: TWiRLContextServer);
 begin
   Assert(Assigned(AContext.Application), 'AContext.Application cannot be nil');
 
   FContext := AContext;
   FAppConfig := AContext.Application as TWiRLApplication;
-
-  FResource := TWiRLResource.Create(AContext);
-  AContext.Resource := FResource;
+  FLocator := TWiRLResourceLocator.Create(FAppConfig.Proxy, FContext);
+  FGC := TWiRLGarbageCollector.Create(nil);
+  FContext.AddContainerOnce(FGC, False);
+  //FResource := TWiRLProxyResource.Create(FAppConfig.Resources);
 end;
 
 destructor TWiRLApplicationWorker.Destroy;
 begin
-  FResource.Free;
+  FLocator.Free;
+  FGC.Free;
   inherited;
 end;
 
@@ -141,25 +166,23 @@ var
 begin
   Result := False;
   LAborted := False;
-  // Find resource type
-  if not FResource.Found then
-    Exit;
 
-  // Find resource method
-  if not Assigned(FResource.Method) then
+  { TODO -opaolo -c : Return an Exception? 16/03/2021 15:19:17 }
+  if not FLocator.HasLocated then
     Exit;
 
   // Run filters
-  FAppConfig.FilterRegistry.FetchRequestFilter(False,
-    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+  FAppConfig.FilterRegistry.FetchRequestFilter(TWiRLFilterType.Normal,
+    procedure (ConstructorInfo: TWiRLFilterConstructorProxy)
     var
       LRequestContext: TWiRLContainerRequestContext;
     begin
-      if FResource.Method.HasFilter(ConstructorInfo.Attribute) then
+      if FLocator.Method.HasFilter(ConstructorInfo.Attribute) then
       begin
         LRequestFilter := ConstructorInfo.GetRequestFilter;
         ContextInjection(LRequestFilter as TObject);
-        LRequestContext := TWiRLContainerRequestContext.Create(FContext, FResource);
+        LRequestContext := TWiRLContainerRequestContext.Create(FContext,
+          FLocator.Resource, FLocator.Method);
         try
           LRequestFilter.Filter(LRequestContext);
           LAborted := LAborted or LRequestContext.Aborted;
@@ -176,25 +199,21 @@ procedure TWiRLApplicationWorker.ApplyResponseFilters;
 var
   LResponseFilter: IWiRLContainerResponseFilter;
 begin
-  // Find resource type
-  if not FResource.Found then
-    Exit;
-
-  // Find resource method
-  if not Assigned(FResource.Method) then
+  { TODO -opaolo -c : Return an Exception? 16/03/2021 15:19:17 }
+  if not FLocator.HasLocated then
     Exit;
 
   // Run filters
-  FAppConfig.FilterRegistry.FetchResponseFilter(False,
-    procedure (ConstructorInfo: TWiRLFilterConstructorInfo)
+  FAppConfig.FilterRegistry.FetchResponseFilter(TWiRLFilterType.Normal,
+    procedure (ConstructorInfo: TWiRLFilterConstructorProxy)
     var
       LResponseContext: TWiRLContainerResponseContext;
     begin
-      if FResource.Method.HasFilter(ConstructorInfo.Attribute) then
+      if FLocator.Method.HasFilter(ConstructorInfo.Attribute) then
       begin
         LResponseFilter := ConstructorInfo.GetResponseFilter;
         ContextInjection(LResponseFilter as TObject);
-        LResponseContext := TWiRLContainerResponseContext.Create(FContext, FResource);
+        LResponseContext := TWiRLContainerResponseContext.Create(FContext, FLocator.Resource);
         try
           LResponseFilter.Filter(LResponseContext);
         finally
@@ -205,9 +224,7 @@ begin
   );
 end;
 
-procedure TWiRLApplicationWorker.AuthContextFromConfig(AContext: TWiRLAuthContext);
-var
-  LToken: string;
+function TWiRLApplicationWorker.GetAuthToken: string;
 
   function ExtractJWTToken(const AAuth: string): string;
   var
@@ -223,15 +240,10 @@ var
 
 begin
   case FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenLocation of
-    TAuthTokenLocation.Bearer: LToken := ExtractJWTToken(FContext.Request.Authorization);
-    TAuthTokenLocation.Cookie: LToken := FContext.Request.CookieFields['token'];
-    TAuthTokenLocation.Header: LToken := FContext.Request.HeaderFields[FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenCustomHeader];
+    TAuthTokenLocation.Bearer: Result := ExtractJWTToken(FContext.Request.Authorization);
+    TAuthTokenLocation.Cookie: Result := FContext.Request.CookieFields['token'];
+    TAuthTokenLocation.Header: Result := FContext.Request.Headers.Values[FAppConfig.GetConfiguration<TWiRLConfigurationAuth>.TokenCustomHeader];
   end;
-
-  if LToken.IsEmpty then
-    Exit;
-
-  AContext.Verify(LToken, FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PublicKey.Key);
 end;
 
 procedure TWiRLApplicationWorker.CheckAuthorization(AAuth: TWiRLAuthContext);
@@ -240,14 +252,12 @@ var
   LAllowed: Boolean;
   LRole: string;
 begin
-  // Non Auth-annotated method are "PermitAll"
-  if not FResource.Method.Auth.HasAuth then
+  if not FLocator.Method.Auth.HasAuth then
     Exit;
 
-  if FResource.Method.Auth.PermitAll then
-    Exit;
-
-  if FResource.Method.Auth.DenyAll then
+  if FLocator.Method.Auth.PermitAll then
+    LAllowed := FAuthContext.Verified
+  else if FLocator.Method.Auth.DenyAll then
     LAllowed := False
   else
   begin
@@ -255,7 +265,7 @@ begin
     try
       LAllowedRoles.Sorted := True;
       LAllowedRoles.Duplicates := TDuplicates.dupIgnore;
-      LAllowedRoles.AddStrings(FResource.Method.Auth.Roles);
+      LAllowedRoles.AddStrings(FLocator.Method.Auth.Roles);
 
       LAllowed := False;
       for LRole in LAllowedRoles do
@@ -273,29 +283,6 @@ begin
     raise EWiRLNotAuthorizedException.Create('Method call not authorized', Self.ClassName);
 end;
 
-procedure TWiRLApplicationWorker.CollectGarbage(const AValue: TValue);
-var
-  LIndex: Integer;
-begin
-  case AValue.Kind of
-    tkClass:
-    begin
-      if (AValue.AsObject <> nil) then
-        if not TRttiHelper.HasAttribute<SingletonAttribute>(AValue.AsObject.ClassType) then
-          AValue.AsObject.Free;
-    end;
-
-    //tkInterface: TObject(AValue.AsInterface).Free;
-
-    tkArray,
-    tkDynArray:
-    begin
-      for LIndex := 0 to AValue.GetArrayLength - 1 do
-        CollectGarbage(AValue.GetArrayElement(LIndex));
-    end;
-  end;
-end;
-
 procedure TWiRLApplicationWorker.ContextInjection(AInstance: TObject);
 begin
   TWiRLContextInjectionRegistry.Instance.
@@ -308,9 +295,9 @@ begin
     ContextInjectionByType(AObject, FContext, AValue);
 end;
 
-function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLMethodParam; AResourceInstance: TObject): TValue;
+function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; AResourceInstance: TObject): TValue;
 
-  function GetObjectFromParam(AParam: TRttiParameter; AParamValue: TRequestParam) :TValue;
+  function GetObjectFromParam(AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
   var
     LReader: IMessageBodyReader;
     //LContentStream: TStream;
@@ -331,7 +318,7 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLMethodParam; ARe
 
   end;
 
-  function GetSimpleParam(AParam: TRttiParameter; AParamValue: TRequestParam) :TValue;
+  function GetSimpleParam(AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
   var
     LFormat: string;
   begin
@@ -372,6 +359,13 @@ begin
     Exit;
   end;
 
+  if AParam.RttiParam.ParamType.IsInstance and
+    TRttiHelper.IsObjectOfType(AParam.RttiParam.ParamType, TWiRLFormDataPart) then
+  begin
+    Result := FContext.Request.MultiPartFormData[AParam.Name];
+    Exit;
+  end;
+
   try
     LParamValue := TRequestParam.Create(FContext, AParam, LParamAttr, LDefaultValue);
     try
@@ -379,7 +373,8 @@ begin
         // TODO: this code forces a conversion to string (probably not a good idea)
         ValidateMethodParam(AParam.Attributes, LParamValue.AsString, True);
 
-      if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord] then
+      // TODO: Modify, try first GetObjectFromParam (to rename!) and then GetSimpleParam
+      if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
         Result := GetObjectFromParam(LParam, LParamValue)
       else
         Result := GetSimpleParam(LParam, LParamValue);
@@ -389,21 +384,21 @@ begin
       LParamValue.Free;
     end;
   except
-    CollectGarbage(Result);
+    FGC.AddGarbage(Result);
     raise;
   end;
 end;
 
 procedure TWiRLApplicationWorker.FillResourceMethodParameters(AInstance: TObject; var AArgumentArray: TArgumentArray);
 var
-  LMethodParam: TWiRLMethodParam;
+  LMethodParam: TWiRLProxyParameter;
 begin
   try
-    if FResource.Method.Params.Count = 0 then
+    if FLocator.Method.Params.Count = 0 then
       Exit;
 
     AArgumentArray := [];
-    for LMethodParam in FResource.Method.Params do
+    for LMethodParam in FLocator.Method.Params do
     begin
       if not LMethodParam.Rest then
         raise EWiRLServerException.Create('Non annotated params are not allowed');
@@ -423,26 +418,45 @@ begin
   end;
 end;
 
-function TWiRLApplicationWorker.GetAuthContext: TWiRLAuthContext;
+function TWiRLApplicationWorker.CreateAuthContext: TWiRLAuthContext;
 begin
   if Assigned(FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.ClaimClass) then
     Result := TWiRLAuthContext.Create(FAppConfig.GetConfiguration<TWiRLConfigurationJWT>.ClaimClass)
   else
     Result := TWiRLAuthContext.Create;
-
-  AuthContextFromConfig(Result);
 end;
 
 procedure TWiRLApplicationWorker.HandleRequest;
 var
   LProcessResource: Boolean;
+  LToken: string;
+  LJWTConf: TWiRLConfigurationJWT;
 begin
-  FAuthContext := GetAuthContext;
+  FAuthContext := CreateAuthContext;
   try
+    LToken := GetAuthToken;
+
+    LJWTConf := FAppConfig.GetConfiguration<TWiRLConfigurationJWT>;
+
+    if not LToken.IsEmpty then
+    begin
+      if LJWTConf.VerificationMode = TJWTVerificationMode.Verify then
+        FAuthContext.Verify(LToken, LJWTConf.KeyPair.PublicKey.Key)
+      else
+        FAuthContext.DeserializeOnly(LToken);
+    end;
+
     try
       FContext.AuthContext := FAuthContext;
       try
+        // We have the URL so let's find the resource in the registry
+        FLocator.Process();
+
+        // Check method authorization with token validity and roles
+        CheckAuthorization(FAuthContext);
+
         LProcessResource := not ApplyRequestFilters;
+
         if LProcessResource then
           InternalHandleRequest;
       except
@@ -455,8 +469,9 @@ begin
       ApplyResponseFilters;
     end;
   finally
+    FContext.RemoveContainer(FAuthContext);
     FreeAndNil(FAuthContext);
-    FContext.AuthContext := nil;
+    //FContext.AuthContext := nil;
   end;
 end;
 
@@ -482,50 +497,41 @@ var
   LWriter: IMessageBodyWriter;
   LMediaType: TMediaType;
 begin
-  if not FResource.Found then
-    raise EWiRLNotFoundException.Create(
-      Format('Resource [%s] not found', [FContext.RequestURL.Resource]),
-      Self.ClassName, 'HandleRequest'
-    );
-
-  if not Assigned(FResource.Method) then
-    raise EWiRLNotFoundException.Create(
-      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.RequestURL.Resource + FContext.RequestURL.SubResources.ToString]),
-      Self.ClassName, 'HandleRequest'
-    );
-
-  CheckAuthorization(FAuthContext);
-
-  LInstance := FResource.CreateInstance();
+  LInstance := FLocator.Resource.CreateInstance();
   try
     FAppConfig.WriterRegistry.FindWriter(
-      FResource.Method,
+      FLocator.Method,
       FContext.Request.AcceptableMediaTypes,
       LWriter,
       LMediaType
     );
 
-    if FResource.Method.IsFunction and not Assigned(LWriter) then
-      raise EWiRLUnsupportedMediaTypeException.Create(
-        Format('MediaType [%s] not supported on resource [%s]',
-          [FContext.Request.AcceptableMediaTypes.ToString, FResource.Path]),
-        Self.ClassName, 'InternalHandleRequest'
-      );
-
-    ContextInjection(LInstance);
-
-    if Assigned(LWriter) then
-      ContextInjection(LWriter as TObject);
-
     try
-      FContext.Request.Application := FAppConfig;
-      // Set the Response Status Code before the method invocation so, inside the method,
-      // we can override: HTTP response code, reason and location
-      FContext.Response.FromWiRLStatus(FResource.Method.Status);
 
-      InvokeResourceMethod(LInstance, LWriter, LMediaType);
+      if FLocator.Method.IsFunction and not Assigned(LWriter) then
+        raise EWiRLUnsupportedMediaTypeException.Create(
+          Format('MediaType [%s] not supported on resource [%s]',
+            [FContext.Request.AcceptableMediaTypes.ToString, FLocator.Resource.Path]),
+          Self.ClassName, 'InternalHandleRequest'
+        );
+
+      ContextInjection(LInstance);
+
+      if Assigned(LWriter) then
+        ContextInjection(LWriter as TObject);
+
+      try
+        FContext.Request.Application := FAppConfig;
+        // Set the Response Status Code before the method invocation so, inside the method,
+        // we can override: HTTP response code, reason and location
+        FContext.Response.FromWiRLStatus(FLocator.Method.Status);
+
+        InvokeResourceMethod(LInstance, LWriter, LMediaType);
+      finally
+        LWriter := nil;
+      end;
+
     finally
-      LWriter := nil;
       LMediaType.Free;
     end;
 
@@ -537,25 +543,26 @@ end;
 procedure TWiRLApplicationWorker.InvokeResourceMethod(AInstance: TObject;
   const AWriter: IMessageBodyWriter; AMediaType: TMediaType);
 
-  procedure CollectResultGarbage(AMethodResult: TValue);
+  procedure AddResultToGarbage(AMethodResult: TValue);
   begin
-    if (not FResource.Method.MethodResult.IsSingleton) then
-      CollectGarbage(AMethodResult);
+    if (not FLocator.Method.MethodResult.IsSingleton) then
+      FGC.AddGarbage(AMethodResult);
   end;
 
-  procedure CollectArgumentsGarbage(AArgumentArray: TArgumentArray);
+  procedure AddArgumentsToGarbage(AArgumentArray: TArgumentArray);
   var
     LArgument: TValue;
     LParameters: TArray<TRttiParameter>;
     LArgIndex: Integer;
   begin
-    LParameters := FResource.Method.RttiObject.GetParameters;
+    LParameters := FLocator.Method.RttiObject.GetParameters;
     LArgIndex := 0;
     for LArgument in AArgumentArray do
     begin
       // Context arguments will be released by TWiRLContext if needed
       if not TRttiHelper.HasAttribute<ContextAttribute>(LParameters[LArgIndex]) then
-        CollectGarbage(LArgument);
+        if not RequestOwnedObject(LArgument) then
+          FGC.AddGarbage(LArgument);
       Inc(LArgIndex);
     end;
   end;
@@ -571,10 +578,14 @@ begin
   LContentType := FContext.Response.ContentType;
   try
     LArgumentArray := [];
-    FillResourceMethodParameters(AInstance, LArgumentArray);
-    LMethodResult := FResource.Method.RttiObject.Invoke(AInstance, LArgumentArray);
 
-    if FResource.Method.IsFunction then
+    FillResourceMethodParameters(AInstance, LArgumentArray);
+    AddArgumentsToGarbage(LArgumentArray);
+
+    LMethodResult := FLocator.Method.RttiObject.Invoke(AInstance, LArgumentArray);
+    AddResultToGarbage(LMethodResult);
+
+    if FLocator.Method.IsFunction then
     begin
       if LMethodResult.IsInstanceOf(TWiRLResponse) then
       begin
@@ -589,7 +600,7 @@ begin
         try
           LStream.Position := 0;
           FContext.Response.ContentStream := LStream;
-          AWriter.WriteTo(LMethodResult, FResource.Method.AllAttributes, AMediaType, FContext.Response.HeaderFields, FContext.Response.ContentStream);
+          AWriter.WriteTo(LMethodResult, FLocator.Method.AllAttributes, AMediaType, FContext.Response.Headers, FContext.Response.ContentStream);
           LStream.Position := 0;
         except
           on E: Exception do
@@ -606,8 +617,26 @@ begin
         );
     end;
   finally
-    CollectResultGarbage(LMethodResult);
-    CollectArgumentsGarbage(LArgumentArray);
+    FGC.CollectGarbage;
+  end;
+end;
+
+function TWiRLApplicationWorker.RequestOwnedObject(
+  const AValue: TValue): Boolean;
+var
+  LObject: TObject;
+  LIndex: Integer;
+begin
+  Result := False;
+  if not AValue.IsObject then
+    Exit(True);
+  LObject := AValue.AsObject;
+  if LObject = FContext.Request.ContentStream then
+    Exit(True);
+  for LIndex := 0 to FContext.Request.MultiPartFormData.Count - 1 do
+  begin
+    if FContext.Request.MultiPartFormData.GetPart(LIndex) = LObject then
+      Exit(True);
   end;
 end;
 
@@ -684,11 +713,10 @@ begin
 end;
 
 constructor TRequestParam.Create(AContext: TWiRLContext;
-  AParam: TWiRLMethodParam; AAttr: TCustomAttribute; const ADefault: string);
+  AParam: TWiRLProxyParameter; AAttr: TCustomAttribute; const ADefault: string);
 var
   LParamIndex: Integer;
-  //LAttrArray: TArray<TCustomAttribute>;
-  LResource: TWiRLResource;
+  LMethod: TWiRLProxyMethod;
   LConsumesAttribute: ConsumesAttribute;
 begin
   FHeaders := nil;
@@ -701,8 +729,7 @@ begin
   if FParamName.IsEmpty then
     FParamName := AParam.Name;
 
-  LResource := TWiRLResource(AContext.Resource);
-
+  LMethod := AContext.ResourceMethod as TWiRLProxyMethod;
   if AAttr is MethodParamAttribute then
   begin
     LConsumesAttribute := TRttiHelper.FindAttribute<ConsumesAttribute>(AParam.RttiParam);
@@ -715,7 +742,9 @@ begin
 
     LParamIndex := ParamNameToParamIndex(AContext, FParamName);
     if LParamIndex = -1 then
-      raise EWiRLWebApplicationException.CreateFmt('Formal param [%s] does not match the path param(s) [%s]', [FParamName, LResource.Method.Path]);
+      raise EWiRLWebApplicationException.CreateFmt(
+        'Formal param [%s] does not match the path param(s) [%s]',
+        [FParamName, LMethod.Path]);
     FStringValue := AContext.RequestURL.PathTokens[LParamIndex];
   end
   else if AAttr is QueryParamAttribute then
@@ -724,7 +753,7 @@ begin
   begin
     if AContext.Request.ContentMediaType.MediaType = TMediaType.MULTIPART_FORM_DATA then
     begin
-      FHeaders := AContext.Request.MultiPartFormData[FParamName].HeaderFields;
+      FHeaders := AContext.Request.MultiPartFormData[FParamName].Headers;
       FMediaType := AContext.Request.MultiPartFormData[FParamName].ContentMediaType;
       FStreamValue := AContext.Request.MultiPartFormData[FParamName].ContentStream;
     end
@@ -736,10 +765,10 @@ begin
   else if AAttr is CookieParamAttribute then
     FStringValue := AContext.Request.CookieFields[FParamName]
   else if AAttr is HeaderParamAttribute then
-    FStringValue := AContext.Request.HeaderFields[FParamName]
+    FStringValue := AContext.Request.Headers.Values[FParamName]
   else if AAttr is BodyParamAttribute then
   begin
-    FHeaders := AContext.Request.HeaderFields;
+    FHeaders := AContext.Request.Headers;
     FMediaType := AContext.Request.ContentMediaType;
     FStreamValue := AContext.Request.ContentStream;
   end
@@ -783,14 +812,17 @@ var
   LPair: TPair<Integer, string>;
   LEngine: TWiRLEngine;
   LApplication: TWiRLApplication;
-  LResource: TWiRLResource;
+  LResource: TWiRLProxyResource;
+  LMethod: TWiRLProxyMethod;
 begin
-  LResource := TWiRLResource(AContext.Resource);
+  LResource := AContext.Resource as TWiRLProxyResource;
+  LMethod := AContext.ResourceMethod as TWiRLProxyMethod;
+
   LApplication := TWiRLApplication(AContext.Application);
   LEngine := TWiRLEngine(AContext.Engine);
 
   LResURL := TWiRLURL.MockURL(LEngine.BasePath,
-    LApplication.BasePath, LResource.Path, LResource.Method.Path);
+    LApplication.BasePath, LResource.Path, LMethod.Path);
   try
     Result := -1;
     for LPair in LResURL.PathParams do
@@ -804,6 +836,93 @@ begin
   finally
     LResURL.Free;
   end;
+end;
+
+{ TWiRLResourceLocator }
+
+constructor TWiRLResourceLocator.Create(AProxy: TWiRLProxyApplication; AContext: TWiRLContext);
+begin
+  FProxy := AProxy;
+  FContext := AContext;
+end;
+
+procedure TWiRLResourceLocator.LocateResource;
+begin
+  FApplication := FContext.Application as TWiRLApplication;
+  FResource := FProxy.GetResource(FContext.RequestURL.Resource);
+end;
+
+procedure TWiRLResourceLocator.LocateResourceMethod;
+var
+  LConsumesMatch: Boolean;
+  LMethod: TWiRLProxyMethod;
+  LPrototypeURL: TWiRLURL;
+  LPathMatches,
+  LProducesMatch,
+  LHttpMethodMatches: Boolean;
+  LMedia: TMediaType;
+begin
+  FMethod := nil;
+
+  for LMedia in FContext.Request.AcceptableMediaTypes do
+  begin
+
+    for LMethod in FResource.Methods do
+    begin
+      // Skip the non-REST methods (no GET/POST/PUT methods)
+      if not LMethod.Rest then
+        Continue;
+
+      LHttpMethodMatches := LMethod.HttpVerb = FContext.Request.Method;
+
+      if not LHttpMethodMatches then
+        Continue;
+
+      LPrototypeURL := TWiRLURL.MockURL(FApplication.EnginePath, FApplication.BasePath, FResource.Path, LMethod.Path);
+      try
+        LPathMatches := LPrototypeURL.MatchPath(FContext.RequestURL);
+      finally
+        LPrototypeURL.Free;
+      end;
+
+      if not LPathMatches then
+        Continue;
+
+      LProducesMatch := FResource.MatchProduces(LMethod, LMedia);
+      LConsumesMatch := FResource.MatchConsumes(LMethod, FContext.Request.ContentMediaType);
+
+      if LProducesMatch and LConsumesMatch then
+      begin
+        FMethod := LMethod;
+        Break;
+      end;
+    end;
+
+    // Already found for the first MediaType, no further search
+    if Assigned(FMethod) then
+      Break;
+  end;
+end;
+
+procedure TWiRLResourceLocator.Process;
+begin
+  LocateResource;
+  if not Assigned(FResource) then
+    raise EWiRLNotFoundException.Create(
+      Format('Resource [%s] not found', [FContext.RequestURL.Resource]),
+      Self.ClassName, 'HandleRequest'
+    );
+
+  LocateResourceMethod;
+  if not Assigned(FMethod) then
+    raise EWiRLNotFoundException.Create(
+      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.RequestURL.Resource + FContext.RequestURL.SubResources.ToString]),
+      Self.ClassName, 'HandleRequest'
+    );
+
+  FContext.Resource := FResource;
+  FContext.ResourceMethod := FMethod;
+  FHasLocated := True;
 end;
 
 end.

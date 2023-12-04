@@ -15,8 +15,10 @@ uses
   System.Classes, System.SysUtils, System.SyncObjs,
   IdContext, IdCookie, IdCustomHTTPServer, IdHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
   IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI, IdResourceStringsProtocols,
+
   WiRL.Core.Classes,
   WiRL.http.Core,
+  WiRL.http.Headers,
   WiRL.http.Cookie,
   WiRL.http.Server.Interfaces,
   WiRL.http.Engines,
@@ -61,7 +63,7 @@ type
   private
     FContext: TIdContext;
     FResponseInfo: TIdHTTPResponseInfo;
-    FCustomHeaders: TStrings;
+    FHeaders: IWiRLHeaders;
     procedure SendCookies;
   protected
     function GetContent: string; override;
@@ -73,6 +75,7 @@ type
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
     function IsUnknownResponseCode: Boolean; override;
+    function GetHeaders: IWiRLHeaders; override;
   public
     procedure SendHeaders; override;
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
@@ -85,7 +88,7 @@ type
     FRequestInfo: TIdHTTPRequestInfo;
     FCookieFields: TWiRLCookies;
     FQueryFields: TWiRLParam;
-    FHeaderFields: TWiRLHeaderList;
+    FHeaders: IWiRLHeaders;
     FContentFields: TWiRLParam;
     procedure ParseParams(Params :TStrings; const AValue: String);
   protected
@@ -96,7 +99,7 @@ type
     function GetQueryFields: TWiRLParam; override;
     function GetContentFields: TWiRLParam; override;
     function GetCookieFields: TWiRLCookies; override;
-    function GetHeaderFields: TWiRLHeaderList; override;
+    function GetHeaders: IWiRLHeaders; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
   public
@@ -189,8 +192,7 @@ begin
 end;
 
 procedure TWiRLhttpServerIndy.ParseAuthorizationHeader(AContext: TIdContext;
-    const AAuthType, AAuthData: string; var VUsername, VPassword: string; var
-    VHandled: Boolean);
+  const AAuthType, AAuthData: string; var VUsername, VPassword: string; var VHandled: Boolean);
 begin
   VHandled := True;
 end;
@@ -258,14 +260,13 @@ begin
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
-  FHeaderFields.Free;
   inherited;
 end;
 
 procedure TWiRLHttpRequestIndy.ParseParams(Params :TStrings; const AValue: String);
 var
-  i, j : Integer;
-  s: string;
+  LIndex, LStrIndex: Integer;
+  LTempStr: string;
   LEncoding: IIdTextEncoding;
 begin
   Params.BeginUpdate;
@@ -276,18 +277,18 @@ begin
       LEncoding := CharsetToEncoding(FRequestInfo.CharSet)
     else
       LEncoding := IndyTextEncoding_UTF8;
-    i := 1;
-    while i <= Length(AValue) do
+    LIndex := 1;
+    while LIndex <= Length(AValue) do
     begin
-      j := i;
-      while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
+      LStrIndex := LIndex;
+      while (LStrIndex <= Length(AValue)) and (AValue[LStrIndex] <> '&') do {do not localize}
       begin
-        Inc(j);
+        Inc(LStrIndex);
       end;
-      s := Copy(AValue, i, j-i);
-      s := StringReplace(s, '+', ' ', [rfReplaceAll]);
-      Params.Add(TIdURI.URLDecode(s, LEncoding));
-      i := j + 1;
+      LTempStr := Copy(AValue, LIndex, LStrIndex-LIndex);
+      LTempStr := StringReplace(LTempStr, '+', ' ', [rfReplaceAll]);
+      Params.Add(TIdURI.URLDecode(LTempStr, LEncoding));
+      LIndex := LStrIndex + 1;
     end;
   finally
     Params.EndUpdate;
@@ -319,27 +320,35 @@ end;
 
 function TWiRLHttpRequestIndy.GetCookieFields: TWiRLCookies;
 var
-  i :Integer;
+  LIndex: Integer;
 begin
   if not Assigned(FCookieFields) then
   begin
     FCookieFields := TWiRLCookies.Create;
-    for i := 0 to FRequestInfo.Cookies.Count - 1 do
+    for LIndex := 0 to FRequestInfo.Cookies.Count - 1 do
     begin
-      CookieFields.AddClientCookie(FRequestInfo.Cookies[i].ClientCookie);
+      CookieFields.AddClientCookie(FRequestInfo.Cookies[LIndex].ClientCookie);
     end;
   end;
   Result := FCookieFields;
 end;
 
-function TWiRLHttpRequestIndy.GetHeaderFields: TWiRLHeaderList;
+function TWiRLHttpRequestIndy.GetHeaders: IWiRLHeaders;
+var
+  LIndex: Integer;
+  LName, LValue: string;
 begin
-  if not Assigned(FHeaderFields) then
+  if not Assigned(FHeaders) then
   begin
-    FHeaderFields := TWiRLHeaderList.Create;
-    FHeaderFields.Assign(FRequestInfo.RawHeaders);
+    FHeaders := TWiRLHeaders.Create;
+    for LIndex := 0 to FRequestInfo.RawHeaders.Count - 1 do
+    begin
+      LName := FRequestInfo.RawHeaders.Names[LIndex];
+      LValue := FRequestInfo.RawHeaders.Values[LName];
+      FHeaders.AddHeader(TWiRLHeader.Create(LName, LValue));
+    end;
   end;
-  Result := FHeaderFields;
+  Result := FHeaders;
 end;
 
 function TWiRLHttpRequestIndy.GetHttpPathInfo: string;
@@ -386,17 +395,26 @@ end;
 
 constructor TWiRLHttpResponseIndy.Create(AContext: TIdContext;
   AResponseInfo: TIdHTTPResponseInfo);
+var
+  LName, LValue: string;
+  LIndex: Integer;
 begin
   inherited Create;
   FContext := AContext;
   FResponseInfo := AResponseInfo;
-  FCustomHeaders := TStringList.Create;
-  FCustomHeaders.Assign(AResponseInfo.CustomHeaders);
+
+  FHeaders := TWiRLHeaders.Create;
+  for LIndex := 0 to AResponseInfo.RawHeaders.Count - 1 do
+  begin
+    LName := AResponseInfo.RawHeaders.Names[LIndex];
+    LValue := AResponseInfo.RawHeaders.Values[LName];
+    FHeaders.AddHeader(TWiRLHeader.Create(LName, LValue));
+  end;
 end;
 
 destructor TWiRLHttpResponseIndy.Destroy;
 begin
-  FCustomHeaders.Free;
+//  FHeaders.Free;
   inherited;
 end;
 
@@ -408,6 +426,11 @@ end;
 function TWiRLHttpResponseIndy.GetContentStream: TStream;
 begin
   Result := FResponseInfo.ContentStream;
+end;
+
+function TWiRLHttpResponseIndy.GetHeaders: IWiRLHeaders;
+begin
+  Result := FHeaders;
 end;
 
 function TWiRLHttpResponseIndy.GetReasonString: string;
@@ -463,17 +486,18 @@ procedure TWiRLHttpResponseIndy.SendHeaders;
   end;
 
 var
-  LIndex :Integer;
+  //LIndex :Integer;
+  LHeader: TWiRLHeader;
 begin
   inherited;
-  FResponseInfo.Date := GMTToLocalDateTime(HeaderFields['Date']);
+  FResponseInfo.Date := GMTToLocalDateTime(Headers.Values['Date']);
   FResponseInfo.CustomHeaders.Clear;
 
-  for LIndex := 0 to HeaderFields.Count - 1 do
+  for LHeader in Headers do
   begin
-    if IsIndyHeader(HeaderFields.Names[LIndex]) then
+    if IsIndyHeader(LHeader.Name) then
       Continue;
-    FResponseInfo.CustomHeaders.Add(HeaderFields.Strings[LIndex]);
+    FResponseInfo.CustomHeaders.AddValue(LHeader.Name, LHeader.Value);
   end;
   if ContentType <> '' then
     ContentMediaType.Parse(ContentType);
@@ -525,7 +549,6 @@ begin
 end;
 
 initialization
-
   TWiRLServerRegistry.Instance.RegisterServer<TWiRLhttpServerIndy>('TIdHttpServer (Indy)');
 
 

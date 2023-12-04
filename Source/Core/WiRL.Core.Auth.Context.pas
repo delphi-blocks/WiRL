@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -71,6 +71,7 @@ type
     procedure Clear;
     procedure Generate(const ASecret: TBytes);
     procedure Verify(const ACompactToken: string; ASecret: TBytes);
+    procedure DeserializeOnly(const ACompactToken: string);
 
     property CompactToken: string read FCompactToken;
     property Subject: TWiRLSubject read FSubject write FSubject;
@@ -182,6 +183,26 @@ begin
       end;
     finally
       LKey.Free;
+    end;
+  end;
+end;
+
+procedure TWiRLAuthContext.DeserializeOnly(const ACompactToken: string);
+var
+  LJWT: TJWT;
+begin
+  Clear;
+  if ACompactToken <> '' then
+  begin
+    FCompactToken := ACompactToken;
+    LJWT := TJOSE.DeserializeOnly(FCompactToken, FSubjectClass);
+    if Assigned(LJWT) then
+    begin
+      try
+        TJSONHelper.JSONCopyFrom(LJWT.Claims.JSON, FSubject.JSON);
+      finally
+        LJWT.Free;
+      end;
     end;
   end;
 end;

@@ -24,7 +24,6 @@ uses
   WiRL.http.URL,
   WiRL.Core.Application,
   WiRL.http.Accept.MediaType,
-  WiRL.http.Filters.Compression,
 
   Server.Filters.Attributes,
   Server.Forms.Main;
@@ -150,7 +149,7 @@ procedure TResponseLoggerFilter.Filter(
 var
   LMessage: string;
 begin
-  LMessage := DateTimeToStr(Now) + ' - ' + ARequestContext.Request.Method + ' ' + ARequestContext.Request.PathInfo;
+  LMessage := DateTimeToStr(Now) + ' - ' + TEncoding.ANSI.GetString(ARequestContext.Response.RawContent);
   if ARequestContext.Request.Query <> '' then
     LMessage := LMessage + '?' + ARequestContext.Request.Query;
   FMainForm.Log('RES - ' + LMessage);

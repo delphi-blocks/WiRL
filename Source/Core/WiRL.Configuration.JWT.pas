@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -24,9 +24,11 @@ uses
 
 type
   TSecretGenerator = reference to function(): TBytes;
+  TJWTVerificationMode = (Verify, Deserialize);
 
   IWiRLConfigurationJWT = interface(IWiRLConfiguration)
   ['{BF13669E-7B9C-4D56-AE9C-C9EF6EE733DA}']
+    function SetVerificationMode(AVerificationMode: TJWTVerificationMode = TJWTVerificationMode.Verify): IWiRLConfigurationJWT;
     function SetClaimClass(AClaimClass: TWiRLSubjectClass): IWiRLConfigurationJWT;
     function SetAlgorithm(AAlgorithm: TJOSEAlgorithmId): IWiRLConfigurationJWT;
     function SetSecret(const ASecret: TBytes): IWiRLConfigurationJWT; overload;
@@ -38,10 +40,11 @@ type
   TConfigurator = reference to procedure(AJWTConf: IWiRLConfigurationJWT);
 
   [Implements(IWiRLConfigurationJWT)]
-  TWiRLConfigurationJWT = class sealed(TWiRLConfigurationNRef, IWiRLConfigurationJWT)
+  TWiRLConfigurationJWT = class sealed(TWiRLConfiguration, IWiRLConfigurationJWT)
   private
     const SCRT_SGN = 'd2lybC5zdXBlcnNlY3JldC5zZWVkLmZvci5zaWduaW5n';
   private
+    FVerificationMode: TJWTVerificationMode;
     FClaimClass: TWiRLSubjectClass;
     FAlgorithm: TJOSEAlgorithmId;
     FKeyPair: TKeyPair;
@@ -50,10 +53,11 @@ type
     class function SHA256(const ASecret: TBytes): IWiRLConfigurationJWT; static;
     class function RSA256(const APublicKey, APrivateKey: TBytes): IWiRLConfigurationJWT; static;
   public
-    constructor Create;
+    constructor Create; override;
     destructor Destroy; override;
 
     // Interface IWiRLConfigurationJWT implementation
+    function SetVerificationMode(AVerificationMode: TJWTVerificationMode): IWiRLConfigurationJWT;
     function SetClaimClass(AClaimClass: TWiRLSubjectClass): IWiRLConfigurationJWT;
     function SetAlgorithm(AAlgorithm: TJOSEAlgorithmId): IWiRLConfigurationJWT;
     function SetSecret(const ASecret: TBytes): IWiRLConfigurationJWT; overload;
@@ -61,6 +65,7 @@ type
     function SetPublicKey(const APublicKey: TBytes): IWiRLConfigurationJWT;
     function SetPrivateKey(const APrivateKey: TBytes): IWiRLConfigurationJWT;
   published
+    property VerificationMode: TJWTVerificationMode read FVerificationMode write FVerificationMode;
     property ClaimClass: TWiRLSubjectClass read FClaimClass write FClaimClass;
     property Algorithm: TJOSEAlgorithmId read FAlgorithm write FAlgorithm;
     property KeyPair: TKeyPair read FKeyPair write FKeyPair;
@@ -71,6 +76,7 @@ implementation
 constructor TWiRLConfigurationJWT.Create;
 begin
   inherited;
+  FVerificationMode := TJWTVerificationMode.Verify;
   FKeyPair := TKeyPair.Create;
 end;
 
@@ -132,6 +138,12 @@ end;
 function TWiRLConfigurationJWT.SetSecret(ASecretGen: TSecretGenerator): IWiRLConfigurationJWT;
 begin
   FKeyPair.SetSymmetricKey(ASecretGen);
+  Result := Self;
+end;
+
+function TWiRLConfigurationJWT.SetVerificationMode(AVerificationMode: TJWTVerificationMode): IWiRLConfigurationJWT;
+begin
+  FVerificationMode := AVerificationMode;
   Result := Self;
 end;
 

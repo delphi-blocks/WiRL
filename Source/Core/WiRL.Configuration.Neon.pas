@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,7 +14,6 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Defaults,
 
-  WiRL.Core.Application,
   WiRL.Configuration.Core,
   Neon.Core.Persistence,
   Neon.Core.Types;
@@ -36,7 +35,7 @@ type
   end;
 
   [Implements(IWiRLConfigurationNeon)]
-  TWiRLConfigurationNeon = class(TWiRLConfigurationNRef, IWiRLConfigurationNeon)
+  TWiRLConfigurationNeon = class(TWiRLConfiguration, IWiRLConfigurationNeon)
   private
     FPrettyPrint: Boolean;
     FIgnoreFieldPrefix: Boolean;
@@ -47,9 +46,10 @@ type
     FMemberCase: TNeonCase;
     FMembers: TNeonMembersSet;
   public
-    constructor Create;
+    constructor Create; override;
     destructor Destroy; override;
 
+    class function New: IWiRLConfigurationNeon; static;
     class function Default: IWiRLConfigurationNeon; static;
     class function Pretty: IWiRLConfigurationNeon; static;
     class function Snake: IWiRLConfigurationNeon; static;
@@ -76,6 +76,7 @@ type
     property Visibility: TNeonVisibility read FVisibility write FVisibility;
     property IgnoreFieldPrefix: Boolean read FIgnoreFieldPrefix write FIgnoreFieldPrefix;
     property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
+ public
     property Serializers: TNeonSerializerRegistry read FSerializers write FSerializers;
   end;
 
@@ -92,7 +93,7 @@ constructor TWiRLConfigurationNeon.Create;
 begin
   inherited;
   FSerializers := TNeonSerializerRegistry.Create;
-  SetMemberCase(TNeonCase.PascalCase);
+  SetMemberCase(TNeonCase.Unchanged);
   SetMembers([TNeonMembers.Standard]);
   SetIgnoreFieldPrefix(False);
   SetVisibility([mvPublic, mvPublished]);
@@ -103,6 +104,7 @@ end;
 class function TWiRLConfigurationNeon.Default: IWiRLConfigurationNeon;
 begin
   Result := TWiRLConfigurationNeon.Create;
+  Result.SetMemberCase(TNeonCase.PascalCase);
 end;
 
 class function TWiRLConfigurationNeon.Pretty: IWiRLConfigurationNeon;
@@ -158,6 +160,11 @@ end;
 function TWiRLConfigurationNeon.GetSerializers: TNeonSerializerRegistry;
 begin
   Result := FSerializers;
+end;
+
+class function TWiRLConfigurationNeon.New: IWiRLConfigurationNeon;
+begin
+  Result := TWiRLConfigurationNeon.Create;
 end;
 
 function TWiRLConfigurationNeon.RemoveSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;

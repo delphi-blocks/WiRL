@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -12,7 +12,7 @@ unit WiRL.Core.JSON;
 interface
 
 uses
-  System.JSON, System.SysUtils, System.Generics.Collections;
+  System.JSON, System.SysUtils, System.Classes, System.Generics.Collections;
 
 type
   TJSONAncestor = System.JSON.TJSONAncestor;
@@ -28,7 +28,10 @@ type
 
   TJSONHelper = class
   public
-    class function PrettyPrint(AJSONValue: TJSONValue): string; static;
+    class function Print(AJSONValue: TJSONValue; APretty: Boolean): string; static;
+    class procedure PrintToWriter(AJSONValue: TJSONValue; AWriter: TTextWriter; APretty: Boolean); overload; static;
+    class procedure PrintToWriter(const AJSONString: string; AWriter: TTextWriter; APretty: Boolean); overload; static;
+    class function PrettyPrint(const AJSONString: string): string; static;
 
     class function ToJSON(AJSONValue: TJSONValue): string; static;
     class function StringArrayToJsonArray(const values: TArray<string>): string; static;
@@ -96,17 +99,58 @@ end;
 
 class procedure TJSONHelper.JSONCopyFrom(ASource, ADestination: TJSONObject);
 var
-  LPair: TJSONPair;
+  LPairSrc, LPairDst: TJSONPair;
 begin
-  for LPair in ASource do
-    ADestination.AddPair(TJSONPair(LPair.Clone));
+  for LPairSrc in ASource do
+  begin
+    LPairDst := ADestination.Get(LPairSrc.JsonString.Value);
+    if Assigned(LPairDst) then
+      // Replace the JSON Value (the previous is freed by the TJSONPair object)
+      LPairDst.JsonValue := TJSONValue(LPairSrc.JsonValue.Clone)
+    else
+      ADestination.AddPair(TJSONPair(LPairSrc.Clone));
+  end;
 end;
 
-class function TJSONHelper.PrettyPrint(AJSONValue: TJSONValue): string;
+class function TJSONHelper.PrettyPrint(const AJSONString: string): string;
 var
-  LJSONString: string;
+  LWriter: TStringWriter;
+begin
+  LWriter := TStringWriter.Create;
+  try
+    PrintToWriter(AJSONString, LWriter, True);
+    Result := LWriter.ToString;
+  finally
+    LWriter.Free;
+  end;
+end;
+
+class function TJSONHelper.Print(AJSONValue: TJSONValue; APretty: Boolean): string;
+var
+  LWriter: TStringWriter;
+begin
+  LWriter := TStringWriter.Create;
+  try
+    PrintToWriter(AJSONValue, LWriter, APretty);
+    Result := LWriter.ToString;
+  finally
+    LWriter.Free;
+  end;
+end;
+
+class procedure TJSONHelper.PrintToWriter(AJSONValue: TJSONValue;
+  AWriter: TTextWriter; APretty: Boolean);
+begin
+  PrintToWriter(AJSONValue.ToJSON, AWriter, APretty);
+end;
+
+class procedure TJSONHelper.PrintToWriter(const AJSONString: string; AWriter:
+    TTextWriter; APretty: Boolean);
+var
   LChar: Char;
   LOffset: Integer;
+  LIndex: Integer;
+  LOutsideString: Boolean;
 
   function Spaces(AOffset: Integer): string;
   begin
@@ -114,47 +158,63 @@ var
   end;
 
 begin
-  Result := '';
-  LOffset := 0;
-  LJSONString := AJSONValue.ToString;
-  for LChar in LJSONString do
+  if not APretty then
   begin
-    if LChar = '{' then
+    AWriter.Write(AJSONString);
+    Exit;
+  end;
+
+  LOffset := 0;
+  LOutsideString := True;
+
+  for LIndex := 0 to Length(AJSONString) - 1 do
+  begin
+    LChar := AJSONString.Chars[LIndex];
+
+    if LChar = '"' then
+      LOutsideString := not LOutsideString;
+
+    if LOutsideString and (LChar = '{') then
     begin
       Inc(LOffset);
-      Result := Result + LChar;
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
+      AWriter.Write(LChar);
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
     end
-    else if LChar = '}' then
+    else if LOutsideString and (LChar = '}') then
     begin
       Dec(LOffset);
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
-      Result := Result + LChar;
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
+      AWriter.Write(LChar);
     end
-    else if LChar = ',' then
+    else if LOutsideString and (LChar = ',') then
     begin
-      Result := Result + LChar;
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
+      AWriter.Write(LChar);
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
     end
-    else if LChar = '[' then
+    else if LOutsideString and (LChar = '[') then
     begin
       Inc(LOffset);
-      Result := Result + LChar;
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
+      AWriter.Write(LChar);
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
     end
-    else if LChar = ']' then
+    else if LOutsideString and (LChar = ']') then
     begin
       Dec(LOffset);
-      Result := Result + sLineBreak;
-      Result := Result + Spaces(LOffset);
-      Result := Result + LChar;
+      AWriter.Write(sLineBreak);
+      AWriter.Write(Spaces(LOffset));
+      AWriter.Write(LChar);
+    end
+    else if LOutsideString and (LChar = ':') then
+    begin
+      AWriter.Write(LChar);
+      AWriter.Write(' ');
     end
     else
-      Result := Result + LChar;
+      AWriter.Write(LChar);
   end;
 end;
 

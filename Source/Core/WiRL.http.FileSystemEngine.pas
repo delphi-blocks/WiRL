@@ -21,6 +21,7 @@ uses
 
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Exceptions,
   WiRL.http.Request,
   WiRL.http.Response,

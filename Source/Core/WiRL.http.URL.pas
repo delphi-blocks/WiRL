@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -287,9 +287,8 @@ begin
       LToken := PathTokens[LIndex];
       LOtherToken := AOtherURL.PathTokens[LIndex];
       if not (
-        (LToken = LOtherToken) // exact match
-        or (StartsStr('{', LToken) and EndsStr('}', LToken)) // LToken is a param
-        or (StartsStr('{', LOtherToken) and EndsStr('}', LOtherToken)) // LOtherToken is a param
+        (LToken = LOtherToken) or // exact match
+        (StartsStr('{', LToken) and EndsStr('}', LToken)) // LToken is a param
       ) then
         Result := False;
     end;
@@ -497,12 +496,11 @@ end;
 
 function TWiRLURLDictionary.ToString: string;
 var
-  i: Integer;
+  LPair: TPair<Integer, string>;
 begin
   Result := '';
-  //DONE: for..in access wouldn't work in proper order
-  for  i := 1 to Self.Count
-    do Result := Result + '/' + Self[i];
+  for LPair in Self.ToArray do
+    Result := Result + '/' + LPair.Value;
 end;
 
 end.

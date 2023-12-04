@@ -14,19 +14,20 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti,
   WiRL.Rtti.Utils,
+  WiRL.http.Request,
   WiRL.Core.Context,
   WiRL.Core.Injection,
   WiRL.Tests.Mock.Classes;
 
 type
-  TPersonFactory = class(TInterfacedObject, IContextFactory)
+  TPersonFactory = class(TInterfacedObject, IContextObjectFactory)
   public
-    function CreateContext(const AObject: TRttiObject; AContext: TWiRLContext): TValue;
+    function CreateContextObject(const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
   end;
 
-  TCounterFactory = class(TInterfacedObject, IContextFactory)
+  TCounterFactory = class(TInterfacedObject, IContextObjectFactory)
   public
-    function CreateContext(const AObject: TRttiObject; AContext: TWiRLContext): TValue;
+    function CreateContextObject(const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
   end;
 
 implementation
@@ -36,13 +37,13 @@ uses
 
 { TPersonFactory }
 
-function TPersonFactory.CreateContext(const AObject: TRttiObject;
-  AContext: TWiRLContext): TValue;
+function TPersonFactory.CreateContextObject(const AObject: TRttiObject;
+  AContext: TWiRLContextBase): TValue;
 var
   LPerson: TTestPersonObject;
   LQueryFields: TWiRLParam;
 begin
-  LQueryFields := AContext.Request.QueryFields;
+  LQueryFields := AContext.GetContextDataAs<TWiRLRequest>.QueryFields;
 
   LPerson := TTestPersonObject.Create;
   LPerson.Name := LQueryFields.AsType<string>('name');
@@ -53,8 +54,8 @@ end;
 
 { TCounterFactory }
 
-function TCounterFactory.CreateContext(const AObject: TRttiObject;
-  AContext: TWiRLContext): TValue;
+function TCounterFactory.CreateContextObject(const AObject: TRttiObject;
+  AContext: TWiRLContextBase): TValue;
 begin
   Result := GetGlobalCounter;
 end;

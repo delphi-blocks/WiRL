@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,7 +14,9 @@ uses
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
   Server.Resources in 'Server.Resources.pas',
   Server.Claims in 'Server.Claims.pas',
-  Server.Auth.Resource in 'Server.Auth.Resource.pas';
+  Server.Auth.Resource in 'Server.Auth.Resource.pas',
+  Server.Filters in 'Server.Filters.pas',
+  Common.Entities in 'Common.Entities.pas';
 
 {$R *.res}
 

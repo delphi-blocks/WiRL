@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, System.Rtti,
   WiRL.Rtti.Utils,
   WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Core.Injection;
 
 type
@@ -40,20 +41,22 @@ type
   // The class factory is responsable to create the context.
   // It will be released by the system unless it's annotated
   // with the Singleton attribute
-  TMyClassFactory = class(TInterfacedObject, IContextFactory)
+  TMyClassFactory = class(TInterfacedObject, IContextHttpFactory)
   public
-    function CreateContext(const AObject: TRttiObject;
-      AContext: TWiRLContext): TValue;
+    function CreateContextObject(const AObject: TRttiObject;
+      AContext: TWiRLContextHttp): TValue;
   end;
 
 
 implementation
 
+uses
+  WiRL.http.Request;
 
 { TMyClassFactory }
 
-function TMyClassFactory.CreateContext(const AObject: TRttiObject;
-  AContext: TWiRLContext): TValue;
+function TMyClassFactory.CreateContextObject(const AObject: TRttiObject;
+  AContext: TWiRLContextHttp): TValue;
 var
   LInstance: TMyClass;
 begin

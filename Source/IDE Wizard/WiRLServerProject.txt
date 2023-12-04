@@ -1,7 +1,7 @@
 program WiRLServerProject;
 
 uses
-  Forms;
+  Vcl.Forms;
 
 {$R *.res}
 

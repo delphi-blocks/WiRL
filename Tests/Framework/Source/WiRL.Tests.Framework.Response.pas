@@ -19,6 +19,7 @@ uses
 
   WiRL.http.Accept.MediaType,
   WiRL.http.Response,
+  WiRL.http.Headers,
   WiRL.Tests.Mock.Server;
 
 type
@@ -202,8 +203,8 @@ end;
 
 procedure TTestResponse.TestHeaderFields;
 begin
-  FResponse.HeaderFields['x-test-header'] := 'test-value';
-  Assert.AreEqual('test-value', FResponse.HeaderFields['x-test-header']);
+  FResponse.Headers.Values['x-test-header'] := 'test-value';
+  Assert.AreEqual('test-value', FResponse.Headers.Values['x-test-header']);
 end;
 
 procedure TTestResponse.TestLastModified;

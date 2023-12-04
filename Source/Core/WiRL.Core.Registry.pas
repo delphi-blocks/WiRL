@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -17,7 +17,7 @@ uses
   WiRL.Rtti.Utils;
 
 type
-  TWiRLConstructorInfo = class
+  TWiRLConstructorProxy = class
   private
     FConstructorFunc: TFunc<TObject>;
     FTypeTClass: TClass;
@@ -26,21 +26,28 @@ type
 
     property TypeTClass: TClass read FTypeTClass;
     property ConstructorFunc: TFunc<TObject> read FConstructorFunc write FConstructorFunc;
-    function Clone: TWiRLConstructorInfo;
+    function Clone: TWiRLConstructorProxy;
   end;
 
-  TWiRLResourceRegistry = class(TObjectDictionary<string, TWiRLConstructorInfo>)
+  TWiRLResourceRegistry = class(TObjectDictionary<string, TWiRLConstructorProxy>)
   private type
     TWiRLResourceRegistrySingleton = TWiRLSingleton<TWiRLResourceRegistry>;
   protected
     class function GetInstance: TWiRLResourceRegistry; static; inline;
   public
     constructor Create; virtual;
-    function AddResourceName(const AResourceName: string): TWiRLConstructorInfo;
-    function RegisterResource<T: class>: TWiRLConstructorInfo; overload;
-    function RegisterResource<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLConstructorInfo; overload;
+    function AddResourceName(const AResourceName: string): TWiRLConstructorProxy;
 
-    function GetResourceClass(const AResource: string; out Value: TClass): Boolean;
+    function RegisterResource(AClass: TClass): TWiRLConstructorProxy; overload;
+    function RegisterResource<T: class>: TWiRLConstructorProxy; overload;
+    function RegisterResource<T: class>(const AConstructorFunc: TFunc<TObject>): TWiRLConstructorProxy; overload;
+
+    function ResourceExists(AClass: TClass): Boolean; overload;
+    function ResourceExists<T: class>: Boolean; overload;
+
+    procedure UnregisterResource(AClass: TClass);
+
+    function GetResourceClass(const AResourceName: string; out Value: TClass): Boolean;
     function GetResourceInstance<T: class>: T;
 
     class property Instance: TWiRLResourceRegistry read GetInstance;
@@ -52,8 +59,9 @@ implementation
 
 function TWiRLResourceRegistry.GetResourceInstance<T>: T;
 var
-  LInfo: TWiRLConstructorInfo;
+  LInfo: TWiRLConstructorProxy;
 begin
+  Result := default(T);
   if Self.TryGetValue(T.ClassName, LInfo) then
   begin
     if LInfo.ConstructorFunc <> nil then
@@ -61,20 +69,30 @@ begin
   end;
 end;
 
-function TWiRLResourceRegistry.RegisterResource<T>: TWiRLConstructorInfo;
+function TWiRLResourceRegistry.RegisterResource<T>: TWiRLConstructorProxy;
 begin
   Result := RegisterResource<T>(nil);
 end;
 
-function TWiRLResourceRegistry.RegisterResource<T>(
-  const AConstructorFunc: TFunc<TObject>): TWiRLConstructorInfo;
+function TWiRLResourceRegistry.RegisterResource(AClass: TClass): TWiRLConstructorProxy;
 begin
-  Result := TWiRLConstructorInfo.Create(TClass(T), AConstructorFunc);
+  Result := TWiRLConstructorProxy.Create(AClass, nil);
+  Self.Add(AClass.QualifiedClassName, Result);
+end;
+
+function TWiRLResourceRegistry.RegisterResource<T>(
+  const AConstructorFunc: TFunc<TObject>): TWiRLConstructorProxy;
+begin
+  Result := TWiRLConstructorProxy.Create(TClass(T), AConstructorFunc);
   Self.Add(T.QualifiedClassName, Result);
 end;
 
-function TWiRLResourceRegistry.AddResourceName(
-  const AResourceName: string): TWiRLConstructorInfo;
+procedure TWiRLResourceRegistry.UnregisterResource(AClass: TClass);
+begin
+  Self.Remove(AClass.QualifiedClassName);
+end;
+
+function TWiRLResourceRegistry.AddResourceName(const AResourceName: string): TWiRLConstructorProxy;
 begin
   Self.Add(AResourceName, nil);
   Result := nil;
@@ -82,9 +100,19 @@ end;
 
 constructor TWiRLResourceRegistry.Create;
 begin
-  // TWiRLResourceRegistrySingleton.CheckInstance(Self);
-
   inherited Create([doOwnsValues]);
+end;
+
+function TWiRLResourceRegistry.ResourceExists(AClass: TClass): Boolean;
+var
+  LItem: TWiRLConstructorProxy;
+begin
+  Result := TryGetValue(AClass.QualifiedClassName, LItem);
+end;
+
+function TWiRLResourceRegistry.ResourceExists<T>: Boolean;
+begin
+  Result := ResourceExists(TClass(T));
 end;
 
 class function TWiRLResourceRegistry.GetInstance: TWiRLResourceRegistry;
@@ -92,25 +120,24 @@ begin
   Result := TWiRLResourceRegistrySingleton.Instance;
 end;
 
-function TWiRLResourceRegistry.GetResourceClass(const AResource: string;
-  out Value: TClass): Boolean;
+function TWiRLResourceRegistry.GetResourceClass(const AResourceName: string; out Value: TClass): Boolean;
 var
-  LInfo: TWiRLConstructorInfo;
+  LInfo: TWiRLConstructorProxy;
 begin
   Value := nil;
-  Result := Self.TryGetValue(AResource, LInfo);
+  Result := Self.TryGetValue(AResourceName, LInfo);
   if Result then
     Value := LInfo.TypeTClass;
 end;
 
-{ TWiRLConstructorInfo }
+{ TWiRLConstructorProxy }
 
-function TWiRLConstructorInfo.Clone: TWiRLConstructorInfo;
+function TWiRLConstructorProxy.Clone: TWiRLConstructorProxy;
 begin
-  Result := TWiRLConstructorInfo.Create(FTypeTClass, FConstructorFunc);
+  Result := TWiRLConstructorProxy.Create(FTypeTClass, FConstructorFunc);
 end;
 
-constructor TWiRLConstructorInfo.Create(AClass: TClass;
+constructor TWiRLConstructorProxy.Create(AClass: TClass;
   const AConstructorFunc: TFunc<TObject>);
 begin
   inherited Create;

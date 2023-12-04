@@ -15,6 +15,9 @@ uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
 
+  WiRL.Configuration.Core,
+  WiRL.Configuration.Compression,
+  WiRL.Core.Classes,
   WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.Core.MessageBody.Default,
@@ -94,6 +97,13 @@ begin
         .SetFilters('*')
         .SetResources(
           'Server.Resources.TFilterDemoResource')
+
+      (*
+      .Plugin.Configure<IWiRLConfigurationCompression>
+        .SetMinSize(300)
+        .SetMediaTypes('application/xml,application/json,text/plain')
+        .ApplyConfig
+      *)
   ;
 
   if not FServer.Active then

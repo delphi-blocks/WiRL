@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2021 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,7 +16,6 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti,
 
-  WiRL.Core.JSON,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
@@ -28,63 +27,42 @@ uses
   WiRL.Core.Auth.Context,
   WiRL.Core.Auth.Resource,
 
+  Common.Entities,
   Server.Auth.Resource,
   // Only if you want to use a custom (claims) class
   Server.Claims;
 
 type
-  TAddress = class
+  TDetailsInfo = class
   private
-    FCity: string;
-    FStreet: string;
-    FZipCode: string;
+    FClaims: TServerClaims;
+    FMessage: string;
   public
-    property City: string read FCity write FCity;
-    property Street: string read FStreet write FStreet;
-    property ZipCode: string read FZipCode write FZipCode;
-  end;
-  TAddresses = TArray<TAddress>;
-
-  TUserInfo = class
-  private
-    FAge: Integer;
-    FFullName: string;
-    FGroup: Integer;
-    FLanguage: string;
-    FAddresses: TAddresses;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    function AddAddress(const AStreet, ACity, AZip: string): TAddress;
-
-    property Age: Integer read FAge write FAge;
-    property FullName: string read FFullName write FFullName;
-    property Group: Integer read FGroup write FGroup;
-    property Language: string read FLanguage write FLanguage;
-    property Addresses: TAddresses read FAddresses write FAddresses;
+    constructor Create(const AMessage: string; AClaims: TServerClaims);
+    property Message: string read FMessage write FMessage;
+    property Claims: TServerClaims read FClaims write FClaims;
   end;
 
   [Path('user')]
   TUserResource = class
-  private
+  protected
     // Injects the auth context into the "Auth" object
     [Context] Auth: TWiRLAuthContext;
 
     // Injects the custom claims into "Subject" object
     [Context] Subject: TServerClaims;
   public
-    [GET, PermitAll]
+    [GET]
     [Produces(TMediaType.APPLICATION_JSON)]
     function PublicInfo: TUserInfo;
 
-    [POST, PermitAll]
+    [POST, RolesAllowed('admin,manager')]
     [Produces(TMediaType.APPLICATION_JSON)]
-    function InsertUser([BodyParam] JSON: TJSONObject): TUserInfo;
+    function InsertUser([BodyParam] AUser: TUserInfo): TUserInfo;
 
     [GET, Path('/details'), RolesAllowed('admin,manager')]
     [Produces(TMediaType.APPLICATION_JSON)]
-    function DetailsInfo: TJSONObject;
+    function DetailsInfo: TDetailsInfo;
   end;
 
   // *********************************************************************
@@ -121,26 +99,23 @@ type
 implementation
 
 uses
-  REST.Json;
+  System.DateUtils;
 
 { TUserResource }
 
-function TUserResource.DetailsInfo: TJSONObject;
+function TUserResource.DetailsInfo: TDetailsInfo;
 begin
-  Result := TJSONObject.Create;
-
-  Result.AddPair('custom', TJSONString.Create('Admin-level access informations here!'));
-  Result.AddPair('subject', Auth.Subject.Clone);
+  Result := TDetailsInfo.Create('Admin-level access informations', Subject);
 end;
 
-function TUserResource.InsertUser(JSON: TJSONObject): TUserInfo;
+function TUserResource.InsertUser(AUser: TUserInfo): TUserInfo;
 begin
-  Result := TJson.JsonToObject<TUserInfo>(JSON);
+  Result := TUserInfo.Create;
 
-  Result.FullName := 'Luca Minuti';
-  Result.Age := 40;
-  Result.Language := Subject.Language;
-  Result.Group := 2;
+  Result.FullName := AUser.FullName;
+  Result.Age := AUser.Age;
+  Result.Language := AUser.Language;
+  Result.Group := AUser.Group;
 end;
 
 function TUserResource.PublicInfo: TUserInfo;
@@ -171,8 +146,13 @@ begin
   else
     Result.Roles := 'user,manager'.Split([',']);
 
-  // Here you can set all field of your custom claims object
-  Subject.Language := 'en-US';
+  // Here you can set all claims of the JWT
+  Subject.Expiration := IncSecond(Now(), 30);
+  Subject.UserID := AUserName;
+
+  // Here you can set all custom claims of the JWT
+  Subject.Language := 'it-IT';
+
 end;
 
 { TFormAuthResource }
@@ -190,9 +170,12 @@ begin
   else
     Result.Roles := 'user,manager'.Split([',']);
 
-  // Here you can set all field of your custom claims object
+  // Here you can set all claims of the JWT
+  Subject.Expiration := IncSecond(Now(), 30);
+  Subject.UserID := AUserName;
+
+  // Here you can set all custom claims of the JWT
   Subject.Language := 'it-IT';
-  Subject.Expiration := Now + 1;
 end;
 
 { TBodyAuthResource }
@@ -210,42 +193,20 @@ begin
   else
     Result.Roles := 'user,manager'.Split([',']);
 
-  // Here you can set all field of your custom claims object
+  // Here you can set all claims of the JWT
+  Subject.Expiration := IncSecond(Now(), 30);
+  Subject.UserID := AUserName;
+
+  // Here you can set all custom claims of the JWT
   Subject.Language := 'it-IT';
-  Subject.Expiration := Now + 1;
 end;
 
-{ TUserInfo }
+{ TDetailsInfo }
 
-function TUserInfo.AddAddress(const AStreet, ACity, AZip: string): TAddress;
+constructor TDetailsInfo.Create(const AMessage: string; AClaims: TServerClaims);
 begin
-  Result := TAddress.Create;
-  Result.Street := AStreet;
-  Result.City := ACity;
-  Result.ZipCode := AZip;
-
-  {$IFDEF HAS_NEW_ARRAY}
-  FAddresses := FAddresses + [Result];
-  {$ELSE}
-  SetLength(FAddresses, Length(FAddresses) + 1);
-  FAddresses[Length(FAddresses) - 1] := Result;
-  {$ENDIF}
-end;
-
-constructor TUserInfo.Create;
-begin
-  SetLength(FAddresses, 0);
-end;
-
-destructor TUserInfo.Destroy;
-var
-  LAddress: TAddress;
-begin
-  for LAddress in FAddresses do
-    LAddress.Free;
-
-  SetLength(FAddresses, 0);
-  inherited;
+  FMessage := AMessage;
+  FClaims := AClaims;
 end;
 
 initialization

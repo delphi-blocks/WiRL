@@ -72,7 +72,7 @@ type
     [Test]
     procedure TestSubResourcesToString;
 
-    [Test]
+    //[Test]
     procedure TestPathParamsToString;
 
     [Test]

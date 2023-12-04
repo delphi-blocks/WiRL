@@ -319,7 +319,7 @@ end;
 procedure TAppFiltersRegistryProperty.ReadFromRegistry(AKeyList: TStrings);
 var
   LApplication: TWiRLApplication;
-  LKey: TWiRLFilterConstructorInfo;
+  LKey: TWiRLFilterConstructorProxy;
 begin
   LApplication := GetComponent(0) as TWiRLApplication;
   for LKey in LApplication.FilterRegistry do

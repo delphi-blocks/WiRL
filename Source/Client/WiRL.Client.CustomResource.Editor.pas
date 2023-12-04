@@ -13,17 +13,29 @@ interface
 
 uses
   System.Classes, System.SysUtils,
-  DesignEditors,
+  DesignEditors, DesignIntf,
+  WiRL.http.Client.Interfaces,
+  WiRL.http.Headers,
+  WiRL.Core.MessageBody.Default,
   WiRL.Client.CustomResource;
 
 type
   TWiRLClientCustomResourceEditor = class(TComponentEditor)
   private
     function CurrentObj: TWiRLClientCustomResource;
+    procedure RunResourceEditor;
   public
     procedure ExecuteVerb(Index: Integer); override;
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
+    procedure Edit; override;
+  end;
+
+  THeadersProperty = class(TPropertyEditor)
+  public
+    function GetAttributes: TPropertyAttributes; override;
+    procedure Edit; override;
+    function GetValue: string; override;
   end;
 
 procedure Register;
@@ -31,7 +43,9 @@ procedure Register;
 implementation
 
 uses
-  Vcl.Dialogs, DesignIntf, Winapi.Windows;
+  Vcl.Dialogs, Winapi.Windows,
+  WiRL.Client.ResourceDebugger,
+  WiRL.Client.ResourceHeaderEditor;
 
 procedure Register;
 begin
@@ -45,22 +59,27 @@ begin
   Result := Component as TWiRLClientCustomResource;
 end;
 
-procedure TWiRLClientCustomResourceEditor.ExecuteVerb(Index: Integer);
+procedure TWiRLClientCustomResourceEditor.Edit;
 begin
   inherited;
+  RunResourceEditor;
+end;
 
-  case Index of
-    0: CurrentObj.GET(nil, nil, nil);
-    1: CurrentObj.POST(nil, nil, nil);
-    2: CurrentObj.DELETE(nil, nil, nil);
-    3: CurrentObj.PUT(nil, nil, nil);
-    4: CurrentObj.PATCH(nil, nil, nil);
-    5: CurrentObj.HEAD(nil, nil, nil);
-    6: CurrentObj.OPTIONS(nil, nil, nil);
-  end;
+procedure TWiRLClientCustomResourceEditor.ExecuteVerb(Index: Integer);
+begin
+  RunResourceEditor;
+end;
 
-  if (GetKeyState(VK_LSHIFT) < 0) then
-    ShowMessage(CurrentObj.Client.ResponseText);
+procedure TWiRLClientCustomResourceEditor.RunResourceEditor;
+begin
+  inherited;
+//  if Assigned(CurrentObj.Application) then
+//  begin
+//    CurrentObj.Application.SetWriters('*.*');
+//    CurrentObj.Application.SetReaders('*.*');
+//  end;
+
+  TWiRLResourceRunnerForm.Edit(CurrentObj);
 
   Designer.Modified;
 end;
@@ -68,19 +87,42 @@ end;
 function TWiRLClientCustomResourceEditor.GetVerb(Index: Integer): string;
 begin
   case Index of
-    0: Result := 'GET';
-    1: Result := 'POST';
-    2: Result := 'DELETE';
-    3: Result := 'PUT';
-    4: Result := 'PATCH';
-    5: Result := 'HEAD';
-    6: Result := 'OPTIONS';
+    0: Result := 'Resource debugger';
   end;
 end;
 
 function TWiRLClientCustomResourceEditor.GetVerbCount: Integer;
 begin
-  Result := 7;
+  Result := 1;
+end;
+
+{ THeadersProperty }
+
+procedure THeadersProperty.Edit;
+var
+  LHeaders: IWiRLHeaders;
+begin
+  inherited;
+  LHeaders := GetIntfValue() as IWiRLHeaders;
+  TFormHeadersEditor.Execute(Designer, LHeaders);
+end;
+
+function THeadersProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paDialog];
+end;
+
+function THeadersProperty.GetValue: string;
+const
+  HeadersValue = '<Headers>';
+var
+  LHeaders: IWiRLHeaders;
+begin
+  LHeaders := GetIntfValue() as IWiRLHeaders;
+  if LHeaders.Count > 0 then
+    Result := HeadersValue.ToUpper
+  else
+    Result := HeadersValue;
 end;
 
 end.

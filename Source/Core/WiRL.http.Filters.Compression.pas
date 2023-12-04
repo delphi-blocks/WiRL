@@ -14,6 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes,
 
+  WiRL.Core.Classes,
   WiRL.Core.Registry,
   WiRL.http.Filters,
   WiRL.http.Request,
@@ -87,6 +88,8 @@ type
 implementation
 
 uses
+  WiRL.Configuration.Compression,
+  WiRL.Core.Declarations,
   System.ZLib, System.IOUtils;
 
 { TRequestDecodingFilter }
@@ -96,15 +99,14 @@ var
   LStrStream: TStringStream;
   LMemStream: TMemoryStream;
 
-  procedure DoDecompress(ASource, ADestination: TStream;
-    const AContentEncoding: string);
+  procedure DoDecompress(ASource, ADestination: TStream; const AContentEncoding: string);
   var
     LWindowBits: Integer;
     LDecompressor: TZDecompressionStream;
   begin
     LWindowBits := 15;
-    if AContentEncoding = ENC_GZIP
-      then Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
+    if AContentEncoding = ENC_GZIP then
+	  Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
 
     ASource.Seek(0, TSeekOrigin.soBeginning);
 
@@ -119,14 +121,13 @@ var
 
 begin
   if (ARequestContext.Request.ContentEncoding = ENC_GZIP)  or
-    (ARequestContext.Request.ContentEncoding = ENC_DEFLATE) then
+     (ARequestContext.Request.ContentEncoding = ENC_DEFLATE) then
   begin
     if Assigned(ARequestContext.Request.ContentStream) then
     begin
       LMemStream := TMemoryStream.Create;
       try
-        DoDecompress(ARequestContext.Request.ContentStream, LMemStream,
-          ARequestContext.Request.ContentEncoding);
+        DoDecompress(ARequestContext.Request.ContentStream, LMemStream, ARequestContext.Request.ContentEncoding);
         LMemStream.Position := soFromBeginning;
         ARequestContext.Request.ContentStream := LMemStream;
       except
@@ -141,8 +142,7 @@ begin
       try
         LMemStream := TMemoryStream.Create;
         try
-          DoDecompress(LStrStream, LMemStream,
-            ARequestContext.Request.ContentEncoding);
+          DoDecompress(LStrStream, LMemStream, ARequestContext.Request.ContentEncoding);
           LMemStream.Position := soFromBeginning;
           ARequestContext.Request.Content := '';
           ARequestContext.Request.ContentStream := LMemStream;
@@ -161,19 +161,20 @@ end;
 
 procedure TResponseEncodingFilter.Filter(AResponseContext: TWiRLContainerResponseContext);
 var
+  LConf: TWiRLConfigurationCompression;
   LStrStream: TStringStream;
   LMemStream: TMemoryStream;
   LContentEncoding: string;
+  LContentLength: Integer;
 
-  procedure DoCompress(ASource, ADestination: TStream;
-    const AContentEncoding: string);
+  procedure DoCompress(ASource, ADestination: TStream; const AContentEncoding: string);
   var
     LWindowBits: Integer;
     LCompressor: TZCompressionStream;
   begin
     LWindowBits := 15;
-    if AContentEncoding = ENC_GZIP
-      then Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
+    if AContentEncoding = ENC_GZIP then
+	  Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
 
     ASource.Seek(0, TSeekOrigin.soBeginning);
     LCompressor := TZCompressionStream.Create(ADestination, zcDefault, LWindowBits);
@@ -185,12 +186,25 @@ var
   end;
 
 begin
-  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_GZIP)
-    then LContentEncoding := ENC_GZIP
-    else
-  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE)
-    then LContentEncoding := ENC_DEFLATE
-    else LContentEncoding := ENC_IDENTITY;
+  LConf := (AResponseContext.Context.Application as TWiRLApplication).GetConfiguration<TWiRLConfigurationCompression>;
+
+  if Assigned(AResponseContext.Response.ContentStream) then
+    LContentLength := AResponseContext.Response.ContentStream.Size
+  else
+    LContentLength := Length(AResponseContext.Response.Content);
+
+  if LContentLength <= LConf.MinimumSize then
+    Exit;
+
+  if not TWiRLStringArray.New(LConf.MediaTypes).Contains(AResponseContext.Response.ContentType) then
+    Exit;
+
+  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_GZIP) then
+    LContentEncoding := ENC_GZIP
+  else if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE) then
+    LContentEncoding := ENC_DEFLATE
+  else
+    LContentEncoding := ENC_IDENTITY;
 
   if LContentEncoding <> ENC_IDENTITY then
   begin
@@ -243,8 +257,8 @@ var
     LCompressor: TZCompressionStream;
   begin
     LWindowBits := 15;
-    if AContentEncoding = ENC_GZIP
-      then Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
+    if AContentEncoding = ENC_GZIP then 
+	  Inc(LWindowBits, 16); //REF: https://stackoverflow.com/a/52815667/8018798
 
     ASource.Seek(0, TSeekOrigin.soBeginning);
     LCompressor := TZCompressionStream.Create(ADestination, zcDefault, LWindowBits);
@@ -256,12 +270,12 @@ var
   end;
 
 begin
-  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_GZIP)
-    then LContentEncoding := ENC_GZIP
-    else
-  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE)
-    then LContentEncoding := ENC_DEFLATE
-    else LContentEncoding := ENC_IDENTITY;
+  if AResponseContext.Request.AcceptableEncodings.Contains(ENC_GZIP) then 
+    LContentEncoding := ENC_GZIP
+  else if AResponseContext.Request.AcceptableEncodings.Contains(ENC_DEFLATE) then
+	  LContentEncoding := ENC_DEFLATE
+  else
+	  LContentEncoding := ENC_IDENTITY;
 
   if LContentEncoding <> ENC_IDENTITY then
   begin
@@ -298,10 +312,5 @@ begin
     end;
   end;
 end;
-
-initialization
-  TWiRLFilterRegistry.Instance.RegisterFilter<TRequestDecodingFilter>;
-  TWiRLFilterRegistry.Instance.RegisterFilter<TResponseEncodingFilter>;
-  //TWiRLFilterRegistry.Instance.RegisterFilter<TResponseEncodingFilterDebug>;
 
 end.

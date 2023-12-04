@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2022 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -39,7 +39,7 @@ type
   end;
 
   [Implements(IWiRLConfigurationAuth)]
-  TWiRLConfigurationAuth = class sealed(TWiRLConfigurationNRef, IWiRLConfigurationAuth)
+  TWiRLConfigurationAuth = class sealed(TWiRLConfiguration, IWiRLConfigurationAuth)
   public
     function Configure: IWiRLConfigurationAuth;
     function SetAuthChallenge(AChallenge: TAuthChallenge; const ARealm: string): IWiRLConfigurationAuth;
@@ -57,7 +57,7 @@ type
   public
     class function Default: TWiRLConfigurationAuth; static;
   public
-    constructor Create;
+    constructor Create; override;
   published
     property Realm: string read FRealm write FRealm;
     property AuthChallenge: TAuthChallenge read FAuthChallenge write FAuthChallenge;

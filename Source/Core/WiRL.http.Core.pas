@@ -121,21 +121,6 @@ type
     property Location: string read FLocation write FLocation;
   end;
 
-  TWiRLHeaderList = class(TStringList)
-  private
-    function GetName(AIndex: Integer): string;
-    function GetValue(const AName: string): string;
-    procedure SetValue(const AName, AValue: string);
-    function GetValueFromLine(AIndex: Integer): string;
-  public
-    constructor Create;
-
-    function IndexOfName(const AName: string): Integer; reintroduce;
-    property Names[Index: Integer]: string read GetName;
-    property Values[const Name: string]: string read GetValue write SetValue; default;
-    property ValueFromIndex[Index: Integer]: string read GetValueFromLine;
-  end;
-
   TWiRLParam = class(TStringList)
   private
     FApplication: TObject;
@@ -151,23 +136,6 @@ type
 
     property Values[const AName: string]: string read GetValue write SetValue; default;
     property Application: TObject read FApplication write SetApplication;
-  end;
-
-  TWiRLStreamWrapper = class(TStream)
-  private
-    FOwnsStream: Boolean;
-    FStream: TStream;
-  protected
-    function GetSize: Int64; override;
-    procedure SetSize(const NewSize: Int64); overload; override;
-  public
-    function Read(var Buffer; Count: Longint): Longint; overload; override;
-    function Write(const Buffer; Count: Longint): Longint; overload; override;
-    function Seek(Offset: Longint; Origin: Word): Longint; overload; override;
-
-    constructor Create(AStream: TStream; AOwnsStream: Boolean = False);
-    destructor Destroy; override;
-    property Stream: TStream read FStream;
   end;
 
 var
@@ -224,92 +192,6 @@ begin
     Result := TEncoding.ASCII
   else
     Result := DefaultCharSetEncoding;
-end;
-
-{ TWiRLHeaderList }
-
-const
-  HeaderNameValueSeparator = ': ';
-
-constructor TWiRLHeaderList.Create;
-begin
-  inherited Create;
-  NameValueSeparator := ':';
-end;
-
-function TWiRLHeaderList.GetName(AIndex: Integer): string;
-var
-  LLine: string;
-  LTrimmedSeparator: string;
-  LSepIndex: Integer;
-begin
-  if (AIndex >= 0) and (AIndex < Count) then
-  begin
-    LLine := Get(AIndex);
-    LTrimmedSeparator := Trim(HeaderNameValueSeparator); // Sometimes the space is not present
-    LSepIndex := LLine.IndexOf(LTrimmedSeparator);
-    Result := LLine.Substring(0, LSepIndex).Trim;
-  end
-  else
-  begin
-    Result := '';
-  end;
-end;
-
-function TWiRLHeaderList.GetValueFromLine(AIndex: Integer): string;
-var
-  LLine: string;
-  LTrimmedSeparator: string;
-  LSepIndex: Integer;
-begin
-  if (AIndex >= 0) and (AIndex < Count) then
-  begin
-    LLine := Get(AIndex);
-    LTrimmedSeparator := Trim(HeaderNameValueSeparator); // Sometimes the space is not present
-    LSepIndex := LLine.IndexOf(LTrimmedSeparator);
-    Result := LLine.Substring(LSepIndex + 1).Trim;
-  end
-  else
-  begin
-    Result := '';
-  end;
-end;
-
-function TWiRLHeaderList.GetValue(const AName: string): string;
-var
-  LIndex: Integer;
-begin
-  LIndex := IndexOfName(AName);
-  Result := GetValueFromLine(LIndex);
-end;
-
-function TWiRLHeaderList.IndexOfName(const AName: string): Integer;
-var
-  LIndex: Integer;
-begin
-  Result := -1;
-  for LIndex := 0 to Count - 1 do
-  begin
-    if CompareText(GetName(LIndex), AName) = 0 then
-    begin
-      Exit(LIndex);
-    end;
-  end;
-end;
-
-procedure TWiRLHeaderList.SetValue(const AName, AValue: string);
-var
-  LIndex: Integer;
-begin
-  LIndex := IndexOfName(AName);
-  if AValue <> '' then
-  begin
-    if LIndex < 0 then
-      LIndex := Add('');
-    Put(LIndex, AName + HeaderNameValueSeparator + AValue);
-  end
-  else if LIndex >= 0 then
-    Delete(LIndex);
 end;
 
 { TWiRLParam }
@@ -412,47 +294,6 @@ end;
 constructor TWiRLHttpStatus.Create;
 begin
   Create(200, '', '');
-end;
-
-{ TWiRLStreamWrapper }
-
-constructor TWiRLStreamWrapper.Create(AStream: TStream; AOwnsStream: Boolean);
-begin
-  inherited Create;
-  FStream := AStream;
-  FOwnsStream := AOwnsStream;
-end;
-
-destructor TWiRLStreamWrapper.Destroy;
-begin
-  if FOwnsStream then
-    FStream.Free;
-  inherited;
-end;
-
-function TWiRLStreamWrapper.GetSize: Int64;
-begin
-  Result := FStream.Size;
-end;
-
-function TWiRLStreamWrapper.Read(var Buffer; Count: Longint): Longint;
-begin
-  Result := FStream.Read(Buffer, Count);
-end;
-
-function TWiRLStreamWrapper.Seek(Offset: Longint; Origin: Word): Longint;
-begin
-  Result := FStream.Seek(Offset, Origin);
-end;
-
-procedure TWiRLStreamWrapper.SetSize(const NewSize: Int64);
-begin
-  FStream.Size := NewSize;
-end;
-
-function TWiRLStreamWrapper.Write(const Buffer; Count: Longint): Longint;
-begin
-  Result := FStream.Write(Buffer, Count);
 end;
 
 end.

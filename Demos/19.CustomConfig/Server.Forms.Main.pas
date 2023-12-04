@@ -14,6 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
+  WiRL.Core.Converter,
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
@@ -52,6 +53,7 @@ implementation
 uses
   Neon.Core.Types,
   WiRL.Configuration.Neon,
+  WiRL.Configuration.Converter,
   WiRL.Core.JSON,
   WiRL.Rtti.Utils,
   Server.Config;
@@ -94,6 +96,10 @@ begin
       .SetAppName('Default App')
       .SetResources('*')
       .SetFilters('*')
+
+      .Plugin.Configure<IWiRLFormatSetting>
+        .AddFormat(TypeInfo(TDateTime), TWiRLFormatSetting.ISODATE_UTC)
+        .BackToApp
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
