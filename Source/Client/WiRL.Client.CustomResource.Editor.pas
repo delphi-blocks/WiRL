@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,8 +14,9 @@ interface
 uses
   System.Classes, System.SysUtils,
   DesignEditors, DesignIntf,
-  WiRL.http.Client.Interfaces,
+
   WiRL.http.Headers,
+  WiRL.http.Client.Interfaces,
   WiRL.Core.MessageBody.Default,
   WiRL.Client.CustomResource;
 

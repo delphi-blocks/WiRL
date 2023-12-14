@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -81,9 +81,8 @@ type
   end;
 
   TWiRLEngine = class(TWiRLCustomEngine)
-  private
-  const
-    DefaultEngineName = 'WiRL Engine';
+  private const
+    DefaultEngineName = 'WiRL REST Engine';
   private
     class var FServerFileName: string;
     class var FServerDirectory: string;
@@ -161,6 +160,7 @@ begin
   try
     LApplication.SetBasePath(ABasePath);
     LApplication.Engine := Self;
+    LApplication.AppName := 'App';
     FCurrentApp := LApplication;
   except
     LApplication.Free;

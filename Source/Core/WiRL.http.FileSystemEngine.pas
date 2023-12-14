@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -33,10 +33,9 @@ type
   TStringFunc = TFunc<string>;
 
   TWiRLFileSystemEngine = class(TWiRLCustomEngine)
-  private
-  const
-    DefaultRootFolder = '{AppPath}' + PathDelim + 'www';
+  private const
     DefaultEngineName = 'WiRL FileSystemEngine';
+    DefaultRootFolder = '{AppPath}' + PathDelim + 'www';
   private
     FRootFolder: string;
     FMacros: TDictionary<string,TStringFunc>;
@@ -93,8 +92,6 @@ begin
   else
     Result := APath;
 end;
-
-{ TWiRLFileSystemEngine }
 
 procedure TWiRLFileSystemEngine.CheckRelativePath(const ARelativeURL: string);
 begin

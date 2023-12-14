@@ -58,7 +58,7 @@ type
     function StreamToObject<T>(AHeaders: IWiRLHeaders; AStream: TStream): T; overload;
     procedure StreamToObject(AObject: TObject; AHeaders: IWiRLHeaders; AStream: TStream); overload;
     procedure ObjectToStream<T>(AHeaders: IWiRLHeaders; AObject: T; AStream: TStream); overload;
-    function SameObject<T>(AGeneric: T; AObject: TObject): Boolean;
+    function SameObject<T>(AValue: T; AObject: TObject): Boolean;
     procedure SetApplication(const Value: TWiRLClientApplication);
     function ValueToString(const AValue: TValue): string;
     procedure StreamToEntity<T>(AEntity: T; AHeaders: IWiRLHeaders;
@@ -289,8 +289,7 @@ begin
     Result := Result + '?' + SmartConcat(TWiRLURL.URLEncode(FQueryParams.ToStringArray), '&');
 end;
 
-function TWiRLClientCustomResource.HasFilter(
-  AAttribute: TCustomAttribute): Boolean;
+function TWiRLClientCustomResource.HasFilter(AAttribute: TCustomAttribute): Boolean;
 var
   LFilterName: string;
   LAttributeName: string;
@@ -381,8 +380,7 @@ begin
   end;
 end;
 
-procedure TWiRLClientCustomResource.Notification(AComponent: TComponent;
-  Operation: TOperation);
+procedure TWiRLClientCustomResource.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if Operation = opRemove then
@@ -671,8 +669,7 @@ begin
   Result := GenericHttpRequest<T, V>('PATCH', ARequestEntity);
 end;
 
-procedure TWiRLClientCustomResource.Patch<T>(const ARequestEntity: T;
-  AResponseEntity: TObject);
+procedure TWiRLClientCustomResource.Patch<T>(const ARequestEntity: T; AResponseEntity: TObject);
 begin
   GenericHttpRequest<T, TObject>('PATCH', ARequestEntity, AResponseEntity);
 end;
@@ -822,8 +819,7 @@ begin
   Result := FApplication;
 end;
 
-function TWiRLClientCustomResource.SameObject<T>(AGeneric: T;
-  AObject: TObject): Boolean;
+function TWiRLClientCustomResource.SameObject<T>(AValue: T; AObject: TObject): Boolean;
 var
   LValue: TValue;
 begin
@@ -831,7 +827,7 @@ begin
   if not Assigned(AObject) then
     Exit;
 
-  LValue := TValue.From<T>(AGeneric);
+  LValue := TValue.From<T>(AValue);
   if LValue.IsEmpty then
     Exit;
 
@@ -844,8 +840,7 @@ begin
   FHeaders.Accept := Value;
 end;
 
-procedure TWiRLClientCustomResource.SetApplication(
-  const Value: TWiRLClientApplication);
+procedure TWiRLClientCustomResource.SetApplication(const Value: TWiRLClientApplication);
 begin
   if FApplication <> Value then
   begin
@@ -858,8 +853,7 @@ begin
   end;
 end;
 
-procedure TWiRLClientCustomResource.SetContentStream(AStream: TStream;
-  AOwnStream: Boolean);
+procedure TWiRLClientCustomResource.SetContentStream(AStream: TStream; AOwnStream: Boolean);
 begin
   if Assigned(FResponseStream) and (FResponseStream <> AStream) then
   begin
@@ -899,8 +893,7 @@ end;
 
 { TWiRLResourceHeaders }
 
-constructor TWiRLResourceHeaders.Create(
-  ACustomResource: TWiRLClientCustomResource);
+constructor TWiRLResourceHeaders.Create(ACustomResource: TWiRLClientCustomResource);
 begin
   inherited Create;
   FCustomResource := ACustomResource;
@@ -919,7 +912,6 @@ begin
 end;
 
 initialization
-
-RegisterHttpMethodImplementations;
+  RegisterHttpMethodImplementations;
 
 end.

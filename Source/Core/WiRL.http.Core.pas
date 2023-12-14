@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -162,7 +162,7 @@ function ContentStreamToString(const ACharset: string; AContentStream: TStream):
 var
   LEncoding: TEncoding;
   LBuffer: TBytes;
-  LPos :Int64;
+  LPos: Int64;
 begin
   Result := '';
   if Assigned(AContentStream) and (AContentStream.Size > 0) then

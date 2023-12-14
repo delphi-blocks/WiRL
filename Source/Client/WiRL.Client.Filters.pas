@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -250,8 +250,7 @@ end;
 
 { TWiRLClientFilterConstructorInfo }
 
-constructor TWiRLClientFilterConstructorInfo.Create(
-  const AFilterQualifiedClassName: string);
+constructor TWiRLClientFilterConstructorInfo.Create(const AFilterQualifiedClassName: string);
 begin
   inherited Create;
   FFilterQualifiedClassName := AFilterQualifiedClassName;
@@ -454,8 +453,7 @@ begin
   Result := FStatusText;
 end;
 
-procedure TWiRLVirtualResponse.SetContentStream(AStream: TStream;
-  AOwnStream: Boolean);
+procedure TWiRLVirtualResponse.SetContentStream(AStream: TStream; AOwnStream: Boolean);
 begin
   if AStream <> FContentStream then
   begin

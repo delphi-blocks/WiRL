@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,6 +16,7 @@ interface
 uses
   System.SysUtils, System.Classes,
   WiRL.Rtti.Utils,
+  WiRL.Core.Declarations,
   WiRL.Core.Engine,
   WiRL.Core.MessageBody.Default,
   WiRL.http.Engines,
@@ -26,11 +27,11 @@ uses
 procedure Register;
 
 const
-  WIRL_CAPTION = 'WiRL RESTful Library for Delphi 4.5.0';
+  WIRL_CAPTION = 'WiRL RESTful Library for Delphi ' + WIRL_VERSION;
   WIRL_LICENSE = 'Apache License, Version 2.0';
   WIRL_DESCRIPTION =
     'WiRL: 100% RESTful Library for Delphi' + sLineBreak + sLineBreak +
-    'Copyright © 2015-2023 WiRL Team. All rights reserved.' + sLineBreak +
+    Format('Copyright © 2015-%d WiRL Team. All rights reserved.', [CurrentYear]) + sLineBreak +
     'https://github.com/delphi-blocks/WiRL' + sLineBreak + sLineBreak +
     '[Powered by]' + sLineBreak + sLineBreak +
     'Delphi JOSE and JWT Library' + sLineBreak +
@@ -57,17 +58,17 @@ var
 
 procedure RegisterAboutBox;
 var
-  ProductImage: HBITMAP;
+  LProductImage: HBITMAP;
 begin
   if AboutBoxIndex = -1 then
   begin
     Supports(BorlandIDEServices,IOTAAboutBoxServices, AboutBoxServices);
     if not Assigned(AboutBoxServices) then
       Exit;
-    ProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'WiRLSplash');
-    if ProductImage = 0 then
+    LProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'WiRLSplash');
+    if LProductImage = 0 then
       Exit;
-    AboutBoxIndex := AboutBoxServices.AddPluginInfo(WIRL_CAPTION, WIRL_DESCRIPTION, ProductImage, False);
+    AboutBoxIndex := AboutBoxServices.AddPluginInfo(WIRL_CAPTION, WIRL_DESCRIPTION, LProductImage, False);
   end;
 end;
 
@@ -83,14 +84,14 @@ end;
 
 procedure RegisterSplashScreen;
 var
-  ProductImage: HBITMAP;
+  LProductImage: HBITMAP;
 begin
   if Assigned(SplashScreenServices) then
   begin
-    ProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'WiRLSplash');
-    if ProductImage <> 0 then
+    LProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'WiRLSplash');
+    if LProductImage <> 0 then
     begin
-      SplashScreenServices.AddPluginBitmap(WIRL_CAPTION, ProductImage, False, WIRL_LICENSE);
+      SplashScreenServices.AddPluginBitmap(WIRL_CAPTION, LProductImage, False, WIRL_LICENSE);
     end;
   end;
 end;

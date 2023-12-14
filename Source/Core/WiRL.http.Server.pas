@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -36,11 +36,14 @@ type
   protected
     FEngineName: string;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    function GetBasePath(const AURL: string): string;
   public
     constructor Create(AOwner: TComponent); overload; override;
     constructor Create(ABasePath: string); reintroduce; overload;
 
+    function CanHandle(const AURL: string): Boolean; virtual;
     procedure HandleRequest(AContext: TWiRLContext); virtual; abstract;
+
     procedure Startup; virtual;
     procedure Shutdown; virtual;
   published
@@ -62,7 +65,7 @@ type
 
   TWiRLEngineRegistry = class(TObjectList<TWiRLEngineInfo>)
   public
-    function TryGetValue(const ABasePath: string; out AEngine: TWiRLCustomEngine): Boolean;
+    function GetEngine(const AURL: string): TWiRLCustomEngine;
   end;
 
   TEngineListEnumerator = class
@@ -85,16 +88,17 @@ type
   end;
 
   TWiRLServer = class(TComponent, IWiRLListener)
-  private
-  const
+  private const
     DefaultPort = 8080;
     DefaultThreadPoolSize = 50;
   private
+    FServerName: string;
     FCurrentEngine: TWiRLCustomEngine;
     FHttpServer: IWiRLServer;
     FActive: Boolean;
     FServerVendor: string;
     FEngineList: TWiRLEngineList;
+    FSinkPaths: TList<string>;
     procedure FreeEngines;
     function GetPortProp: Integer;
     procedure SetPortProp(APort: Integer);
@@ -117,8 +121,10 @@ type
     procedure RemoveEngine(const ABasePath: string); overload;
     function GetEngine(const AURL: string): TWiRLCustomEngine;
     function CurrentEngine<T: constructor, TWiRLCustomEngine>: T;
+    function SetServerName(const AName: string): TWiRLServer;
     function SetPort(APort: Integer): TWiRLServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLServer;
+    function AddSinkPath(const APath: string): TWiRLServer;
 
     { IWiRLListener }
     procedure HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
@@ -131,7 +137,9 @@ type
   published
     property Active: Boolean read GetActive write SetActive;
     property Port: Integer read GetPortProp write SetPortProp default DefaultPort;
+    property SinkPaths: TList<string> read FSinkPaths write FSinkPaths;
     property ThreadPoolSize: Integer read GetThreadPoolSizeProp write SetThreadPoolSizeProp default DefaultThreadPoolSize;
+    property ServerName: string read FServerName write FServerName;
     property ServerVendor: string read FServerVendor write SetServerVendor;
     property ServerImplementation: TObject read GetServerImplementation;
   end;
@@ -172,14 +180,22 @@ begin
   Result := Self;
 end;
 
+function TWiRLServer.AddSinkPath(const APath: string): TWiRLServer;
+begin
+  FSinkPaths.Add(APath);
+  Result := Self;
+end;
+
 constructor TWiRLServer.Create(AOwner: TComponent);
 begin
   inherited;
+  FSinkPaths := TList<string>.Create;
   FEngineList := TWiRLEngineList.Create(Self);
   FEngines := TWiRLEngineRegistry.Create(True);
   FHttpServer := TWiRLServerRegistry.Instance.CreateServer(FServerVendor);
   FHttpServer.Listener := Self;
   FActive := False;
+  FServerName := 'WiRL Server';
   Port := DefaultPort;
   ThreadPoolSize := DefaultThreadPoolSize;
 end;
@@ -191,6 +207,7 @@ end;
 
 destructor TWiRLServer.Destroy;
 begin
+  FSinkPaths.Free;
   FEngineList.Free;
   FreeEngines;
   inherited;
@@ -215,25 +232,8 @@ begin
 end;
 
 function TWiRLServer.GetEngine(const AURL: string): TWiRLCustomEngine;
-var
-  LUrlTokens: TArray<string>;
-  LBaseUrl: string;
 begin
-  Result := nil;
-  LUrlTokens := AURL.Split(['/']);
-  if Length(LUrlTokens) > 1 then
-    LBaseUrl := LUrlTokens[1]
-  else
-    LBaseUrl := '';
-
-  if FEngines.TryGetValue('/' + LBaseUrl, Result) then
-    Exit;
-
-  if FEngines.TryGetValue('/', Result) then
-    Exit;
-
-  if AURL.Equals('/favicon.ico') then
-    Abort;
+  Result := FEngines.GetEngine(AURL);
 
   if not Assigned(Result) then
     raise EWiRLNotFoundException.Create(Format('Engine not found for URL [%s]', [AURL]));
@@ -243,8 +243,15 @@ procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResp
 var
   LContext: TWiRLContext;
   LEngine: TWiRLCustomEngine;
+  LPath: string;
 begin
-  inherited;
+  for LPath in FSinkPaths do
+    if LPath = ARequest.PathInfo then
+    begin
+      AResponse.StatusCode := 204; //404?
+      Exit;
+    end;
+
   LContext := TWiRLContext.Create;
   try
     LContext.Server := Self;
@@ -321,6 +328,12 @@ begin
   end;
 end;
 
+function TWiRLServer.SetServerName(const AName: string): TWiRLServer;
+begin
+  FServerName := AName;
+  Result := Self;
+end;
+
 function TWiRLServer.GetPortProp: Integer;
 begin
   Result := FHttpServer.Port;
@@ -387,8 +400,7 @@ end;
 
 { TWiRLEngineInfo }
 
-constructor TWiRLEngineInfo.Create(AEngine: TWiRLCustomEngine;
-  AOwnsObjects: Boolean);
+constructor TWiRLEngineInfo.Create(AEngine: TWiRLCustomEngine; AOwnsObjects: Boolean);
 begin
   inherited Create;
   FEngine := AEngine;
@@ -402,6 +414,16 @@ begin
   inherited;
   FindDefaultServer;
   BasePath := '/';
+end;
+
+function TWiRLCustomEngine.CanHandle(const AURL: string): Boolean;
+var
+  LBasePath: string;
+begin
+  Result := False;
+  LBasePath := GetBasePath(AURL);
+  if BasePath = LBasePath then
+    Result := True;
 end;
 
 constructor TWiRLCustomEngine.Create(ABasePath: string);
@@ -425,6 +447,17 @@ begin
       end;
     end;
   end;
+end;
+
+function TWiRLCustomEngine.GetBasePath(const AURL: string): string;
+var
+  LTokens: TArray<string>;
+begin
+  LTokens := AURL.Split(['/']);
+  if Length(LTokens) > 1 then
+    Result := '/' + LTokens[1]
+  else
+    Result := '/';
 end;
 
 procedure TWiRLCustomEngine.Notification(AComponent: TComponent;
@@ -473,20 +506,21 @@ end;
 
 { TWiRLEngineRegistry }
 
-function TWiRLEngineRegistry.TryGetValue(const ABasePath: string;
-  out AEngine: TWiRLCustomEngine): Boolean;
+function TWiRLEngineRegistry.GetEngine(const AURL: string): TWiRLCustomEngine;
 var
   LEngineInfo: TWiRLEngineInfo;
 begin
-  Result := False;
+  Result := nil;
+
   for LEngineInfo in Self do
-  begin
-    if LEngineInfo.Engine.BasePath = ABasePath then
-    begin
-      AEngine := LEngineInfo.Engine;
-      Exit(True);
-    end;
-  end;
+    if LEngineInfo.Engine.CanHandle(AURL) then
+      Exit(LEngineInfo.Engine);
+
+  // Perhaps it's a file request let's try with '/'
+  if not Assigned(Result) then
+    for LEngineInfo in Self do
+      if LEngineInfo.Engine.CanHandle('/') then
+        Exit(LEngineInfo.Engine);
 end;
 
 { TWiRLEngineList }

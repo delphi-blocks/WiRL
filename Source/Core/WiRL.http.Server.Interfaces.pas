@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -78,16 +78,16 @@ var
   AServerClass: TClass;
 begin
   if Self.Count < 1 then
-    raise EWiRLException.CreateFmt('CreateServer: no server registered (add "WiRL.http.Server.*" unit to the project)', [AName]);
+    raise EWiRLException.CreateFmt('CreateServer: no server registered (add "WiRL.http.Server.*" units to the project)', [AName]);
 
   if AName = '' then
     AServerClass := GetDefaultClass()
   else if not Self.TryGetValue(AName, AServerClass) then
-    raise EWiRLException.CreateFmt('CreateServer: http server [%s] not registered (add "WiRL.http.Server.*" unit to the project)', [AName]);
+    raise EWiRLException.CreateFmt('CreateServer: http server [%s] not registered (add "WiRL.http.Server.*" units to the project)', [AName]);
 
   LObject := TRttiHelper.CreateInstance(AServerClass);
   if not Supports(LObject, IWiRLServer, Result) then
-    raise EWiRLException.CreateFmt('CreateServer: can''t create a http server with class [%s]', [AServerClass.ClassName]);
+    raise EWiRLException.CreateFmt('CreateServer: can''t create an http server of class [%s]', [AServerClass.ClassName]);
 end;
 
 function TWiRLServerRegistry.GetDefaultClass: TClass;

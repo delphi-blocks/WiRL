@@ -814,8 +814,7 @@ begin
   Result := Self;
 end;
 
-function TWiRLInvocation.SetContentStream(AStream: TStream;
-  AOwnStream: Boolean): TWiRLInvocation;
+function TWiRLInvocation.SetContentStream(AStream: TStream; AOwnStream: Boolean): TWiRLInvocation;
 begin
   FWiRLInvocation.SetContentStream(AStream, AOwnStream);
   Result := Self;
@@ -891,8 +890,7 @@ begin
   FResource.QueryParam(AName, AValue);
 end;
 
-procedure TWiRLResourceWrapper.SetContentStream(AStream: TStream;
-  AOwnStream: Boolean);
+procedure TWiRLResourceWrapper.SetContentStream(AStream: TStream; AOwnStream: Boolean);
 begin
   FResource.SetContentStream(AStream, AOwnStream);
 end;

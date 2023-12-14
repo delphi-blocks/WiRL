@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -21,7 +21,6 @@ uses
   WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Request,
-//  WiRL.http.Response,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
   WiRL.Core.MessageBodyWriter,

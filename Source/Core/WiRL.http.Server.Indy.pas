@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -144,10 +144,6 @@ var
   LRequest: TWiRLRequest;
   LResponse: TWiRLResponse;
 begin
-  inherited;
-  if EndsText('/favicon.ico', ARequestInfo.Document) then
-    Exit;
-
   LRequest := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
   try
     LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
@@ -167,7 +163,6 @@ end;
 procedure TWiRLhttpServerIndy.DoCommandOther(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
 begin
-  inherited;
   DoCommandGet(AContext, ARequestInfo, AResponseInfo);
 end;
 

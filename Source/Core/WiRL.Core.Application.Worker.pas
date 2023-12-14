@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2022 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -621,8 +621,7 @@ begin
   end;
 end;
 
-function TWiRLApplicationWorker.RequestOwnedObject(
-  const AValue: TValue): Boolean;
+function TWiRLApplicationWorker.RequestOwnedObject(const AValue: TValue): Boolean;
 var
   LObject: TObject;
   LIndex: Integer;
@@ -780,7 +779,6 @@ begin
 
   if (not Assigned(FStreamValue)) and (FStringValue = '') then
     FStringValue := ADefault;
-
 end;
 
 destructor TRequestParam.Destroy;
