@@ -18,6 +18,7 @@ uses
   System.Contnrs, System.Types, System.TypInfo,
   WiRL.Configuration.Core,
   WiRL.Core.Classes,
+  WiRL.Core.Context,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.http.Client.Interfaces,
@@ -93,6 +94,9 @@ type
     function CheckFilterNameBinding(AClientResource: TObject; AAttribute: TCustomAttribute): Boolean;
     function AppNameIsStored: Boolean;
     procedure RegistryNotification(Sender: TObject);
+//    procedure StreamToArray(AArray: TValue; AHeaders: IWiRLHeaders;
+//      AStream: TStream);
+    procedure ContextInjection(AInstance: TObject; AContext: TWiRLContextBase);
   protected
     function GetPath: string; virtual;
     function AddFilter(const AFilter: string): Boolean;
@@ -110,6 +114,10 @@ type
   public
     procedure ApplyRequestFilter(AClientResource: TObject; const AHttpMethod: string; ARequestStream: TStream; out AResponse: IWiRLResponse);
     procedure ApplyResponseFilter(AClientResource: TObject; const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse);
+    procedure StreamToEntity<T>(AEntity: T; AHeaders: IWiRLHeaders; AStream: TStream; AContext: TWiRLContextBase);
+    function StreamToObject<T>(AHeaders: IWiRLHeaders; AStream: TStream; AContext: TWiRLContextBase): T; overload;
+    procedure StreamToObject(AObject: TObject; AHeaders: IWiRLHeaders; AStream: TStream; AContext: TWiRLContextBase); overload;
+
     property Resources: TObjectList<TObject> read FResources;
   public
     { IWiRLApplication }
@@ -175,7 +183,9 @@ uses
   WiRL.Client.Resource,
   WiRL.Core.Utils,
   WiRL.Core.Converter,
-  WiRL.http.URL;
+  WiRL.Core.Injection,
+  WiRL.http.URL,
+  WiRL.http.Accept.MediaType;
 
 type
   TWiRLResourceWrapper = class(TInterfacedObject, IWiRLInvocation)
@@ -662,6 +672,105 @@ begin
     Self.AddWriter(LWriter);
   Result := Self;
 end;
+
+procedure TWiRLClientApplication.ContextInjection(AInstance: TObject; AContext: TWiRLContextBase);
+begin
+  TWiRLContextInjectionRegistry.Instance.
+    ContextInjection(AInstance, AContext);
+end;
+
+procedure TWiRLClientApplication.StreamToEntity<T>(AEntity: T;
+  AHeaders: IWiRLHeaders; AStream: TStream; AContext: TWiRLContextBase);
+var
+  LValue: TValue;
+begin
+  LValue := TValue.From<T>(AEntity);
+
+  if LValue.IsObject then
+    if LValue.AsObject is TStream then
+      LValue := AStream
+    else
+      StreamToObject(LValue.AsObject, AHeaders, AStream, AContext)
+//  else if LValue.IsArray then
+//    StreamToArray(LValue, AHeaders, AStream)
+  else
+    raise EWiRLClientException.Create('Not supported');
+end;
+
+procedure TWiRLClientApplication.StreamToObject(AObject: TObject;
+  AHeaders: IWiRLHeaders; AStream: TStream; AContext: TWiRLContextBase);
+var
+  LType: TRttiType;
+  LMediaType: TMediaType;
+  LReader: IMessageBodyReader;
+begin
+  LType := TRttiHelper.Context.GetType(AObject.ClassInfo);
+  LMediaType := TMediaType.Create(AHeaders.Values[TWiRLHeader.CONTENT_TYPE]);
+  try
+    LReader := ReaderRegistry.FindReader(LType, LMediaType);
+    if not Assigned(LReader) then
+      raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
+    ContextInjection(LReader as TObject, AContext);
+
+    LReader.ReadFrom(AObject, LType, LMediaType, AHeaders, AStream);
+  finally
+    LMediaType.Free;
+  end;
+end;
+
+function TWiRLClientApplication.StreamToObject<T>(AHeaders: IWiRLHeaders;
+  AStream: TStream; AContext: TWiRLContextBase): T;
+var
+  LType: TRttiType;
+  LMediaType: TMediaType;
+  LReader: IMessageBodyReader;
+  LValue: TValue;
+begin
+  LType := TRttiHelper.Context.GetType(TypeInfo(T));
+  if TRttiHelper.IsObjectOfType<TStream>(LType) then
+    Exit(TRttiHelper.ObjectAsType<T>(AStream));
+
+  LMediaType := TMediaType.Create(AHeaders.ContentType);
+  try
+    LReader := ReaderRegistry.FindReader(LType, LMediaType);
+    if not Assigned(LReader) then
+      raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
+    ContextInjection(LReader as TObject, AContext);
+
+    LValue := LReader.ReadFrom(LType, LMediaType, AHeaders, AStream);
+    Result := LValue.AsType<T>;
+  finally
+    LMediaType.Free;
+  end;
+end;
+
+{
+procedure TWiRLClientApplication.StreamToArray(AArray: TValue;
+  AHeaders: IWiRLHeaders; AStream: TStream);
+var
+  LList: TDataSetList;
+  LIndex: Integer;
+  LItem: TValue;
+begin
+  LList := TDataSetList.Create(False);
+  try
+    for LIndex := 0 to AArray.GetArrayLength - 1 do
+    begin
+      LItem := AArray.GetArrayElement(LIndex);
+      if not LItem.IsObject then
+        raise EWiRLClientException.Create('Array of primitive type not supported');
+
+      if not (LItem.AsObject is TDataSet) then
+        raise EWiRLClientException.Create('Error Message');
+
+      LList.Add(TDataSet(LItem.AsObject));
+    end;
+    StreamToObject(LList, AHeaders, AStream);
+  finally
+    LList.Free;
+  end;
+end;
+}
 
 function TWiRLClientApplication.SetWriters(const AWriters: TArray<string>): IWiRLApplication;
 var

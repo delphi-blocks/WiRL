@@ -9,7 +9,7 @@
 {******************************************************************************}
 unit WiRL.http.Client.NetHttp;
 
-{$I ..\Core\WiRL.inc}
+{.$I ..\Core\WiRL.inc}
 
 interface
 
@@ -18,6 +18,8 @@ uses
 
   System.Net.HttpClient,
   System.Net.URLClient,
+
+  WiRL.Core.Context,
 
   WiRL.http.Client.Interfaces,
   WiRL.http.Core,
@@ -34,13 +36,15 @@ type
     FMediaType: TMediaType;
     FHeaders: IWiRLHeaders;
     FOwnContentStream: Boolean;
+    FContext: TWiRLContextBase;
 
     { IWiRLResponse }
     function GetHeaderValue(const AName: string): string;
     function GetStatusCode: Integer;
     function GetStatusText: string;
     function GetContentType: string;
-    function GetContent: string;
+    function GetContent: TWiRLContent;
+    function GetContentText: string;
     function GetContentStream: TStream;
     function GetHeaders: IWiRLHeaders;
     function GetContentMediaType: TMediaType;
@@ -48,6 +52,7 @@ type
     procedure SetStatusCode(AValue: Integer);
     procedure SetStatusText(const AValue: string);
     procedure SetOwnContentStream(const AValue: Boolean);
+    procedure SetContext(AContext: TWiRLContextBase);
   public
     constructor Create(AResponse: IHTTPResponse);
     destructor Destroy; override;
@@ -281,9 +286,14 @@ begin
   inherited;
 end;
 
-function TWiRLClientResponseNetHttp.GetContent: string;
+function TWiRLClientResponseNetHttp.GetContentText: string;
 begin
   Result := EncodingFromCharSet(GetContentMediaType.Charset).GetString(GetRawContent);
+end;
+
+function TWiRLClientResponseNetHttp.GetContent: TWiRLContent;
+begin
+  Result := TWiRLContent.Create(Self, FContext);
 end;
 
 function TWiRLClientResponseNetHttp.GetContentMediaType: TMediaType;
@@ -347,6 +357,11 @@ begin
     Result := FStatusText
   else
     Result := FResponse.StatusText;
+end;
+
+procedure TWiRLClientResponseNetHttp.SetContext(AContext: TWiRLContextBase);
+begin
+  FContext := AContext;
 end;
 
 procedure TWiRLClientResponseNetHttp.SetOwnContentStream(const AValue: Boolean);

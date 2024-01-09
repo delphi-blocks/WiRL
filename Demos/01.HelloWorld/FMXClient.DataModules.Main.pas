@@ -9,7 +9,7 @@
 {******************************************************************************}
 unit FMXClient.DataModules.Main;
 
-{.$I '..\Core\WiRL.inc'}
+{$I '..\Core\WiRL.inc'}
 
 interface
 
@@ -24,7 +24,7 @@ uses
   System.Net.HttpClientComponent, FMX.Types, FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
   FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
-  WiRL.http.Client.Interfaces;
+  WiRL.http.Client.Interfaces, Generics.Collections;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -53,6 +53,7 @@ type
     function PostStream(AStream: TStream): string;
     function GetRawResponse: string;
     function GetStringAndStream(AStream: TStream): string;
+    function GetPersonAndHeader(Id: Integer): TPair<TPerson, string>;
   end;
 
 var
@@ -153,6 +154,33 @@ begin
     .Get<TPerson>;
 end;
 
+function TMainDataModule.GetPersonAndHeader(
+  Id: Integer): TPair<TPerson, string>;
+var
+  LResponse: IWiRLResponse;
+  LPerson: TPerson;
+  LContentType: string;
+begin
+  // If I want an object but I need the raw response too
+  // I can get the object from the response
+
+  // 1. Get the raw response (IWiRLResponse)
+  LResponse := WiRLClientApplication1
+    .Resource('helloworld/person')
+    .Accept('application/json')
+    .AcceptLanguage('it_IT')
+    .Header('x-author', 'Luca')
+    .QueryParam('Id', Id.ToString)
+    .Get<IWiRLResponse>;
+
+  // 2. Read the header from the response
+  LContentType := LResponse.ContentType;
+  // 3. Read the object (TPerson) from the response
+  LPerson := LResponse.Content.AsType<TPerson>;
+
+  Result := TPair<TPerson, string>.Create(LPerson, LContentType);
+end;
+
 function TMainDataModule.GetRawResponse: string;
 var
   LResponse: IWiRLResponse;
@@ -162,7 +190,7 @@ begin
   Result :=
     'StatusCode: ' + LResponse.StatusCode.ToString + sLineBreak +
     'ReasonString: ' + LResponse.StatusText + sLineBreak +
-    'Content: ' + LResponse.Content;
+    'Content: ' + LResponse.ContentText;
 end;
 
 function TMainDataModule.PostOrder(AOrderProposal: TOrderProposal): TOrder;
@@ -196,7 +224,7 @@ begin
   except
     on E: EWiRLClientProtocolException do
     begin
-      Result := E.Response.Content;
+      Result := E.Response.ContentText;
     end;
   end;
 end;

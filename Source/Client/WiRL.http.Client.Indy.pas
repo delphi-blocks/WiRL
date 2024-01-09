@@ -19,6 +19,8 @@ uses
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
   IdHTTPHeaderInfo, IdStack, IdResourceStringsProtocols,
 
+  WiRL.Core.Context,
+
   WiRL.http.Client.Interfaces,
   WiRL.http.Accept.MediaType,
 
@@ -33,20 +35,23 @@ type
     FHeaders: IWiRLHeaders;
     FMediaType: TMediaType;
     FOwnContentStream: Boolean;
+    FContext: TWiRLContextBase;
 
     { IWiRLResponse }
     function GetHeaderValue(const AName: string): string;
     function GetStatusCode: Integer;
     function GetStatusText: string;
     function GetContentType: string;
-    function GetContent: string;
+    function GetContentText: string;
     function GetContentStream: TStream;
+    function GetContent: TWiRLContent;
     function GetHeaders: IWiRLHeaders;
     function GetContentMediaType: TMediaType;
     function GetRawContent: TBytes;
     procedure SetStatusCode(AValue: Integer);
     procedure SetStatusText(const AValue: string);
     procedure SetOwnContentStream(const AValue: Boolean);
+    procedure SetContext(AContext: TWiRLContextBase);
   public
     constructor Create(AIdHTTPResponse: TIdHTTPResponse);
     destructor Destroy; override;
@@ -293,9 +298,14 @@ begin
   inherited;
 end;
 
-function TWiRLClientResponseIndy.GetContent: string;
+function TWiRLClientResponseIndy.GetContentText: string;
 begin
   Result := EncodingFromCharSet(GetContentMediaType.Charset).GetString(GetRawContent);
+end;
+
+function TWiRLClientResponseIndy.GetContent: TWiRLContent;
+begin
+  Result := TWiRLContent.Create(Self, FContext);
 end;
 
 function TWiRLClientResponseIndy.GetContentMediaType: TMediaType;
@@ -356,6 +366,11 @@ end;
 function TWiRLClientResponseIndy.GetStatusText: string;
 begin
   Result := FIdHTTPResponse.ResponseText;
+end;
+
+procedure TWiRLClientResponseIndy.SetContext(AContext: TWiRLContextBase);
+begin
+  FContext := AContext;
 end;
 
 procedure TWiRLClientResponseIndy.SetOwnContentStream(const AValue: Boolean);

@@ -29,7 +29,6 @@ type
     ToolBar1: TToolBar;
     MainTabControl: TTabControl;
     HelloWorldTabItem: TTabItem;
-    StringDemosTabItem: TTabItem;
     btnExecute: TButton;
     Memo1: TMemo;
     Layout1: TLayout;
@@ -48,6 +47,7 @@ type
     BtnGetWiRLResponse: TButton;
     EditInput: TEdit;
     Label1: TLabel;
+    BtnPersonAndHeader: TButton;
     procedure btnExecuteClick(Sender: TObject);
     procedure btnEchoClick(Sender: TObject);
     procedure btnReverseClick(Sender: TObject);
@@ -62,6 +62,7 @@ type
     procedure Image1DblClick(Sender: TObject);
     procedure BtnPostStreamClick(Sender: TObject);
     procedure BtnGetWiRLResponseClick(Sender: TObject);
+    procedure BtnPersonAndHeaderClick(Sender: TObject);
   private
     procedure Log(const ATag, AMessage: string);
   public
@@ -83,19 +84,21 @@ uses
   WiRL.Core.JSON, Demo.Entities;
 
 procedure TMainForm.btnEchoClick(Sender: TObject);
+var
+  LResult: string;
 begin
-  Log(
-    'Echo',
-    MainDataModule.EchoString(EditInput.Text)
-  );
+  LResult := MainDataModule.EchoString(EditInput.Text);
+
+  Log('Echo', LResult);
 end;
 
 procedure TMainForm.btnReverseClick(Sender: TObject);
+var
+  LResult: string;
 begin
-  Log(
-    'Reverse',
-    MainDataModule.ReverseString(EditInput.Text)
-  );
+  LResult := MainDataModule.ReverseString(EditInput.Text);
+
+  Log('Reverse', LResult);
 end;
 
 procedure TMainForm.Button1Click(Sender: TObject);
@@ -146,6 +149,18 @@ begin
     LImageStream.Free;
   end;
 
+end;
+
+procedure TMainForm.BtnPersonAndHeaderClick(Sender: TObject);
+var
+  LResponse: TPair<TPerson, string>;
+begin
+  LResponse := MainDataModule.GetPersonAndHeader(12);
+  try
+    Log('GetReverseAndHeader', LResponse.Key.Name + sLineBreak + LResponse.Value);
+  finally
+    LResponse.Key.Free;
+  end;
 end;
 
 procedure TMainForm.BtnGetStringAndStreamClick(Sender: TObject);
@@ -241,11 +256,12 @@ begin
 end;
 
 procedure TMainForm.BtnGetWiRLResponseClick(Sender: TObject);
+var
+  LResponse: string;
 begin
-  Log(
-    'GetRawResponse',
-    MainDataModule.GetRawResponse
-  );
+  LResponse := MainDataModule.GetRawResponse;
+
+  Log('GetRawResponse', LResponse);
 
 end;
 
@@ -254,41 +270,41 @@ var
   LResponse: string;
 begin
   LResponse := MainDataModule.PostStreamResource.POST<string, string>(EditInput.Text);
-  Log(
-    'POST',
-    LResponse
-  );
+
+  Log('POST', LResponse);
 end;
 
 procedure TMainForm.BtnPostStreamClick(Sender: TObject);
 var
   LStream: TStream;
+  LResponse: string;
 begin
   LStream := TStringStream.Create(EditInput.Text, TEncoding.UTF8);
   try
-    Log(
-      'PostStream',
-      MainDataModule.PostStream(LStream)
-    );
+    LResponse := MainDataModule.PostStream(LStream);
+
+    Log('PostStream', LResponse);
   finally
     LStream.Free;
   end;
 end;
 
 procedure TMainForm.BtnExceptionClick(Sender: TObject);
+var
+  LResponse: string;
 begin
-  Log(
-    'TestException',
-    MainDataModule.TestException
-  );
+  LResponse := MainDataModule.TestException;
+
+  Log('TestException', LResponse);
 end;
 
 procedure TMainForm.btnExecuteClick(Sender: TObject);
+var
+  LResponse: string;
 begin
-  Log(
-    'ExecuteHelloWorld',
-    MainDataModule.ExecuteHelloWorld
-  );
+  LResponse := MainDataModule.ExecuteHelloWorld;
+
+  Log('ExecuteHelloWorld', LResponse);
 end;
 
 end.

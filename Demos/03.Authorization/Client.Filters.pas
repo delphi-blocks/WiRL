@@ -26,7 +26,7 @@ procedure TClientLogger.Filter(AResponseContext: TWiRLClientResponseContext);
 begin
   // Probably is not a good idea to use a reference to frmClientMain here,
   // but... it's just a demo!
-  frmClientMain.ShowResponse(TJSONHelper.PrettyPrint(AResponseContext.Response.Content));
+  frmClientMain.ShowResponse(TJSONHelper.PrettyPrint(AResponseContext.Response.ContentText));
 end;
 
 initialization

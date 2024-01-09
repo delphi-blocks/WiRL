@@ -43,7 +43,7 @@ type
   TPerson = class
   private
     FName: string;
-  published
+  public
     property Name: string read FName write FName;
   end;
 

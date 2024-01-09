@@ -55,16 +55,10 @@ type
 
     procedure ContextInjection(AInstance: TObject);
     function MergeHeaders(const AHttpMethod: string): IWiRLHeaders;
-    function StreamToObject<T>(AHeaders: IWiRLHeaders; AStream: TStream): T; overload;
-    procedure StreamToObject(AObject: TObject; AHeaders: IWiRLHeaders; AStream: TStream); overload;
     procedure ObjectToStream<T>(AHeaders: IWiRLHeaders; AObject: T; AStream: TStream); overload;
     function SameObject<T>(AValue: T; AObject: TObject): Boolean;
     procedure SetApplication(const Value: TWiRLClientApplication);
     function ValueToString(const AValue: TValue): string;
-    procedure StreamToEntity<T>(AEntity: T; AHeaders: IWiRLHeaders;
-      AStream: TStream);
-    procedure StreamToArray(AArray: TValue; AHeaders: IWiRLHeaders;
-      AStream: TStream);
     procedure UseStreamEntity<T>(AResponseEntity: T);
   protected
     function GetClient: TWiRLClient; virtual;
@@ -402,96 +396,6 @@ begin
   Writer.WriteListEnd;
 end;
 
-procedure TWiRLClientCustomResource.StreamToObject(AObject: TObject;
-  AHeaders: IWiRLHeaders; AStream: TStream);
-var
-  LType: TRttiType;
-  LMediaType: TMediaType;
-  LReader: IMessageBodyReader;
-begin
-  LType := TRttiHelper.Context.GetType(AObject.ClassInfo);
-  LMediaType := TMediaType.Create(AHeaders.Values[TWiRLHeader.CONTENT_TYPE]);
-  try
-    LReader := Application.ReaderRegistry.FindReader(LType, LMediaType);
-    if not Assigned(LReader) then
-      raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
-    ContextInjection(LReader as TObject);
-
-    LReader.ReadFrom(AObject, LType, LMediaType, AHeaders, AStream);
-  finally
-    LMediaType.Free;
-  end;
-end;
-
-procedure TWiRLClientCustomResource.StreamToArray(AArray: TValue;
-  AHeaders: IWiRLHeaders; AStream: TStream);
-var
-  LList: TDataSetList;
-  LIndex: Integer;
-  LItem: TValue;
-begin
-  LList := TDataSetList.Create(False);
-  try
-    for LIndex := 0 to AArray.GetArrayLength - 1 do
-    begin
-      LItem := AArray.GetArrayElement(LIndex);
-      if not LItem.IsObject then
-        raise EWiRLClientException.Create('Array of primitive type not supported');
-
-      if not (LItem.AsObject is TDataSet) then
-        raise EWiRLClientException.Create('Error Message');
-
-      LList.Add(TDataSet(LItem.AsObject));
-    end;
-    StreamToObject(LList, AHeaders, AStream);
-  finally
-    LList.Free;
-  end;
-end;
-
-procedure TWiRLClientCustomResource.StreamToEntity<T>(AEntity: T;
-  AHeaders: IWiRLHeaders; AStream: TStream);
-var
-  LValue: TValue;
-begin
-  LValue := TValue.From<T>(AEntity);
-
-  if LValue.IsObject then
-    if LValue.AsObject is TStream then
-      LValue := AStream
-    else
-      StreamToObject(LValue.AsObject, AHeaders, AStream)
-  else if LValue.IsArray then
-    StreamToArray(LValue, AHeaders, AStream)
-  else
-    raise EWiRLClientException.Create('Not supported');
-end;
-
-function TWiRLClientCustomResource.StreamToObject<T>(AHeaders: IWiRLHeaders; AStream: TStream): T;
-var
-  LType: TRttiType;
-  LMediaType: TMediaType;
-  LReader: IMessageBodyReader;
-  LValue: TValue;
-begin
-  LType := TRttiHelper.Context.GetType(TypeInfo(T));
-  if TRttiHelper.IsObjectOfType<TStream>(LType) then
-    Exit(TRttiHelper.ObjectAsType<T>(AStream));
-
-  LMediaType := TMediaType.Create(AHeaders.ContentType);
-  try
-    LReader := Application.ReaderRegistry.FindReader(LType, LMediaType);
-    if not Assigned(LReader) then
-      raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
-    ContextInjection(LReader as TObject);
-
-    LValue := LReader.ReadFrom(LType, LMediaType, AHeaders, AStream);
-    Result := LValue.AsType<T>;
-  finally
-    LMediaType.Free;
-  end;
-end;
-
 procedure TWiRLClientCustomResource.ObjectToStream<T>(AHeaders: IWiRLHeaders;
   AObject: T; AStream: TStream);
 var
@@ -575,10 +479,11 @@ begin
     end;
     DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
 
+    LResponse.SetContext(FContext);
     if TRttiHelper.IsInterfaceOfType(TypeInfo(V), IWiRLResponse) then
       Exit(TValue.From<IWiRLResponse>(LResponse).AsType<V>);
 
-    Result := StreamToObject<V>(LResponse.Headers, LResponse.ContentStream);
+    Result := FApplication.StreamToObject<V>(LResponse.Headers, LResponse.ContentStream, FContext);
     if SameObject<V>(Result, LResponse.ContentStream) then
       LResponse.SetOwnContentStream(False);
   finally
@@ -627,7 +532,8 @@ begin
     end;
     DoAfterRequest(AHttpMethod, LRequestStream, LResponse);
 
-    StreamToEntity<V>(AResponseEntity, LResponse.Headers, LResponse.ContentStream);
+    LResponse.SetContext(FContext);
+    FApplication.StreamToEntity<V>(AResponseEntity, LResponse.Headers, LResponse.ContentStream, FContext);
 
     if SameObject<V>(AResponseEntity, LResponse.ContentStream) then
       LResponse.SetOwnContentStream(False);

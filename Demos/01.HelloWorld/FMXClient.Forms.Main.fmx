@@ -24,8 +24,6 @@ object MainForm: TMainForm
     TabPosition = PlatformDefault
     Sizes = (
       860s
-      601s
-      860s
       601s)
     object HelloWorldTabItem: TTabItem
       CustomIcon = <
@@ -282,6 +280,17 @@ object MainForm: TMainForm
           TextSettings.Trimming = None
           OnClick = BtnGetWiRLResponseClick
         end
+        object BtnPersonAndHeader: TButton
+          Position.X = 8.000000000000000000
+          Position.Y = 448.000000000000000000
+          Size.Width = 217.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 14
+          Text = 'GET TPerson and header'
+          TextSettings.Trimming = None
+          OnClick = BtnPersonAndHeaderClick
+        end
       end
       object EditInput: TEdit
         Touch.InteractiveGestures = [LongTap, DoubleTap]
@@ -304,21 +313,6 @@ object MainForm: TMainForm
         Text = 'Input:'
         TabOrder = 3
       end
-    end
-    object StringDemosTabItem: TTabItem
-      CustomIcon = <
-        item
-        end>
-      TextSettings.Trimming = None
-      IsSelected = False
-      Size.Width = 131.000000000000000000
-      Size.Height = 26.000000000000000000
-      Size.PlatformDefault = False
-      StyleLookup = ''
-      TabOrder = 0
-      Text = 'StringDemosTabItem'
-      ExplicitSize.cx = 131.000000000000000000
-      ExplicitSize.cy = 24.000000000000000000
     end
   end
 end
