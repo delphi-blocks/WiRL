@@ -39,7 +39,6 @@ type
     FContext: TWiRLContextBase;
 
     { IWiRLResponse }
-    function GetHeaderValue(const AName: string): string;
     function GetStatusCode: Integer;
     function GetStatusText: string;
     function GetContentType: string;
@@ -310,12 +309,13 @@ end;
 
 function TWiRLClientResponseNetHttp.GetContentType: string;
 begin
-  Result := GetHeaderValue('Content-Type');
+  Result := GetHeaders['Content-Type'];
 end;
 
 function TWiRLClientResponseNetHttp.GetHeaders: IWiRLHeaders;
 var
   LHeader: TNameValuePair;
+  LCookie: TCookie;
 begin
   if not Assigned(FHeaders) then
   begin
@@ -324,13 +324,12 @@ begin
     begin
       FHeaders.AddHeader(TWiRLHeader.Create(LHeader.Name, LHeader.Value));
     end;
+    for LCookie in FResponse.Cookies do
+    begin
+      FHeaders.AddHeader(TWiRLHeader.Create('Set-Cookie', LCookie.GetServerCookie));
+    end;
   end;
   Result := FHeaders;
-end;
-
-function TWiRLClientResponseNetHttp.GetHeaderValue(const AName: string): string;
-begin
-  Result := GetHeaders.Values[AName];
 end;
 
 function TWiRLClientResponseNetHttp.GetRawContent: TBytes;

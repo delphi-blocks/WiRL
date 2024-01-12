@@ -108,8 +108,6 @@ type
 
   IWiRLResponse = interface
     ['{F75C65E0-9F58-44EB-98DB-01BB3A5AF9F1}']
-    /// <summary>Getter for the HeaderValue Property</summary>
-    function GetHeaderValue(const AName: string): string;
     /// <summary>Getter for the StatusCode Property</summary>
     function GetStatusCode: Integer;
     /// <summary>Getter for the StatusText Property</summary>
@@ -137,10 +135,6 @@ type
     /// <summary>Set the response context (internal usage)</summary>
     procedure SetContext(AContext: TWiRLContextBase);
 
-    /// <summary>Property to Get Header values</summary>
-    /// <param name="AName">Name of the Header</param>
-    /// <returns>The string value associated to the given name.</returns>
-    property HeaderValue[const AName: string]: string read GetHeaderValue;
     /// <summary>Get StatusText from server response</summary>
     property StatusText: string read GetStatusText write SetStatusText;
     /// <summary>Get StatusCode from server response</summary>
