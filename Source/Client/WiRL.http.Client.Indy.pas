@@ -284,7 +284,7 @@ constructor TWiRLClientResponseIndy.Create(AIdHTTPResponse: TIdHTTPResponse);
 begin
   inherited Create;
   FIdHTTPResponse := AIdHTTPResponse;
-  FOwnContentStream := True;
+  FOwnContentStream := False;
 end;
 
 destructor TWiRLClientResponseIndy.Destroy;

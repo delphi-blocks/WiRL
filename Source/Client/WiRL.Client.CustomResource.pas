@@ -49,7 +49,6 @@ type
     FOnRequestError: TRequestErrorEvent;
     FFilters: TStringDynArray;
     FResponseStream: TStream;
-    FOwnStream: Boolean;
     procedure SetPathParams(const Value: TStrings);
     procedure SetQueryParams(const Value: TStrings);
 
@@ -85,8 +84,6 @@ type
     procedure LoadHeadersProperty(Reader: TReader);
     procedure StoreHeadersProperty(Writer: TWriter);
 
-    procedure InitResponseStream;
-
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -98,7 +95,7 @@ type
     function GetParentComponent: TComponent; override;
     function HasParent: Boolean; override;
 
-    procedure SetContentStream(AStream: TStream; AOwnStream: Boolean);
+    procedure SetContentStream(AStream: TStream);
 
     // http verbs
     function Get<T>: T; overload;
@@ -224,7 +221,6 @@ begin
   FQueryParams := TStringList.Create;
   FContext := TWiRLContextHttp.Create;
   FHeaders := TWiRLResourceHeaders.Create(Self);
-  InitResponseStream;
 end;
 
 function TWiRLClientCustomResource.GetClient: TWiRLClient;
@@ -313,22 +309,41 @@ begin
     FContext.AddContainerOnce(LPair.Value, False);
 end;
 
-procedure TWiRLClientCustomResource.InitResponseStream;
-begin
-  FResponseStream := TMemoryStream.Create;
-  FOwnStream := True;
-end;
-
 function TWiRLClientCustomResource.InternalHttpRequest(
   const AHttpMethod: string; ARequestStream, AResponseStream: TStream): IWiRLResponse;
 var
   LHttpMethodImplementation: THttpMethodImplementation;
+  LResponseStream: TStream;
+  LInternalStream: Boolean;
 begin
   LHttpMethodImplementation := HttpMethodImplementations[TWiRLHttpMethod.ConvertFromString(AHttpMethod)];
   if not Assigned(LHttpMethodImplementation) then
     raise EWiRLClientException.CreateFmt('Implementation not found for method [%s]', [AHttpMethod]);
 
-  Result := LHttpMethodImplementation(Self, ARequestStream, AResponseStream, MergeHeaders(AHttpMethod));
+  LInternalStream := not Assigned(AResponseStream);
+  if LInternalStream then
+    LResponseStream := TMemoryStream.Create
+  else
+    LResponseStream := ARequestStream;
+
+  try
+    Result := LHttpMethodImplementation(Self, ARequestStream, LResponseStream, MergeHeaders(AHttpMethod));
+    if LInternalStream then
+      Result.SetOwnContentStream(True);
+  except
+    on E: EWiRLClientProtocolException do
+    begin
+      if LInternalStream then
+        Result.SetOwnContentStream(True);
+      raise;
+    end;
+    on E: Exception do
+    begin
+      if LInternalStream then
+        LResponseStream.Free;
+      raise;
+    end;
+  end;
 end;
 
 procedure TWiRLClientCustomResource.LoadHeadersProperty(Reader: TReader);
@@ -465,14 +480,10 @@ begin
       else
       begin
         LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, FResponseStream);
-        LResponse.SetOwnContentStream(FOwnStream);
-        InitResponseStream;
       end;
     except
       on E: EWiRLClientProtocolException do
       begin
-        E.Response.SetOwnContentStream(FOwnStream);
-        InitResponseStream;
         DoRequestError(AHttpMethod, LRequestStream, E.Response);
         raise;
       end;
@@ -496,14 +507,12 @@ procedure TWiRLClientCustomResource.GenericHttpRequest<T, V>(
 var
   LRequestStream: TMemoryStream;
   LResponse: IWiRLResponse;
-  LOwnResponseStream: Boolean;
 begin
   if not Assigned(Client) then
     Exit;
 
   InitHttpRequest;
 
-  LOwnResponseStream := FOwnStream;
   LRequestStream := TMemoryStream.Create;
   try
     UseStreamEntity<V>(AResponseEntity);
@@ -519,13 +528,9 @@ begin
       end
       else
         LResponse := InternalHttpRequest(AHttpMethod, LRequestStream, FResponseStream);
-      InitResponseStream;
-      LResponse.SetOwnContentStream(LOwnResponseStream);
     except
       on E: EWiRLClientProtocolException do
       begin
-        InitResponseStream;
-        E.Response.SetOwnContentStream(LOwnResponseStream);
         DoRequestError(AHttpMethod, LRequestStream, E.Response);
         raise;
       end;
@@ -551,7 +556,7 @@ begin
   LValue := TValue.From<T>(AResponseEntity);
   if (LValue.IsObject) and LValue.IsInstanceOf(TStream) then
   begin
-    SetContentStream(LValue.AsType<TStream>, False);
+    SetContentStream(LValue.AsType<TStream>);
   end;
 end;
 
@@ -630,8 +635,6 @@ begin
   FPathParams.Free;
   FQueryParams.Free;
   FContext.Free;
-  if FOwnStream then
-    FResponseStream.Free;
   inherited;
 end;
 
@@ -759,14 +762,13 @@ begin
   end;
 end;
 
-procedure TWiRLClientCustomResource.SetContentStream(AStream: TStream; AOwnStream: Boolean);
+procedure TWiRLClientCustomResource.SetContentStream(AStream: TStream);
 begin
   if Assigned(FResponseStream) and (FResponseStream <> AStream) then
   begin
     FResponseStream.Free;
   end;
 
-  FOwnStream := AOwnStream;
   FResponseStream := AStream;
 end;
 

@@ -273,7 +273,7 @@ constructor TWiRLClientResponseNetHttp.Create(AResponse: IHTTPResponse);
 begin
   inherited Create;
   FResponse := AResponse;
-  FOwnContentStream := True;
+  FOwnContentStream := False;
 end;
 
 destructor TWiRLClientResponseNetHttp.Destroy;

@@ -42,7 +42,7 @@ type
     function Authorization(const AValue: string): TWiRLInvocation; overload;
     function AuthBasic(const AName, AValue: string): TWiRLInvocation; overload;
     function AuthBearer(const AValue: string): TWiRLInvocation; overload;
-    function SetContentStream(AStream: TStream; AOwnStream: Boolean = False): TWiRLInvocation;
+    function SetContentStream(AStream: TStream): TWiRLInvocation;
 
     function QueryParam(const AName: string; const AValue: TValue): TWiRLInvocation; overload;
     function QueryParam<T>(const AName: string; const AValue: T): TWiRLInvocation; overload;
@@ -201,7 +201,7 @@ type
     procedure AcceptLanguage(const AAcceptLanguage: string);
     procedure QueryParam(const AName: string; const AValue: TValue);
     procedure PathParam(const AName: string; const AValue: TValue);
-    procedure SetContentStream(AStream: TStream; AOwnStream: Boolean);
+    procedure SetContentStream(AStream: TStream);
 
     constructor Create(AApplication: TWiRLClientApplication);
     destructor Destroy; override;
@@ -923,9 +923,9 @@ begin
   Result := Self;
 end;
 
-function TWiRLInvocation.SetContentStream(AStream: TStream; AOwnStream: Boolean): TWiRLInvocation;
+function TWiRLInvocation.SetContentStream(AStream: TStream): TWiRLInvocation;
 begin
-  FWiRLInvocation.SetContentStream(AStream, AOwnStream);
+  FWiRLInvocation.SetContentStream(AStream);
   Result := Self;
 end;
 
@@ -999,9 +999,9 @@ begin
   FResource.QueryParam(AName, AValue);
 end;
 
-procedure TWiRLResourceWrapper.SetContentStream(AStream: TStream; AOwnStream: Boolean);
+procedure TWiRLResourceWrapper.SetContentStream(AStream: TStream);
 begin
-  FResource.SetContentStream(AStream, AOwnStream);
+  FResource.SetContentStream(AStream);
 end;
 
 procedure TWiRLResourceWrapper.Target(const AUrl: string);

@@ -119,7 +119,7 @@ function TMainDataModule.GetStringAndStream(AStream: TStream): string;
 begin
   Result := WiRLClientApplication1
     .Resource('helloworld')
-    .SetContentStream(AStream, False)
+    .SetContentStream(AStream)
     .Accept('text/plain')
     .Get<string>;
 end;
