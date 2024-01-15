@@ -40,6 +40,7 @@ type
     { IWiRLResponse }
     function GetStatusCode: Integer;
     function GetStatusText: string;
+    function GetStatus: TWiRLResponseStatus;
     function GetContentType: string;
     function GetContentText: string;
     function GetContentStream: TStream;
@@ -321,7 +322,7 @@ end;
 
 function TWiRLClientResponseIndy.GetContentType: string;
 begin
-  Result := FHeaders['Content-Type'];
+  Result := GetHeaders['Content-Type'];
 end;
 
 function TWiRLClientResponseIndy.GetHeaders: IWiRLHeaders;
@@ -357,6 +358,11 @@ begin
     SetLength(Result, GetContentStream.Size);
     GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
   end;
+end;
+
+function TWiRLClientResponseIndy.GetStatus: TWiRLResponseStatus;
+begin
+  Result := TWiRLResponseStatus.FromStatusCode(GetStatusCode);
 end;
 
 function TWiRLClientResponseIndy.GetStatusCode: Integer;

@@ -140,6 +140,7 @@ type
     function GetHeaderValue(const AName: string): string;
     function GetStatusCode: Integer;
     function GetStatusText: string;
+    function GetStatus: TWiRLResponseStatus;
     function GetContentType: string;
     function GetContentText: string;
     function GetContentStream: TStream;
@@ -450,6 +451,11 @@ begin
     SetLength(Result, GetContentStream.Size);
     GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
   end;
+end;
+
+function TWiRLVirtualResponse.GetStatus: TWiRLResponseStatus;
+begin
+  Result := TWiRLResponseStatus.FromStatusCode(FStatusCode);
 end;
 
 function TWiRLVirtualResponse.GetStatusCode: Integer;

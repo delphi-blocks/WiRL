@@ -41,6 +41,7 @@ type
     { IWiRLResponse }
     function GetStatusCode: Integer;
     function GetStatusText: string;
+    function GetStatus: TWiRLResponseStatus;
     function GetContentType: string;
     function GetContent: TWiRLContent;
     function GetContentText: string;
@@ -340,6 +341,11 @@ begin
     SetLength(Result, GetContentStream.Size);
     GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
   end;
+end;
+
+function TWiRLClientResponseNetHttp.GetStatus: TWiRLResponseStatus;
+begin
+  Result := TWiRLResponseStatus.FromStatusCode(GetStatusCode);
 end;
 
 function TWiRLClientResponseNetHttp.GetStatusCode: Integer;

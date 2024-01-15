@@ -48,6 +48,9 @@ type
     EditInput: TEdit;
     Label1: TLabel;
     BtnPersonAndHeader: TButton;
+    BtnPersorOrError: TButton;
+    EditPersonID: TEdit;
+    Label2: TLabel;
     procedure btnExecuteClick(Sender: TObject);
     procedure btnEchoClick(Sender: TObject);
     procedure btnReverseClick(Sender: TObject);
@@ -63,6 +66,7 @@ type
     procedure BtnPostStreamClick(Sender: TObject);
     procedure BtnGetWiRLResponseClick(Sender: TObject);
     procedure BtnPersonAndHeaderClick(Sender: TObject);
+    procedure BtnPersorOrErrorClick(Sender: TObject);
   private
     procedure Log(const ATag, AMessage: string);
   public
@@ -155,12 +159,30 @@ procedure TMainForm.BtnPersonAndHeaderClick(Sender: TObject);
 var
   LResponse: TPair<TPerson, string>;
 begin
-  LResponse := MainDataModule.GetPersonAndHeader(12);
+  LResponse := MainDataModule.GetPersonAndHeader(EditPersonID.Text.ToInteger);
   try
     Log('GetReverseAndHeader', LResponse.Key.Name + sLineBreak + LResponse.Value);
   finally
     LResponse.Key.Free;
   end;
+end;
+
+procedure TMainForm.BtnPersorOrErrorClick(Sender: TObject);
+var
+  LPerson: TPerson;
+begin
+  LPerson := MainDataModule.GetPersonOrError(EditPersonID.Text.ToInteger);
+  try
+    Log(
+      'GetPerson',
+      'Name: ' + LPerson.Name + sLineBreak +
+      'Age: ' + LPerson.Age.ToString + sLineBreak +
+      'Detail: ' + LPerson.Detail
+    );
+  finally
+    LPerson.Free;
+  end;
+
 end;
 
 procedure TMainForm.BtnGetStringAndStreamClick(Sender: TObject);
@@ -197,7 +219,7 @@ procedure TMainForm.BtnGenericGETClick(Sender: TObject);
 var
   LPerson: TPerson;
 begin
-  LPerson := MainDataModule.GetPerson(12);
+  LPerson := MainDataModule.GetPerson(EditPersonID.Text.ToInteger);
   try
     Log(
       'GetPerson',

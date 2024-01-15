@@ -18,6 +18,7 @@ uses
   WiRL.http.URL,
   WiRL.http.MultipartData,
   WiRL.Core.Engine,
+  WiRL.Core.Exceptions,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.Core.Application,
@@ -149,6 +150,9 @@ end;
 
 function THelloWorldResource.GetPerson(Id: Integer): TPerson;
 begin
+  if Id >= 100 then
+    raise EWiRLNotFoundException.Create('Not found!');
+
   Result := TPerson.Create;
   Result.Name := 'Paolo Rossi';
   Result.Age := Id;

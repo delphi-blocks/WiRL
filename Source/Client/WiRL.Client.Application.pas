@@ -43,6 +43,8 @@ type
     function AuthBasic(const AName, AValue: string): TWiRLInvocation; overload;
     function AuthBearer(const AValue: string): TWiRLInvocation; overload;
     function SetContentStream(AStream: TStream): TWiRLInvocation;
+    function DisableProtocolException: TWiRLInvocation;
+    function EnabledProtocolException: TWiRLInvocation;
 
     function QueryParam(const AName: string; const AValue: TValue): TWiRLInvocation; overload;
     function QueryParam<T>(const AName: string; const AValue: T): TWiRLInvocation; overload;
@@ -188,7 +190,7 @@ uses
   WiRL.http.Accept.MediaType;
 
 type
-  TWiRLResourceWrapper = class(TInterfacedObject, IWiRLInvocation)
+  TWiRLResourceProxy = class(TInterfacedObject, IWiRLInvocation)
   private
     FApp: TWiRLClientApplication;
     FResource: TWiRLClientCustomResource;
@@ -840,7 +842,7 @@ end;
 
 constructor TWiRLInvocation.Create(AApplication: TWiRLClientApplication);
 begin
-  FWiRLInvocation := TWiRLResourceWrapper.Create(AApplication);
+  FWiRLInvocation := TWiRLResourceProxy.Create(AApplication);
 end;
 
 procedure TWiRLInvocation.Delete(AResponseEntity: TObject);
@@ -851,6 +853,18 @@ end;
 function TWiRLInvocation.Delete<T>: T;
 begin
   Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).Delete<T>;
+end;
+
+function TWiRLInvocation.DisableProtocolException: TWiRLInvocation;
+begin
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).DisableProtocolException := True;
+  Result := Self;
+end;
+
+function TWiRLInvocation.EnabledProtocolException: TWiRLInvocation;
+begin
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).DisableProtocolException := False;
+  Result := Self;
 end;
 
 function TWiRLInvocation.Filters(const AFilters: TStringDynArray): TWiRLInvocation;
@@ -941,50 +955,50 @@ begin
   Result := Self;
 end;
 
-{ TWiRLResourceWrapper }
+{ TWiRLResourceProxy }
 
-procedure TWiRLResourceWrapper.Accept(const AAccept: string);
+procedure TWiRLResourceProxy.Accept(const AAccept: string);
 begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
   FResource.Headers.Accept := AAccept;
 end;
 
-procedure TWiRLResourceWrapper.AcceptLanguage(const AAcceptLanguage: string);
+procedure TWiRLResourceProxy.AcceptLanguage(const AAcceptLanguage: string);
 begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
   // FResource.SpecificAcceptLanguage := AAccept;
 end;
 
-procedure TWiRLResourceWrapper.ContentType(const AContentType: string);
+procedure TWiRLResourceProxy.ContentType(const AContentType: string);
 begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
   FResource.Headers.ContentType := AContentType;
 end;
 
-constructor TWiRLResourceWrapper.Create(AApplication: TWiRLClientApplication);
+constructor TWiRLResourceProxy.Create(AApplication: TWiRLClientApplication);
 begin
   inherited Create;
   FApp := AApplication;
   FResource := nil;
 end;
 
-destructor TWiRLResourceWrapper.Destroy;
+destructor TWiRLResourceProxy.Destroy;
 begin
   FResource.Free;
   inherited;
 end;
 
-function TWiRLResourceWrapper.GetResource: TObject;
+function TWiRLResourceProxy.GetResource: TObject;
 begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
   Result := FResource;
 end;
 
-procedure TWiRLResourceWrapper.PathParam(const AName: string; const AValue: TValue);
+procedure TWiRLResourceProxy.PathParam(const AName: string; const AValue: TValue);
 begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
@@ -992,19 +1006,19 @@ begin
   FResource.PathParam(AName, AValue);
 end;
 
-procedure TWiRLResourceWrapper.QueryParam(const AName: string; const AValue: TValue);
+procedure TWiRLResourceProxy.QueryParam(const AName: string; const AValue: TValue);
 begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
   FResource.QueryParam(AName, AValue);
 end;
 
-procedure TWiRLResourceWrapper.SetContentStream(AStream: TStream);
+procedure TWiRLResourceProxy.SetContentStream(AStream: TStream);
 begin
   FResource.SetContentStream(AStream);
 end;
 
-procedure TWiRLResourceWrapper.Target(const AUrl: string);
+procedure TWiRLResourceProxy.Target(const AUrl: string);
 begin
   if not Assigned(FResource) then
   begin

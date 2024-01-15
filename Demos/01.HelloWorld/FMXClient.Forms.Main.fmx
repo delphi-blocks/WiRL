@@ -47,13 +47,13 @@ object MainForm: TMainForm
         TextSettings.Font.Family = 'Consolas'
         Anchors = [akLeft, akTop, akRight, akBottom]
         Position.X = 234.000000000000000000
-        Position.Y = 38.000000000000000000
+        Position.Y = 64.000000000000000000
         Size.Width = 625.000000000000000000
-        Size.Height = 562.000000000000000000
+        Size.Height = 536.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         Viewport.Width = 621.000000000000000000
-        Viewport.Height = 558.000000000000000000
+        Viewport.Height = 532.000000000000000000
       end
       object Layout1: TLayout
         Align = Left
@@ -63,14 +63,14 @@ object MainForm: TMainForm
         TabOrder = 1
         object btnExecute: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 274.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 25.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 202.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
           Text = 'GET string'
@@ -79,14 +79,14 @@ object MainForm: TMainForm
         end
         object btnEcho: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 5.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 25.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 12
           Text = 'Echo'
@@ -106,14 +106,14 @@ object MainForm: TMainForm
         end
         object btnReverse: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 40.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 32.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 27.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 11
           Text = 'Reverse'
@@ -122,14 +122,14 @@ object MainForm: TMainForm
         end
         object btnPost: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 82.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 22.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 52.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 4
           Text = 'Post string'
@@ -138,14 +138,14 @@ object MainForm: TMainForm
         end
         object BtnGenericGET: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 114.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 22.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 77.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 6
           Text = 'GET Object'
@@ -154,14 +154,14 @@ object MainForm: TMainForm
         end
         object BtnGenericPOST: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 146.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 22.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 102.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 13
           Text = 'POST Object (new)'
@@ -170,14 +170,14 @@ object MainForm: TMainForm
         end
         object BtnException: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 178.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 22.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 127.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 8
           Text = 'Exception'
@@ -186,14 +186,14 @@ object MainForm: TMainForm
         end
         object Button1: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 210.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 22.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 152.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 10
           Text = 'POST Object (fill)'
@@ -202,14 +202,14 @@ object MainForm: TMainForm
         end
         object BtnGetImage: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 309.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 25.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 227.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 7
           Text = 'Get Image (new)'
@@ -218,14 +218,14 @@ object MainForm: TMainForm
         end
         object Button2: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 344.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 25.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 252.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 5
           Text = 'Get Image (fill)'
@@ -234,14 +234,14 @@ object MainForm: TMainForm
         end
         object BtnGetStringAndStream: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 379.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 25.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 277.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 3
           Text = 'Get string and stream'
@@ -250,14 +250,14 @@ object MainForm: TMainForm
         end
         object BtnPostStream: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 242.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 22.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 177.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 9
           Text = 'POST Stream'
@@ -266,14 +266,14 @@ object MainForm: TMainForm
         end
         object BtnGetWiRLResponse: TButton
           Align = Top
-          Margins.Left = 5.000000000000000000
-          Margins.Top = 5.000000000000000000
-          Margins.Right = 5.000000000000000000
-          Margins.Bottom = 5.000000000000000000
-          Position.X = 5.000000000000000000
-          Position.Y = 414.000000000000000000
-          Size.Width = 223.000000000000000000
-          Size.Height = 25.000000000000000000
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 302.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 2
           Text = 'Get IWiRLResponse'
@@ -281,20 +281,43 @@ object MainForm: TMainForm
           OnClick = BtnGetWiRLResponseClick
         end
         object BtnPersonAndHeader: TButton
-          Position.X = 8.000000000000000000
-          Position.Y = 448.000000000000000000
-          Size.Width = 217.000000000000000000
+          Align = Top
+          ModalResult = 2
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 327.000000000000000000
+          Size.Width = 229.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 14
+          TabOrder = 15
           Text = 'GET TPerson and header'
           TextSettings.Trimming = None
           OnClick = BtnPersonAndHeaderClick
         end
+        object BtnPersorOrError: TButton
+          Align = Top
+          ModalResult = 2
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 353.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 14
+          Text = 'GET TPerson or error'
+          TextSettings.Trimming = None
+          OnClick = BtnPersorOrErrorClick
+        end
       end
       object EditInput: TEdit
         Touch.InteractiveGestures = [LongTap, DoubleTap]
-        TabOrder = 2
+        TabOrder = 3
         Text = 'Hello, World!'
         Position.X = 304.000000000000000000
         Position.Y = 8.000000000000000000
@@ -311,7 +334,28 @@ object MainForm: TMainForm
         TextSettings.HorzAlign = Trailing
         TextSettings.Trimming = None
         Text = 'Input:'
-        TabOrder = 3
+        TabOrder = 5
+      end
+      object EditPersonID: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 2
+        Text = '12'
+        Position.X = 305.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 555.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object Label2: TLabel
+        Position.X = 242.000000000000000000
+        Position.Y = 36.000000000000000000
+        Size.Width = 55.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.HorzAlign = Trailing
+        TextSettings.Trimming = None
+        Text = 'Person ID:'
+        TabOrder = 4
       end
     end
   end

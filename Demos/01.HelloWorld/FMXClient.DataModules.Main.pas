@@ -24,7 +24,7 @@ uses
   System.Net.HttpClientComponent, FMX.Types, FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
   FireDAC.DApt.Intf, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
-  WiRL.http.Client.Interfaces, Generics.Collections;
+  WiRL.http.Core, WiRL.http.Client.Interfaces, Generics.Collections;
 
 type
   TJobMessageSubscriber = TProc<string,Integer>;
@@ -54,6 +54,7 @@ type
     function GetRawResponse: string;
     function GetStringAndStream(AStream: TStream): string;
     function GetPersonAndHeader(Id: Integer): TPair<TPerson, string>;
+    function GetPersonOrError(Id: Integer): TPerson;
   end;
 
 var
@@ -179,6 +180,30 @@ begin
   LPerson := LResponse.Content.AsType<TPerson>;
 
   Result := TPair<TPerson, string>.Create(LPerson, LContentType);
+end;
+
+function TMainDataModule.GetPersonOrError(Id: Integer): TPerson;
+var
+  LReponse: IWiRLResponse;
+begin
+  LReponse := WiRLClientApplication1
+    .Resource('helloworld/person')
+    .Accept('application/json')
+    .QueryParam('Id', Id.ToString)
+    // Doesn't raise any axception in case of HTTP errors (400, 500)
+    .DisableProtocolException
+    .Get<IWiRLResponse>;
+
+  case LReponse.Status of
+    TWiRLResponseStatus.Success:
+      Exit(LReponse.Content.AsType<TPerson>);
+    TWiRLResponseStatus.ClientError:
+      raise Exception.CreateFmt('Client Error: %d', [LReponse.StatusCode]);
+    TWiRLResponseStatus.ServerError:
+      raise Exception.CreateFmt('Server Error: %d', [LReponse.StatusCode]);
+    else
+      raise Exception.CreateFmt('Unknwn Error (Status: [%s])', [LReponse.Status.ToString]);
+  end;
 end;
 
 function TMainDataModule.GetRawResponse: string;

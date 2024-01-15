@@ -11,6 +11,8 @@ unit WiRL.http.Client.Interfaces;
 
 interface
 
+{$SCOPEDENUMS ON}
+
 uses
   System.Classes, System.SysUtils, System.JSON, System.Generics.Collections,
 
@@ -19,6 +21,7 @@ uses
   WiRL.Core.Exceptions,
   WiRL.Core.Singleton,
   WiRL.Core.Context,
+  WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Accept.MediaType;
 
@@ -134,11 +137,15 @@ type
     function GetContent: TWiRLContent;
     /// <summary>Set the response context (internal usage)</summary>
     procedure SetContext(AContext: TWiRLContextBase);
+    /// <summary>Get Status category from server response (100, 200, 300, ...)</summary>
+    function GetStatus: TWiRLResponseStatus;
 
     /// <summary>Get StatusText from server response</summary>
     property StatusText: string read GetStatusText write SetStatusText;
     /// <summary>Get StatusCode from server response</summary>
     property StatusCode: Integer read GetStatusCode write SetStatusCode;
+    /// <summary>Get Status category from server response (100, 200, 300, ...)</summary>
+    property Status: TWiRLResponseStatus read GetStatus;
     /// <summary>Get ContentType from server response</summary>
     property ContentType: string read GetContentType;
     /// <summary>Get the body from server response as a string</summary>

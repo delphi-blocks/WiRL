@@ -49,6 +49,7 @@ type
     FOnRequestError: TRequestErrorEvent;
     FFilters: TStringDynArray;
     FResponseStream: TStream;
+    FDisableProtocolException: Boolean;
     procedure SetPathParams(const Value: TStrings);
     procedure SetQueryParams(const Value: TStrings);
 
@@ -70,7 +71,7 @@ type
     procedure SetContentType(const Value: string);
     procedure DoBeforeRequest(const AHttpMethod: string; ARequestStream: TStream; out AResponse: IWiRLResponse); virtual;
     procedure DoAfterRequest(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse); virtual;
-    procedure DoRequestError(const AHttpMethod: string; ARequestStream: TStream; AResponse: IWiRLResponse); virtual;
+    procedure DoRequestError(const AHttpMethod: string; ARequestStream: TStream; E: EWiRLClientProtocolException); virtual;
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
@@ -130,6 +131,7 @@ type
     property AfterRequest: TAfterRequestEvent read FAfterRequest write FAfterRequest;
     property BeforeRequest: TBeforeRequestEvent read FBeforeRequest write FBeforeRequest;
     property OnRequestError: TRequestErrorEvent read FOnRequestError write FOnRequestError;
+    property DisableProtocolException: Boolean read FDisableProtocolException write FDisableProtocolException;
   end;
 
   TWiRLResourceHeaders = class(TWiRLHeaders)
@@ -313,36 +315,18 @@ function TWiRLClientCustomResource.InternalHttpRequest(
   const AHttpMethod: string; ARequestStream, AResponseStream: TStream): IWiRLResponse;
 var
   LHttpMethodImplementation: THttpMethodImplementation;
-  LResponseStream: TStream;
-  LInternalStream: Boolean;
+  FOriginalNoProtocolErrorException: Boolean;
 begin
   LHttpMethodImplementation := HttpMethodImplementations[TWiRLHttpMethod.ConvertFromString(AHttpMethod)];
   if not Assigned(LHttpMethodImplementation) then
     raise EWiRLClientException.CreateFmt('Implementation not found for method [%s]', [AHttpMethod]);
 
-  LInternalStream := not Assigned(AResponseStream);
-  if LInternalStream then
-    LResponseStream := TMemoryStream.Create
-  else
-    LResponseStream := ARequestStream;
-
+  FOriginalNoProtocolErrorException := Client.NoProtocolErrorException;
+  Client.NoProtocolErrorException := FDisableProtocolException;
   try
-    Result := LHttpMethodImplementation(Self, ARequestStream, LResponseStream, MergeHeaders(AHttpMethod));
-    if LInternalStream then
-      Result.SetOwnContentStream(True);
-  except
-    on E: EWiRLClientProtocolException do
-    begin
-      if LInternalStream then
-        Result.SetOwnContentStream(True);
-      raise;
-    end;
-    on E: Exception do
-    begin
-      if LInternalStream then
-        LResponseStream.Free;
-      raise;
-    end;
+    Result := LHttpMethodImplementation(Self, ARequestStream, AResponseStream, MergeHeaders(AHttpMethod));
+  finally
+    Client.NoProtocolErrorException := FOriginalNoProtocolErrorException;
   end;
 end;
 
@@ -484,7 +468,7 @@ begin
     except
       on E: EWiRLClientProtocolException do
       begin
-        DoRequestError(AHttpMethod, LRequestStream, E.Response);
+        DoRequestError(AHttpMethod, LRequestStream, E);
         raise;
       end;
     end;
@@ -531,7 +515,7 @@ begin
     except
       on E: EWiRLClientProtocolException do
       begin
-        DoRequestError(AHttpMethod, LRequestStream, E.Response);
+        DoRequestError(AHttpMethod, LRequestStream, E);
         raise;
       end;
     end;
@@ -695,7 +679,7 @@ begin
 end;
 
 procedure TWiRLClientCustomResource.DoRequestError(const AHttpMethod: string;
-  ARequestStream: TStream; AResponse: IWiRLResponse);
+  ARequestStream: TStream; E: EWiRLClientProtocolException);
 var
   LRequestPosition: Integer;
   LResponsePosition: Integer;
@@ -706,13 +690,13 @@ begin
   begin
     if Assigned(ARequestStream) then
       LRequestPosition := ARequestStream.Position;
-    if Assigned(AResponse.ContentStream) then
-      LResponsePosition := AResponse.ContentStream.Position;
-    FOnRequestError(Self, AHttpMethod, ARequestStream, AResponse);
+    if Assigned(E.Response.ContentStream) then
+      LResponsePosition := E.Response.ContentStream.Position;
+    FOnRequestError(Self, AHttpMethod, ARequestStream, E.Response);
     if Assigned(ARequestStream) then
       ARequestStream.Position := LRequestPosition;
-    if Assigned(AResponse.ContentStream) then
-      AResponse.ContentStream.Position := LResponsePosition;
+    if Assigned(E.Response.ContentStream) then
+      E.Response.ContentStream.Position := LResponsePosition;
   end;
 end;
 
