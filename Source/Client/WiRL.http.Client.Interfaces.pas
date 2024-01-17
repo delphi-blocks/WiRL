@@ -14,7 +14,7 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes, System.SysUtils, System.JSON, System.Generics.Collections,
+  System.Classes, System.SysUtils, System.JSON, System.Rtti, System.Generics.Collections,
 
   WiRL.Rtti.Utils,
   WiRL.Core.Classes,
@@ -37,7 +37,8 @@ type
     FResponse: IWiRLResponse;
     FContext: TWiRLContextBase;
   public
-    function AsType<T>: T;
+    function AsType<T>: T; overload;
+    procedure AsType(LEntity: TObject); overload;
     constructor Create(AResponse: IWiRLResponse; AContext: TWiRLContextBase);
   end;
 
@@ -367,6 +368,17 @@ begin
 end;
 
 { TWiRLContent }
+
+procedure TWiRLContent.AsType(LEntity: TObject);
+var
+  LApplication: TWiRLClientApplication;
+begin
+  LApplication := FContext.FindContextDataAs<TWiRLClientApplication>;
+  if not Assigned(LApplication) then
+    raise EWiRLClientException.Create('Application is not assigned');
+
+  LApplication.StreamToObject(LEntity, FResponse.Headers, FResponse.ContentStream, FContext);
+end;
 
 function TWiRLContent.AsType<T>: T;
 var
