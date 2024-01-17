@@ -56,7 +56,8 @@ uses
   WiRL.Tests.Mock.Resources.MessageBody in '..\Mock\WiRL.Tests.Mock.Resources.MessageBody.pas',
   WiRL.Tests.Mock.Resources.Exception in '..\Mock\WiRL.Tests.Mock.Resources.Exception.pas',
   WiRL.Tests.Mock.Resources.Convert in '..\Mock\WiRL.Tests.Mock.Resources.Convert.pas',
-  WiRL.Tests.Mock.Resources.ContextInjection in '..\Mock\WiRL.Tests.Mock.Resources.ContextInjection.pas';
+  WiRL.Tests.Mock.Resources.ContextInjection in '..\Mock\WiRL.Tests.Mock.Resources.ContextInjection.pas',
+  WiRL.Tests.Framework.URL in 'Source\WiRL.Tests.Framework.URL.pas';
 
 var
   runner : ITestRunner;

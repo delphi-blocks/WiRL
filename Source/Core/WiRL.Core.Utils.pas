@@ -87,6 +87,8 @@ type
   function EnsurePrefix(const AString, APrefix: string; const AIgnoreCase: Boolean = True): string;
   function EnsureSuffix(const AString, ASuffix: string; const AIgnoreCase: Boolean = True): string;
 
+  function IsAbsoluteUrl(const APath: string): Boolean;
+
   function StringArrayToString(const AArray: TArray<string>): string;
 
   function StreamToJSONValue(const AStream: TStream; const AEncoding: TEncoding = nil): TJSONValue;
@@ -216,6 +218,27 @@ begin
   Result := SmartConcat(AArray);
 end;
 
+function IsAbsoluteUrl(const APath: string): Boolean;
+const
+  ValidProtocolChars = [
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+  ];
+var
+  LIndex: Integer;
+begin
+  Result := False;
+  for LIndex := 1 to Length(APath) do
+  begin
+    if APath[LIndex] = ':' then
+      Exit(True);
+    if CharInSet(APath[LIndex], ValidProtocolChars) then
+
+  end;
+end;
+
 function EnsurePrefix(const AString, APrefix: string; const AIgnoreCase: Boolean = True): string;
 begin
   Result := AString;
@@ -273,7 +296,10 @@ begin
     if (Result <> '') and (LValue <> '') then
       Result := Result + ADelimiter;
 
-    Result := Result + LValue;
+    if IsAbsoluteUrl(LValue) then
+      Result := LValue
+    else
+      Result := Result + LValue;
   end;
 end;
 
