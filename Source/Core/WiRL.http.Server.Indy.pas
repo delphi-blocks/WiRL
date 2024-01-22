@@ -66,9 +66,7 @@ type
     FHeaders: IWiRLHeaders;
     procedure SendCookies;
   protected
-    function GetContent: string; override;
     function GetContentStream: TStream; override;
-    procedure SetContent(const Value: string); override;
     procedure SetContentStream(const Value: TStream); override;
     function GetStatusCode: Integer; override;
     procedure SetStatusCode(const Value: Integer); override;
@@ -413,13 +411,10 @@ begin
   inherited;
 end;
 
-function TWiRLHttpResponseIndy.GetContent: string;
-begin
-  Result := FResponseInfo.ContentText;
-end;
-
 function TWiRLHttpResponseIndy.GetContentStream: TStream;
 begin
+  if not Assigned(FResponseInfo.ContentStream) then
+    FResponseInfo.ContentStream := TMemoryStream.Create;
   Result := FResponseInfo.ContentStream;
 end;
 
@@ -505,12 +500,6 @@ begin
     FResponseInfo.ContentLength := ContentLength;
 
   SendCookies;
-end;
-
-procedure TWiRLHttpResponseIndy.SetContent(const Value: string);
-begin
-  inherited;
-  FResponseInfo.ContentText := Value;
 end;
 
 procedure TWiRLHttpResponseIndy.SetContentStream(const Value: TStream);

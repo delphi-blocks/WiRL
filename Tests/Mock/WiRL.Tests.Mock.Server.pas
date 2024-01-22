@@ -76,16 +76,13 @@ type
   private
     FContentStream: TStream;
     FStatusCode: Integer;
-    FContent: string;
     FReasonString: string;
     FResponseError: TWiRLResponseError;
     FHeadersSent: Boolean;
     FHeader: IWiRLHeaders;
     function GetResponseError: TWiRLResponseError;
   protected
-    function GetContent: string; override;
     function GetContentStream: TStream; override;
-    procedure SetContent(const Value: string); override;
     procedure SetContentStream(const Value: TStream); override;
     function GetStatusCode: Integer; override;
     procedure SetStatusCode(const Value: Integer); override;
@@ -417,24 +414,11 @@ begin
   inherited;
 end;
 
-function TWiRLTestResponse.GetContent: string;
-var
-  LBuffer: TBytes;
-begin
-  if Assigned(FContentStream) and (FContentStream.Size > 0)  then
-  begin
-    FContentStream.Position := 0;
-    SetLength(LBuffer, FContentStream.Size);
-    FContentStream.Read(LBuffer[0], FContentStream.Size);
-    // Should read the content-type
-    Result := TEncoding.UTF8.GetString(LBuffer);
-  end
-  else
-    Result := FContent;
-end;
-
 function TWiRLTestResponse.GetContentStream: TStream;
 begin
+  if not Assigned(FContentStream) then
+    FContentStream := TMemoryStream.Create;
+
   Result := FContentStream;
 end;
 
@@ -477,15 +461,12 @@ begin
   FHeadersSent := True;
 end;
 
-procedure TWiRLTestResponse.SetContent(const Value: string);
-begin
-  inherited;
-  FContent := Value;
-end;
-
 procedure TWiRLTestResponse.SetContentStream(const Value: TStream);
 begin
   inherited;
+  if Assigned(FContentStream) then
+    FContentStream.Free;
+
   FContentStream := Value;
 end;
 

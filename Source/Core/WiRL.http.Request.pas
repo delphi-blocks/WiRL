@@ -51,8 +51,8 @@ type
     FApplication: TObject;
     FHeaderFields: TWiRLRequestHeaderList;
     function GetAcceptableMediaTypes: TMediaTypeList;
-    function GetContent: string;
-    procedure SetContent(const Value: string);
+    function GetContentText: string;
+    procedure SetContentText(const Value: string);
     function GetRawContent: TBytes;
     procedure SetRawContent(const Value: TBytes);
     function GetContentMediaType: TMediaType;
@@ -124,7 +124,7 @@ type
     property ContentFields: TWiRLParam read GetContentFields;
     property Headers: IWiRLHeaders read GetHeaders;
     property CookieFields: TWiRLCookies read GetCookieFields;
-    property Content: string read GetContent write SetContent;
+    property Content: string read GetContentText write SetContentText;
     property RawContent: TBytes read GetRawContent write SetRawContent;
     property ContentStream: TStream read GetContentStream write SetContentStream;
     property ContentType: string read GetContentType write SetContentType;
@@ -231,15 +231,8 @@ begin
   Result := Headers.Authorization;
 end;
 
-function TWiRLRequest.GetContent: string;
-//var
-//  Encoding :TEncoding;
+function TWiRLRequest.GetContentText: string;
 begin
-//  if ContentMediaType.Charset <> '' then
-//    Encoding := TEncoding.GetEncoding(ContentMediaType.Charset)
-//  else
-//    Encoding := TEncoding.UTF8;
-//  Result := Encoding.GetString(RawContent);
   Result := EncodingFromCharSet(ContentMediaType.Charset).GetString(RawContent);
 end;
 
@@ -323,6 +316,7 @@ function TWiRLRequest.GetRawContent: TBytes;
 var
   LPos :Int64;
 begin
+  SetLength(Result, 0);
   if (GetContentStream <> nil) and (GetContentStream.Size > 0) then
   begin
     LPos := GetContentStream.Position;
@@ -378,7 +372,7 @@ begin
   Headers.Authorization := Value;
 end;
 
-procedure TWiRLRequest.SetContent(const Value: string);
+procedure TWiRLRequest.SetContentText(const Value: string);
 var
   LStream: TStream;
 begin
