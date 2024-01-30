@@ -27,11 +27,11 @@ uses
 procedure Register;
 
 const
-  WIRL_CAPTION = 'WiRL RESTful Library for Delphi ' + WIRL_VERSION;
+  WIRL_CAPTION = 'WiRL RESTful Library for Delphi ' + WIRL_VERSION_STR;
   WIRL_LICENSE = 'Apache License, Version 2.0';
   WIRL_DESCRIPTION =
     'WiRL: 100% RESTful Library for Delphi' + sLineBreak + sLineBreak +
-    Format('Copyright © 2015-%d WiRL Team. All rights reserved.', [CurrentYear]) + sLineBreak +
+    'Copyright © 2015-%d WiRL Team. All rights reserved.' + sLineBreak +
     'https://github.com/delphi-blocks/WiRL' + sLineBreak + sLineBreak +
     '[Powered by]' + sLineBreak + sLineBreak +
     'Delphi JOSE and JWT Library' + sLineBreak +
@@ -68,7 +68,7 @@ begin
     LProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'WiRLSplash');
     if LProductImage = 0 then
       Exit;
-    AboutBoxIndex := AboutBoxServices.AddPluginInfo(WIRL_CAPTION, WIRL_DESCRIPTION, LProductImage, False);
+    AboutBoxIndex := AboutBoxServices.AddPluginInfo(WIRL_CAPTION, Format(WIRL_DESCRIPTION, [CurrentYear]), LProductImage, False);
   end;
 end;
 
