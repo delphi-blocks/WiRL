@@ -126,7 +126,7 @@ begin
     ResponseLabel.Font.Color := clBlack;
 
   ResponseLabel.Caption := IntToStr(AResponse.StatusCode) + ' - ' + AResponse.StatusText;
-  MemoResponse.Text := AResponse.Content;
+  MemoResponse.Text := AResponse.Content.AsType<string>;
 end;
 
 procedure TWiRLResourceRunnerForm.ButtonAddHeaderClick(Sender: TObject);
