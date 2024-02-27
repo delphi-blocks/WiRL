@@ -297,12 +297,12 @@ end;
 
 function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; AResourceInstance: TObject): TValue;
 
-  function GetObjectFromParam(AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
+  function GetObjectFromParam(AMethod: TWiRLProxyMethod; AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
   var
     LReader: IMessageBodyReader;
     //LContentStream: TStream;
   begin
-    LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, AParamValue.MediaType);
+    LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, AMethod.RttiObject.GetAttributes, AParamValue.MediaType);
     if Assigned(LReader) then
     begin
       ContextInjection(LReader as TObject);
@@ -375,7 +375,7 @@ begin
 
       // TODO: Modify, try first GetObjectFromParam (to rename!) and then GetSimpleParam
       if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
-        Result := GetObjectFromParam(LParam, LParamValue)
+        Result := GetObjectFromParam(FLocator.Method, LParam, LParamValue)
       else
         Result := GetSimpleParam(LParam, LParamValue);
 

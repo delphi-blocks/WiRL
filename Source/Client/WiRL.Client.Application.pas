@@ -709,7 +709,7 @@ begin
   LType := TRttiHelper.Context.GetType(AObject.ClassInfo);
   LMediaType := TMediaType.Create(AHeaders.Values[TWiRLHeader.CONTENT_TYPE]);
   try
-    LReader := ReaderRegistry.FindReader(LType, LMediaType);
+    LReader := ReaderRegistry.FindReader(LType, [], LMediaType);
     if not Assigned(LReader) then
       raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
     ContextInjection(LReader as TObject, AContext);
@@ -734,7 +734,7 @@ begin
 
   LMediaType := TMediaType.Create(AHeaders.ContentType);
   try
-    LReader := ReaderRegistry.FindReader(LType, LMediaType);
+    LReader := ReaderRegistry.FindReader(LType, [], LMediaType);
     if not Assigned(LReader) then
       raise EWiRLClientException.CreateFmt('Reader not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
     ContextInjection(LReader as TObject, AContext);

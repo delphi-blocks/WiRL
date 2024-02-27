@@ -407,12 +407,12 @@ begin
   LMediaType := TMediaType.Create(ContentType);
   try
     LValue := TValue.From<T>(AObject);
-    LWriter := Application.WriterRegistry.FindWriter(LType, LMediaType);
+    LWriter := Application.WriterRegistry.FindWriter(LType, [], LMediaType);
     if not Assigned(LWriter) then
       raise EWiRLClientException.CreateFmt('Writer not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
 
     ContextInjection(LWriter as TObject);
-    LWriter.WriteTo(LValue, nil, LMediaType, AHeaders, AStream);
+    LWriter.WriteTo(LValue, [], LMediaType, AHeaders, AStream);
     AStream.Position := soFromBeginning;
 
   finally
