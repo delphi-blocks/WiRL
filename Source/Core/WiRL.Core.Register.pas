@@ -30,7 +30,7 @@ const
   WIRL_CAPTION = 'WiRL RESTful Library for Delphi ' + WIRL_VERSION_STR;
   WIRL_LICENSE = 'Apache License, Version 2.0';
   WIRL_DESCRIPTION =
-    'WiRL: 100% RESTful Library for Delphi' + sLineBreak + sLineBreak +
+    'WiRL: 100%% RESTful Library for Delphi' + sLineBreak + sLineBreak +
     'Copyright © 2015-%d WiRL Team. All rights reserved.' + sLineBreak +
     'https://github.com/delphi-blocks/WiRL' + sLineBreak + sLineBreak +
     '[Powered by]' + sLineBreak + sLineBreak +
