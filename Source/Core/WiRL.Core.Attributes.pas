@@ -412,6 +412,21 @@ type
 
   RESTAttribute = class(TCustomAttribute);
 
+  /// <summary>
+  ///  The <b>SingleRecord</b> attribute change how the message body writer
+  ///  create the output stream for the decorated method.
+  ///  In general when a method return a TDataSet the message body writer
+  ///  produces a list of record. With this attribute the MBW return only
+  ///  the first record of the dataset.
+  /// </summary>
+  /// <remarks>
+  /// WARNING: This attribute will work only if you add the unit:
+  /// WiRL.MessageBody.SingleRecord
+  /// somewhere in the project.
+  /// </remarks>
+  SingleRecordAttribute = class(TCustomAttribute)
+  end;
+
 {$ENDREGION}
 
 implementation
