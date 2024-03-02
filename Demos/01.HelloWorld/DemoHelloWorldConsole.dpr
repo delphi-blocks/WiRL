@@ -21,7 +21,9 @@ uses
   WiRL.Core.Engine,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
-  Server.Resources in 'Server.Resources.pas';
+  Server.Resources.HelloWorld in 'Server.Resources.HelloWorld.pas',
+  Server.Resources.Database in 'Server.Resources.Database.pas',
+  Server.Resources.Params in 'Server.Resources.Params.pas';
 
 var
   WiRLConsole: TWiRLConsoleBase;

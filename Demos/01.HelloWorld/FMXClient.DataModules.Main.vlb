@@ -1,3 +1,6 @@
 ﻿[MainForm.FDMemTable1]
 Visible=False
 
+[MainForm.dsUsers]
+Visible=False
+

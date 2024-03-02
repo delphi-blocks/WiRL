@@ -119,8 +119,10 @@
         <DCCReference Include="Server.Forms.Main.pas">
             <Form>MainForm</Form>
         </DCCReference>
-        <DCCReference Include="Server.Resources.pas"/>
+        <DCCReference Include="Server.Resources.HelloWorld.pas"/>
         <DCCReference Include="Demo.Entities.pas"/>
+        <DCCReference Include="Server.Resources.Database.pas"/>
+        <DCCReference Include="Server.Resources.Params.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -181,6 +183,12 @@
             </Platforms>
             <Deployment Version="4">
                 <DeployFile LocalName="Win32\Debug\DemoHelloWorld.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win32\Debug\DemoHelloWorld.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>DemoHelloWorld.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="OSX32">
                         <Operation>1</Operation>

@@ -22,7 +22,7 @@ uses
   FireDAC.Comp.Client, FMX.Grid, FireDAC.Stan.StorageJSON, Data.Bind.EngExt,
   Fmx.Bind.DBEngExt, Fmx.Bind.Grid, System.Bindings.Outputs, Fmx.Bind.Editors,
   Data.Bind.Components, Data.Bind.Grid, Data.Bind.DBScope, FMX.Memo.Types,
-  FMX.Objects;
+  FMX.Objects, FMXClient.DataModules.Database;
 
 type
   TMainForm = class(TForm)
@@ -51,6 +51,29 @@ type
     BtnPersorOrError: TButton;
     EditPersonID: TEdit;
     Label2: TLabel;
+    TabDatabase: TTabItem;
+    StringGrid1: TStringGrid;
+    btnLoad: TButton;
+    dsUsers: TFDMemTable;
+    BindSourceDB1: TBindSourceDB;
+    BindingsList1: TBindingsList;
+    LinkGridToDataSourceBindSourceDB1: TLinkGridToDataSource;
+    dsUsersid: TIntegerField;
+    dsUsersvalue: TStringField;
+    TabParams: TTabItem;
+    Layout2: TLayout;
+    btnString: TButton;
+    Image2: TImage;
+    btnInt: TButton;
+    btnFloat: TButton;
+    Memo2: TMemo;
+    btnParamObject: TButton;
+    btnBool: TButton;
+    btnDate: TButton;
+    btnTime: TButton;
+    btnEnum: TButton;
+    btnDateTime: TButton;
+    btnMultiPart: TButton;
     procedure btnExecuteClick(Sender: TObject);
     procedure btnEchoClick(Sender: TObject);
     procedure btnReverseClick(Sender: TObject);
@@ -67,10 +90,22 @@ type
     procedure BtnGetWiRLResponseClick(Sender: TObject);
     procedure BtnPersonAndHeaderClick(Sender: TObject);
     procedure BtnPersorOrErrorClick(Sender: TObject);
+    procedure btnLoadClick(Sender: TObject);
+    procedure btnStringClick(Sender: TObject);
+    procedure btnIntClick(Sender: TObject);
+    procedure btnFloatClick(Sender: TObject);
+    procedure btnParamObjectClick(Sender: TObject);
+    procedure btnBoolClick(Sender: TObject);
+    procedure btnEnumClick(Sender: TObject);
+    procedure btnTimeClick(Sender: TObject);
+    procedure btnDateClick(Sender: TObject);
+    procedure btnDateTimeClick(Sender: TObject);
+    procedure btnMultiPartClick(Sender: TObject);
   private
     procedure Log(const ATag, AMessage: string);
+    procedure ParamLog(const ATag, AMessage: string);
   public
-    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
   end;
 
 var
@@ -81,11 +116,36 @@ implementation
 {$R *.fmx}
 
 uses
+  System.IOUtils,
   FMXClient.DataModules.Main,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
   WiRL.Client.Utils,
-  WiRL.Core.JSON, Demo.Entities;
+  WiRL.Core.JSON, Demo.Entities, FMXClient.DataModules.Params;
+
+procedure TMainForm.btnBoolClick(Sender: TObject);
+var
+  LResult: Boolean;
+begin
+  LResult := ParamsModule.GetBoolean(True);
+  ParamLog('GetBoolean', BoolToStr(LResult, True));
+end;
+
+procedure TMainForm.btnDateClick(Sender: TObject);
+var
+  LResult: TDate;
+begin
+  LResult := ParamsModule.GetDate(Date);
+  ParamLog('GetDate', DateToStr(LResult));
+end;
+
+procedure TMainForm.btnDateTimeClick(Sender: TObject);
+var
+  LResult: TDateTime;
+begin
+  LResult := ParamsModule.GetDateTime(Now);
+  ParamLog('GetDateTime', DateTimeToStr(LResult));
+end;
 
 procedure TMainForm.btnEchoClick(Sender: TObject);
 var
@@ -96,6 +156,14 @@ begin
   Log('Echo', LResult);
 end;
 
+procedure TMainForm.btnEnumClick(Sender: TObject);
+var
+  LResult: TMyEnum;
+begin
+  LResult := ParamsModule.GetEnum(TMyEnum.Second);
+  ParamLog('GetEnum', TRttiEnumerationType.GetName(LResult));
+end;
+
 procedure TMainForm.btnReverseClick(Sender: TObject);
 var
   LResult: string;
@@ -103,6 +171,22 @@ begin
   LResult := MainDataModule.ReverseString(EditInput.Text);
 
   Log('Reverse', LResult);
+end;
+
+procedure TMainForm.btnStringClick(Sender: TObject);
+var
+  LResult: string;
+begin
+  LResult := ParamsModule.GetString('test');
+  ParamLog('GetString', LResult);
+end;
+
+procedure TMainForm.btnTimeClick(Sender: TObject);
+var
+  LResult: TTime;
+begin
+  LResult := ParamsModule.GetTime(Now);
+  ParamLog('GetTime', TimeToStr(LResult));
 end;
 
 procedure TMainForm.Button1Click(Sender: TObject);
@@ -153,6 +237,12 @@ begin
     LImageStream.Free;
   end;
 
+end;
+
+constructor TMainForm.Create(AOwner: TComponent);
+begin
+  inherited;
+  MainTabControl.ActiveTab := HelloWorldTabItem;
 end;
 
 procedure TMainForm.BtnPersonAndHeaderClick(Sender: TObject);
@@ -213,6 +303,12 @@ procedure TMainForm.Log(const ATag, AMessage: string);
 begin
   Memo1.Lines.Add('---------- ' + DateTimeToStr(Now) + ' ' + ATag + ' ----------');
   Memo1.Lines.Add(AMessage);
+end;
+
+procedure TMainForm.ParamLog(const ATag, AMessage: string);
+begin
+  Memo2.Lines.Add('---------- ' + DateTimeToStr(Now) + ' ' + ATag + ' ----------');
+  Memo2.Lines.Add(AMessage);
 end;
 
 procedure TMainForm.BtnGenericGETClick(Sender: TObject);
@@ -287,6 +383,41 @@ begin
 
 end;
 
+procedure TMainForm.btnIntClick(Sender: TObject);
+var
+  LResult: Integer;
+begin
+  LResult := ParamsModule.GetInteger(42);
+  ParamLog('GetInteger', LResult.ToString);
+end;
+
+procedure TMainForm.btnLoadClick(Sender: TObject);
+begin
+  DatabaseModule.GetDBData(dsUsers);
+end;
+
+procedure TMainForm.btnMultiPartClick(Sender: TObject);
+var
+  LResult: string;
+  LObject: TSimpleParam;
+begin
+  LObject := TSimpleParam.Create('Test data');
+  try
+    LResult := MainDataModule.PostMultiPart(ParamStr(0), LObject, 'AString');
+    ParamLog('GetMultiPart', TJSONHelper.PrettyPrint(LResult));
+  finally
+    LObject.Free;
+  end;
+end;
+
+procedure TMainForm.btnParamObjectClick(Sender: TObject);
+var
+  LResult: string;
+begin
+  LResult := ParamsModule.GetStringFromObject('testobject');
+  ParamLog('GetStringFromObject', LResult);
+end;
+
 procedure TMainForm.btnPostClick(Sender: TObject);
 var
   LResponse: string;
@@ -327,6 +458,14 @@ begin
   LResponse := MainDataModule.ExecuteHelloWorld;
 
   Log('ExecuteHelloWorld', LResponse);
+end;
+
+procedure TMainForm.btnFloatClick(Sender: TObject);
+var
+  LResult: Double;
+begin
+  LResult := ParamsModule.GetFloat(3.14);
+  ParamLog('GetFloat', LResult.ToString);
 end;
 
 end.

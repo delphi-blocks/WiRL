@@ -55,6 +55,7 @@ type
     function GetStringAndStream(AStream: TStream): string;
     function GetPersonAndHeader(Id: Integer): TPair<TPerson, string>;
     function GetPersonOrError(Id: Integer): TPerson;
+    function PostMultiPart(const AFileName: string; LObject: TSimpleParam; const AString: string): string;
   end;
 
 var
@@ -65,10 +66,12 @@ implementation
 {%CLASSGROUP 'FMX.Controls.TControl'}
 
 uses
+  System.Net.Mime,
   FMXClient.Forms.Main,
 
   {$IFDEF HAS_NETHTTP_CLIENT}
   WiRL.http.Client.NetHttp,
+  System.Net.HttpClient,
   {$ELSE}
   WiRL.http.Client.Indy,
   {$ENDIF}
@@ -78,7 +81,8 @@ uses
   WiRL.Core.JSON,
   WiRL.Core.MessageBody.Default,
 
-  Neon.Core.Types;
+  Neon.Core.Types,
+  Neon.Core.Persistence.JSON;
 
 {$R *.dfm}
 
@@ -216,6 +220,47 @@ begin
     'StatusCode: ' + LResponse.StatusCode.ToString + sLineBreak +
     'ReasonString: ' + LResponse.StatusText + sLineBreak +
     'Content: ' + LResponse.ContentText;
+end;
+
+function TMainDataModule.PostMultiPart(const AFileName: string;
+  LObject: TSimpleParam; const AString: string): string;
+{$IFDEF HAS_NETHTTP_CLIENT}
+var
+  LHttpClient: THTTPClient;
+  LFormData: TMultipartFormData;
+  LResponse: IHTTPResponse;
+  LJsonString: string;
+  LJSON: TJSONValue;
+{$ENDIF}
+begin
+  {$IFNDEF HAS_NETHTTP_CLIENT}
+  raise Exception.Create('This demo only work with NetHttp');
+  {$ELSE}
+
+  LJSON := TNeon.ObjectToJSON(LObject);
+  try
+    LJsonString := TNeon.Print(LJSON, True);
+  finally
+    LJSON.Free;
+  end;
+
+  LHttpClient := THTTPClient.Create;
+  try
+    LFormData := TMultipartFormData.Create();
+    try
+      LFormData.AddFile('AContent', AFileName);
+      LFormData.AddField('AValue', AString);
+      LFormData.AddField('AJSON', LJsonString, 'application/json');
+      LResponse := LHttpClient.Post(WiRLClientApplication1.Path + '/helloworld/multipart', LFormData);
+      Result := LResponse.ContentAsString(TEncoding.UTF8);
+    finally
+      LFormData.Free;
+    end;
+  finally
+    LHttpClient.Free;
+  end;
+
+  {$ENDIF}
 end;
 
 function TMainDataModule.PostOrder(AOrderProposal: TOrderProposal): TOrder;

@@ -75,10 +75,11 @@ type
   TWiRLConverter = class
   protected
     FFormat: TWiRLFormatSetting;
+    FRttiType: TRttiType;
   public
     function ValueFromString(const AValue: string): TValue; virtual; abstract;
     function ValueToString(const AValue: TValue): string; virtual; abstract;
-    constructor Create(const AFormat: TWiRLFormatSetting);
+    constructor Create(const AFormat: TWiRLFormatSetting; ARttiType: TRttiType);
   end;
 
   TWiRLConverterClass = class of TWiRLConverter;
@@ -177,6 +178,12 @@ type
     function ValueToString(const AValue: TValue): string; override;
   end;
 
+  TDefaultEnumConverter = class(TWiRLConverter)
+  public
+    function ValueFromString(const AValue: string): TValue; override;
+    function ValueToString(const AValue: TValue): string; override;
+  end;
+
 implementation
 
 uses
@@ -216,6 +223,13 @@ begin
   Result :=
     (ARttiType.TypeKind = tkEnumeration) and
     (ARttiType.Handle = TypeInfo(Boolean));
+end;
+
+function IsEnum(ARttiType: TRttiType): Boolean;
+begin
+  Result :=
+    (ARttiType.TypeKind = tkEnumeration) and
+    (ARttiType.Handle <> TypeInfo(Boolean));
 end;
 
 function IsString(ARttiType: TRttiType): Boolean;
@@ -294,7 +308,7 @@ begin
   begin
     if LConverterInfo.CheckConverter(ARttiType, LFormatSetting) then
     begin
-      Exit(LConverterInfo.ConverterClass.Create(LFormatSetting));
+      Exit(LConverterInfo.ConverterClass.Create(LFormatSetting, ARttiType));
     end;
   end;
 
@@ -335,10 +349,11 @@ end;
 
 { TWiRLConverter }
 
-constructor TWiRLConverter.Create(const AFormat: TWiRLFormatSetting);
+constructor TWiRLConverter.Create(const AFormat: TWiRLFormatSetting; ARttiType: TRttiType);
 begin
   inherited Create;
   FFormat := AFormat;
+  FRttiType := ARttiType;
 end;
 
 { TISODateTimeConverter }
@@ -692,6 +707,30 @@ begin
         Exit(True);
     end
   );
+
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultEnumConverter,
+    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if IsEnum(ARttiType) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
+end;
+
+{ TDefaultEnumConverter }
+
+function TDefaultEnumConverter.ValueFromString(const AValue: string): TValue;
+var
+  LOrdinal: Integer;
+begin
+  LOrdinal := GetEnumValue(FRttiType.Handle, AValue);
+  TValue.Make(@LOrdinal, FRttiType.Handle, Result);
+end;
+
+function TDefaultEnumConverter.ValueToString(const AValue: TValue): string;
+begin
+  Result := System.TypInfo.GetEnumName(FRttiType.Handle, AValue.AsOrdinal);
 end;
 
 initialization

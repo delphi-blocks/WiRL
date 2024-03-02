@@ -630,12 +630,15 @@ begin
   if not AValue.IsObject then
     Exit(True);
   LObject := AValue.AsObject;
-  if LObject = FContext.Request.ContentStream then
-    Exit(True);
-  for LIndex := 0 to FContext.Request.MultiPartFormData.Count - 1 do
+  if Assigned(FContext.Request.ContentStream) then
   begin
-    if FContext.Request.MultiPartFormData.GetPart(LIndex) = LObject then
+    if LObject = FContext.Request.ContentStream then
       Exit(True);
+    for LIndex := 0 to FContext.Request.MultiPartFormData.Count - 1 do
+    begin
+      if FContext.Request.MultiPartFormData.GetPart(LIndex) = LObject then
+        Exit(True);
+    end;
   end;
 end;
 
