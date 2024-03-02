@@ -11,6 +11,8 @@ unit FMXClient.DataModules.Main;
 
 {$I '..\Core\WiRL.inc'}
 
+{.$UNDEF HAS_NETHTTP_CLIENT}
+
 interface
 
 uses
@@ -74,6 +76,7 @@ uses
   System.Net.HttpClient,
   {$ELSE}
   WiRL.http.Client.Indy,
+  IdMultipartFormData,
   {$ENDIF}
 
   WiRL.Configuration.Neon,
@@ -226,42 +229,48 @@ function TMainDataModule.PostMultiPart(const AFileName: string;
   LObject: TSimpleParam; const AString: string): string;
 {$IFDEF HAS_NETHTTP_CLIENT}
 var
-  LHttpClient: THTTPClient;
   LFormData: TMultipartFormData;
-  LResponse: IHTTPResponse;
-  LJsonString: string;
-  LJSON: TJSONValue;
-{$ENDIF}
 begin
-  {$IFNDEF HAS_NETHTTP_CLIENT}
-  raise Exception.Create('This demo only work with NetHttp');
-  {$ELSE}
+  LFormData := TMultipartFormData.Create();
 
-  LJSON := TNeon.ObjectToJSON(LObject);
   try
-    LJsonString := TNeon.Print(LJSON, True);
-  finally
-    LJSON.Free;
-  end;
+    LFormData.AddFile('AContent', AFileName);
+    LFormData.AddField('AValue', AString);
+    LFormData.AddField('AJSON', TNeon.ObjectToJSONString(LObject), 'application/json');
 
-  LHttpClient := THTTPClient.Create;
-  try
-    LFormData := TMultipartFormData.Create();
-    try
-      LFormData.AddFile('AContent', AFileName);
-      LFormData.AddField('AValue', AString);
-      LFormData.AddField('AJSON', LJsonString, 'application/json');
-      LResponse := LHttpClient.Post(WiRLClientApplication1.Path + '/helloworld/multipart', LFormData);
-      Result := LResponse.ContentAsString(TEncoding.UTF8);
-    finally
-      LFormData.Free;
-    end;
-  finally
-    LHttpClient.Free;
-  end;
+    Result := WiRLClientApplication1
+      .Resource('helloworld/multipart')
+      .Accept('application/json')
+      .ContentType(LFormData.MimeTypeHeader)
+      .Header('x-author', 'Luca')
+      .Post<TMultipartFormData, string>(LFormData);
 
-  {$ENDIF}
+  finally
+    LFormData.Free;
+  end;
 end;
+{$ELSE}
+var
+  LFormData: TIdMultiPartFormDataStream;
+begin
+  LFormData := TIdMultiPartFormDataStream.Create();
+  try
+    LFormData.AddFile('AContent', AFileName);
+    LFormData.AddFormField('AValue', AString);
+    LFormData.AddFormField('AJSON', TNeon.ObjectToJSONString(LObject), '', 'application/json');
+
+    Result := WiRLClientApplication1
+      .Resource('helloworld/multipart')
+      .Accept('application/json')
+      .ContentType('multipart/form-data; boundary=' + LFormData.Boundary)
+      .Header('x-author', 'Luca')
+      .Post<TIdMultiPartFormDataStream, string>(LFormData);
+
+  finally
+    LFormData.Free;
+  end;
+end;
+{$ENDIF}
 
 function TMainDataModule.PostOrder(AOrderProposal: TOrderProposal): TOrder;
 begin

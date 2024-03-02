@@ -156,9 +156,24 @@ type
       AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
   end;
 
+  /// <summary>
+  ///   This is the standard TMultipartFormData MessageBodyWriter
+  /// </summary>
+  {$IFNDEF HAS_NETHTTP_CLIENT}
+  [Produces(TMediaType.MULTIPART_FORM_DATA)]
+  TWiRLMultipartFormDataProvider = class(TMessageBodyProvider)
+  public
+    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
+  end;
+  {$ENDIF}
+
 implementation
 
 uses
+  {$IFNDEF HAS_NETHTTP_CLIENT}
+  System.Net.Mime,
+  {$ENDIF}
   System.TypInfo,
   WiRL.Core.Utils,
   WiRL.Core.Converter,
@@ -525,6 +540,10 @@ begin
   TMessageBodyReaderRegistry.Instance.RegisterReader<TStream>(TWiRLStreamProvider);
   TMessageBodyWriterRegistry.Instance.RegisterWriter<TStream>(TWiRLStreamProvider, TMessageBodyWriterRegistry.AFFINITY_HIGH);
 
+  {$IFNDEF HAS_NETHTTP_CLIENT}
+  TMessageBodyWriterRegistry.Instance.RegisterWriter<TMultipartFormData>(TWiRLMultipartFormDataProvider, TMessageBodyWriterRegistry.AFFINITY_HIGH);
+  {$ENDIF}
+
 end;
 
 { TWiRLJSONProvider }
@@ -554,6 +573,24 @@ procedure TWiRLJSONProvider.WriteJSONToStream(AJSON: TJSONValue; AStream: TStrea
 begin
   TNeon.PrintToStream(AJSON, AStream, FConfigurationNeon.GetNeonConfig.GetPrettyPrint);
 end;
+
+{ TWiRLMultipartFormDataProvider }
+
+{$IFNDEF HAS_NETHTTP_CLIENT}
+procedure TWiRLMultipartFormDataProvider.WriteTo(const AValue: TValue;
+  const AAttributes: TAttributeArray; AMediaType: TMediaType;
+  AHeaders: IWiRLHeaders; AContentStream: TStream);
+var
+  LMultipartFormData: TMultipartFormData;
+begin
+  LMultipartFormData := AValue.AsObject as TMultipartFormData;
+  if Assigned(LMultipartFormData) then
+  begin
+    LMultipartFormData.Stream.Position := 0;
+    AContentStream.CopyFrom(LMultipartFormData.Stream, LMultipartFormData.Stream.Size);
+  end;
+end;
+{$ENDIF}
 
 initialization
   RegisterMessageBodyClasses;
