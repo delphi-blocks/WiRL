@@ -12,7 +12,7 @@ unit WiRL.http.URL;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections,
+  System.SysUtils, System.Classes, System.NetEncoding, System.Generics.Collections,
   WiRL.Core.JSON,
   WiRL.http.Request,
   WiRL.http.Response;
@@ -476,9 +476,9 @@ end;
 
 class function TWiRLURL.URLEncode(const AString: string): string;
 begin
-//  Result := TNetEncoding.URL.Encode(AString);
-  Result := TIdURI.PathEncode(AString);
-  Result := StringReplace(Result, '&', '%26', [rfReplaceAll]);
+  Result := TNetEncoding.URL.Encode(AString, [Ord('&')], [TURLEncoding.TEncodeOption.EncodePercent]);
+  //Result := TIdURI.PathEncode(AString);
+  //Result := StringReplace(Result, '&', '%26', [rfReplaceAll]);
 end;
 
 class function TWiRLURL.URLEncode(const AStrings: TArray<string>): TArray<string>;

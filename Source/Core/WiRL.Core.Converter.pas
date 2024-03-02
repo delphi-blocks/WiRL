@@ -84,9 +84,15 @@ type
 
   TWiRLConverterClass = class of TWiRLConverter;
 
-  TWiRLCheckConverter = reference to function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean;
+  TWiRLCheckConverter = reference to function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean;
 
   TWiRLConverterRegistry = class(TObject)
+  public
+    const AFFINITY_VERY_HIGH = 50;
+    const AFFINITY_HIGH = 30;
+    const AFFINITY_LOW = 10;
+    const AFFINITY_VERY_LOW = 1;
+    const AFFINITY_ZERO = 0;
   private type
     TWiRLConverterRegistrySingleton = TWiRLSingleton<TWiRLConverterRegistry>;
     TWiRLConverterInfo = class
@@ -302,15 +308,29 @@ function TWiRLConverterRegistry.GetConverter(const ARttiType: TRttiType;
 var
   LConverterInfo: TWiRLConverterInfo;
   LFormatSetting: TWiRLFormatSetting;
+  LCandidate: TWiRLConverterClass;
+  LCandidateAffinity: Integer;
+  LAffinity: Integer;
 begin
+  LCandidateAffinity := TWiRLConverterRegistry.AFFINITY_ZERO;
+  LCandidate := nil;
+
   LFormatSetting := TWiRLFormatSetting(AFormat);
   for LConverterInfo in FRegistry do
   begin
-    if LConverterInfo.CheckConverter(ARttiType, LFormatSetting) then
+    LAffinity := TWiRLConverterRegistry.AFFINITY_VERY_LOW;
+    if LConverterInfo.CheckConverter(ARttiType, LAffinity, LFormatSetting) then
     begin
-      Exit(LConverterInfo.ConverterClass.Create(LFormatSetting, ARttiType));
+      if not Assigned(LCandidate) or (LAffinity > LCandidateAffinity) then
+      begin
+        LCandidate := LConverterInfo.ConverterClass;
+        LCandidateAffinity := LAffinity;
+      end;
     end;
   end;
+
+  if Assigned(LCandidate) then
+    Exit(LCandidate.Create(LFormatSetting, ARttiType));
 
   raise EWiRLConvertError.CreateFmt('Converter not found for type [%s] with format [%s]', [ARttiType.QualifiedName, AFormat]);
 end;
@@ -619,7 +639,7 @@ end;
 procedure RegisterDefaultConverters;
 begin
   TWiRLConverterRegistry.Instance.RegisterConverter(TISODateConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if AFormat.IsDefault and IsDate(ARttiType) then
@@ -628,7 +648,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TISODateTimeConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if AFormat.IsDefault and IsDateTime(ARttiType) then
@@ -637,7 +657,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TUnixDateTimeConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if (AFormat = TWiRLFormatSetting.UNIX) and IsDateTime(ARttiType) then
@@ -646,7 +666,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TUnixDateConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if (AFormat = TWiRLFormatSetting.UNIX) and IsDate(ARttiType) then
@@ -655,7 +675,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TYMDDateConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if ( (AFormat.Kind = TWiRLFormatSetting.MDY) or (AFormat.Kind = TWiRLFormatSetting.DMY) ) and IsDate(ARttiType) then
@@ -664,7 +684,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultFloatConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if AFormat.IsDefault and IsFloat(ARttiType) then
@@ -673,7 +693,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultIntegerConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if (ARttiType.TypeKind = tkInteger) and AFormat.IsDefault then
@@ -682,7 +702,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultCurrencyConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if IsCurrency(ARttiType) and AFormat.IsDefault then
@@ -691,7 +711,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultBooleanConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if IsBoolean(ARttiType) and AFormat.IsDefault then
@@ -700,7 +720,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultStringConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if IsString(ARttiType) and AFormat.IsDefault then
@@ -709,7 +729,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultEnumConverter,
-    function (ARttiType: TRttiType; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if IsEnum(ARttiType) and AFormat.IsDefault then

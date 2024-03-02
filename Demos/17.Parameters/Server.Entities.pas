@@ -8,6 +8,8 @@ uses
 type
   TMyEnum = (First, Second);
 
+  TCustomEnum = (None, Left, Right);
+
   TRecordParam = record
     Name: string;
     City: string;
