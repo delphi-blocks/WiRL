@@ -318,12 +318,31 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; 
 
   end;
 
-  function GetSimpleParam(AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
+  function GetSimpleParam(AMethod: TWiRLProxyMethod; AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
   var
     LFormat: string;
   begin
     LFormat := FAppConfig.GetFormatSettingFor(AParam.ParamType.Handle);
     Result := TWiRLConvert.AsType(AParamValue.AsString, AParam.ParamType.Handle, LFormat);
+  end;
+
+  function GetArrayFromParam(AMethod: TWiRLProxyMethod; AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
+  var
+    LFormat: string;
+    LItemType: TRttiType;
+    LParamList: TArray<string>;
+    LIndex: Integer;
+    LItem: TValue;
+  begin
+    LParamList := AParamValue.AsString.Split([DefaultArraySeparator]);
+    LItemType := TRttiDynamicArrayType(AParam.ParamType).ElementType;
+    LFormat := FAppConfig.GetFormatSettingFor(LItemType.Handle);
+    Result := TRttiHelper.CreateArrayValue(AParam.ParamType, Length(LParamList));
+    for LIndex := Low(LParamList) to High(LParamList) do
+    begin
+      LItem := TWiRLConvert.AsType(LParamList[LIndex], LItemType.Handle, LFormat);
+      Result.SetArrayElement(LIndex, LItem);
+    end;
   end;
 
 var
@@ -374,10 +393,12 @@ begin
         ValidateMethodParam(AParam.Attributes, LParamValue.AsString, True);
 
       // TODO: Modify, try first GetObjectFromParam (to rename!) and then GetSimpleParam
-      if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
+      if LParam.ParamType.TypeKind in [tkDynArray] then
+        Result := GetArrayFromParam(FLocator.Method, LParam, LParamValue)
+      else if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
         Result := GetObjectFromParam(FLocator.Method, LParam, LParamValue)
       else
-        Result := GetSimpleParam(LParam, LParamValue);
+        Result := GetSimpleParam(FLocator.Method, LParam, LParamValue);
 
       ValidateMethodParam(AParam.Attributes, Result, False);
     finally

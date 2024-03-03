@@ -72,6 +72,10 @@ type
     // Create instance of class with parameterless constructor
     class function CreateInstanceValue(AType: TRttiType): TValue; overload;
 
+    // Create array of TValue with ALength elements
+    class function CreateArrayValue(AType: TRttiType; ALength: NativeInt): TValue; overload;
+    class function CreateArrayValue(ATypeInfo: PTypeInfo; ALength: NativeInt): TValue; overload;
+
     // Create instance of class with parameterless constructor
     class function CreateInstance(AClass: TClass): TObject;  overload;
     class function CreateInstance(AType: TRttiType): TObject; overload;
@@ -595,6 +599,20 @@ begin
   FContext := TRttiContext.Create;
 end;
 
+class function TRttiHelper.CreateArrayValue(ATypeInfo: PTypeInfo;
+  ALength: NativeInt): TValue;
+var
+  LArrayPtr: Pointer;
+begin
+  LArrayPtr := nil;
+  DynArraySetLength(LArrayPtr, ATypeInfo, 1, @ALength);
+  try
+    TValue.Make(@LArrayPtr, ATypeInfo, Result); // makes copy of array
+  finally
+    DynArrayClear(LArrayPtr, ATypeInfo);
+  end;
+end;
+
 class function TRttiHelper.CreateInstance(const ATypeName: string;
   const Args: array of TValue): TObject;
 var
@@ -602,6 +620,12 @@ var
 begin
   LType := Context.FindType(ATypeName);
   Result := CreateInstance(LType, Args);
+end;
+
+class function TRttiHelper.CreateArrayValue(AType: TRttiType;
+  ALength: NativeInt): TValue;
+begin
+  Result := CreateArrayValue(AType.Handle, ALength);
 end;
 
 {$IFDEF CUSTOM_ATTRIBUTE_BUG}

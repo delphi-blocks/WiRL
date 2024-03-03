@@ -59,6 +59,7 @@ type
     function SameObject<T>(AValue: T; AObject: TObject): Boolean;
     procedure SetApplication(const Value: TWiRLClientApplication);
     function ValueToString(const AValue: TValue): string;
+    function ArrayToString(const AValue: TValue): string;
     procedure UseStreamEntity<T>(AResponseEntity: T);
   protected
     function GetClient: TWiRLClient; virtual;
@@ -206,6 +207,21 @@ begin
 end;
 
 { TWiRLClientCustomResource }
+
+function TWiRLClientCustomResource.ArrayToString(const AValue: TValue): string;
+var
+  LIndex: Integer;
+  LLength: Integer;
+begin
+  Result := '';
+  LLength := AValue.GetArrayLength;
+  for LIndex := 0 to LLength - 1 do
+  begin
+    Result := Result + ValueToString(AValue.GetArrayElement(LIndex));
+    if LIndex < LLength - 1 then
+      Result := Result + DefaultArraySeparator;
+  end;
+end;
 
 procedure TWiRLClientCustomResource.ContextInjection(AInstance: TObject);
 begin
@@ -580,7 +596,13 @@ end;
 procedure TWiRLClientCustomResource.PathParam(const AName: string;
   const AValue: TValue);
 begin
-  PathParams.Values[AName] := ValueToString(AValue);
+  if AValue.Kind = tkSet then
+    raise EWiRLClientException.CreateFmt('"Set" not supported for parameter "%s"', [AName]);
+
+  if AValue.IsArray then
+    PathParams.Values[AName] := ArrayToString(AValue)
+  else
+    PathParams.Values[AName] := ValueToString(AValue);
 end;
 
 function TWiRLClientCustomResource.Post<T, V>(const ARequestEntity: T): V;

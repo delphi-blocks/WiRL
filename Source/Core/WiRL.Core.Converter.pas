@@ -166,6 +166,12 @@ type
     function ValueToString(const AValue: TValue): string; override;
   end;
 
+  TDefaultInt64Converter = class(TWiRLConverter)
+  public
+    function ValueFromString(const AValue: string): TValue; override;
+    function ValueToString(const AValue: TValue): string; override;
+  end;
+
   TDefaultCurrencyConverter = class(TWiRLConverter)
   public
     function ValueFromString(const AValue: string): TValue; override;
@@ -189,6 +195,9 @@ type
     function ValueFromString(const AValue: string): TValue; override;
     function ValueToString(const AValue: TValue): string; override;
   end;
+
+const
+  DefaultArraySeparator = ',';
 
 implementation
 
@@ -701,6 +710,15 @@ begin
     end
   );
 
+  TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultInt64Converter,
+    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    begin
+      Result := False;
+      if (ARttiType.TypeKind = tkInt64) and AFormat.IsDefault then
+        Exit(True);
+    end
+  );
+
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultCurrencyConverter,
     function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
@@ -751,6 +769,18 @@ end;
 function TDefaultEnumConverter.ValueToString(const AValue: TValue): string;
 begin
   Result := System.TypInfo.GetEnumName(FRttiType.Handle, AValue.AsOrdinal);
+end;
+
+{ TDefaultInt64Converter }
+
+function TDefaultInt64Converter.ValueFromString(const AValue: string): TValue;
+begin
+  Result := StrToInt64(AValue);
+end;
+
+function TDefaultInt64Converter.ValueToString(const AValue: TValue): string;
+begin
+  Result := IntToStr(AValue.AsInt64);
 end;
 
 initialization
