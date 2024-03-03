@@ -14,7 +14,7 @@ unit WiRL.http.Client.NetHttp;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.DateUtils,
 
   System.Net.HttpClient,
   System.Net.URLClient,
@@ -37,6 +37,7 @@ type
     FHeaders: IWiRLHeaders;
     FOwnContentStream: Boolean;
     FContext: TWiRLContextBase;
+    function GetServerCookie(ACookie: TCookie): string;
 
     { IWiRLResponse }
     function GetStatusCode: Integer;
@@ -327,7 +328,7 @@ begin
     end;
     for LCookie in FResponse.Cookies do
     begin
-      FHeaders.AddHeader(TWiRLHeader.Create('Set-Cookie', LCookie.GetServerCookie));
+      FHeaders.AddHeader(TWiRLHeader.Create('Set-Cookie', GetServerCookie(LCookie)));
     end;
   end;
   Result := FHeaders;
@@ -341,6 +342,42 @@ begin
     SetLength(Result, GetContentStream.Size);
     GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
   end;
+end;
+
+function TWiRLClientResponseNetHttp.GetServerCookie(ACookie: TCookie): string;
+var
+  LDomain: string;
+  LDate: TDateTime;
+  LYear, LMonth, LDay: Word;
+begin
+  Result := ToString;
+  if ACookie.Domain <> '' then
+  begin
+    LDomain := ACookie.Domain;
+    if LDomain.Chars[0] = '.' then
+      LDomain := LDomain.Substring(1);
+    Result := Result + ';Domain=' + LDomain;
+  end;
+  if ACookie.Path <> '' then
+    Result := Result + ';Path=' + ACookie.Path;
+  if ACookie.Expires <> 0.0 then
+  begin
+    LDate := ACookie.Expires;
+    if LDate <= 1 then
+      LDate := EncodeDateTime(1970, 1, 1, 0, 0, 0, 0)
+    else
+    begin
+      DecodeDate(LDate, LYear, LMonth, LDay);
+      if not ((LYear = 9999) and (LMonth = 12) and (LDay = 31)) then
+        LDate := TTimeZone.Local.ToUniversalTime(LDate);
+    end;
+    Result := Result + ';Expires=' +
+      FormatDateTime('ddd, dd mmm yyyy hh:nn:ss', LDate, TFormatSettings.Invariant) + ' GMT';
+  end;
+  if ACookie.HttpOnly then
+    Result := Result + ';HttpOnly';
+  if ACookie.Secure then
+    Result := Result + ';Secure';
 end;
 
 function TWiRLClientResponseNetHttp.GetStatus: TWiRLResponseStatus;

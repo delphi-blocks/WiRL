@@ -9,6 +9,8 @@
 {******************************************************************************}
 unit FMXClient.Forms.Main;
 
+{$I '..\Core\WiRL.inc'}
+
 interface
 
 uses
@@ -74,6 +76,7 @@ type
     btnEnum: TButton;
     btnDateTime: TButton;
     btnMultiPart: TButton;
+    btnParamArray: TButton;
     procedure btnExecuteClick(Sender: TObject);
     procedure btnEchoClick(Sender: TObject);
     procedure btnReverseClick(Sender: TObject);
@@ -101,6 +104,7 @@ type
     procedure btnDateClick(Sender: TObject);
     procedure btnDateTimeClick(Sender: TObject);
     procedure btnMultiPartClick(Sender: TObject);
+    procedure btnParamArrayClick(Sender: TObject);
   private
     procedure Log(const ATag, AMessage: string);
     procedure ParamLog(const ATag, AMessage: string);
@@ -408,6 +412,18 @@ begin
   finally
     LObject.Free;
   end;
+end;
+
+procedure TMainForm.btnParamArrayClick(Sender: TObject);
+var
+  LResult: TArrayInt;
+begin
+  LResult := ParamsModule.GetArray([1,2,3]);
+  {$IFDEF HAS_ARRAY_TO_STRING}
+  ParamLog('GetArray', TArray.ToString(LResult));
+  {$ELSE}
+  ParamLog('GetArray', 'Array size: ' + Length(LResult).ToString);
+  {$ENDIF}
 end;
 
 procedure TMainForm.btnParamObjectClick(Sender: TObject);

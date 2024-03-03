@@ -184,7 +184,7 @@ begin
     .AddPair('AValue', AValue)
     .AddPair('JSON', AJSON.ToJSON)
     .AddPair('FileName', AContent.FileName)
-    .AddPair('ContentSize', Length(LContentBuffer));
+    .AddPair('ContentSize', TJSONNumber.Create(Length(LContentBuffer)));
 end;
 
 function THelloWorldResource.PostStreamExample(AContent: TStream): string;

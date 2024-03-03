@@ -61,7 +61,7 @@ type
   end;
 
   TArrayParam = TArray<TRecordParam>;
-  TArrayInt = TArray<Integer>;
+  TArrayInt = TArray<Int64>;
 
   TSimpleParam = class(TObject)
   private

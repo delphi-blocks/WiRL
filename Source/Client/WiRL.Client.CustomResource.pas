@@ -151,6 +151,7 @@ uses
   WiRL.Configuration.Neon,
   WiRL.Configuration.Converter,
   WiRL.http.Accept.MediaType,
+  WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.Injection,
   WiRL.Core.Converter,
@@ -418,12 +419,14 @@ var
   LMediaType: TMediaType;
   LWriter: IMessageBodyWriter;
   LValue: TValue;
+  LAttributes: TAttributeArray;
 begin
+  LAttributes := [];
   LType := TRttiHelper.Context.GetType(TypeInfo(T));
   LMediaType := TMediaType.Create(ContentType);
   try
     LValue := TValue.From<T>(AObject);
-    LWriter := Application.WriterRegistry.FindWriter(LType, [], LMediaType);
+    LWriter := Application.WriterRegistry.FindWriter(LType, LAttributes, LMediaType);
     if not Assigned(LWriter) then
       raise EWiRLClientException.CreateFmt('Writer not found for [%s] content type: [%s]', [LType.Name, LMediaType.MediaType]);
 

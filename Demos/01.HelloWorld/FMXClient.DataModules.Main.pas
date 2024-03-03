@@ -236,7 +236,11 @@ begin
   try
     LFormData.AddFile('AContent', AFileName);
     LFormData.AddField('AValue', AString);
+    {$IFDEF HAS_FORM_DATA_FIELD_WITH_MEDIA_TYPE}
     LFormData.AddField('AJSON', TNeon.ObjectToJSONString(LObject), 'application/json');
+    {$ELSE}
+    LFormData.AddField('AJSON', TNeon.ObjectToJSONString(LObject));
+    {$ENDIF}
 
     Result := WiRLClientApplication1
       .Resource('helloworld/multipart')

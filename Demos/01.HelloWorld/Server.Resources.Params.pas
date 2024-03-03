@@ -65,7 +65,7 @@ type
     function ParamRecord([BodyParam] AParam: TRecordParam): TRecordParam;
 
     [GET, Path('/array/{AParam}')]
-    [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
+    [Produces(TMediaType.APPLICATION_JSON)]
     function ParamArray([PathParam] AParam: TArrayInt): TArrayInt;
 
     [POST, Path('/arraybody')]

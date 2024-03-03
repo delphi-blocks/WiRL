@@ -19,7 +19,7 @@ object MainForm: TMainForm
     Size.Width = 860.000000000000000000
     Size.Height = 626.000000000000000000
     Size.PlatformDefault = False
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 1
     TabPosition = PlatformDefault
     Sizes = (
@@ -34,7 +34,7 @@ object MainForm: TMainForm
         item
         end>
       TextSettings.Trimming = None
-      IsSelected = True
+      IsSelected = False
       Size.Width = 122.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -374,6 +374,8 @@ object MainForm: TMainForm
       StyleLookup = ''
       TabOrder = 0
       Text = 'Database'
+      ExplicitSize.cx = 70.000000000000000000
+      ExplicitSize.cy = 26.000000000000000000
       object StringGrid1: TStringGrid
         CanFocus = True
         ClipChildren = True
@@ -404,13 +406,15 @@ object MainForm: TMainForm
         item
         end>
       TextSettings.Trimming = None
-      IsSelected = False
+      IsSelected = True
       Size.Width = 59.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
       TabOrder = 0
       Text = 'Params'
+      ExplicitSize.cx = 59.000000000000000000
+      ExplicitSize.cy = 26.000000000000000000
       object Layout2: TLayout
         Align = Left
         Size.Width = 233.000000000000000000
@@ -428,7 +432,7 @@ object MainForm: TMainForm
           Size.Width = 229.000000000000000000
           Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 10
+          TabOrder = 11
           Text = 'String'
           TextSettings.Trimming = None
           OnClick = btnStringClick
@@ -455,7 +459,7 @@ object MainForm: TMainForm
           Size.Width = 229.000000000000000000
           Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 9
+          TabOrder = 10
           Text = 'Integer'
           TextSettings.Trimming = None
           OnClick = btnIntClick
@@ -471,7 +475,7 @@ object MainForm: TMainForm
           Size.Width = 229.000000000000000000
           Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 8
+          TabOrder = 9
           Text = 'Float'
           TextSettings.Trimming = None
           OnClick = btnFloatClick
@@ -483,11 +487,11 @@ object MainForm: TMainForm
           Margins.Right = 2.000000000000000000
           Margins.Bottom = 2.000000000000000000
           Position.X = 2.000000000000000000
-          Position.Y = 202.000000000000000000
+          Position.Y = 227.000000000000000000
           Size.Width = 229.000000000000000000
           Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 6
+          TabOrder = 7
           Text = 'Object'
           TextSettings.Trimming = None
           OnClick = btnParamObjectClick
@@ -503,7 +507,7 @@ object MainForm: TMainForm
           Size.Width = 229.000000000000000000
           Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 7
+          TabOrder = 8
           Text = 'Boolean'
           TextSettings.Trimming = None
           OnClick = btnBoolClick
@@ -579,7 +583,7 @@ object MainForm: TMainForm
           Margins.Right = 2.000000000000000000
           Margins.Bottom = 2.000000000000000000
           Position.X = 2.000000000000000000
-          Position.Y = 227.000000000000000000
+          Position.Y = 252.000000000000000000
           Size.Width = 229.000000000000000000
           Size.Height = 21.000000000000000000
           Size.PlatformDefault = False
@@ -587,6 +591,22 @@ object MainForm: TMainForm
           Text = 'MultiPart'
           TextSettings.Trimming = None
           OnClick = btnMultiPartClick
+        end
+        object btnParamArray: TButton
+          Align = Top
+          Margins.Left = 2.000000000000000000
+          Margins.Top = 2.000000000000000000
+          Margins.Right = 2.000000000000000000
+          Margins.Bottom = 2.000000000000000000
+          Position.X = 2.000000000000000000
+          Position.Y = 202.000000000000000000
+          Size.Width = 229.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 6
+          Text = 'Array'
+          TextSettings.Trimming = None
+          OnClick = btnParamArrayClick
         end
       end
       object Memo2: TMemo

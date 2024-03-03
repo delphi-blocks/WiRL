@@ -4,7 +4,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, WiRL.Client.CustomResource,
-  WiRL.Client.Resource, WiRL.Client.Application, WiRL.http.Client, Demo.Entities;
+  WiRL.Client.Resource, WiRL.Client.Application,
+  WiRL.http.Client, WiRL.http.Accept.MediaType,
+  Demo.Entities;
 
 type
   TParamsModule = class(TDataModule)
@@ -26,6 +28,7 @@ type
     function GetDateTime(ADateTime: TDateTime): TDateTime;
     function GetTime(ATime: TTime): TTime;
     function GetEnum(AEnum: TMyEnum): TMyEnum;
+    function GetArray(AArray: TArrayInt): TArrayInt;
   end;
 
 var
@@ -38,6 +41,15 @@ implementation
 {$R *.dfm}
 
 { TParamsModule }
+
+function TParamsModule.GetArray(AArray: TArrayInt): TArrayInt;
+begin
+  Result := WiRLClientApplication1
+    .Resource('params/array/{AArray}')
+    .Accept(TMediaType.APPLICATION_JSON)
+    .PathParam('AArray', AArray)
+    .Get<TArrayInt>;
+end;
 
 function TParamsModule.GetBoolean(ABool: Boolean): Boolean;
 begin
