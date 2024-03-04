@@ -323,7 +323,7 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; 
     LFormat: string;
   begin
     LFormat := FAppConfig.GetFormatSettingFor(AParam.ParamType.Handle);
-    Result := TWiRLConvert.AsType(AParamValue.AsString, AParam.ParamType.Handle, LFormat);
+    Result := TWiRLConvert.AsType(AParamValue.AsString, AParam.GetAttributes, AParam.ParamType.Handle, LFormat);
   end;
 
   function GetArrayFromParam(AMethod: TWiRLProxyMethod; AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
@@ -340,7 +340,7 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; 
     Result := TRttiHelper.CreateArrayValue(AParam.ParamType, Length(LParamList));
     for LIndex := Low(LParamList) to High(LParamList) do
     begin
-      LItem := TWiRLConvert.AsType(LParamList[LIndex], LItemType.Handle, LFormat);
+      LItem := TWiRLConvert.AsType(LParamList[LIndex], AParam.GetAttributes, LItemType.Handle, LFormat);
       Result.SetArrayElement(LIndex, LItem);
     end;
   end;

@@ -16,6 +16,7 @@ uses
   System.Rtti,
 
   WiRL.Core.Singleton,
+  WiRL.Core.Declarations,
   WiRL.Rtti.Utils;
 
 type
@@ -76,15 +77,16 @@ type
   protected
     FFormat: TWiRLFormatSetting;
     FRttiType: TRttiType;
+    FAttributes: TAttributeArray;
   public
     function ValueFromString(const AValue: string): TValue; virtual; abstract;
     function ValueToString(const AValue: TValue): string; virtual; abstract;
-    constructor Create(const AFormat: TWiRLFormatSetting; ARttiType: TRttiType);
+    constructor Create(const AFormat: TWiRLFormatSetting; ARttiType: TRttiType; const AAttributes: TAttributeArray);
   end;
 
   TWiRLConverterClass = class of TWiRLConverter;
 
-  TWiRLCheckConverter = reference to function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean;
+  TWiRLCheckConverter = reference to function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean;
 
   TWiRLConverterRegistry = class(TObject)
   public
@@ -107,7 +109,7 @@ type
   public
     constructor Create; virtual;
     function RegisterConverter(AConverterClass: TWiRLConverterClass; const ACheckConverter: TWiRLCheckConverter): TWiRLConverterInfo;
-    function GetConverter(const ARttiType: TRttiType; const AFormat: string): TWiRLConverter;
+    function GetConverter(const ARttiType: TRttiType; const AAttributes: TAttributeArray; const AFormat: string): TWiRLConverter;
 
     class property Instance: TWiRLConverterRegistry read GetInstance;
     destructor Destroy; override;
@@ -116,11 +118,15 @@ type
   TWiRLConvert = class
   public
     // String to type
+    class function AsType<T>(const AValue: string; const AAttributes: TAttributeArray; const AFormat: string = TWiRLFormatSetting.DEFAULT): T; overload;
     class function AsType<T>(const AValue: string; const AFormat: string = TWiRLFormatSetting.DEFAULT): T; overload;
+    class function AsType(const AValue: string; const AAttributes: TAttributeArray; ATypeInfo: PTypeInfo; const AFormat: string = TWiRLFormatSetting.DEFAULT): TValue; overload;
     class function AsType(const AValue: string; ATypeInfo: PTypeInfo; const AFormat: string = TWiRLFormatSetting.DEFAULT): TValue; overload;
 
     // Type to string
+    class function From<T>(const AValue: T; const AAttributes: TAttributeArray; const AFormat: string = TWiRLFormatSetting.DEFAULT): string; overload;
     class function From<T>(const AValue: T; const AFormat: string = TWiRLFormatSetting.DEFAULT): string; overload;
+    class function From(const AValue: TValue; const AAttributes: TAttributeArray; ATypeInfo: PTypeInfo; const AFormat: string = TWiRLFormatSetting.DEFAULT): string; overload;
     class function From(const AValue: TValue; ATypeInfo: PTypeInfo; const AFormat: string = TWiRLFormatSetting.DEFAULT): string; overload;
   end;
 
@@ -255,8 +261,8 @@ end;
 
 { TWiRLConvert }
 
-class function TWiRLConvert.AsType(const AValue: string; ATypeInfo: PTypeInfo;
-  const AFormat: string): TValue;
+class function TWiRLConvert.AsType(const AValue: string; const AAttributes: TAttributeArray;
+  ATypeInfo: PTypeInfo; const AFormat: string): TValue;
 var
   LConverter: TWiRLConverter;
   LRttiType: TRttiType;
@@ -265,7 +271,7 @@ begin
     Exit(TValue.Empty);
 
   LRttiType := TRttiHelper.Context.GetType(ATypeInfo);
-  LConverter := TWiRLConverterRegistry.Instance.GetConverter(LRttiType, AFormat);
+  LConverter := TWiRLConverterRegistry.Instance.GetConverter(LRttiType, AAttributes, AFormat);
   try
     Result := LConverter.ValueFromString(AValue);
   finally
@@ -273,19 +279,38 @@ begin
   end;
 end;
 
-class function TWiRLConvert.AsType<T>(const AValue: string; const AFormat: string): T;
+class function TWiRLConvert.AsType<T>(const AValue: string;
+  const AAttributes: TAttributeArray; const AFormat: string): T;
 begin
-  Result := AsType(AValue, TypeInfo(T), AFormat).AsType<T>();
+  Result := AsType(AValue, AAttributes, TypeInfo(T), AFormat).AsType<T>();
 end;
 
-class function TWiRLConvert.From(const AValue: TValue; ATypeInfo: PTypeInfo;
+class function TWiRLConvert.AsType(const AValue: string; ATypeInfo: PTypeInfo;
+  const AFormat: string): TValue;
+var
+  LAttributes: TAttributeArray;
+begin
+  SetLength(LAttributes, 0);
+  Result := AsType(AValue, LAttributes, ATypeInfo, AFormat);
+end;
+
+class function TWiRLConvert.AsType<T>(const AValue, AFormat: string): T;
+var
+  LAttributes: TAttributeArray;
+begin
+  SetLength(LAttributes, 0);
+  Result := AsType<T>(AValue, LAttributes, AFormat);
+end;
+
+class function TWiRLConvert.From(const AValue: TValue;
+  const AAttributes: TAttributeArray; ATypeInfo: PTypeInfo;
   const AFormat: string): string;
 var
   LConverter: TWiRLConverter;
   LRttiType: TRttiType;
 begin
   LRttiType := TRttiHelper.Context.GetType(ATypeInfo);
-  LConverter := TWiRLConverterRegistry.Instance.GetConverter(LRttiType, AFormat);
+  LConverter := TWiRLConverterRegistry.Instance.GetConverter(LRttiType, AAttributes, AFormat);
   try
     Result := LConverter.ValueToString(AValue);
   finally
@@ -293,10 +318,26 @@ begin
   end;
 end;
 
+class function TWiRLConvert.From(const AValue: TValue; ATypeInfo: PTypeInfo;
+  const AFormat: string): string;
+var
+  LAttributes: TAttributeArray;
+begin
+  Result := From(AValue, LAttributes, ATypeInfo, AFormat);
+end;
+
 class function TWiRLConvert.From<T>(const AValue: T;
   const AFormat: string): string;
+var
+  LAttributes: TAttributeArray;
 begin
-  Result := From(TValue.From(AValue), TypeInfo(T), AFormat);
+  Result := From<T>(AValue, LAttributes, AFormat);
+end;
+
+class function TWiRLConvert.From<T>(const AValue: T;
+  const AAttributes: TAttributeArray; const AFormat: string): string;
+begin
+  Result := From(TValue.From(AValue), AAttributes, TypeInfo(T), AFormat);
 end;
 
 { TWiRLConverterRegistry }
@@ -313,7 +354,7 @@ begin
 end;
 
 function TWiRLConverterRegistry.GetConverter(const ARttiType: TRttiType;
-  const AFormat: string): TWiRLConverter;
+  const AAttributes: TAttributeArray; const AFormat: string): TWiRLConverter;
 var
   LConverterInfo: TWiRLConverterInfo;
   LFormatSetting: TWiRLFormatSetting;
@@ -328,7 +369,7 @@ begin
   for LConverterInfo in FRegistry do
   begin
     LAffinity := TWiRLConverterRegistry.AFFINITY_VERY_LOW;
-    if LConverterInfo.CheckConverter(ARttiType, LAffinity, LFormatSetting) then
+    if LConverterInfo.CheckConverter(ARttiType, AAttributes, LAffinity, LFormatSetting) then
     begin
       if not Assigned(LCandidate) or (LAffinity > LCandidateAffinity) then
       begin
@@ -339,7 +380,7 @@ begin
   end;
 
   if Assigned(LCandidate) then
-    Exit(LCandidate.Create(LFormatSetting, ARttiType));
+    Exit(LCandidate.Create(LFormatSetting, ARttiType, AAttributes));
 
   raise EWiRLConvertError.CreateFmt('Converter not found for type [%s] with format [%s]', [ARttiType.QualifiedName, AFormat]);
 end;
@@ -378,11 +419,12 @@ end;
 
 { TWiRLConverter }
 
-constructor TWiRLConverter.Create(const AFormat: TWiRLFormatSetting; ARttiType: TRttiType);
+constructor TWiRLConverter.Create(const AFormat: TWiRLFormatSetting; ARttiType: TRttiType; const AAttributes: TAttributeArray);
 begin
   inherited Create;
   FFormat := AFormat;
   FRttiType := ARttiType;
+  FAttributes := AAttributes;
 end;
 
 { TISODateTimeConverter }
@@ -648,7 +690,7 @@ end;
 procedure RegisterDefaultConverters;
 begin
   TWiRLConverterRegistry.Instance.RegisterConverter(TISODateConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if AFormat.IsDefault and IsDate(ARttiType) then
@@ -657,7 +699,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TISODateTimeConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if AFormat.IsDefault and IsDateTime(ARttiType) then
@@ -666,7 +708,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TUnixDateTimeConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if (AFormat = TWiRLFormatSetting.UNIX) and IsDateTime(ARttiType) then
@@ -675,7 +717,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TUnixDateConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if (AFormat = TWiRLFormatSetting.UNIX) and IsDate(ARttiType) then
@@ -684,7 +726,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TYMDDateConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if ( (AFormat.Kind = TWiRLFormatSetting.MDY) or (AFormat.Kind = TWiRLFormatSetting.DMY) ) and IsDate(ARttiType) then
@@ -693,7 +735,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultFloatConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if AFormat.IsDefault and IsFloat(ARttiType) then
@@ -702,7 +744,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultIntegerConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if (ARttiType.TypeKind = tkInteger) and AFormat.IsDefault then
@@ -711,7 +753,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultInt64Converter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if (ARttiType.TypeKind = tkInt64) and AFormat.IsDefault then
@@ -720,7 +762,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultCurrencyConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if IsCurrency(ARttiType) and AFormat.IsDefault then
@@ -729,7 +771,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultBooleanConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if IsBoolean(ARttiType) and AFormat.IsDefault then
@@ -738,7 +780,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultStringConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if IsString(ARttiType) and AFormat.IsDefault then
@@ -747,7 +789,7 @@ begin
   );
 
   TWiRLConverterRegistry.Instance.RegisterConverter(TDefaultEnumConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if IsEnum(ARttiType) and AFormat.IsDefault then
