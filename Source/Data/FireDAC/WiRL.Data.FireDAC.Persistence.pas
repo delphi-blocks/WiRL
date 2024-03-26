@@ -9,7 +9,7 @@
 {******************************************************************************}
 unit WiRL.Data.FireDAC.Persistence;
 
-{$I WiRL.inc}
+{$I ..\..\Core\WiRL.inc}
 
 interface
 
