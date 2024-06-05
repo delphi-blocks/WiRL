@@ -63,6 +63,7 @@ type
   private
     FHttpClient: THTTPClient;
     FProxyParams: TWiRLProxyConnectionInfo;
+    procedure InitHttpClient;
     // Setters and getters
     function GetConnectTimeout: Integer;
     procedure SetConnectTimeout(Value: Integer);
@@ -110,6 +111,7 @@ function TWiRLClientNetHttp.Delete(const AURL: string;
 var
   LHTTPResponse: IHTTPResponse;
 begin
+  InitHttpClient;
   try
     LHTTPResponse := FHttpClient.Delete(AURL, AResponseContent, GetRequestHeaders(AHeaders));
   except
@@ -129,6 +131,7 @@ function TWiRLClientNetHttp.Get(const AURL: string; AResponseContent: TStream; A
 var
   LHTTPResponse: IHTTPResponse;
 begin
+  InitHttpClient;
   try
     LHTTPResponse := FHttpClient.Get(AURL, AResponseContent, GetRequestHeaders(AHeaders));
   except
@@ -180,6 +183,7 @@ function TWiRLClientNetHttp.Head(const AURL: string; AHeaders: IWiRLHeaders): IW
 var
   LHTTPResponse: IHTTPResponse;
 begin
+  InitHttpClient;
   try
     LHTTPResponse := FHttpClient.Head(AURL, GetRequestHeaders(AHeaders));
   except
@@ -189,11 +193,25 @@ begin
   Result := TWiRLClientResponseNetHttp.Create(LHTTPResponse);
 end;
 
+procedure TWiRLClientNetHttp.InitHttpClient;
+begin
+  if (FProxyParams.ProxyServer <> '') and (FProxyParams.ProxyPort > 0) then
+  begin
+    FHttpClient.ProxySettings := TProxySettings.Create(
+      FProxyParams.ProxyServer,
+      FProxyParams.ProxyPort,
+      FProxyParams.ProxyUsername,
+      FProxyParams.ProxyPassword
+    );
+  end;
+end;
+
 function TWiRLClientNetHttp.Options(const AURL: string;
   AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
+  InitHttpClient;
   try
     LHTTPResponse := FHttpClient.Options(AURL, AResponseContent, GetRequestHeaders(AHeaders));
   except
@@ -208,6 +226,7 @@ function TWiRLClientNetHttp.Patch(const AURL: string; ARequestContent,
 var
   LHTTPResponse: IHTTPResponse;
 begin
+  InitHttpClient;
   try
     ARequestContent.Position := 0;
     LHTTPResponse := FHttpClient.Patch(AURL, ARequestContent, AResponseContent, GetRequestHeaders(AHeaders));
@@ -223,6 +242,7 @@ function TWiRLClientNetHttp.Post(const AURL: string; ARequestContent,
 var
   LHTTPResponse: IHTTPResponse;
 begin
+  InitHttpClient;
   try
     ARequestContent.Position := 0;
     LHTTPResponse := FHttpClient.Post(AURL, ARequestContent, AResponseContent, GetRequestHeaders(AHeaders));
@@ -238,6 +258,7 @@ function TWiRLClientNetHttp.Put(const AURL: string; ARequestContent,
 var
   LHTTPResponse: IHTTPResponse;
 begin
+  InitHttpClient;
   try
     ARequestContent.Position := 0;
     LHTTPResponse := FHttpClient.Put(AURL, ARequestContent, AResponseContent, GetRequestHeaders(AHeaders));
