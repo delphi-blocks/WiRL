@@ -214,7 +214,7 @@ type
 function TWiRLClientApplication.AddApplication(
   const ABasePath: string): IWiRLApplication;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  raise EWiRLException.CreateFmt('Method "AddApplication" not found for class [%s]', [Self.ClassName]);
 end;
 
 function TWiRLClientApplication.AddConfiguration(
@@ -555,13 +555,14 @@ end;
 function TWiRLClientApplication.SetAppName(
   const AAppName: string): IWiRLApplication;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  FAppName := AAppName;
+  Result := Self;
 end;
 
 function TWiRLClientApplication.SetBasePath(
   const ABasePath: string): IWiRLApplication;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  raise EWiRLException.CreateFmt('Method "SetBasePath" not found for class [%s]', [Self.ClassName]);
 end;
 
 procedure TWiRLClientApplication.SetClient(const Value: TWiRLClient);
@@ -601,7 +602,7 @@ end;
 function TWiRLClientApplication.SetErrorMediaType(
   const AMediaType: string): IWiRLApplication;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  raise EWiRLException.CreateFmt('Method "SetErrorMediaType" not found for class [%s]', [Self.ClassName]);
 end;
 
 function TWiRLClientApplication.SetFilters(
@@ -650,19 +651,19 @@ end;
 function TWiRLClientApplication.SetResources(
   const AResources: System.TArray<System.string>): IWiRLApplication;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  raise EWiRLException.CreateFmt('Method "SetResources" not found for class [%s]', [Self.ClassName]);
 end;
 
 function TWiRLClientApplication.SetResources(
   const AResources: string): IWiRLApplication;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  raise EWiRLException.CreateFmt('Method "SetResources" not found for class [%s]', [Self.ClassName]);
 end;
 
 function TWiRLClientApplication.SetSystemApp(
   ASystem: Boolean): IWiRLApplication;
 begin
-  raise EWiRLException.CreateFmt('Method not found for class [%s]', [Self.ClassName]);
+  raise EWiRLException.CreateFmt('Method "SetSystemApp" not found for class [%s]', [Self.ClassName]);
 end;
 
 function TWiRLClientApplication.SetWriters(
