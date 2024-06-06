@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.TypInfo, System.Rtti,
-  WiRL.Core.Converter;
+  WiRL.Core.Converter, WiRL.Core.Declarations;
 
 type
   TCustomEnumConverter = class(TWiRLConverter)
@@ -50,7 +50,7 @@ end;
 procedure RegisterCustomConverters;
 begin
   TWiRLConverterRegistry.Instance.RegisterConverter(TCustomEnumConverter,
-    function (ARttiType: TRttiType; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
+    function (ARttiType: TRttiType; const AAttributes: TAttributeArray; var AAffinity: Integer; const AFormat: TWiRLFormatSetting): Boolean
     begin
       Result := False;
       if (ARttiType.TypeKind = tkEnumeration) and
