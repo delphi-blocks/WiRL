@@ -234,24 +234,20 @@ begin
     Result := AFunc(LRequest, LResponseStream);
 
     if LInternalStream then
-
       Result.SetOwnContentStream(True);
+
     DoAfterCommand(LRequest, Result);
     CheckResponse(Result);
 
   except
-    on E: EWiRLClientProtocolException do
+    if LInternalStream then
     begin
-      if LInternalStream then
-        Result.SetOwnContentStream(True);
-      raise;
-    end;
-    on E: Exception do
-    begin
-      if LInternalStream then
+      if Assigned(Result) then
+        Result.SetOwnContentStream(True)
+      else
         LResponseStream.Free;
-      raise;
     end;
+    raise;
   end;
 end;
 

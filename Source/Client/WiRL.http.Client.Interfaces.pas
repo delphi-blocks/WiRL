@@ -384,6 +384,8 @@ function TWiRLContent.AsType<T>: T;
 var
   LApplication: TWiRLClientApplication;
 begin
+  if not Assigned(FContext) then
+    raise EWiRLClientException.Create('Context unavailable');
   LApplication := FContext.FindContextDataAs<TWiRLClientApplication>;
   if not Assigned(LApplication) then
     raise EWiRLClientException.Create('Application is not assigned');
