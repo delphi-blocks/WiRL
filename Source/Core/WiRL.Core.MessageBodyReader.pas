@@ -142,6 +142,7 @@ type
 implementation
 
 uses
+  WiRL.Core.Exceptions,
   WiRL.Rtti.Utils,
   WiRL.Core.Attributes;
 
@@ -298,7 +299,7 @@ begin
       LInstance := TRttiHelper.CreateInstance(AReaderClass);
       //LInstance := AReaderClass.Create;
       if not Supports(LInstance, IMessageBodyReader, Result) then
-        raise Exception.Create('Interface IMessageBodyReader not implemented');
+        raise EWiRLServerException.Create('Interface IMessageBodyReader not implemented');
     end,
     AIsReadable,
     AGetAffinity,

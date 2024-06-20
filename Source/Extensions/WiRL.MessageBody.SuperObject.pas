@@ -61,7 +61,7 @@ begin
   LStreamWriter := TStreamWriter.Create(AContentStream);
   try
     if not Supports(AValue.AsInterface, ISuperObject, LSuperObject) then
-      raise Exception.Create('Invalid type cast');
+      raise EWiRLServerException.Create('Invalid type cast');
     if Assigned(LSuperObject) then
       LStreamWriter.Write(LSuperObject.AsJSon());
   finally

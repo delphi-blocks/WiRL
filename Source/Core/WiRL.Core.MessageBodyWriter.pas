@@ -283,7 +283,7 @@ begin
   for LEntry in FRegistry do
   begin
     if not Assigned(LEntry.Produces) then
-      raise Exception.CreateFmt('Attribute [Produce] required for [%s]', [LEntry.WriterName]);
+      raise EWiRLServerException.CreateFmt('Attribute [Produce] required for [%s]', [LEntry.WriterName]);
 
     if LEntry.IsWritable(AType, AAttributes, AMediaType) and
        (AMediaType.IsWildcard or LEntry.Produces.Contains(TMediaType.WILDCARD) or LEntry.Produces.Contains(AMediaType)) then
@@ -394,7 +394,7 @@ begin
       LInstance := TRttiHelper.CreateInstance(AWriterClass);
       //LInstance := AWriterClass.Create;
       if not Supports(LInstance, IMessageBodyWriter, Result) then
-        raise Exception.Create('Interface IMessageBodyWriter not implemented');
+        raise EWiRLServerException.Create('Interface IMessageBodyWriter not implemented');
     end,
     AIsWritable,
     AGetAffinity,

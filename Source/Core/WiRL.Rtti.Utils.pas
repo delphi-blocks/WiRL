@@ -128,6 +128,7 @@ implementation
 uses
   Generics.Collections,
   System.DateUtils,
+  WiRL.Core.Exceptions,
   WiRL.Core.Utils;
 
 {$IFDEF CUSTOM_ATTRIBUTE_BUG}
@@ -164,7 +165,7 @@ begin
       end;
     end;
   else
-    raise Exception.CreateFmt('Error creating type: %s', [AType.Name]);
+    raise EWiRLServerException.CreateFmt('Error creating type: %s', [AType.Name]);
   end;
 end;
 
@@ -466,7 +467,7 @@ begin
   else if AObject is TRttiManagedField then
     Result := TRttiManagedField(AObject).FieldType
   else
-    raise Exception.Create('Object doesn''t have a type');
+    raise EWiRLServerException.Create('Object doesn''t have a type');
 end;
 
 class function TRttiHelper.GetType(ATypeInfo: Pointer): TRttiType;
@@ -591,7 +592,7 @@ begin
     end;
   end;
   if not Assigned(Result) then
-    raise Exception.CreateFmt('TRttiHelper.CreateInstance: can''t create object [%s]', [AType.Name]);
+    raise EWiRLServerException.CreateFmt('TRttiHelper.CreateInstance: can''t create object [%s]', [AType.Name]);
 end;
 
 class constructor TRttiHelper.Create;

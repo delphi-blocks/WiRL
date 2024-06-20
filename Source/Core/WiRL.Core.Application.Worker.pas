@@ -374,7 +374,7 @@ begin
   if LParamAttr is ContextAttribute then
   begin
     if (not AParam.RttiParam.ParamType.IsInstance) or (not ContextInjectionByType(AParam.RttiParam, Result)) then
-      raise Exception.Create('Context injection failure');
+      raise EWiRLServerException.Create('Context injection failure');
     Exit;
   end;
 

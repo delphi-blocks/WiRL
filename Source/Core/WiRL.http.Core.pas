@@ -270,7 +270,7 @@ begin
   if LRes >= 0 then
     Result := TWiRLHttpMethod(LRes)
   else
-    raise Exception.Create('Error converting string type');
+    raise EWiRLConvertError.Create('Error converting string type');
 end;
 
 function TWiRLHttpMethodHelper.ToString: string;

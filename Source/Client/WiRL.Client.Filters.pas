@@ -413,7 +413,7 @@ end;
 
 function TWiRLVirtualResponse.GetContent: TWiRLContent;
 begin
-  raise Exception.Create('Error Message');
+  raise EWiRLServerException.Create('Not Implemented');
 end;
 
 function TWiRLVirtualResponse.GetContentMediaType: TMediaType;

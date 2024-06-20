@@ -106,7 +106,9 @@ uses
   {$ELSE}
   Soap.EncdDecd,
   {$ENDIF}
-  System.ZLib, System.JSON;
+  System.ZLib,
+  System.JSON,
+  WiRL.Core.Exceptions;
 
 { TFireDACDataSets }
 
@@ -154,7 +156,7 @@ begin
         Break;
       end;
   if Result = nil then
-    raise Exception.Create('No DataSet found');
+    raise EWiRLServerException.Create('No DataSet found');
 end;
 
 function TFireDACDataSets.GetEnumerator: TEnumerator<TFireDACDataSetPair>;
