@@ -97,8 +97,7 @@ var
 begin
   LEngineInfo := TWiRLEngineInfo.Create(AEngine, AOwnsObjects);
   FEngines.Add(LEngineInfo);
-  if AEngine.Server <> Self then
-    AEngine.Server := Self;
+  AEngine.SetEngineServer(Self);
 end;
 
 function TWiRLServer.AddEngine<T>(const ABasePath: string; AOwnsObjects: Boolean): T;

@@ -23,6 +23,8 @@ type
     constructor Create(AOwner: TComponent); overload; override;
     constructor Create(ABasePath: string); reintroduce; overload;
 
+    procedure SetEngineServer(AServer: TComponent);
+
     function CanHandle(const AURL: string): Boolean; virtual;
     procedure HandleRequest(AContext: TWiRLContext); virtual; abstract;
 
@@ -149,6 +151,12 @@ begin
     if FBasePath.IndexOf('/', 1) > 0 then
       raise EWiRLException.CreateFmt('BasePath [%s] should not contains any slash', [FBasePath]);
   end;
+end;
+
+procedure TWiRLCustomEngine.SetEngineServer(AServer: TComponent);
+begin
+  if FServer <> Self then
+    FServer := Self;
 end;
 
 procedure TWiRLCustomEngine.SetServer(const Value: TComponent);
