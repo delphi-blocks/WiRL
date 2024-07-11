@@ -1,4 +1,4 @@
-unit WiRL.http.ProxyEngine;
+unit WiRL.Engine.Proxy;
 
 interface
 
@@ -17,7 +17,8 @@ uses
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.http.Server,
-  WiRL.http.Client;
+  WiRL.http.Client,
+  WiRL.Engine.Core;
 
 type
   EWiRLProxyEngineException = class(EWiRLServerException);
