@@ -88,7 +88,7 @@ begin
       .Plugin.Configure<IWiRLConfigurationAuth>
         .SetTokenType(TAuthTokenType.JWT)
         .SetTokenLocation(TAuthTokenLocation.Bearer)
-        .BackToApp
+        .ApplyConfig
 
       // JWT configuration (App plugin configuration)
       .Plugin.Configure<IWiRLConfigurationJWT>

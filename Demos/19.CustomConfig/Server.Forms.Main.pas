@@ -99,12 +99,12 @@ begin
 
       .Plugin.Configure<IWiRLFormatSetting>
         .AddFormat(TypeInfo(TDateTime), TWiRLFormatSetting.ISODATE_UTC)
-        .BackToApp
+        .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase)
-        .BackToApp
+        .ApplyConfig
 
       .Plugin.Configure<ITestConfig>
         .SetStringValue('ciao')

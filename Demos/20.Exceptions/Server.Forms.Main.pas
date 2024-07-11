@@ -97,7 +97,7 @@ begin
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase)
-        .BackToApp
+        .ApplyConfig
   ;
 
   if not FServer.Active then

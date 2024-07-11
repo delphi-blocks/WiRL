@@ -109,7 +109,7 @@ begin
   //     .SetUseUTCDate(True)
   //     .SetVisibility([mvPublic, mvPublished])
   //     .SetMemberCase(TNeonCase.CamelCase)
-  //     .BackToApp;
+  //     .ApplyConfig;
 
   FApp.AppName := 'app';
   FApp.Client := FClient;

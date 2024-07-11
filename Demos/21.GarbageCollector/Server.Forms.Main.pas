@@ -69,7 +69,7 @@ begin
 
       .Plugin.Configure<IWiRLFormatSetting>
         .AddFormat(TypeInfo(TDateTime), TWiRLFormatSetting.ISODATE_UTF)
-        .BackToApp
+        .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)
