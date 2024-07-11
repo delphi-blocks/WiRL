@@ -10,8 +10,8 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Metadata,
   WiRL.Core.Registry,
-  WiRL.Core.Engine,
   WiRL.Core.Context,
+  WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Response,
   WiRL.http.Request,
@@ -87,7 +87,7 @@ begin
   FServer := TWiRLServer.Create(nil);
 
   // Engine configuration
-  FServer.AddEngine<TWiRLEngine>('/rest')
+  FServer.AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('WiRL Test Demo')
 
     .AddApplication('/app')

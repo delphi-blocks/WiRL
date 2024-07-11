@@ -19,7 +19,7 @@ uses
 
   WiRL.http.Server,
   WiRL.Core.Application,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
 
@@ -56,7 +56,7 @@ type
   private
     FTestExceptionMapper: TTestExceptionMapper;
   public
-    procedure HandleException(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; E: Exception);
+    procedure HandleException(const ASender: TWiRLRESTEngine; const AApplication: TWiRLApplication; E: Exception);
     constructor Create(ATestExceptionMapper: TTestExceptionMapper);
   end;
 
@@ -71,7 +71,7 @@ begin
   FServer := TWiRLServer.Create(nil);
 
   // Engine configuration
-  FServer.AddEngine<TWiRLEngine>('/rest')
+  FServer.AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('WiRL Test Demo')
 
     .AddSubscriber(TExceptionListener.Create(Self))
@@ -146,7 +146,7 @@ begin
   FTestExceptionMapper := ATestExceptionMapper;
 end;
 
-procedure TExceptionListener.HandleException(const ASender: TWiRLEngine;
+procedure TExceptionListener.HandleException(const ASender: TWiRLRESTEngine;
   const AApplication: TWiRLApplication; E: Exception);
 begin
   Inc(FTestExceptionMapper.FExceptionHandlerCount);

@@ -22,7 +22,7 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
 
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
@@ -41,6 +41,9 @@ type
   end;
 
 implementation
+
+uses
+  System.TypInfo;
 
 { TWiRLTestPersonRecordProvider }
 

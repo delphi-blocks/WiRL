@@ -9,7 +9,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Accept.MediaType,
   WiRL.http.Accept.Parser,
   WiRL.http.Accept.Charset,

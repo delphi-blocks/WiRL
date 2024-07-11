@@ -20,7 +20,7 @@ uses
   WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Cookie,
   WiRL.http.Response,
   WiRL.http.Request,
@@ -59,15 +59,15 @@ type
   {
   TWiRLTestServer = class(TObject)
   private
-    FEngine: TWiRLEngine;
+    FEngine: TWiRLRESTEngine;
     FActive: Boolean;
   public
     constructor Create; virtual;
     destructor Destroy; override;
 
     procedure DoCommand(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
-    function ConfigureEngine(const ABasePath: string): TWiRLEngine;
-    property Engine: TWiRLEngine read FEngine;
+    function ConfigureEngine(const ABasePath: string): TWiRLRESTEngine;
+    property Engine: TWiRLRESTEngine read FEngine;
     property Active: Boolean read FActive write FActive;
   end;
   }
@@ -136,7 +136,7 @@ implementation
 { TWiRLTestServer }
 
 {
-function TWiRLTestServer.ConfigureEngine(const ABasePath: string): TWiRLEngine;
+function TWiRLTestServer.ConfigureEngine(const ABasePath: string): TWiRLRESTEngine;
 begin
   FEngine.SetBasePath(ABasePath);
   Result := FEngine;
@@ -144,7 +144,7 @@ end;
 
 constructor TWiRLTestServer.Create;
 begin
-  FEngine := TWiRLEngine.Create(nil);
+  FEngine := TWiRLRESTEngine.Create(nil);
 end;
 
 destructor TWiRLTestServer.Destroy;
