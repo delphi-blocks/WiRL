@@ -74,7 +74,7 @@ type
   private
     type TWiRLDiagnosticsManagerSingleton = TWiRLSingleton<TWiRLDiagnosticsManager>;
   private
-    class var FEngine: TWiRLEngine;
+    class var FEngine: TWiRLRESTEngine;
     FEngineInfo: TWiRLDiagnosticEngineInfo;
     FAppDictionary: TObjectDictionary<string, TWiRLDiagnosticAppInfo>;
     FCriticalSection: TCriticalSection;
@@ -86,7 +86,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    class procedure SetEngine(AEngine: TWiRLEngine);
+    class procedure SetEngine(AEngine: TWiRLRESTEngine);
 
     function ToJSON: TJSONObject; virtual;
     procedure RetrieveAppInfo(const App: string; const ADoSomething: TProc<TWiRLDiagnosticAppInfo>);
@@ -96,8 +96,8 @@ type
     procedure OnTokenEnd(const AToken: string);
 
     // IWiRLHandleRequestEventListener
-    procedure BeforeHandleRequest(const ASender: TWiRLEngine; const AApplication: TWiRLApplication);
-    procedure AfterHandleRequest(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; const AStopWatch: TStopWatch);
+    procedure BeforeHandleRequest(const ASender: TWiRLRESTEngine; const AApplication: TWiRLApplication);
+    procedure AfterHandleRequest(const ASender: TWiRLRESTEngine; const AApplication: TWiRLApplication; const AStopWatch: TStopWatch);
 
     class property Instance: TWiRLDiagnosticsManager read GetInstance;
   end;
@@ -111,7 +111,7 @@ uses
 
 { TWiRLDiagnosticsManager }
 
-procedure TWiRLDiagnosticsManager.AfterHandleRequest(const ASender: TWiRLEngine;
+procedure TWiRLDiagnosticsManager.AfterHandleRequest(const ASender: TWiRLRESTEngine;
   const AApplication: TWiRLApplication; const AStopWatch: TStopWatch);
 var
   LStopWatch: TStopwatch;
@@ -133,7 +133,7 @@ begin
   );
 end;
 
-procedure TWiRLDiagnosticsManager.BeforeHandleRequest(const ASender: TWiRLEngine;
+procedure TWiRLDiagnosticsManager.BeforeHandleRequest(const ASender: TWiRLRESTEngine;
   const AApplication: TWiRLApplication);
 begin
 
@@ -226,7 +226,7 @@ begin
   GetAppInfo(App, ADoSomething);
 end;
 
-class procedure TWiRLDiagnosticsManager.SetEngine(AEngine: TWiRLEngine);
+class procedure TWiRLDiagnosticsManager.SetEngine(AEngine: TWiRLRESTEngine);
 begin
   FEngine := AEngine;
 end;

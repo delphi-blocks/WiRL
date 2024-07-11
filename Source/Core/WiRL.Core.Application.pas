@@ -141,15 +141,16 @@ implementation
 
 uses
   System.StrUtils,
+
   WiRL.Configuration.Converter,
   WiRL.Core.Exceptions,
+  WiRL.Core.Attributes,
+  WiRL.Core.Converter,
   WiRL.Core.Utils,
   WiRL.Rtti.Utils,
   WiRL.http.URL,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Attributes,
-  WiRL.Core.Engine,
-  WiRL.Core.Converter;
+  WiRL.Engine.REST;
 
 function ExtractToken(const AString: string; const ATokenIndex: Integer; const ADelimiter: Char = '/'): string;
 var
@@ -170,7 +171,7 @@ end;
 function TWiRLApplication.AddApplication(
   const ABasePath: string): IWiRLApplication;
 begin
-  Result := (FEngine as TWiRLEngine).AddApplication(ABasePath);
+  Result := (FEngine as TWiRLRESTEngine).AddApplication(ABasePath);
 end;
 
 function TWiRLApplication.AddConfiguration(
@@ -351,10 +352,10 @@ begin
   if FEngine <> Value then
   begin
     if Assigned(FEngine) then
-      (FEngine as TWiRLEngine).RemoveApplication(Self);
+      (FEngine as TWiRLRESTEngine).RemoveApplication(Self);
     FEngine := Value;
     if Assigned(FEngine) then
-      (FEngine as TWiRLEngine).AddApplication(Self);
+      (FEngine as TWiRLRESTEngine).AddApplication(Self);
   end;
 end;
 
@@ -410,8 +411,8 @@ end;
 procedure TWiRLApplication.SetParentComponent(AParent: TComponent);
 begin
   inherited;
-  if AParent is TWiRLEngine then
-    Engine := AParent as TWiRLEngine;
+  if AParent is TWiRLRESTEngine then
+    Engine := AParent as TWiRLRESTEngine;
 end;
 
 function TWiRLApplication.SetWriters(const AWriters: TArray<string>): IWiRLApplication;
@@ -566,7 +567,7 @@ end;
 
 function TWiRLApplication.GetEnginePath: string;
 begin
-  Result := (Engine as TWiRLEngine).BasePath;
+  Result := (Engine as TWiRLRESTEngine).BasePath;
 end;
 
 function TWiRLApplication.GetFormatSettingFor(ATypeInfo: PTypeInfo): string;
@@ -584,7 +585,7 @@ begin
   if not Assigned(FEngine) then
     Result := BasePath
   else
-    Result := TWiRLURL.CombinePath([(FEngine as TWiRLEngine).BasePath, BasePath]);
+    Result := TWiRLURL.CombinePath([(FEngine as TWiRLRESTEngine).BasePath, BasePath]);
 end;
 
 function TWiRLApplication.GetResourceCtor(const AResourceName: string): TWiRLConstructorProxy;

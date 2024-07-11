@@ -21,7 +21,6 @@ uses
   WiRL.http.Headers,
   WiRL.http.Cookie,
   WiRL.http.Server.Interfaces,
-  WiRL.http.Engines,
   WiRL.http.Response,
   WiRL.http.Request,
   WiRL.Core.Auth.Context;

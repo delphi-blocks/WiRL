@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2023 WiRL Team                                      }
+{       Copyright (c) 2015-2024 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -93,19 +93,20 @@ implementation
 
 uses
   System.StrUtils, System.TypInfo, System.DateUtils,
+
   WiRL.Configuration.JWT,
   WiRL.Configuration.Converter,
+  WiRL.http.URL,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.http.MultipartData,
-  WiRL.Core.Exceptions,
-  WiRL.Core.Utils,
-  WiRL.Rtti.Utils,
-  WiRL.http.URL,
   WiRL.Core.Attributes,
-  WiRL.Core.Engine,
+  WiRL.Core.Exceptions,
   WiRL.Core.Converter,
-  WiRL.Core.JSON;
+  WiRL.Core.Utils,
+  WiRL.Core.JSON,
+  WiRL.Rtti.Utils,
+  WiRL.Engine.REST;
 
 type
   TRequestParam = class(TObject)
@@ -832,7 +833,7 @@ class function TRequestParam.ParamNameToParamIndex(AContext: TWiRLContext;
 var
   LResURL: TWiRLURL;
   LPair: TPair<Integer, string>;
-  LEngine: TWiRLEngine;
+  LEngine: TWiRLRESTEngine;
   LApplication: TWiRLApplication;
   LResource: TWiRLProxyResource;
   LMethod: TWiRLProxyMethod;
@@ -841,7 +842,7 @@ begin
   LMethod := AContext.ResourceMethod as TWiRLProxyMethod;
 
   LApplication := TWiRLApplication(AContext.Application);
-  LEngine := TWiRLEngine(AContext.Engine);
+  LEngine := TWiRLRESTEngine(AContext.Engine);
 
   LResURL := TWiRLURL.MockURL(LEngine.BasePath,
     LApplication.BasePath, LResource.Path, LMethod.Path);

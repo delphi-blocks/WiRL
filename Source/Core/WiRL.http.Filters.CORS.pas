@@ -15,15 +15,15 @@ uses
   System.SysUtils, System.Classes,
 
   WiRL.Configuration.CORS,
-  WiRL.Core.Registry,
   WiRL.http.Filters,
   WiRL.http.Request,
   WiRL.http.Response,
+  WiRL.http.Server,
+  WiRL.Core.Registry,
   WiRL.Core.Attributes,
   WiRL.Core.Exceptions,
-  WiRL.http.Server,
-  WiRL.Core.Engine,
-  WiRL.Core.Application;
+  WiRL.Core.Application,
+  WiRL.Engine.REST;
 
 type
   [NameBinding]

@@ -64,7 +64,7 @@ implementation
 uses
   WiRL.Core.Application,
   WiRL.Core.Metadata,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Configuration.Core,
   WiRL.http.Server;
 
@@ -77,10 +77,10 @@ end;
 function TWiRLContextServer.GetCurrentAppFromServer: TObject;
 var
   LServer: TWiRLServer;
-  LEngine: TWiRLEngine;
+  LEngine: TWiRLRESTEngine;
 begin
   LServer := Server as TWiRLServer;
-  LEngine := LServer.GetEngine(Request.PathInfo) as TWiRLEngine;
+  LEngine := LServer.GetEngine(Request.PathInfo) as TWiRLRESTEngine;
   Result := LEngine.GetApplication(RequestURL);
 end;
 
@@ -89,7 +89,7 @@ var
   LServer: TWiRLServer;
 begin
   LServer := Server as TWiRLServer;
-  Result := LServer.GetEngine(Request.PathInfo) as TWiRLEngine;
+  Result := LServer.GetEngine(Request.PathInfo) as TWiRLRESTEngine;
 end;
 
 function TWiRLContextServer.GetApplication: TObject;
@@ -104,7 +104,7 @@ end;
 
 function TWiRLContextServer.GetEngine: TObject;
 begin
-  Result := FindContextDataAs<TWiRLEngine>;
+  Result := FindContextDataAs<TWiRLRESTEngine>;
 end;
 
 function TWiRLContextServer.GetResource: TObject;

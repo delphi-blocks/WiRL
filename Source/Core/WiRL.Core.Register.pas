@@ -15,12 +15,14 @@ interface
 
 uses
   System.SysUtils, System.Classes,
+
   WiRL.Rtti.Utils,
   WiRL.Core.Declarations,
-  WiRL.Core.Engine,
   WiRL.Core.MessageBody.Default,
-  WiRL.http.Engines,
-  WiRL.http.FileSystemEngine,
+  WiRL.Engine.REST,
+  WiRL.Engine.HTTP,
+  WiRL.Engine.WebServer,
+  WiRL.Engine.FileSystem,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
 
@@ -99,9 +101,10 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('WiRL Server', [TWiRLEngine]);
-  RegisterComponents('WiRL Server', [TWiRLhttpEngine]);
   RegisterComponents('WiRL Server', [TWiRLServer]);
+  RegisterComponents('WiRL Server', [TWiRLRESTEngine]);
+  RegisterComponents('WiRL Server', [TWiRLHTTPEngine]);
+  RegisterComponents('WiRL Server', [TWiRLWebServerEngine]);
   RegisterComponents('WiRL Server', [TWiRLFileSystemEngine]);
   RegisterComponents('WiRL Server', [TWiRLMBWDefaultProvider]);
 

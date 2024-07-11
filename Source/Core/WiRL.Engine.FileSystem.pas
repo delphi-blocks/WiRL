@@ -2,12 +2,12 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2023 WiRL Team                                      }
+{       Copyright (c) 2015-2024 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
 {******************************************************************************}
-unit WiRL.http.FileSystemEngine;
+unit WiRL.Engine.FileSystem;
 
 interface
 
@@ -25,7 +25,8 @@ uses
   WiRL.Core.Exceptions,
   WiRL.http.Request,
   WiRL.http.Response,
-  WiRL.http.Server;
+  WiRL.http.Server,
+  WiRL.Engine.Core;
 
 type
   TWiRLFileSystemErrorEvent = procedure (ASender: TObject; AStatusCode: Integer; AContext: TWiRLContext) of object;
@@ -34,7 +35,7 @@ type
 
   TWiRLFileSystemEngine = class(TWiRLCustomEngine)
   private const
-    DefaultEngineName = 'WiRL FileSystemEngine';
+    DefaultEngineName = 'WiRL FileSystem Engine';
     DefaultRootFolder = '{AppPath}' + PathDelim + 'www';
   private
     FRootFolder: string;
@@ -44,7 +45,7 @@ type
     FIndexFileNames: TStringList;
     FOnError: TWiRLFileSystemErrorEvent;
     function GetContentType(const AFileName: string): string;
-    procedure ServeFileContent(const AFileNamme: string; AResponse: TWiRLResponse);
+    procedure ServeFileContent(const AFileName: string; AResponse: TWiRLResponse);
     procedure CheckRelativePath(const ARelativeURL: string);
     function DirectoryHasIndexFile(const ADirectory: string;
       out AIndexFullPath: string): Boolean;
@@ -58,14 +59,14 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure HandleRequest(AContext: TWiRLContext); override;
 
     function SetEngineName(const AEngineName: string): TWiRLFileSystemEngine;
     function SetRootFolder(const ARootFolder: string): TWiRLFileSystemEngine;
-    procedure HandleRequest(AContext: TWiRLContext); override;
     procedure Startup; override;
     property IndexFileNames: TStringList read FIndexFileNames;
     property ContentTypesForExt: TDictionary<string, string> read FContentTypesForExt;
-    property Macros: TDictionary<string,TStringFunc> read FMacros;
+    property Macros: TDictionary<string, TStringFunc> read FMacros;
   published
     property RootFolder: string read FRootFolder write SetRootFolderProp;
     property OnError: TWiRLFileSystemErrorEvent read FOnError write FOnError;
@@ -102,8 +103,8 @@ end;
 constructor TWiRLFileSystemEngine.Create(AOwner: TComponent);
 begin
   inherited;
-  FContentTypesForExt := TDictionary<string, string>.Create;
   FMacros := TDictionary<string,TStringFunc>.Create;
+  FContentTypesForExt := TDictionary<string, string>.Create;
   FIndexFileNames := TStringList.Create;
   FRootFolder := DefaultRootFolder;
   FEngineName := DefaultEngineName;
@@ -158,8 +159,7 @@ begin
 //  Result := Result.Replace(PathDelim + PathDelim, PathDelim, [rfReplaceAll]);
 end;
 
-procedure TWiRLFileSystemEngine.HandleError(AStatusCode: Integer;
-  AContext: TWiRLContext);
+procedure TWiRLFileSystemEngine.HandleError(AStatusCode: Integer; AContext: TWiRLContext);
 var
   LContent: string;
   LDetail: string;
@@ -272,23 +272,20 @@ begin
   end);
 end;
 
-procedure TWiRLFileSystemEngine.ServeFileContent(const AFileNamme: string;
-  AResponse: TWiRLResponse);
+procedure TWiRLFileSystemEngine.ServeFileContent(const AFileName: string; AResponse: TWiRLResponse);
 begin
   AResponse.StatusCode := 200;
-  AResponse.ContentStream := TFileStream.Create(AFileNamme, fmOpenRead);
-  AResponse.ContentType := GetContentType(AFileNamme);
+  AResponse.ContentStream := TFileStream.Create(AFileName, fmOpenRead);
+  AResponse.ContentType := GetContentType(AFileName);
 end;
 
-function TWiRLFileSystemEngine.SetEngineName(
-  const AEngineName: string): TWiRLFileSystemEngine;
+function TWiRLFileSystemEngine.SetEngineName(const AEngineName: string): TWiRLFileSystemEngine;
 begin
   FEngineName := AEngineName;
   Result := Self;
 end;
 
-function TWiRLFileSystemEngine.SetRootFolder(
-  const ARootFolder: string): TWiRLFileSystemEngine;
+function TWiRLFileSystemEngine.SetRootFolder(const ARootFolder: string): TWiRLFileSystemEngine;
 begin
   RootFolder := ARootFolder;
   Result := Self;

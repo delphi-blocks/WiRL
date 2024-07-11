@@ -47,7 +47,7 @@ type
   TResourcesResource = class
   private
   protected
-    [Context] Engine: TWiRLEngine;
+    [Context] Engine: TWiRLRESTEngine;
   public
     [GET]
     [Produces(TMediaType.APPLICATION_JSON)]

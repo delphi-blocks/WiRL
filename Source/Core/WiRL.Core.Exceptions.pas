@@ -249,7 +249,7 @@ uses
   System.TypInfo,
   WiRL.Configuration.Auth,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application;
 
 { Pair }
@@ -523,7 +523,7 @@ begin
   if Assigned(LApplication) then
   begin
     if Assigned(AContext.Engine) then
-      TWiRLEngine(AContext.Engine).HandleException(AContext, E);
+      TWiRLRESTEngine(AContext.Engine).HandleException(AContext, E);
   end;
 end;
 
