@@ -16,8 +16,8 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   System.Diagnostics, System.Actions, Winapi.ShellAPI,
 
-  WiRL.Core.Engine,
-  WiRL.http.FileSystemEngine,
+  WiRL.Engine.REST,
+  WiRL.Engine.FileSystem,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
 
@@ -77,7 +77,7 @@ begin
     .SetThreadPoolSize(5);
 
   FServer
-    .AddEngine<TWiRLEngine>('/rest')
+    .AddEngine<TWiRLRESTEngine>('/rest')
       .SetEngineName('WiRL Template')
 
       // Application configuration

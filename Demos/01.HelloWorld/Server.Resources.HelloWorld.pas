@@ -17,7 +17,7 @@ uses
 
   WiRL.http.URL,
   WiRL.http.MultipartData,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Exceptions,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
@@ -226,7 +226,7 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(TWiRLEngine.ServerDirectory)))) +
+        TDirectory.GetParent(TWiRLRESTEngine.ServerDirectory)))) +
     'WiRL-logo.png';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
@@ -238,7 +238,7 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(TWiRLEngine.ServerDirectory)))) +
+        TDirectory.GetParent(TWiRLRESTEngine.ServerDirectory)))) +
     'WiRL-doc.pdf';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;

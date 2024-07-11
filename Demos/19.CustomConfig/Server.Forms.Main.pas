@@ -15,7 +15,7 @@ uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
   WiRL.Core.Converter,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Application;
@@ -88,7 +88,7 @@ begin
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
-    .AddEngine<TWiRLEngine>('/rest')
+    .AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('WiRL custom Config')
 
     // Application configuration

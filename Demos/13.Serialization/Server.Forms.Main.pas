@@ -20,7 +20,7 @@ uses
   FireDAC.Comp.Client, FireDAC.Stan.StorageBin, Vcl.Grids, Vcl.DBGrids,
   Vcl.ToolWin, System.Contnrs, System.JSON,
 
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
@@ -628,7 +628,7 @@ begin
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     .SetThreadPoolSize(5)
-    .AddEngine<TWiRLEngine>('/rest')
+    .AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('WiRL ContentType Demo')
 
     // Application configuration

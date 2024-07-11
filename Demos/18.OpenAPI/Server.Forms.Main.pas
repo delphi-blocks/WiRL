@@ -23,8 +23,8 @@ uses
   Neon.Core.Types,
   Neon.Core.Persistence,
   WiRL.Core.Application,
-  WiRL.Core.Engine,
-  WiRL.http.FileSystemEngine,
+  WiRL.Engine.REST,
+  WiRL.Engine.FileSystem,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   OpenAPI.Model.Classes,
@@ -62,7 +62,7 @@ type
     APP_PATH = 'app';
     API_PATH = 'openapi';
   private
-    FEngine: TWiRLEngine;
+    FEngine: TWiRLRESTEngine;
     FRESTServer: TWiRLServer;
     function ConfigureOpenAPIDocument: TOpenAPIDocument;
   public
@@ -176,7 +176,7 @@ begin
   LDocument := ConfigureOpenAPIDocument;
 
   FEngine :=
-    FRESTServer.AddEngine<TWiRLEngine>(ENG_PATH)
+    FRESTServer.AddEngine<TWiRLRESTEngine>(ENG_PATH)
       .SetEngineName('RESTEngine');
 
   FEngine.AddApplication(APP_PATH)

@@ -18,14 +18,14 @@ uses
   Neon.Core.Types,
   WiRL.Configuration.Neon,
   WiRL.Core.Application,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
 
 type
 
   TExceptionListener = class(TInterfacedObject, IWiRLHandleExceptionListener)
-    procedure HandleException(const ASender: TWiRLEngine; const AApplication: TWiRLApplication; E: Exception);
+    procedure HandleException(const ASender: TWiRLRESTEngine; const AApplication: TWiRLApplication; E: Exception);
   end;
 
   TMainForm = class(TForm)
@@ -75,7 +75,7 @@ begin
   FRESTServer := TWiRLServer.Create(Self);
   FListener := TExceptionListener.Create;
 
-  FRESTServer.AddEngine<TWiRLEngine>('/rest')
+  FRESTServer.AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('RESTEngine')
     .AddSubscriber(FListener)
     .AddApplication('/app')
@@ -112,7 +112,7 @@ end;
 
 { TExceptionListener }
 
-procedure TExceptionListener.HandleException(const ASender: TWiRLEngine;
+procedure TExceptionListener.HandleException(const ASender: TWiRLRESTEngine;
   const AApplication: TWiRLApplication; E: Exception);
 begin
   MainForm.memoLog.Lines.Add(E.Message);

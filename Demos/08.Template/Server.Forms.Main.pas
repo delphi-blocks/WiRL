@@ -16,7 +16,7 @@ uses
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   System.Diagnostics, System.Actions,
 
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Application;
@@ -66,7 +66,7 @@ begin
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .AddEngine<TWiRLEngine>('/rest')
+    .AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('WiRL Template')
     .AddApplication('/default')
       .SetAppName('Default')

@@ -8,7 +8,7 @@ uses
 
   WiRL.http.URL,
   WiRL.http.MultipartData,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Exceptions,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
