@@ -51,6 +51,7 @@ type
     function AddOperation(AMethod: TWiRLProxyMethod; AOpenAPIPath: TOpenAPIPathItem; const ATagName: string): TOpenAPIOperation;
     procedure AddResource(AResource: TWiRLProxyResource);
     function CreateParameter(AParameter: TWiRLProxyParameter): TOpenAPIParameter;
+    procedure ClearDocument;
   protected
     constructor Create(AApplication: TWiRLApplication; const ASwaggerResource: string); overload;
     procedure ProcessXMLDoc;
@@ -76,6 +77,7 @@ var
   LRes: TWiRLProxyResource;
   LPair: TPair<string, TWiRLProxyResource>;
 begin
+  ClearDocument();
   ProcessXMLDoc();
 
   for LPair in FApplication.Proxy.Resources do
@@ -116,6 +118,22 @@ begin
     AddResource(LRes);
   end;
   Result := TNeon.ObjectToJSON(FDocument, FNeonConfiguration) as TJSONObject;
+end;
+
+procedure TOpenAPIv3Engine.ClearDocument;
+begin
+  FDocument.Paths.Clear;
+  FDocument.Components.Schemas.Clear;
+  FDocument.Components.Responses.Clear;
+  FDocument.Components.Parameters.Clear;
+  FDocument.Components.Examples.Clear;
+  FDocument.Components.RequestBodies.Clear;
+  FDocument.Components.Headers.Clear;
+  FDocument.Components.SecuritySchemes.Clear;
+  FDocument.Components.Links.Clear;
+  FDocument.Components.Callbacks.Clear;
+  FDocument.Security.Clear;
+  FDocument.Tags.Clear;
 end;
 
 constructor TOpenAPIv3Engine.Create(AApplication: TWiRLApplication; const ASwaggerResource: string);

@@ -16,7 +16,7 @@ uses
   Vcl.SvcMgr, System.Win.Registry,
 
   // WiRL units
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.Console.Base,
   WiRL.Core.Application,
@@ -55,7 +55,7 @@ begin
   FServer
     .SetPort(8080)
     .SetThreadPoolSize(10)
-    .AddEngine<TWiRLEngine>('rest')
+    .AddEngine<TWiRLRESTEngine>('rest')
     .SetEngineName('REST Service')
       .AddApplication('app')
       .SetAppName('Demo App')

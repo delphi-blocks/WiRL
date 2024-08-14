@@ -51,6 +51,35 @@ type
     property ID: Integer read FID write FID;
   end;
 
+  TMyEnum = (First, Second);
+
+  TRecordParam = record
+    Name: string;
+    City: string;
+    Age: Integer;
+    Enum: TMyEnum;
+  end;
+
+  TArrayParam = TArray<TRecordParam>;
+  TArrayInt = TArray<Int64>;
+
+  TSimpleParam = class(TObject)
+  private
+    FValue: string;
+  public
+    property Value: string read FValue write FValue;
+
+    constructor Create(const AValue: string);
+  end;
+
 implementation
+
+{ TSimpleParam }
+
+constructor TSimpleParam.Create(const AValue: string);
+begin
+  inherited Create;
+  FValue := AValue;
+end;
 
 end.

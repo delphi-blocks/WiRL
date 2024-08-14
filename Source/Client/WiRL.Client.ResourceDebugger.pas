@@ -126,7 +126,7 @@ begin
     ResponseLabel.Font.Color := clBlack;
 
   ResponseLabel.Caption := IntToStr(AResponse.StatusCode) + ' - ' + AResponse.StatusText;
-  MemoResponse.Text := AResponse.Content;
+  MemoResponse.Text := AResponse.Content.AsType<string>;
 end;
 
 procedure TWiRLResourceRunnerForm.ButtonAddHeaderClick(Sender: TObject);
@@ -209,7 +209,7 @@ var
   LEditorForm: TWiRLResourceRunnerForm;
 begin
   if not Assigned(AResource) then
-    raise Exception.Create('WiRLResource needed');
+    raise EWiRLClientException.Create('WiRLResource needed');
 
   LEditorForm := TWiRLResourceRunnerForm.Create(nil);
   try
@@ -253,10 +253,10 @@ begin
   try
     LObject := nil;
     if not Assigned(FResource.Application) then
-      raise Exception.Create('Application non defined');
+      raise EWiRLClientException.Create('Application non defined');
 
     if not Assigned(FResource.Client) then
-      raise Exception.Create('HttpClient non defined');
+      raise EWiRLClientException.Create('HttpClient non defined');
 
     try
       ConfigComponent;

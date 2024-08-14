@@ -18,7 +18,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
 
@@ -64,7 +64,7 @@ begin
   FServer := TWiRLServer.Create(nil);
 
   // Engine configuration
-  FServer.AddEngine<TWiRLEngine>('/rest')
+  FServer.AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('WiRL Test Demo')
 
     .AddApplication('/app')

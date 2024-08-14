@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -42,6 +42,12 @@ type
     class function New(const AValue: string): TWiRLStringArray;
   end;
   {$ENDIF}
+
+
+const
+  WiRLVersion = 450;
+  WIRL_VERSION_STR = '4.5.0';
+
 
 implementation
 

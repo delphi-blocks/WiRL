@@ -15,7 +15,7 @@ uses
   System.Classes, System.SysUtils, System.JSON,
 
   WiRL.Core.OpenAPI.Resource,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,

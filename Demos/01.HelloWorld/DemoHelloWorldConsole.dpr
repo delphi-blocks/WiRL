@@ -18,10 +18,12 @@ uses
   System.Types,
   WiRL.Console.Base,
   WiRL.Console.Factory,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
-  Server.Resources in 'Server.Resources.pas';
+  Server.Resources.HelloWorld in 'Server.Resources.HelloWorld.pas',
+  Server.Resources.Database in 'Server.Resources.Database.pas',
+  Server.Resources.Params in 'Server.Resources.Params.pas';
 
 var
   WiRLConsole: TWiRLConsoleBase;
@@ -34,7 +36,7 @@ begin
         AServer
           .SetPort(8080)
           .SetThreadPoolSize(10)
-          .AddEngine<TWiRLEngine>('/rest')
+          .AddEngine<TWiRLRESTEngine>('/rest')
           .SetEngineName('WiRL HelloWorld')
 
           // Adds and configures an application

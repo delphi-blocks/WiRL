@@ -18,7 +18,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.Configuration.Core,
   WiRL.Configuration.Converter,
@@ -31,7 +31,7 @@ type
   private
     FServer: TWiRLServer;
     FApplication: IWiRLApplication;
-    FEngine: TWiRLEngine;
+    FEngine: TWiRLRESTEngine;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
   public
@@ -100,7 +100,7 @@ begin
   FServer := TWiRLServer.Create(nil);
 
   // Engine configuration
-  FEngine := FServer.AddEngine<TWiRLEngine>('/rest');
+  FEngine := FServer.AddEngine<TWiRLRESTEngine>('/rest');
   FEngine.SetEngineName('WiRL Test Demo');
 
   FApplication := FEngine.AddApplication('/app');

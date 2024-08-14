@@ -24,7 +24,7 @@ uses
   WiRL.Configuration.Neon,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application, WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter, WiRL.http.Filters, WiRL.Core.Registry;
 
@@ -70,7 +70,7 @@ begin
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
 
     // Engine configuration
-    .AddEngine<TWiRLEngine>('/rest')
+    .AddEngine<TWiRLRESTEngine>('/rest')
       .SetEngineName('WiRL Auth Demo')
 
       // App base configuration
@@ -88,7 +88,7 @@ begin
       .Plugin.Configure<IWiRLConfigurationAuth>
         .SetTokenType(TAuthTokenType.JWT)
         .SetTokenLocation(TAuthTokenLocation.Bearer)
-        .BackToApp
+        .ApplyConfig
 
       // JWT configuration (App plugin configuration)
       .Plugin.Configure<IWiRLConfigurationJWT>
@@ -100,7 +100,7 @@ end;
 
 procedure TMainForm.ConfigureServerStandard(AServer: TWiRLServer);
 var
-  LEngineConf: TWiRLEngine;
+  LEngineConf: TWiRLRESTEngine;
   LAppConf: IWiRLApplication;
   LAuthConf: IWiRLConfigurationAuth;
   LJWTConf: IWiRLConfigurationJWT;
@@ -109,7 +109,7 @@ begin
   AServer.SetPort(StrToIntDef(PortNumberEdit.Text, 8080));
 
   // Engine configuration
-  LEngineConf := AServer.AddEngine<TWiRLEngine>('/rest');
+  LEngineConf := AServer.AddEngine<TWiRLRESTEngine>('/rest');
   LEngineConf.SetEngineName('WiRL Auth Demo');
 
   // App base configuration

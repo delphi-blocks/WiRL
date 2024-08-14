@@ -40,6 +40,10 @@
   {$DEFINE HAS_MANAGED_RECORD}
 {$ENDIF}
 
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
+  {$DEFINE HAS_FORM_DATA_FIELD_WITH_MEDIA_TYPE}
+{$ENDIF}
+
 {$IF CompilerVersion >= 35} // Delphi 11.0 Alexandria
   {$DEFINE HAS_NEW_ANDROID_PID}
   {$DEFINE HAS_NO_REF_COUNT}      // TNoRefCountObject class
@@ -47,5 +51,6 @@
 {$ENDIF}
 
 {$IF CompilerVersion >= 36} // Delphi 12.0 Athens
+  {$DEFINE HAS_ARRAY_TO_STRING}
 {$ENDIF}
 

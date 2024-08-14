@@ -249,7 +249,7 @@ uses
   System.TypInfo,
   WiRL.Configuration.Auth,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application;
 
 { Pair }
@@ -473,8 +473,7 @@ begin
   end;
 end;
 
-class function EWiRLWebApplicationException.HandleCustomException(
-  AContext: TWiRLContext; E: Exception): Boolean;
+class function EWiRLWebApplicationException.HandleCustomException(AContext: TWiRLContext; E: Exception): Boolean;
 var
   LCtorInfo: TWiRLExceptionMapperConstructorInfo;
 begin
@@ -524,7 +523,7 @@ begin
   if Assigned(LApplication) then
   begin
     if Assigned(AContext.Engine) then
-      TWiRLEngine(AContext.Engine).HandleException(AContext, E);
+      TWiRLRESTEngine(AContext.Engine).HandleException(AContext, E);
   end;
 end;
 
@@ -647,8 +646,7 @@ begin
   FConstructorFunc := AConstructorFunc;
 end;
 
-procedure TWiRLExceptionMapperConstructorInfo.HandleException(
-  AContext: TWiRLContext; E: Exception);
+procedure TWiRLExceptionMapperConstructorInfo.HandleException(AContext: TWiRLContext; E: Exception);
 var
   LObject: TObject;
   LExceptionMapper: IWiRLExceptionMapper;
@@ -685,8 +683,7 @@ end;
 
 { EWiRLHttpStatusException }
 
-constructor EWiRLHttpStatusException.Create(const AMessage, AIssuer,
-  AMethod: string);
+constructor EWiRLHttpStatusException.Create(const AMessage, AIssuer, AMethod: string);
 var
   LPairArray: TExceptionValues;
 begin

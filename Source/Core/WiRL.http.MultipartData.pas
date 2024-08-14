@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -166,7 +166,6 @@ begin
     else if FParameters.Names[LPosition] = PREVIEWTYPE_NAME then
       FPreviewType := FParameters.ValueFromIndex[LPosition];
   end;
-
 end;
 
 { TWiRLFormDataPart }
@@ -278,6 +277,7 @@ end;
 constructor TWiRLFormDataMultiPart.Create(AStream: TStream; const AMIMEBoundary: string);
 begin
   inherited Create;
+
   FFormDataList := TObjectList<TWiRLFormDataPart>.Create(True);
   FMIMEBoundary := AMIMEBoundary;
   Parse(AStream);

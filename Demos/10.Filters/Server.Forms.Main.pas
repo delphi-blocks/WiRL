@@ -18,7 +18,7 @@ uses
   WiRL.Configuration.Core,
   WiRL.Configuration.Compression,
   WiRL.Core.Classes,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.Core.MessageBody.Default,
   WiRL.Data.MessageBody.Default,
@@ -88,7 +88,7 @@ begin
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     // Engine configuration
-    .AddEngine<TWiRLEngine>('/rest')
+    .AddEngine<TWiRLRESTEngine>('/rest')
       .SetEngineName('WiRL Filter Demo')
 
       // Application configuration
@@ -98,12 +98,10 @@ begin
         .SetResources(
           'Server.Resources.TFilterDemoResource')
 
-      (*
       .Plugin.Configure<IWiRLConfigurationCompression>
         .SetMinSize(300)
         .SetMediaTypes('application/xml,application/json,text/plain')
         .ApplyConfig
-      *)
   ;
 
   if not FServer.Active then

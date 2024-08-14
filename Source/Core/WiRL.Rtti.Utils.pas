@@ -72,6 +72,10 @@ type
     // Create instance of class with parameterless constructor
     class function CreateInstanceValue(AType: TRttiType): TValue; overload;
 
+    // Create array of TValue with ALength elements
+    class function CreateArrayValue(AType: TRttiType; ALength: NativeInt): TValue; overload;
+    class function CreateArrayValue(ATypeInfo: PTypeInfo; ALength: NativeInt): TValue; overload;
+
     // Create instance of class with parameterless constructor
     class function CreateInstance(AClass: TClass): TObject;  overload;
     class function CreateInstance(AType: TRttiType): TObject; overload;
@@ -124,6 +128,7 @@ implementation
 uses
   Generics.Collections,
   System.DateUtils,
+  WiRL.Core.Exceptions,
   WiRL.Core.Utils;
 
 {$IFDEF CUSTOM_ATTRIBUTE_BUG}
@@ -160,7 +165,7 @@ begin
       end;
     end;
   else
-    raise Exception.CreateFmt('Error creating type: %s', [AType.Name]);
+    raise EWiRLServerException.CreateFmt('Error creating type: %s', [AType.Name]);
   end;
 end;
 
@@ -462,7 +467,7 @@ begin
   else if AObject is TRttiManagedField then
     Result := TRttiManagedField(AObject).FieldType
   else
-    raise Exception.Create('Object doesn''t have a type');
+    raise EWiRLServerException.Create('Object doesn''t have a type');
 end;
 
 class function TRttiHelper.GetType(ATypeInfo: Pointer): TRttiType;
@@ -587,12 +592,26 @@ begin
     end;
   end;
   if not Assigned(Result) then
-    raise Exception.CreateFmt('TRttiHelper.CreateInstance: can''t create object [%s]', [AType.Name]);
+    raise EWiRLServerException.CreateFmt('TRttiHelper.CreateInstance: can''t create object [%s]', [AType.Name]);
 end;
 
 class constructor TRttiHelper.Create;
 begin
   FContext := TRttiContext.Create;
+end;
+
+class function TRttiHelper.CreateArrayValue(ATypeInfo: PTypeInfo;
+  ALength: NativeInt): TValue;
+var
+  LArrayPtr: Pointer;
+begin
+  LArrayPtr := nil;
+  DynArraySetLength(LArrayPtr, ATypeInfo, 1, @ALength);
+  try
+    TValue.Make(@LArrayPtr, ATypeInfo, Result); // makes copy of array
+  finally
+    DynArrayClear(LArrayPtr, ATypeInfo);
+  end;
 end;
 
 class function TRttiHelper.CreateInstance(const ATypeName: string;
@@ -602,6 +621,12 @@ var
 begin
   LType := Context.FindType(ATypeName);
   Result := CreateInstance(LType, Args);
+end;
+
+class function TRttiHelper.CreateArrayValue(AType: TRttiType;
+  ALength: NativeInt): TValue;
+begin
+  Result := CreateArrayValue(AType.Handle, ALength);
 end;
 
 {$IFDEF CUSTOM_ATTRIBUTE_BUG}

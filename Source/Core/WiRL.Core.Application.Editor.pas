@@ -17,7 +17,7 @@ uses
   System.Actions, Vcl.ActnList, Vcl.Menus, Vcl.PlatformDefaultStyleActnCtrls,
   Vcl.ActnPopup, System.ImageList, Vcl.ImgList, DesignIntf,
 
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application;
 
 type
@@ -62,12 +62,12 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FDesigner: IDesigner;
-    FEngine: TWiRLEngine;
+    FEngine: TWiRLRESTEngine;
     procedure ConfigureListView;
     procedure FillAppList;
     procedure SetSelection;
   public
-    class procedure ShowEditor(ADesigner: IDesigner; AEngine: TWiRLEngine);
+    class procedure ShowEditor(ADesigner: IDesigner; AEngine: TWiRLRESTEngine);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -85,7 +85,7 @@ type
     procedure WindowShow;
 
     property Designer: IDesigner read FDesigner write FDesigner;
-    property Engine: TWiRLEngine read FEngine write FEngine;
+    property Engine: TWiRLRESTEngine read FEngine write FEngine;
   end;
 
 implementation
@@ -314,8 +314,7 @@ begin
     (ListView1.Selected.Index > 0);
 end;
 
-class procedure TWiRLAppEditor.ShowEditor(ADesigner: IDesigner;
-  AEngine: TWiRLEngine);
+class procedure TWiRLAppEditor.ShowEditor(ADesigner: IDesigner; AEngine: TWiRLRESTEngine);
 var
   WiRLAppEditor: TWiRLAppEditor;
 begin

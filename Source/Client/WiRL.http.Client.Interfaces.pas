@@ -11,13 +11,17 @@ unit WiRL.http.Client.Interfaces;
 
 interface
 
+{$SCOPEDENUMS ON}
+
 uses
-  System.Classes, System.SysUtils, System.JSON, System.Generics.Collections,
+  System.Classes, System.SysUtils, System.JSON, System.Rtti, System.Generics.Collections,
 
   WiRL.Rtti.Utils,
   WiRL.Core.Classes,
   WiRL.Core.Exceptions,
   WiRL.Core.Singleton,
+  WiRL.Core.Context,
+  WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Accept.MediaType;
 
@@ -25,6 +29,18 @@ type
   EWiRLClientException = class(EWiRLException);
 
   EWiRLSocketException = class(EWiRLClientException);
+
+  IWiRLResponse = interface;
+
+  TWiRLContent = record
+  private
+    FResponse: IWiRLResponse;
+    FContext: TWiRLContextBase;
+  public
+    function AsType<T>: T; overload;
+    procedure AsType(LEntity: TObject); overload;
+    constructor Create(AResponse: IWiRLResponse; AContext: TWiRLContextBase);
+  end;
 
   IWiRLRequest = interface
     ['{818B8DD9-C5DB-404B-B886-0959DD8D753E}']
@@ -96,8 +112,6 @@ type
 
   IWiRLResponse = interface
     ['{F75C65E0-9F58-44EB-98DB-01BB3A5AF9F1}']
-    /// <summary>Getter for the HeaderValue Property</summary>
-    function GetHeaderValue(const AName: string): string;
     /// <summary>Getter for the StatusCode Property</summary>
     function GetStatusCode: Integer;
     /// <summary>Getter for the StatusText Property</summary>
@@ -105,7 +119,7 @@ type
     /// <summary>Getter for the ContentType Property</summary>
     function GetContentType: string;
     /// <summary>Getter for the Content Property</summary>
-    function GetContent: string;
+    function GetContentText: string;
     /// <summary>Getter for the ContentStream Property</summary>
     function GetContentStream: TStream;
     /// <summary>Getter for the Headers Property</summary>
@@ -120,19 +134,23 @@ type
     procedure SetStatusText(const AValue: string);
     /// <summary>If the ContentStream its owned by the request</summary>
     procedure SetOwnContentStream(const AValue: Boolean);
+    /// <summary>Get content as type T</summary>
+    function GetContent: TWiRLContent;
+    /// <summary>Set the response context (internal usage)</summary>
+    procedure SetContext(AContext: TWiRLContextBase);
+    /// <summary>Get Status category from server response (100, 200, 300, ...)</summary>
+    function GetStatus: TWiRLResponseStatus;
 
-    /// <summary>Property to Get Header values</summary>
-    /// <param name="AName">Name of the Header</param>
-    /// <returns>The string value associated to the given name.</returns>
-    property HeaderValue[const AName: string]: string read GetHeaderValue;
     /// <summary>Get StatusText from server response</summary>
     property StatusText: string read GetStatusText write SetStatusText;
     /// <summary>Get StatusCode from server response</summary>
     property StatusCode: Integer read GetStatusCode write SetStatusCode;
+    /// <summary>Get Status category from server response (100, 200, 300, ...)</summary>
+    property Status: TWiRLResponseStatus read GetStatus;
     /// <summary>Get ContentType from server response</summary>
     property ContentType: string read GetContentType;
     /// <summary>Get the body from server response as a string</summary>
-    property Content: string read GetContent;
+    property ContentText: string read GetContentText;
     /// <summary>Get the body from server response as a stream</summary>
     property ContentStream: TStream read GetContentStream;
     /// <summary>Get the body from server response as a bytes</summary>
@@ -141,6 +159,8 @@ type
     property Headers: IWiRLHeaders read GetHeaders;
     /// <summary>Get media type info</summary>
     property ContentMediaType: TMediaType read GetContentMediaType;
+    /// <summary>Get content as type T</summary>
+    property Content: TWiRLContent read GetContent;
   end;
 
   EWiRLClientProtocolException = class(EWiRLClientException)
@@ -235,6 +255,9 @@ type
 
 implementation
 
+uses
+  WiRL.Client.Application;
+
 { TWiRLClientRegistry }
 
 constructor TWiRLClientRegistry.Create;
@@ -321,7 +344,7 @@ begin
   FResponse := AResponse;
   FStatusCode := AResponse.StatusCode;
   FReasonString := AResponse.StatusText;
-  FResponseText := AResponse.Content;
+  FResponseText := AResponse.ContentText;
   FServerException := Exception.ClassName;
   LMessage := FReasonString;
 
@@ -342,6 +365,39 @@ destructor EWiRLClientProtocolException.Destroy;
 begin
   FResponseJson.Free;
   inherited;
+end;
+
+{ TWiRLContent }
+
+procedure TWiRLContent.AsType(LEntity: TObject);
+var
+  LApplication: TWiRLClientApplication;
+begin
+  LApplication := FContext.FindContextDataAs<TWiRLClientApplication>;
+  if not Assigned(LApplication) then
+    raise EWiRLClientException.Create('Application is not assigned');
+
+  LApplication.StreamToObject(LEntity, FResponse.Headers, FResponse.ContentStream, FContext);
+end;
+
+function TWiRLContent.AsType<T>: T;
+var
+  LApplication: TWiRLClientApplication;
+begin
+  if not Assigned(FContext) then
+    raise EWiRLClientException.Create('Context unavailable');
+  LApplication := FContext.FindContextDataAs<TWiRLClientApplication>;
+  if not Assigned(LApplication) then
+    raise EWiRLClientException.Create('Application is not assigned');
+
+  Result := LApplication.StreamToObject<T>(FResponse.Headers, FResponse.ContentStream, FContext);
+end;
+
+constructor TWiRLContent.Create(AResponse: IWiRLResponse;
+  AContext: TWiRLContextBase);
+begin
+  FResponse := AResponse;
+  FContext := AContext;
 end;
 
 end.

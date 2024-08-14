@@ -33,6 +33,8 @@ type
 
   TAfterCommandEvent = procedure (ASender: TObject; ARequest: IWiRLRequest; AResponse: IWiRLResponse) of object;
 
+  THttpMethodFunc = reference to function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse;
+
   IWiRLInvocation = interface
     ['{83CE1B5E-6D01-4C78-A556-3C4DA54540E8}']
     procedure Target(const AUrl: string);
@@ -41,7 +43,7 @@ type
     procedure AcceptLanguage(const AAcceptLanguage: string);
     procedure QueryParam(const AName: string; const AValue: TValue);
     procedure PathParam(const AName: string; const AValue: TValue);
-    procedure SetContentStream(AStream: TStream; AOwnStream: Boolean);
+    procedure SetContentStream(AStream: TStream);
 
     function GetResource: TObject;
 
@@ -108,6 +110,7 @@ type
   protected
     procedure DoBeforeCommand(ARequest: IWiRLRequest); virtual;
     procedure DoAfterCommand(ARequest: IWiRLRequest; AResponse: IWiRLResponse); virtual;
+    function ExecuteHttpMethod(AHttpMethod: TWiRLHttpMethod; const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders; AFunc: THttpMethodFunc): IWiRLResponse;
     procedure CheckResponse(AResponse: IWiRLResponse);
     function ParseUrl(const AURL: string): string;
 {$IFDEF HAS_SYSTEM_THREADING}
@@ -118,19 +121,19 @@ type
     destructor Destroy; override;
 
     /// <summary>Send 'GET' command to url</summary>
-    function Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
+    function Get(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'POST' command to url</summary>
-    function Post(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
+    function Post(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'PUT' command to url</summary>
-    function Put(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
+    function Put(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'DELETE' command to url</summary>
-    function Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
+    function Delete(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'PATCH' command to url</summary>
-    function Patch(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
+    function Patch(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'HEAD' command to url</summary>
     function Head(const AURL: string; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'OPTIONS' command to url</summary>
-    function Options(const AURL: string; AResponse: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
+    function Options(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
 
     procedure ExecuteAsync(const AProc: TProc);
     function IsRunningAsync: Boolean;
@@ -208,6 +211,46 @@ begin
 {$ENDIF}
 end;
 
+function TWiRLClient.ExecuteHttpMethod(AHttpMethod: TWiRLHttpMethod; const AURL: string;
+  ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders;
+  AFunc: THttpMethodFunc): IWiRLResponse;
+var
+  LRequest: IWiRLRequest;
+
+  LResponseStream: TStream;
+  LInternalStream: Boolean;
+begin
+  InitHttpClient;
+
+  LRequest := TWiRLClientRequest.Create(AHttpMethod.ToString, ParseUrl(AURL), ARequestStream, AHeaders);
+  DoBeforeCommand(LRequest);
+
+  LInternalStream := not Assigned(AResponseStream);
+  if LInternalStream then
+    LResponseStream := TMemoryStream.Create
+  else
+    LResponseStream := AResponseStream;
+  try
+    Result := AFunc(LRequest, LResponseStream);
+
+    if LInternalStream then
+      Result.SetOwnContentStream(True);
+
+    DoAfterCommand(LRequest, Result);
+    CheckResponse(Result);
+
+  except
+    if LInternalStream then
+    begin
+      if Assigned(Result) then
+        Result.SetOwnContentStream(True)
+      else
+        LResponseStream.Free;
+    end;
+    raise;
+  end;
+end;
+
 function TWiRLClient.GetClientImplementation: TObject;
 begin
   CreateHttpClient;
@@ -238,52 +281,40 @@ begin
 {$ENDIF}
 end;
 
-function TWiRLClient.Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-var
-  LRequest: IWiRLRequest;
+function TWiRLClient.Delete(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
-  InitHttpClient;
-  LRequest := TWiRLClientRequest.Create(TWiRLHttpMethod.DELETE.ToString, ParseUrl(AURL), nil, AHeaders);
-  DoBeforeCommand(LRequest);
-  Result := FHttpClient.Delete(LRequest.URL, AResponseContent, LRequest.Headers);
-  DoAfterCommand(LRequest, Result);
-  CheckResponse(Result);
+  Result := ExecuteHttpMethod(TWiRLHttpMethod.DELETE, AURL, nil, AResponseStream, AHeaders,
+    function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse
+    begin
+      Result := FHttpClient.Delete(ARequest.URL, AResponseStream, ARequest.Headers);
+    end);
 end;
 
-function TWiRLClient.Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-var
-  LRequest: IWiRLRequest;
+function TWiRLClient.Get(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
-  InitHttpClient;
-  LRequest := TWiRLClientRequest.Create(TWiRLHttpMethod.GET.ToString, ParseUrl(AURL), nil, AHeaders);
-  DoBeforeCommand(LRequest);
-  Result := FHttpClient.Get(LRequest.URL, AResponseContent, LRequest.Headers);
-  DoAfterCommand(LRequest, Result);
-  CheckResponse(Result);
+  Result := ExecuteHttpMethod(TWiRLHttpMethod.GET, AURL, nil, AResponseStream, AHeaders,
+    function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse
+    begin
+      Result := FHttpClient.Get(ARequest.URL, AResponseStream, ARequest.Headers);
+    end);
 end;
 
 function TWiRLClient.Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
-var
-  LRequest: IWiRLRequest;
 begin
-  InitHttpClient;
-  LRequest := TWiRLClientRequest.Create(TWiRLHttpMethod.HEAD.ToString, ParseUrl(AURL), nil, AHeaders);
-  DoBeforeCommand(LRequest);
-  Result := FHttpClient.Head(LRequest.URL, LRequest.Headers);
-  DoAfterCommand(LRequest, Result);
-  CheckResponse(Result);
+  Result := ExecuteHttpMethod(TWiRLHttpMethod.HEAD, AURL, nil, nil, AHeaders,
+    function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse
+    begin
+      Result := FHttpClient.Head(ARequest.URL, ARequest.Headers);
+    end);
 end;
 
-function TWiRLClient.Options(const AURL: string; AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-var
-  LRequest: IWiRLRequest;
+function TWiRLClient.Options(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
-  InitHttpClient;
-  LRequest := TWiRLClientRequest.Create(TWiRLHttpMethod.OPTIONS.ToString, ParseUrl(AURL), nil, AHeaders);
-  DoBeforeCommand(LRequest);
-  Result := FHttpClient.Options(LRequest.URL, AResponse, LRequest.Headers);
-  DoAfterCommand(LRequest, Result);
-  CheckResponse(Result);
+  Result := ExecuteHttpMethod(TWiRLHttpMethod.OPTIONS, AURL, nil, AResponseStream, AHeaders,
+    function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse
+    begin
+      Result := FHttpClient.Options(ARequest.URL, AResponseStream, ARequest.Headers);
+    end);
 end;
 
 function TWiRLClient.ParseUrl(const AURL: string): string;
@@ -293,40 +324,31 @@ begin
   Result := StringReplace(AURL, WiRLEngineURLPattern, FWiRLEngineURL, [rfReplaceAll, rfIgnoreCase]);
 end;
 
-function TWiRLClient.Patch(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-var
-  LRequest: IWiRLRequest;
+function TWiRLClient.Patch(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
-  InitHttpClient;
-  LRequest := TWiRLClientRequest.Create(TWiRLHttpMethod.PATCH.ToString, ParseUrl(AURL), AContent, AHeaders);
-  DoBeforeCommand(LRequest);
-  Result := FHttpClient.Patch(LRequest.URL, AContent, AResponse, LRequest.Headers);
-  DoAfterCommand(LRequest, Result);
-  CheckResponse(Result);
+  Result := ExecuteHttpMethod(TWiRLHttpMethod.PATCH, AURL, ARequestStream, AResponseStream, AHeaders,
+    function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse
+    begin
+      Result := FHttpClient.Patch(ARequest.URL, ARequestStream, AResponseStream, ARequest.Headers);
+    end);
 end;
 
-function TWiRLClient.Post(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-var
-  LRequest: IWiRLRequest;
+function TWiRLClient.Post(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
-  InitHttpClient;
-  LRequest := TWiRLClientRequest.Create(TWiRLHttpMethod.POST.ToString, ParseUrl(AURL), AContent, AHeaders);
-  DoBeforeCommand(LRequest);
-  Result := FHttpClient.Post(LRequest.URL, AContent, AResponse, LRequest.Headers);
-  DoAfterCommand(LRequest, Result);
-  CheckResponse(Result);
+  Result := ExecuteHttpMethod(TWiRLHttpMethod.POST, AURL, ARequestStream, AResponseStream, AHeaders,
+    function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse
+    begin
+      Result := FHttpClient.Post(ARequest.URL, ARequestStream, AResponseStream, ARequest.Headers);
+    end);
 end;
 
-function TWiRLClient.Put(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-var
-  LRequest: IWiRLRequest;
+function TWiRLClient.Put(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
-  InitHttpClient;
-  LRequest := TWiRLClientRequest.Create(TWiRLHttpMethod.PUT.ToString, ParseUrl(AURL), AContent, AHeaders);
-  DoBeforeCommand(LRequest);
-  Result := FHttpClient.Put(LRequest.URL, AContent, AResponse, LRequest.Headers);
-  DoAfterCommand(LRequest, Result);
-  CheckResponse(Result);
+  Result := ExecuteHttpMethod(TWiRLHttpMethod.PUT, AURL, ARequestStream, AResponseStream, AHeaders,
+    function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse
+    begin
+      Result := FHttpClient.Put(ARequest.URL, ARequestStream, AResponseStream, ARequest.Headers);
+    end);
 end;
 
 procedure TWiRLClient.SetClientVendor(const Value: string);

@@ -22,11 +22,13 @@ type
   public
     const
       UNIX_DATE: string = 'unix';
+      ISO_DATE: string = 'ISO';
     var
       // Same used in FormatSetting plus "unix" and "ISO"
       DateFormat: string;
       DateSeparator: Char;
       TimeSeparator: Char;
+      UseUTC: Boolean;
       // TimestampFormat?
       // a format for every not trivial Field.DataType?
     procedure Reset;
@@ -73,6 +75,10 @@ var
 begin
   if AFormats.DateFormat = TWiRLResolverFormats.UNIX_DATE then
     Result := UnixToDateTime(StrToInt(AValue), False)
+  else if AFormats.DateFormat = TWiRLResolverFormats.ISO_DATE then
+  begin
+    Result := ISO8601ToDate(AValue, AFormats.UseUTC);
+  end
   else
   begin
     LFormat.ShortDateFormat := AFormats.DateFormat;

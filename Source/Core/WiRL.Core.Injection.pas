@@ -122,7 +122,7 @@ begin
     Result := LContextHttpFactory.CreateContextObject(AObject, AContext as TWiRLContextHttp);
   end
   else
-    raise Exception.Create('Invalid context factory');
+    raise EWiRLServerException.Create('Invalid context factory');
 end;
 
 class function TWiRLContextInjectionRegistry.GetInstance: TWiRLContextInjectionRegistry;
@@ -159,11 +159,11 @@ begin
       LInstance := (TRttiHelper.CreateInstance(AFactoryClass));
 
       if not Supports(LInstance, IInterface, Result) then
-        raise Exception.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
+        raise EWiRLServerException.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
 
       if (not Supports(Result, IContextObjectFactory)) and
          (not Supports(Result, IContextHttpFactory)) then
-        raise Exception.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
+        raise EWiRLServerException.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
     end);
 end;
 

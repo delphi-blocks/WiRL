@@ -71,9 +71,9 @@ type
   protected
     function IsUnknownResponseCode: Boolean; virtual;
     function GetHeaders: IWiRLHeaders; virtual; abstract;
-    function GetContent: string; virtual; abstract;
+    function GetContentText: string; virtual;
     function GetContentStream: TStream; virtual; abstract;
-    procedure SetContent(const Value: string); virtual; abstract;
+    procedure SetContentText(const Value: string); virtual;
     procedure SetContentStream(const Value: TStream); virtual; abstract;
     function GetStatusCode: Integer; virtual; abstract;
     procedure SetStatusCode(const Value: Integer); virtual; abstract;
@@ -91,7 +91,8 @@ type
     property Date: TDateTime read GetDate write SetDate;
     property Expires: TDateTime read GetExpires write SetExpires;
     property LastModified: TDateTime read GetLastModified write SetLastModified;
-    property Content: string read GetContent write SetContent;
+    property Content: string read GetContentText write SetContentText;
+    property ContentText: string read GetContentText write SetContentText;
     property ContentEncoding: string read GetContentEncoding write SetContentEncoding;
     property ContentLanguage: string read GetContentLanguage write SetContentLanguage;
     property ContentStream: TStream read GetContentStream write SetContentStream;
@@ -170,6 +171,18 @@ begin
   Result := FMediaType;
 end;
 
+function TWiRLResponse.GetContentText: string;
+var
+  LEncoding: TEncoding;
+begin
+  LEncoding := ContentMediaType.GetDelphiEncoding;
+  try
+    Result := LEncoding.GetString(RawContent);
+  finally
+    LEncoding.Free;
+  end;
+end;
+
 function TWiRLResponse.GetContentType: string;
 begin
   Result := Headers.ContentType;
@@ -236,7 +249,9 @@ begin
     GetContentStream.Position := 0;
     SetLength(Result, GetContentStream.Size);
     GetContentStream.ReadBuffer(Result[0], GetContentStream.Size);
-  end;
+  end
+  else
+    SetLength(Result, 0);
 end;
 
 function TWiRLResponse.GetServer: string;
@@ -287,6 +302,18 @@ begin
   Headers.ContentLength := Value;
 end;
 
+procedure TWiRLResponse.SetContentText(const Value: string);
+var
+  LEncoding: TEncoding;
+begin
+  LEncoding := ContentMediaType.GetDelphiEncoding;
+  try
+    RawContent := LEncoding.GetBytes(Value);
+  finally
+    LEncoding.Free;
+  end;
+end;
+
 procedure TWiRLResponse.SetContentType(const Value: string);
 begin
   Headers.ContentType := Value;
@@ -325,11 +352,12 @@ begin
 end;
 
 procedure TWiRLResponse.SetRawContent(const Value: TBytes);
-var
-  LStream: TStream;
 begin
-  LStream := TBytesStream.Create(Value);
-  ContentStream := LStream;
+  if not Assigned(ContentStream) then
+    ContentStream := TMemoryStream.Create();
+  ContentStream.Position := 0;
+  ContentStream.WriteData(Value, Length(Value));
+  ContentStream.Size := Length(Value);
 end;
 
 procedure TWiRLResponse.SetServer(const Value: string);

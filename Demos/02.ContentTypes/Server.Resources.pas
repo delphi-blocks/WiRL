@@ -17,7 +17,7 @@ uses
   System.SysUtils, System.Classes, Data.DB,
   FireDAC.Comp.Client,
 
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Attributes,
   WiRL.http.Accept.MediaType,
   WiRL.Core.MessageBody.Default,
@@ -170,7 +170,7 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(TWiRLEngine.ServerDirectory)))) +
+        TDirectory.GetParent(TWiRLRESTEngine.ServerDirectory)))) +
     'WiRL-logo.png';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;
@@ -188,7 +188,7 @@ begin
   LFileName := IncludeTrailingPathDelimiter(
     TDirectory.GetParent(
       TDirectory.GetParent(
-        TDirectory.GetParent(TWiRLEngine.ServerDirectory)))) +
+        TDirectory.GetParent(TWiRLRESTEngine.ServerDirectory)))) +
     'wirl-doc.pdf';
   Result := TFileStream.Create(LFileName, fmOpenRead or fmShareDenyWrite);
 end;

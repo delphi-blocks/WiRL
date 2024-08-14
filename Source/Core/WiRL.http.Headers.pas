@@ -179,17 +179,8 @@ end;
 { TWiRLHeaders }
 
 procedure TWiRLHeaders.AddHeader(AHeader: TWiRLHeader);
-var
-  LHeader: TWiRLHeader;
 begin
-  LHeader := FindHeader(AHeader.Name);
-  if Assigned(LHeader) then
-  begin
-    LHeader.Value := AHeader.Value;
-    AHeader.Free;
-  end
-  else
-    Add(AHeader);
+  Add(AHeader);
 end;
 
 procedure TWiRLHeaders.AfterConstruction;

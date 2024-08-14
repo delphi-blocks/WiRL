@@ -85,7 +85,7 @@ type
   protected
     FRegistry: TObjectList<TWriterInfo>;
     function ProducesAcceptIntersection(AProduces, AAccept: TMediaTypeList): TMediaTypeList;
-    function InternalFindWriter(AType: TRttiType; AMediaType: TMediaType): IMessageBodyWriter; overload;
+    function InternalFindWriter(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): IMessageBodyWriter; overload;
   public
     class function GetDefaultClassAffinityFunc<T: class>: TGetAffinityFunction;
   public
@@ -104,7 +104,7 @@ type
     procedure FindWriter(AMethod: TWiRLProxyMethod; AAcceptMediaTypes: TMediaTypeList;
       out AWriter: IMessageBodyWriter; out AMediaType: TMediaType); overload;
 
-    function FindWriter(AType: TRttiType; AMediaType: TMediaType): IMessageBodyWriter; overload;
+    function FindWriter(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): IMessageBodyWriter; overload;
 
     property Count: Integer read GetCount;
   end;
@@ -195,12 +195,12 @@ begin
     AProc(LEntry);
 end;
 
-function TWiRLWriterRegistry.FindWriter(AType: TRttiType; AMediaType: TMediaType): IMessageBodyWriter;
+function TWiRLWriterRegistry.FindWriter(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): IMessageBodyWriter;
 begin
   if FRegistry.Count = 0 then
     raise EWiRLServerException.Create('MessageBodyWriters registry is empty. Please include the MBW''s units in your project');
 
-  Result := InternalFindWriter(AType, AMediaType);
+  Result := InternalFindWriter(AType, AAttributes, AMediaType);
 end;
 
 procedure TWiRLWriterRegistry.FindWriter(AMethod: TWiRLProxyMethod; AAcceptMediaTypes: TMediaTypeList;
@@ -222,7 +222,7 @@ begin
   try
     for LMediaType in LAllowedMediaList do
     begin
-      AWriter := InternalFindWriter(AMethod.RttiObject.ReturnType, LMediaType);
+      AWriter := InternalFindWriter(AMethod.RttiObject.ReturnType, AMethod.RttiObject.GetAttributes, LMediaType);
       if Assigned(AWriter) then
       begin
         AMediaType := LMediaType.Clone;
@@ -268,7 +268,7 @@ begin
       Exit(LWriterInfo);
 end;
 
-function TWiRLWriterRegistry.InternalFindWriter(AType: TRttiType; AMediaType: TMediaType): IMessageBodyWriter;
+function TWiRLWriterRegistry.InternalFindWriter(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): IMessageBodyWriter;
 var
   LEntry: TWriterInfo;
   LFound: Boolean;
@@ -283,12 +283,12 @@ begin
   for LEntry in FRegistry do
   begin
     if not Assigned(LEntry.Produces) then
-      raise Exception.CreateFmt('Attribute [Produce] required for [%s]', [LEntry.WriterName]);
+      raise EWiRLServerException.CreateFmt('Attribute [Produce] required for [%s]', [LEntry.WriterName]);
 
-    if LEntry.IsWritable(AType, AType.GetAttributes, AMediaType) and
+    if LEntry.IsWritable(AType, AAttributes, AMediaType) and
        (AMediaType.IsWildcard or LEntry.Produces.Contains(TMediaType.WILDCARD) or LEntry.Produces.Contains(AMediaType)) then
     begin
-      if not LFound or (LCandidateAffinity < LEntry.GetAffinity(AType, AType.GetAttributes, AMediaType)) then
+      if not LFound or (LCandidateAffinity < LEntry.GetAffinity(AType, AAttributes, AMediaType)) then
       begin
         LCandidate := LEntry;
         LCandidateAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType);
@@ -394,7 +394,7 @@ begin
       LInstance := TRttiHelper.CreateInstance(AWriterClass);
       //LInstance := AWriterClass.Create;
       if not Supports(LInstance, IMessageBodyWriter, Result) then
-        raise Exception.Create('Interface IMessageBodyWriter not implemented');
+        raise EWiRLServerException.Create('Interface IMessageBodyWriter not implemented');
     end,
     AIsWritable,
     AGetAffinity,

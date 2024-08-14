@@ -15,8 +15,7 @@ uses
   System.SysUtils;
 
 type
-  EPosixException = class(Exception)
-  end;
+  EPosixException = class(Exception);
 
 implementation
 

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2022 WiRL Team                                      }
+{       Copyright (c) 2015-2024 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -93,19 +93,20 @@ implementation
 
 uses
   System.StrUtils, System.TypInfo, System.DateUtils,
+
   WiRL.Configuration.JWT,
   WiRL.Configuration.Converter,
+  WiRL.http.URL,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.http.MultipartData,
-  WiRL.Core.Exceptions,
-  WiRL.Core.Utils,
-  WiRL.Rtti.Utils,
-  WiRL.http.URL,
   WiRL.Core.Attributes,
-  WiRL.Core.Engine,
+  WiRL.Core.Exceptions,
   WiRL.Core.Converter,
-  WiRL.Core.JSON;
+  WiRL.Core.Utils,
+  WiRL.Core.JSON,
+  WiRL.Rtti.Utils,
+  WiRL.Engine.REST;
 
 type
   TRequestParam = class(TObject)
@@ -297,12 +298,12 @@ end;
 
 function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; AResourceInstance: TObject): TValue;
 
-  function GetObjectFromParam(AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
+  function GetObjectFromParam(AMethod: TWiRLProxyMethod; AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
   var
     LReader: IMessageBodyReader;
     //LContentStream: TStream;
   begin
-    LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, AParamValue.MediaType);
+    LReader := FAppConfig.ReaderRegistry.FindReader(AParam.ParamType, AMethod.RttiObject.GetAttributes, AParamValue.MediaType);
     if Assigned(LReader) then
     begin
       ContextInjection(LReader as TObject);
@@ -318,12 +319,31 @@ function TWiRLApplicationWorker.FillAnnotatedParam(AParam: TWiRLProxyParameter; 
 
   end;
 
-  function GetSimpleParam(AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
+  function GetSimpleParam(AMethod: TWiRLProxyMethod; AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
   var
     LFormat: string;
   begin
     LFormat := FAppConfig.GetFormatSettingFor(AParam.ParamType.Handle);
-    Result := TWiRLConvert.AsType(AParamValue.AsString, AParam.ParamType.Handle, LFormat);
+    Result := TWiRLConvert.AsType(AParamValue.AsString, AParam.GetAttributes, AParam.ParamType.Handle, LFormat);
+  end;
+
+  function GetArrayFromParam(AMethod: TWiRLProxyMethod; AParam: TRttiParameter; AParamValue: TRequestParam): TValue;
+  var
+    LFormat: string;
+    LItemType: TRttiType;
+    LParamList: TArray<string>;
+    LIndex: Integer;
+    LItem: TValue;
+  begin
+    LParamList := AParamValue.AsString.Split([DefaultArraySeparator]);
+    LItemType := TRttiDynamicArrayType(AParam.ParamType).ElementType;
+    LFormat := FAppConfig.GetFormatSettingFor(LItemType.Handle);
+    Result := TRttiHelper.CreateArrayValue(AParam.ParamType, Length(LParamList));
+    for LIndex := Low(LParamList) to High(LParamList) do
+    begin
+      LItem := TWiRLConvert.AsType(LParamList[LIndex], AParam.GetAttributes, LItemType.Handle, LFormat);
+      Result.SetArrayElement(LIndex, LItem);
+    end;
   end;
 
 var
@@ -355,7 +375,7 @@ begin
   if LParamAttr is ContextAttribute then
   begin
     if (not AParam.RttiParam.ParamType.IsInstance) or (not ContextInjectionByType(AParam.RttiParam, Result)) then
-      raise Exception.Create('Context injection failure');
+      raise EWiRLServerException.Create('Context injection failure');
     Exit;
   end;
 
@@ -374,10 +394,12 @@ begin
         ValidateMethodParam(AParam.Attributes, LParamValue.AsString, True);
 
       // TODO: Modify, try first GetObjectFromParam (to rename!) and then GetSimpleParam
-      if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
-        Result := GetObjectFromParam(LParam, LParamValue)
+      if LParam.ParamType.TypeKind in [tkDynArray] then
+        Result := GetArrayFromParam(FLocator.Method, LParam, LParamValue)
+      else if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
+        Result := GetObjectFromParam(FLocator.Method, LParam, LParamValue)
       else
-        Result := GetSimpleParam(LParam, LParamValue);
+        Result := GetSimpleParam(FLocator.Method, LParam, LParamValue);
 
       ValidateMethodParam(AParam.Attributes, Result, False);
     finally
@@ -621,8 +643,7 @@ begin
   end;
 end;
 
-function TWiRLApplicationWorker.RequestOwnedObject(
-  const AValue: TValue): Boolean;
+function TWiRLApplicationWorker.RequestOwnedObject(const AValue: TValue): Boolean;
 var
   LObject: TObject;
   LIndex: Integer;
@@ -631,12 +652,15 @@ begin
   if not AValue.IsObject then
     Exit(True);
   LObject := AValue.AsObject;
-  if LObject = FContext.Request.ContentStream then
-    Exit(True);
-  for LIndex := 0 to FContext.Request.MultiPartFormData.Count - 1 do
+  if Assigned(FContext.Request.ContentStream) then
   begin
-    if FContext.Request.MultiPartFormData.GetPart(LIndex) = LObject then
+    if LObject = FContext.Request.ContentStream then
       Exit(True);
+    for LIndex := 0 to FContext.Request.MultiPartFormData.Count - 1 do
+    begin
+      if FContext.Request.MultiPartFormData.GetPart(LIndex) = LObject then
+        Exit(True);
+    end;
   end;
 end;
 
@@ -780,7 +804,6 @@ begin
 
   if (not Assigned(FStreamValue)) and (FStringValue = '') then
     FStringValue := ADefault;
-
 end;
 
 destructor TRequestParam.Destroy;
@@ -810,7 +833,7 @@ class function TRequestParam.ParamNameToParamIndex(AContext: TWiRLContext;
 var
   LResURL: TWiRLURL;
   LPair: TPair<Integer, string>;
-  LEngine: TWiRLEngine;
+  LEngine: TWiRLRESTEngine;
   LApplication: TWiRLApplication;
   LResource: TWiRLProxyResource;
   LMethod: TWiRLProxyMethod;
@@ -819,7 +842,7 @@ begin
   LMethod := AContext.ResourceMethod as TWiRLProxyMethod;
 
   LApplication := TWiRLApplication(AContext.Application);
-  LEngine := TWiRLEngine(AContext.Engine);
+  LEngine := TWiRLRESTEngine(AContext.Engine);
 
   LResURL := TWiRLURL.MockURL(LEngine.BasePath,
     LApplication.BasePath, LResource.Path, LMethod.Path);

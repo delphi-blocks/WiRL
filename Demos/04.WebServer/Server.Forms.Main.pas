@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2024 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,8 +16,8 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   System.Diagnostics, System.Actions, Winapi.ShellAPI,
 
-  WiRL.http.FileSystemEngine,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
+  WiRL.Engine.WebServer,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
 
@@ -65,9 +65,10 @@ begin
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
     // Engine configuration
-    .AddEngine<TWiRLFileSystemEngine>('/')
-      .SetEngineName('WiRL FileSystemEngine')
+    .AddEngine<TWiRLWebServerEngine>('/')
+      .SetEngineName('WiRL WebServer Engine')
       .SetRootFolder('{AppPath}\www')
+      .AddAlias('/images', '{AppPath}\www\img')
   ;
 
   StartServerAction.Execute;

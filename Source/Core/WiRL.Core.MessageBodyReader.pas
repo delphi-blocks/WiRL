@@ -106,7 +106,7 @@ type
     function AddReaderName(const AReaderName: string): TReaderInfo;
     procedure Assign(ARegistry: TWiRLReaderRegistry);
     procedure Enumerate(const AProc: TProc<TReaderInfo>);
-    function FindReader(AType: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
+    function FindReader(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): IMessageBodyReader;
 
     class function GetDefaultClassAffinityFunc<T: class>: TGetAffinityFunction;
 
@@ -142,6 +142,7 @@ type
 implementation
 
 uses
+  WiRL.Core.Exceptions,
   WiRL.Rtti.Utils,
   WiRL.Core.Attributes;
 
@@ -192,7 +193,7 @@ begin
 
 end;
 
-function TWiRLReaderRegistry.FindReader(AType: TRttiType; AMediaType: TMediaType): IMessageBodyReader;
+function TWiRLReaderRegistry.FindReader(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): IMessageBodyReader;
 var
   LEntry: TReaderInfo;
   LCompatibleEntries: TArray<TReaderInfo>;
@@ -204,7 +205,7 @@ begin
   for LEntry in FRegistry do
   begin
     if (LEntry.Consumes.Contains(AMediaType) or LEntry.Consumes.Contains(TMediaType.WILDCARD)) and
-       LEntry.IsReadable(AType, AType.GetAttributes, AMediaType) then
+       LEntry.IsReadable(AType, AAttributes, AMediaType) then
       LCompatibleEntries := LCompatibleEntries + [LEntry];
   end;
 
@@ -214,11 +215,11 @@ begin
   else
     begin
       LCandidate := LCompatibleEntries[0];
-      LCandidateAffinity := LCandidate.GetAffinity(AType, AType.GetAttributes, AMediaType);
+      LCandidateAffinity := LCandidate.GetAffinity(AType, AAttributes, AMediaType);
 
       for LEntry in LCompatibleEntries do
       begin
-        LCurrentAffinity := LEntry.GetAffinity(AType, AType.GetAttributes, AMediaType);
+        LCurrentAffinity := LEntry.GetAffinity(AType, AAttributes, AMediaType);
 
         if LCurrentAffinity >= LCandidateAffinity then
         begin
@@ -298,7 +299,7 @@ begin
       LInstance := TRttiHelper.CreateInstance(AReaderClass);
       //LInstance := AReaderClass.Create;
       if not Supports(LInstance, IMessageBodyReader, Result) then
-        raise Exception.Create('Interface IMessageBodyReader not implemented');
+        raise EWiRLServerException.Create('Interface IMessageBodyReader not implemented');
     end,
     AIsReadable,
     AGetAffinity,

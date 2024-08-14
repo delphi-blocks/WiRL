@@ -14,7 +14,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.JSON,
 
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
@@ -47,6 +47,9 @@ type
 
     [GET, Path('/enum/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
     function ParamEnum([PathParam] AParam: TMyEnum): TMyEnum;
+
+    [GET, Path('/customenum/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
+    function ParamCustomEnum([PathParam] AParam: TCustomEnum): TCustomEnum;
 
     [GET, Path('/date/{AParam}'), Produces(TMediaType.TEXT_PLAIN)]
     function ParamDate([PathParam] AParam: TDate): TDate;
@@ -105,6 +108,11 @@ begin
 end;
 
 function TParametersResource.ParamBool(AParam: Boolean): Boolean;
+begin
+  Result := AParam;
+end;
+
+function TParametersResource.ParamCustomEnum(AParam: TCustomEnum): TCustomEnum;
 begin
   Result := AParam;
 end;

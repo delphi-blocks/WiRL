@@ -17,16 +17,16 @@ uses
   System.Rtti,
   WiRL.http.Core,
   WiRL.http.Headers,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.MessageBody.Classes,
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
-
-  WiRL.Core.Engine,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
-  WiRL.http.Accept.MediaType, WiRL.Tests.Mock.Classes;
+  WiRL.Engine.REST,
+  WiRL.Tests.Mock.Classes;
 
 type
   [Consumes(TMediaType.APPLICATION_XML)]

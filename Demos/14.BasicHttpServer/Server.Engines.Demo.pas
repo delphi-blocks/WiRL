@@ -14,8 +14,9 @@ interface
 uses
   System.SysUtils,
 
+  WiRL.Engine.Core,
+  WiRL.Engine.HTTP,
   WiRL.http.Server,
-  WiRL.http.Engines,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
   WiRL.Core.Context.Server;
@@ -33,7 +34,7 @@ type
 
 implementation
 
-{ TWiRLEngine }
+{ TWiRLRESTEngine }
 
 procedure TWiRLDemoEngine.HandleRequest(AContext: TWiRLContext);
 begin

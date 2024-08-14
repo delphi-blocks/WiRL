@@ -12,8 +12,10 @@ program DemoHelloWorld;
 uses
   Forms,
   Server.Forms.Main in 'Server.Forms.Main.pas' {MainForm},
-  Server.Resources in 'Server.Resources.pas',
-  Demo.Entities in 'Demo.Entities.pas';
+  Server.Resources.HelloWorld in 'Server.Resources.HelloWorld.pas',
+  Demo.Entities in 'Demo.Entities.pas',
+  Server.Resources.Database in 'Server.Resources.Database.pas',
+  Server.Resources.Params in 'Server.Resources.Params.pas';
 
 {$R *.res}
 

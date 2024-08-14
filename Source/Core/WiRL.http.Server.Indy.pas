@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -21,7 +21,6 @@ uses
   WiRL.http.Headers,
   WiRL.http.Cookie,
   WiRL.http.Server.Interfaces,
-  WiRL.http.Engines,
   WiRL.http.Response,
   WiRL.http.Request,
   WiRL.Core.Auth.Context;
@@ -66,9 +65,7 @@ type
     FHeaders: IWiRLHeaders;
     procedure SendCookies;
   protected
-    function GetContent: string; override;
     function GetContentStream: TStream; override;
-    procedure SetContent(const Value: string); override;
     procedure SetContentStream(const Value: TStream); override;
     function GetStatusCode: Integer; override;
     procedure SetStatusCode(const Value: Integer); override;
@@ -144,10 +141,6 @@ var
   LRequest: TWiRLRequest;
   LResponse: TWiRLResponse;
 begin
-  inherited;
-  if EndsText('/favicon.ico', ARequestInfo.Document) then
-    Exit;
-
   LRequest := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
   try
     LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
@@ -167,7 +160,6 @@ end;
 procedure TWiRLhttpServerIndy.DoCommandOther(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
 begin
-  inherited;
   DoCommandGet(AContext, ARequestInfo, AResponseInfo);
 end;
 
@@ -418,13 +410,10 @@ begin
   inherited;
 end;
 
-function TWiRLHttpResponseIndy.GetContent: string;
-begin
-  Result := FResponseInfo.ContentText;
-end;
-
 function TWiRLHttpResponseIndy.GetContentStream: TStream;
 begin
+  if not Assigned(FResponseInfo.ContentStream) then
+    FResponseInfo.ContentStream := TMemoryStream.Create;
   Result := FResponseInfo.ContentStream;
 end;
 
@@ -510,12 +499,6 @@ begin
     FResponseInfo.ContentLength := ContentLength;
 
   SendCookies;
-end;
-
-procedure TWiRLHttpResponseIndy.SetContent(const Value: string);
-begin
-  inherited;
-  FResponseInfo.ContentText := Value;
 end;
 
 procedure TWiRLHttpResponseIndy.SetContentStream(const Value: TStream);

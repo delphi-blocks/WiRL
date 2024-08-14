@@ -197,14 +197,14 @@ end;
 class procedure TPosixDaemon.DetachTerminal;
 begin
   if setsid() < 0 then
-    raise Exception.Create('Impossible to create an independent session');
+    raise EPosixException.Create('Impossible to create an independent session');
 end;
 
 class function TPosixDaemon.ForkProcess: pid_t;
 begin
   Result := fork();
   if Result < 0 then
-    raise Exception.Create('Cannot create the fork');
+    raise EPosixException.Create('Cannot create the fork');
 end;
 
 class procedure TPosixDaemon.CatchHandleSignals;

@@ -20,7 +20,7 @@ uses
   WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Cookie,
   WiRL.http.Response,
   WiRL.http.Request,
@@ -59,15 +59,15 @@ type
   {
   TWiRLTestServer = class(TObject)
   private
-    FEngine: TWiRLEngine;
+    FEngine: TWiRLRESTEngine;
     FActive: Boolean;
   public
     constructor Create; virtual;
     destructor Destroy; override;
 
     procedure DoCommand(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
-    function ConfigureEngine(const ABasePath: string): TWiRLEngine;
-    property Engine: TWiRLEngine read FEngine;
+    function ConfigureEngine(const ABasePath: string): TWiRLRESTEngine;
+    property Engine: TWiRLRESTEngine read FEngine;
     property Active: Boolean read FActive write FActive;
   end;
   }
@@ -76,16 +76,13 @@ type
   private
     FContentStream: TStream;
     FStatusCode: Integer;
-    FContent: string;
     FReasonString: string;
     FResponseError: TWiRLResponseError;
     FHeadersSent: Boolean;
     FHeader: IWiRLHeaders;
     function GetResponseError: TWiRLResponseError;
   protected
-    function GetContent: string; override;
     function GetContentStream: TStream; override;
-    procedure SetContent(const Value: string); override;
     procedure SetContentStream(const Value: TStream); override;
     function GetStatusCode: Integer; override;
     procedure SetStatusCode(const Value: Integer); override;
@@ -139,7 +136,7 @@ implementation
 { TWiRLTestServer }
 
 {
-function TWiRLTestServer.ConfigureEngine(const ABasePath: string): TWiRLEngine;
+function TWiRLTestServer.ConfigureEngine(const ABasePath: string): TWiRLRESTEngine;
 begin
   FEngine.SetBasePath(ABasePath);
   Result := FEngine;
@@ -147,7 +144,7 @@ end;
 
 constructor TWiRLTestServer.Create;
 begin
-  FEngine := TWiRLEngine.Create(nil);
+  FEngine := TWiRLRESTEngine.Create(nil);
 end;
 
 destructor TWiRLTestServer.Destroy;
@@ -417,24 +414,11 @@ begin
   inherited;
 end;
 
-function TWiRLTestResponse.GetContent: string;
-var
-  LBuffer: TBytes;
-begin
-  if Assigned(FContentStream) and (FContentStream.Size > 0)  then
-  begin
-    FContentStream.Position := 0;
-    SetLength(LBuffer, FContentStream.Size);
-    FContentStream.Read(LBuffer[0], FContentStream.Size);
-    // Should read the content-type
-    Result := TEncoding.UTF8.GetString(LBuffer);
-  end
-  else
-    Result := FContent;
-end;
-
 function TWiRLTestResponse.GetContentStream: TStream;
 begin
+  if not Assigned(FContentStream) then
+    FContentStream := TMemoryStream.Create;
+
   Result := FContentStream;
 end;
 
@@ -477,15 +461,12 @@ begin
   FHeadersSent := True;
 end;
 
-procedure TWiRLTestResponse.SetContent(const Value: string);
-begin
-  inherited;
-  FContent := Value;
-end;
-
 procedure TWiRLTestResponse.SetContentStream(const Value: TStream);
 begin
   inherited;
+  if Assigned(FContentStream) then
+    FContentStream.Free;
+
   FContentStream := Value;
 end;
 

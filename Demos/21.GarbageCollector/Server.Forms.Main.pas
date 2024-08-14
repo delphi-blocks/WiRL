@@ -19,7 +19,7 @@ uses
   WiRL.Configuration.Neon,
   WiRL.Configuration.Converter,
   WiRL.Core.Converter,
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Server.Indy;
 
@@ -61,7 +61,7 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
   RESTServer := TWiRLServer.Create(Self);
 
-  RESTServer.AddEngine<TWiRLEngine>('/rest')
+  RESTServer.AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('RESTEngine')
     .AddApplication('/app')
       .SetResources('*')
@@ -69,7 +69,7 @@ begin
 
       .Plugin.Configure<IWiRLFormatSetting>
         .AddFormat(TypeInfo(TDateTime), TWiRLFormatSetting.ISODATE_UTF)
-        .BackToApp
+        .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationNeon>
         .SetUseUTCDate(True)

@@ -320,7 +320,8 @@ begin
     procedure ()
     begin
       FRequest.QueryFields.AsType<Integer>('value');
-    end, EConvertError);
+    end,
+    EConvertError);
 end;
 
 procedure TTestRequest.TestRawContent;

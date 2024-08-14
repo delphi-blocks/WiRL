@@ -17,13 +17,13 @@ uses
   System.TypInfo,
 
   WiRL.Core.Classes,
-  WiRL.http.Engines,
+  WiRL.Core.Application,
+  WiRL.Core.Registry,
   WiRL.http.Server,
   WiRL.http.Server.Interfaces,
-  WiRL.Core.Application,
-  WiRL.Core.Engine,
-  WiRL.Core.Registry,
   WiRL.http.Filters,
+  WiRL.Engine.REST,
+  WiRL.Engine.HTTP,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.MessageBodyReader,
 
@@ -115,14 +115,17 @@ procedure Register;
 
 implementation
 
+uses
+  WiRL.Engine.Core;
+
 procedure Register;
 begin
   RegisterClass(TWiRLApplication);
   RegisterNoIcon([TWiRLApplication]);
-  RegisterComponentEditor (TWiRLEngine, TWiRLEngineEditor);
+  RegisterComponentEditor (TWiRLRESTEngine, TWiRLEngineEditor);
 
   RegisterPropertyEditor(TypeInfo(string), TWiRLServer, 'ServerVendor', TServerVendorProperty);
-  RegisterPropertyEditor(TypeInfo(TWiRLApplicationList), TWiRLEngine, 'Applications', TApplicationsProperty);
+  RegisterPropertyEditor(TypeInfo(TWiRLApplicationList), TWiRLRESTEngine, 'Applications', TApplicationsProperty);
 
   RegisterPropertyEditor(TypeInfo(TWiRLResourceRegistry), TWiRLApplication, 'Resources', TAppResourcesRegistryProperty);
   RegisterPropertyEditor(TypeInfo(TWiRLFilterRegistry), TWiRLApplication, 'Filters', TAppFiltersRegistryProperty);
@@ -168,10 +171,10 @@ begin
   inherited;
   case Index of
     0: begin
-      TWiRLAppEditor.ShowEditor(Designer, Component as TWiRLEngine);
+      TWiRLAppEditor.ShowEditor(Designer, Component as TWiRLRESTEngine);
     end;
     1: begin
-      LBasePath := '/app' + IntToStr((Component as TWiRLEngine).Applications.Count + 1);
+      LBasePath := '/app' + IntToStr((Component as TWiRLRESTEngine).Applications.Count + 1);
       if InputQuery('New Application', 'BasePath', LBasePath) then
       begin
         LApplication := TWiRLApplication.Create(Component.Owner);
@@ -240,7 +243,7 @@ begin
   if PropCount < 1 then
     Exit;
 
-  TWiRLAppEditor.ShowEditor(Designer, GetComponent(0) as TWiRLEngine);
+  TWiRLAppEditor.ShowEditor(Designer, GetComponent(0) as TWiRLRESTEngine);
 
 end;
 

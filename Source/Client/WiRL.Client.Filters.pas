@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2023 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -21,6 +21,7 @@ uses
   WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Classes,
+  WiRL.Core.Context,
   WiRL.Core.Singleton,
   WiRL.Core.Exceptions,
   WiRL.Core.Attributes,
@@ -134,20 +135,24 @@ type
     FStatusText: string;
     FContentStream: TStream;
     FOwnStream: Boolean;
+    FContext: TWiRLContextBase;
   protected
     function GetHeaderValue(const AName: string): string;
     function GetStatusCode: Integer;
     function GetStatusText: string;
+    function GetStatus: TWiRLResponseStatus;
     function GetContentType: string;
-    function GetContent: string;
+    function GetContentText: string;
     function GetContentStream: TStream;
     function GetHeaders: IWiRLHeaders;
     function GetContentMediaType: TMediaType;
     function GetRawContent: TBytes;
+    function GetContent: TWiRLContent;
     procedure SetStatusCode(AValue: Integer);
     procedure SetStatusText(const AValue: string);
     procedure SetContentStream(AStream: TStream; AOwnStream: Boolean);
     procedure SetOwnContentStream(const AValue: Boolean);
+    procedure SetContext(AContext: TWiRLContextBase);
   public
     constructor Create;
     destructor Destroy; override;
@@ -250,8 +255,7 @@ end;
 
 { TWiRLClientFilterConstructorInfo }
 
-constructor TWiRLClientFilterConstructorInfo.Create(
-  const AFilterQualifiedClassName: string);
+constructor TWiRLClientFilterConstructorInfo.Create(const AFilterQualifiedClassName: string);
 begin
   inherited Create;
   FFilterQualifiedClassName := AFilterQualifiedClassName;
@@ -402,9 +406,14 @@ begin
   inherited;
 end;
 
-function TWiRLVirtualResponse.GetContent: string;
+function TWiRLVirtualResponse.GetContentText: string;
 begin
   Result := EncodingFromCharSet(GetContentMediaType.Charset).GetString(GetRawContent);
+end;
+
+function TWiRLVirtualResponse.GetContent: TWiRLContent;
+begin
+  raise EWiRLServerException.Create('Not Implemented');
 end;
 
 function TWiRLVirtualResponse.GetContentMediaType: TMediaType;
@@ -444,6 +453,11 @@ begin
   end;
 end;
 
+function TWiRLVirtualResponse.GetStatus: TWiRLResponseStatus;
+begin
+  Result := TWiRLResponseStatus.FromStatusCode(FStatusCode);
+end;
+
 function TWiRLVirtualResponse.GetStatusCode: Integer;
 begin
   Result := FStatusCode;
@@ -454,8 +468,7 @@ begin
   Result := FStatusText;
 end;
 
-procedure TWiRLVirtualResponse.SetContentStream(AStream: TStream;
-  AOwnStream: Boolean);
+procedure TWiRLVirtualResponse.SetContentStream(AStream: TStream; AOwnStream: Boolean);
 begin
   if AStream <> FContentStream then
   begin
@@ -466,6 +479,11 @@ begin
     FContentStream := AStream;
   end;
   FOwnStream := AOwnStream;
+end;
+
+procedure TWiRLVirtualResponse.SetContext(AContext: TWiRLContextBase);
+begin
+  FContext := AContext;
 end;
 
 procedure TWiRLVirtualResponse.SetOwnContentStream(const AValue: Boolean);
