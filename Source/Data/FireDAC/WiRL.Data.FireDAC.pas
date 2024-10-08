@@ -95,6 +95,7 @@ implementation
 
 uses
   System.Rtti,
+  System.JSON,
   WiRL.Core.Exceptions,
   WiRL.Core.Utils,
   WiRL.Data.Utils,
