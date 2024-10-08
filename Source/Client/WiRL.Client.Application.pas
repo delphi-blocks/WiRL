@@ -211,14 +211,12 @@ type
 
 { TWiRLClientApplication }
 
-function TWiRLClientApplication.AddApplication(
-  const ABasePath: string): IWiRLApplication;
+function TWiRLClientApplication.AddApplication(const ABasePath: string): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method "AddApplication" not found for class [%s]', [Self.ClassName]);
 end;
 
-function TWiRLClientApplication.AddConfiguration(
-  const AConfiguration: TWiRLConfiguration): IWiRLApplication;
+function TWiRLClientApplication.AddConfiguration(const AConfiguration: TWiRLConfiguration): IWiRLApplication;
 begin
   FConfigRegistry.Add(AConfiguration);
   Result := Self;
@@ -437,8 +435,7 @@ begin
   Result := FAppConfigurator;
 end;
 
-procedure TWiRLClientApplication.GetChildren(Proc: TGetChildProc;
-  Root: TComponent);
+procedure TWiRLClientApplication.GetChildren(Proc: TGetChildProc; Root: TComponent);
 var
   LResource: TObject;
 begin
@@ -502,8 +499,7 @@ begin
   Result := FClient = FDefaultClient;
 end;
 
-procedure TWiRLClientApplication.Notification(AComponent: TComponent;
-  Operation: TOperation);
+procedure TWiRLClientApplication.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if Operation = opRemove then
@@ -536,8 +532,7 @@ begin
   end;
 end;
 
-function TWiRLClientApplication.Resource(
-  const AUrl: string): TWiRLInvocation;
+function TWiRLClientApplication.Resource(const AUrl: string): TWiRLInvocation;
 begin
   Result := TWiRLInvocation.Create(Self);
   Result.Target(AUrl);
@@ -552,15 +547,13 @@ begin
   Result := Self;
 end;
 
-function TWiRLClientApplication.SetAppName(
-  const AAppName: string): IWiRLApplication;
+function TWiRLClientApplication.SetAppName(const AAppName: string): IWiRLApplication;
 begin
   FAppName := AAppName;
   Result := Self;
 end;
 
-function TWiRLClientApplication.SetBasePath(
-  const ABasePath: string): IWiRLApplication;
+function TWiRLClientApplication.SetBasePath(const ABasePath: string): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method "SetBasePath" not found for class [%s]', [Self.ClassName]);
 end;
@@ -599,81 +592,62 @@ begin
   end;
 end;
 
-function TWiRLClientApplication.SetErrorMediaType(
-  const AMediaType: string): IWiRLApplication;
+function TWiRLClientApplication.SetErrorMediaType(const AMediaType: string): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method "SetErrorMediaType" not found for class [%s]', [Self.ClassName]);
 end;
 
-function TWiRLClientApplication.SetFilters(
-  AFilters: TStrings): IWiRLApplication;
-var
-  LFilterName: string;
+function TWiRLClientApplication.SetFilters(AFilters: TStrings): IWiRLApplication;
 begin
-  for LFilterName in AFilters do
-    SetFilters(LFilterName);
-  Result := Self;
+  Result := SetFilters(AFilters.ToStringArray);
 end;
 
-function TWiRLClientApplication.SetFilters(
-  const AFilters: string): IWiRLApplication;
+function TWiRLClientApplication.SetFilters(const AFilters: string): IWiRLApplication;
 begin
-  SetFilters(AFilters.Split([',']));
-  Result := Self;
+  Result := SetFilters(AFilters.Split([',']));
 end;
 
-function TWiRLClientApplication.SetFilters(
-  const AFilters: System.TArray<System.string>): IWiRLApplication;
+function TWiRLClientApplication.SetFilters(const AFilters: System.TArray<System.string>): IWiRLApplication;
 var
   LFilter: string;
 begin
-  for LFilter in AFilters do
-    Self.AddFilter(LFilter);
+  if Length(AFilters) = 0 then
+    FFilterRegistry.Clear
+  else
+    for LFilter in AFilters do
+      Self.AddFilter(LFilter);
+
   Result := Self;
 end;
 
 function TWiRLClientApplication.SetReaders(const AReaders: string): IWiRLApplication;
 begin
-  SetReaders(AReaders.Split([',']));
-  Result := Self;
+  Result := SetReaders(AReaders.Split([',']));
 end;
 
-function TWiRLClientApplication.SetReaders(
-  AReaders: TStrings): IWiRLApplication;
-var
-  LReader: string;
+function TWiRLClientApplication.SetReaders(AReaders: TStrings): IWiRLApplication;
 begin
-  for LReader in AReaders do
-    Self.AddReader(LReader);
-  Result := Self;
+  Result := SetReaders(AReaders.ToStringArray);
 end;
 
-function TWiRLClientApplication.SetResources(
-  const AResources: System.TArray<System.string>): IWiRLApplication;
+function TWiRLClientApplication.SetResources(const AResources: System.TArray<System.string>): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method "SetResources" not found for class [%s]', [Self.ClassName]);
 end;
 
-function TWiRLClientApplication.SetResources(
-  const AResources: string): IWiRLApplication;
+function TWiRLClientApplication.SetResources(const AResources: string): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method "SetResources" not found for class [%s]', [Self.ClassName]);
 end;
 
-function TWiRLClientApplication.SetSystemApp(
-  ASystem: Boolean): IWiRLApplication;
+function TWiRLClientApplication.SetSystemApp(ASystem: Boolean): IWiRLApplication;
 begin
   raise EWiRLException.CreateFmt('Method "SetSystemApp" not found for class [%s]', [Self.ClassName]);
 end;
 
-function TWiRLClientApplication.SetWriters(
-  AWriters: TStrings): IWiRLApplication;
-var
-  LWriter: string;
+function TWiRLClientApplication.SetWriters(AWriters: TStrings): IWiRLApplication;
 begin
-  for LWriter in AWriters do
-    Self.AddWriter(LWriter);
-  Result := Self;
+  Result := SetWriters(AWriters.ToStringArray);
 end;
 
 procedure TWiRLClientApplication.ContextInjection(AInstance: TObject; AContext: TWiRLContextBase);
@@ -786,8 +760,7 @@ end;
 
 function TWiRLClientApplication.SetWriters(const AWriters: string): IWiRLApplication;
 begin
-  SetWriters(AWriters.Split([',']));
-  Result := Self;
+  Result := SetWriters(AWriters.Split([',']));
 end;
 
 { TAppConfiguratorImpl }

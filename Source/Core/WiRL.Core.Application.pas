@@ -370,9 +370,13 @@ function TWiRLApplication.SetReaders(const AReaders: TArray<string>): IWiRLAppli
 var
   LReader: string;
 begin
+  if Length(AReaders) = 0 then
+    FreaderRegistry.Clear
+  else
+    for LReader in AReaders do
+      Self.AddReader(LReader);
+
   Result := Self;
-  for LReader in AReaders do
-    Self.AddReader(LReader);
 end;
 
 function TWiRLApplication.SetReaders(const AReaders: string): IWiRLApplication;
@@ -389,9 +393,13 @@ function TWiRLApplication.SetResources(const AResources: TArray<string>): IWiRLA
 var
   LResource: string;
 begin
+  if Length(AResources) = 0 then
+    FResourceRegistry.Clear
+  else
+    for LResource in AResources do
+      Self.AddResource(LResource);
+
   Result := Self;
-  for LResource in AResources do
-    Self.AddResource(LResource);
 end;
 
 function TWiRLApplication.SetFilters(const AFilters: string): IWiRLApplication;
@@ -403,9 +411,13 @@ function TWiRLApplication.SetFilters(const AFilters: TArray<string>): IWiRLAppli
 var
   LFilter: string;
 begin
+  if Length(AFilters) = 0 then
+    FFilterRegistry.Clear
+  else
+    for LFilter in AFilters do
+      Self.AddFilter(LFilter);
+
   Result := Self;
-  for LFilter in AFilters do
-    Self.AddFilter(LFilter);
 end;
 
 procedure TWiRLApplication.SetParentComponent(AParent: TComponent);
@@ -419,9 +431,13 @@ function TWiRLApplication.SetWriters(const AWriters: TArray<string>): IWiRLAppli
 var
   LWriter: string;
 begin
+  if Length(AWriters) = 0 then
+    FWriterRegistry.Clear
+  else
+    for LWriter in AWriters do
+      Self.AddWriter(LWriter);
+
   Result := Self;
-  for LWriter in AWriters do
-    Self.AddWriter(LWriter);
 end;
 
 function TWiRLApplication.SetWriters(const AWriters: string): IWiRLApplication;
