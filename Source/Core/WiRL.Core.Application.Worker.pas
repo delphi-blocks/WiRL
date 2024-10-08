@@ -463,7 +463,13 @@ begin
     if not LToken.IsEmpty then
     begin
       if LJWTConf.VerificationMode = TJWTVerificationMode.Verify then
-        FAuthContext.Verify(LToken, LJWTConf.KeyPair.PublicKey.Key)
+      begin
+        FAuthContext.Verify(LToken, LJWTConf.KeyPair.PublicKey.Key);
+
+        if LJWTConf.CheckExpiration then
+          if FAuthContext.Expired then
+            raise EWiRLNotAuthorizedException.Create('Token expired');
+      end
       else
         FAuthContext.DeserializeOnly(LToken);
     end;
