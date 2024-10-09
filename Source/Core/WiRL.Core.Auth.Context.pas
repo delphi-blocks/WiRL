@@ -165,7 +165,7 @@ function TWiRLAuthContext.GetExpired: Boolean;
 begin
   Result := False;
   if Subject.HasExpiration then
-    if Subject.Expiration > Now() then
+    if Subject.Expiration < Now() then
       Result := True;
 end;
 
