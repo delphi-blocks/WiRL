@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>WiRL htmx Demo</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>htmx htmx Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" >
+    <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+    <script>
+        window.onload = function() {
+            document.body.addEventListener('htmx:configRequest', function(evt) {
+                evt.detail.headers ['accept'] = 'text/html'; // force text/html
+                if (evt.target.getAttribute('wirl-stencil')) {
+                    evt.detail.headers['x-stencil'] = evt.target.getAttribute('wirl-stencil'); // add x-stencil header
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+    <main class="container">
+        <h1>WiRL htmx Demo</h1>
+        <div class="grid">
+            <article>
+                <header>Demo 1</header>
+                <div id="output1"></div>
+                <button hx-get="rest/default/person"
+                        hx-trigger="click"
+                        hx-target="#output1"
+                        hx-swap="outerHTML">
+                    Click Me!
+                </button>
+            </article>
+            <article>
+                <header>Demo 2</header>
+                <div id="output2"></div>
+                <button hx-get="rest/default/person"
+                        wirl-stencil="person_it.html"
+                        hx-trigger="click"
+                        hx-target="#output2"
+                        hx-swap="outerHTML">
+                    Click Me!
+                </button>
+            </article>
+        </div>
+        <article>
+            <header>Demo 3</header>
+            <div id="output3">
+                <button hx-get="rest/default/employee"
+                        wirl-stencil="employee.html"
+                        hx-trigger="click"
+                        hx-target="#output3"
+                        hx-swap="innerHTML">
+                    Show employees
+                </button>
+            </div>
+        </article>
+</main>
+</body>
+</html>

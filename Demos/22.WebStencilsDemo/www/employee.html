@@ -1,0 +1,33 @@
+<table>
+    <thead>
+      <tr>
+        <th scope="col">Last name</th>
+        <th scope="col">First name</th>
+        <th scope="col">Hire date</th>
+        <th scope="col">Salary</th>
+        <th scope="col"></th>
+      </tr>
+    </thead>
+    <tbody>
+
+        @foreach value {
+            <tr>
+                <th scope="row">@loop.last_name</th>
+                <td>@loop.first_name</td>
+                <td>@loop.hire_date</td>
+                <td>@loop.salary</td>
+                <td>
+                    <button hx-get="rest/default/employee/@loop.emp_no"
+                            wirl-stencil="employee_edit.html"
+                            hx-trigger="click"
+                            hx-target="#output3"
+                            hx-swap="innerHTML"
+                            class="outline">
+                        Edit
+                    </button>
+                </td>
+            </tr>
+        }
+
+    </tbody>
+  </table>

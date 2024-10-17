@@ -1,0 +1,47 @@
+@foreach value {
+<form>
+    <fieldset>
+      <label>
+        First name
+        <input
+          name="first_name"
+          placeholder="First name"
+          autocomplete="given-name"
+          value="@loop.first_name"
+        />
+      </label>
+      <label>
+        Last name
+        <input
+          name="last_name"
+          placeholder="Last name"
+          value="@loop.last_name"
+        />
+      </label>
+      <label>
+        Hire date
+        <input
+          name="hire_date"
+          placeholder="Hire date"
+          value="@loop.hire_date"
+        />
+      </label>
+      <label>
+        Salary
+        <input
+          name="salary"
+          placeholder="Salary"
+          value="@loop.salary"
+        />
+      </label>
+    </fieldset>
+  
+    <button hx-get="rest/default/employee"
+            wirl-stencil="employee.html"
+            hx-trigger="click"
+            hx-target="#output3"
+            hx-swap="innerHTML">
+        Back
+    </button>
+</form>
+}
