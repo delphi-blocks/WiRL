@@ -13,16 +13,13 @@ interface
 
 uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
-  Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
-  System.Diagnostics, System.Actions,
+  Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
 
-  WiRL.Engine.REST,
-  WiRL.http.Server,
-  WiRL.http.Server.Indy,
-  WiRL.Core.Application;
+  Server.Filters,
+  Server.Listener;
 
 type
-  TMainForm = class(TForm)
+  TMainForm = class(TForm, ILogger)
     TopPanel: TPanel;
     StartButton: TButton;
     StopButton: TButton;
@@ -31,14 +28,20 @@ type
     StopServerAction: TAction;
     PortNumberEdit: TEdit;
     Label1: TLabel;
+    lstLog: TListBox;
+    TitlePanel: TPanel;
     procedure StartServerActionExecute(Sender: TObject);
     procedure StartServerActionUpdate(Sender: TObject);
     procedure StopServerActionExecute(Sender: TObject);
     procedure StopServerActionUpdate(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+    procedure PortNumberEditChange(Sender: TObject);
   private
-    FServer: TWiRLServer;
+    FListener: TListener;
   public
+    procedure Log(const AMsg :string);
+
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
 var
@@ -48,48 +51,59 @@ implementation
 
 {$R *.dfm}
 
-uses
-  WiRL.Core.JSON,
-  WiRL.Rtti.Utils,
-  WiRL.Core.MessageBody.Default;
-
-procedure TMainForm.FormCreate(Sender: TObject);
+constructor TMainForm.Create(AOwner: TComponent);
 begin
+  inherited;
+  FListener := TListener.Create;
   StartServerAction.Execute;
+  RegisterLogger(Self);
+
+  Caption := FListener.Name;
+  TitlePanel.Caption := FListener.DisplayName;
+end;
+
+destructor TMainForm.Destroy;
+begin
+  UnregisterLogger(Self);
+
+  FListener.Free;
+  inherited;
+end;
+
+procedure TMainForm.Log(const AMsg: string);
+begin
+  TThread.Synchronize(nil,
+    procedure ()
+    begin
+      lstLog.Items.Add(AMsg);
+    end
+  );
+end;
+
+procedure TMainForm.PortNumberEditChange(Sender: TObject);
+begin
+  FListener.Port := StrToIntDef(PortNumberEdit.Text, 8081);
 end;
 
 procedure TMainForm.StartServerActionExecute(Sender: TObject);
 begin
-  // Create http server
-  FServer := TWiRLServer.Create(nil);
-
-  // Engine configuration
-  FServer
-    .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .AddEngine<TWiRLRESTEngine>('/rest')
-    .SetEngineName('WiRL Template')
-    .AddApplication('/default')
-      .SetAppName('Default')
-      .SetResources('Server.Resources.THelloWorldResource');
-
-  if not FServer.Active then
-    FServer.Active := True;
+  FListener.Start;
 end;
 
 procedure TMainForm.StartServerActionUpdate(Sender: TObject);
 begin
-  StartServerAction.Enabled := (FServer = nil) or (FServer.Active = False);
+  PortNumberEdit.Enabled := not FListener.Active;
+  StartServerAction.Enabled := not FListener.Active;
 end;
 
 procedure TMainForm.StopServerActionExecute(Sender: TObject);
 begin
-  FServer.Active := False;
-  FreeAndNil(FServer);
+  FListener.Stop;
 end;
 
 procedure TMainForm.StopServerActionUpdate(Sender: TObject);
 begin
-  StopServerAction.Enabled := Assigned(FServer) and (FServer.Active = True);
+  StopServerAction.Enabled := FListener.Active;
 end;
 
 initialization
