@@ -8,7 +8,8 @@ uses
   WiRL.Configuration.Core,
   WiRL.Configuration.Compression,
   WiRL.Core.Classes,
-  WiRL.Core.Engine,
+  WiRL.Engine.Core,
+  WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.Core.MessageBody.Default,
   WiRL.Data.MessageBody.Default,
@@ -82,7 +83,7 @@ begin
   FServer
     .SetPort(FPort)
     // Engine configuration
-    .AddEngine<TWiRLEngine>('/rest')
+    .AddEngine<TWiRLRESTEngine>('/rest')
       .SetEngineName('WiRL Demo')
 
       // Application configuration
