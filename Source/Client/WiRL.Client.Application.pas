@@ -59,6 +59,8 @@ type
     procedure Put<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
     function Delete<T>: T; overload;
     procedure Delete(AResponseEntity: TObject); overload;
+    function Delete<T, V>(const ARequestEntity: T): V; overload;
+    procedure Delete<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
     function Patch<T, V>(const ARequestEntity: T): V; overload;
     procedure Patch<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
 
@@ -824,6 +826,12 @@ begin
   (FWiRLInvocation.Resource as TWiRLClientCustomResource).Delete(AResponseEntity);
 end;
 
+procedure TWiRLInvocation.Delete<T>(const ARequestEntity: T;
+  AResponseEntity: TObject);
+begin
+  (FWiRLInvocation.Resource as TWiRLClientCustomResource).Delete(ARequestEntity, AResponseEntity);
+end;
+
 function TWiRLInvocation.Delete<T>: T;
 begin
   Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).Delete<T>;
@@ -927,6 +935,11 @@ function TWiRLInvocation.Target(const AUrl: string): TWiRLInvocation;
 begin
   FWiRLInvocation.Target(AUrl);
   Result := Self;
+end;
+
+function TWiRLInvocation.Delete<T, V>(const ARequestEntity: T): V;
+begin
+  Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).Delete<T, V>(ARequestEntity);
 end;
 
 { TWiRLResourceProxy }

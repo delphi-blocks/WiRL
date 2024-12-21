@@ -109,6 +109,8 @@ type
     procedure Put<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
     function Delete<T>: T; overload;
     procedure Delete(AResponseEntity: TObject); overload;
+    function Delete<T, V>(const ARequestEntity: T): V; overload;
+    procedure Delete<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
     function Patch<T, V>(const ARequestEntity: T): V; overload;
     procedure Patch<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
 
@@ -196,7 +198,7 @@ begin
   HttpMethodImplementations[TWiRLHttpMethod.DELETE] :=
     function (AResource: TWiRLClientCustomResource; ARequestStream, AResponseStream: TStream; ACustomHeaders: IWiRLHeaders): IWiRLResponse
     begin
-      Result := AResource.Client.Delete(AResource.URL, AResponseStream, ACustomHeaders);
+      Result := AResource.Client.Delete(AResource.URL, ARequestStream, AResponseStream, ACustomHeaders);
     end;
 
   HttpMethodImplementations[TWiRLHttpMethod.PATCH] :=
@@ -448,6 +450,12 @@ end;
 procedure TWiRLClientCustomResource.Delete(AResponseEntity: TObject);
 begin
   GenericHttpRequest<string, TObject>('DELETE', '', AResponseEntity);
+end;
+
+procedure TWiRLClientCustomResource.Delete<T>(const ARequestEntity: T;
+  AResponseEntity: TObject);
+begin
+  GenericHttpRequest<T, TObject>('DELETE', ARequestEntity, AResponseEntity);
 end;
 
 function TWiRLClientCustomResource.Delete<T>: T;
@@ -806,6 +814,11 @@ end;
 procedure TWiRLClientCustomResource.SetQueryParams(const Value: TStrings);
 begin
   FQueryParams.Assign(Value);
+end;
+
+function TWiRLClientCustomResource.Delete<T, V>(const ARequestEntity: T): V;
+begin
+  Result := GenericHttpRequest<T, V>('DELETE', ARequestEntity);
 end;
 
 { TWiRLResourceHeaders }

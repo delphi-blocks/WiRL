@@ -79,7 +79,7 @@ type
     function Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Post(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Put(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-    function Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Delete(const AURL: string; ARequestStream, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Options(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Patch(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
@@ -107,13 +107,13 @@ begin
 end;
 
 function TWiRLClientNetHttp.Delete(const AURL: string;
-  AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+  ARequestStream, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 var
   LHTTPResponse: IHTTPResponse;
 begin
   InitHttpClient;
   try
-    LHTTPResponse := FHttpClient.Delete(AURL, AResponseContent, GetRequestHeaders(AHeaders));
+    LHTTPResponse := FHttpClient.Delete(AURL, ARequestStream, AResponseContent, GetRequestHeaders(AHeaders));
   except
     on E: ENetHTTPException do
       Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
