@@ -30,9 +30,22 @@ type
   public
     [GET, Produces(TMediaType.TEXT_PLAIN)]
     function SampleText: string;
+
     [Path('error')]
     [GET, Produces(TMediaType.TEXT_PLAIN)]
-    function GetError: string;
+    function GetCustomException: string;
+
+    [Path('details')]
+    [GET, Produces(TMediaType.TEXT_PLAIN)]
+    function GetErrorDetails: string;
+
+    [Path('exception')]
+    [GET, Produces(TMediaType.TEXT_PLAIN)]
+    function GetException: string;
+
+    [Path('divbyzero')]
+    [GET, Produces(TMediaType.TEXT_PLAIN)]
+    function GetDivByZero: string;
   end;
 
 implementation
@@ -42,10 +55,32 @@ implementation
 
 { TDemoResource }
 
-function TDemoResource.GetError: string;
+function TDemoResource.GetCustomException: string;
 begin
   raise EMyNotFoundException.Create(102, 'Exception Message');
   Result := 'Hello, Error!';
+end;
+
+function TDemoResource.GetDivByZero: string;
+begin
+  Result := IntToStr(5 div StrToInt('0'));
+end;
+
+function TDemoResource.GetErrorDetails: string;
+begin
+  raise EWiRLWebApplicationException.Create('Invalid input', 400,
+    TValuesUtil.MakeValueArray(
+      //Pair.S('unit', 'Test.pas'), // Valore string
+      Pair.N('line', 150), // Valore numerico
+      Pair.B('failure', True), // Valore booleano
+      Pair.D('timestamp', Now) // Valore numerico
+    )
+  );
+end;
+
+function TDemoResource.GetException: string;
+begin
+  raise Exception.Create('Test');
 end;
 
 function TDemoResource.SampleText: string;

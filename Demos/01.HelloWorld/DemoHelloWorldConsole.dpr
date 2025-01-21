@@ -41,9 +41,13 @@ begin
 
           // Adds and configures an application
           .AddApplication('/app')
+            // You can add any single resource (FQCN of the class) or use '*'
+            // to add all registered resources
             .SetResources([
-              'Server.Resources.THelloWorldResource',
-              'Server.Resources.TEntityResource'])
+              'Server.Resources.HelloWorld.THelloWorldResource',
+              'Server.Resources.HelloWorld.TEntityResource',
+              'Server.Resources.Database.TDatabaseResource',
+              'Server.Resources.Params.TParametersResource'])
         ;
       end
     );

@@ -59,6 +59,7 @@ type
     FCompactToken: string;
     FVerified: Boolean;
     FSubject: TWiRLSubject;
+    function GetExpired: Boolean;
   public
     {$IFNDEF HAS_HMAC_HASH}
     class constructor Create;
@@ -82,6 +83,7 @@ type
     ///   Beware: The claims has not been validated!
     /// </remarks>
     property Verified: Boolean read FVerified;
+    property Expired: Boolean read GetExpired;
   end;
 
 implementation
@@ -157,6 +159,14 @@ begin
   finally
     LJWT.Free;
   end;
+end;
+
+function TWiRLAuthContext.GetExpired: Boolean;
+begin
+  Result := False;
+  if Subject.HasExpiration then
+    if Subject.Expiration < Now() then
+      Result := True;
 end;
 
 procedure TWiRLAuthContext.Verify(const ACompactToken: string; ASecret: TBytes);

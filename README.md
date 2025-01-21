@@ -5,8 +5,6 @@
   <img src="https://www.paolorossi.net/img/wirl-logo.png" alt="Delphi RESTful Library" width="200" />
 </p>
 
-## What is WiRL?
-
 ![Top language](https://img.shields.io/github/languages/top/delphi-blocks/WiRL)
 [![GitHub license](https://img.shields.io/github/license/delphi-blocks/WiRL)](https://github.com/delphi-blocks/WiRL/blob/master/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/delphi-blocks/WiRL)](https://github.com/delphi-blocks/WiRL/issues)
@@ -15,6 +13,12 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/delphi-blocks/WiRL)
 ![GitHub last commit](https://img.shields.io/github/last-commit/delphi-blocks/WiRL)
 ![GitHub contributors](https://img.shields.io/github/contributors-anon/delphi-blocks/WiRL)
+
+## Getting Started
+
+Please follow the documentation at [wirl.delphiblocks.dev](https://wirl.delphiblocks.dev/)!
+
+## What is WiRL?
 
 **WiRL** was created to simplify RESTful service implementation in Delphi but, more importantly, to enable maximum interoperability with REST clients written in other languages and tools.
 

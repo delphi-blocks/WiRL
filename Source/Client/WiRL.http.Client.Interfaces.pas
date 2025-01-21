@@ -219,13 +219,13 @@ type
     function GetClientImplementation: TObject;
 
     // Http methods
-    function Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-    function Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-    function Options(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Delete(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Get(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Options(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
-    function Patch(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-    function Post(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-    function Put(const AURL: string; AContent, AResponse: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Patch(const AURL: string; AContentStream, AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Post(const AURL: string; AContentStream, AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Put(const AURL: string; AContentStream, AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 
     // Http properties
     property ConnectTimeout: Integer read GetConnectTimeout write SetConnectTimeout;

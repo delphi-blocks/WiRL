@@ -12,7 +12,7 @@ unit WiRL.Data.MessageBody.Default;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, System.Contnrs,
+  System.Classes, System.SysUtils, System.Rtti,
   WiRL.Core.Classes,
   WiRL.Core.Attributes,
   WiRL.http.Core,
@@ -57,6 +57,7 @@ type
 implementation
 
 uses
+  System.JSON,
   Data.DB,
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON,

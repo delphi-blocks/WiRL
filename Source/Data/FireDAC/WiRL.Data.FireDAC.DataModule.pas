@@ -71,7 +71,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.Rtti, System.TypInfo, System.Generics.Collections,
+  System.JSON, System.Rtti, System.TypInfo, System.Generics.Collections,
   WiRL.Rtti.Utils;
 
 { TWiRLFDDataModuleResource }

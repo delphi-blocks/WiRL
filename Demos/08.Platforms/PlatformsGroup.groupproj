@@ -1,0 +1,72 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{BD41113A-BA49-4DAC-A91E-23D738E2046A}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="VclDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="WinServiceDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="ConsoleDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DeamonDemo.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="VclDemo">
+        <MSBuild Projects="VclDemo.dproj"/>
+    </Target>
+    <Target Name="VclDemo:Clean">
+        <MSBuild Projects="VclDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VclDemo:Make">
+        <MSBuild Projects="VclDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="WinServiceDemo">
+        <MSBuild Projects="WinServiceDemo.dproj"/>
+    </Target>
+    <Target Name="WinServiceDemo:Clean">
+        <MSBuild Projects="WinServiceDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="WinServiceDemo:Make">
+        <MSBuild Projects="WinServiceDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ConsoleDemo">
+        <MSBuild Projects="ConsoleDemo.dproj"/>
+    </Target>
+    <Target Name="ConsoleDemo:Clean">
+        <MSBuild Projects="ConsoleDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ConsoleDemo:Make">
+        <MSBuild Projects="ConsoleDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DeamonDemo">
+        <MSBuild Projects="DeamonDemo.dproj"/>
+    </Target>
+    <Target Name="DeamonDemo:Clean">
+        <MSBuild Projects="DeamonDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DeamonDemo:Make">
+        <MSBuild Projects="DeamonDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="VclDemo;WinServiceDemo;ConsoleDemo;DeamonDemo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="VclDemo:Clean;WinServiceDemo:Clean;ConsoleDemo:Clean;DeamonDemo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="VclDemo:Make;WinServiceDemo:Make;ConsoleDemo:Make;DeamonDemo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

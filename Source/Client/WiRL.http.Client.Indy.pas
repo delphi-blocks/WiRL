@@ -29,6 +29,12 @@ uses
   WiRL.http.Cookie;
 
 type
+  TWiRLIndyHttp = class(TIdHTTP)
+  public
+    // Add a Delete overload not supported by standard Indy HTTP client component
+    procedure Delete(AURL: string; ARequestContent, AResponseContent: TStream); overload;
+  end;
+
   TWiRLClientResponseIndy = class(TInterfacedObject, IWiRLResponse)
   private
     FIdHTTPResponse: TIdHTTPResponse;
@@ -59,7 +65,7 @@ type
 
   TWiRLClientIndy = class(TInterfacedObject, IWiRLClient)
   private
-    FHttpClient: TIdHTTP;
+    FHttpClient: TWiRLIndyHttp;
     FProxyParams: TWiRLProxyConnectionInfo;
     // Setters and getters
     function GetConnectTimeout: Integer;
@@ -81,7 +87,7 @@ type
     function Get(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Post(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Put(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
-    function Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+    function Delete(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Options(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Head(const AURL: string; AHeaders: IWiRLHeaders): IWiRLResponse;
     function Patch(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
@@ -99,16 +105,16 @@ const
 
 constructor TWiRLClientIndy.Create;
 begin
-  FHttpClient := TIdHTTP.Create(nil);
+  FHttpClient := TWiRLIndyHttp.Create(nil);
   FHttpClient.MaxAuthRetries := -1;
   FHttpClient.HTTPOptions := FHttpClient.HTTPOptions + [hoNoProtocolErrorException, hoWantProtocolErrorContent];
 end;
 
-function TWiRLClientIndy.Delete(const AURL: string; AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+function TWiRLClientIndy.Delete(const AURL: string; ARequestContent, AResponseContent: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   BuildRequestObject(AHeaders);
   try
-    FHttpClient.Delete(AURL, AResponseContent);
+    FHttpClient.Delete(AURL, ARequestContent, AResponseContent);
   except
     on E: EIdSocketError do
       Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));
@@ -393,6 +399,14 @@ end;
 procedure TWiRLClientResponseIndy.SetStatusText(const AValue: string);
 begin
   FIdHTTPResponse.ResponseText := AValue;
+end;
+
+{ TWiRLIndyHttp }
+
+procedure TWiRLIndyHttp.Delete(AURL: string; ARequestContent,
+  AResponseContent: TStream);
+begin
+  DoRequest(Id_HTTPMethodDelete, AURL, ARequestContent, AResponseContent, []);
 end;
 
 initialization

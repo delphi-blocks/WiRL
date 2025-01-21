@@ -127,7 +127,7 @@ type
     /// <summary>Send 'PUT' command to url</summary>
     function Put(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'DELETE' command to url</summary>
-    function Delete(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
+    function Delete(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'PATCH' command to url</summary>
     function Patch(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders = nil): IWiRLResponse;
     /// <summary>Send 'HEAD' command to url</summary>
@@ -281,12 +281,12 @@ begin
 {$ENDIF}
 end;
 
-function TWiRLClient.Delete(const AURL: string; AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
+function TWiRLClient.Delete(const AURL: string; ARequestStream, AResponseStream: TStream; AHeaders: IWiRLHeaders): IWiRLResponse;
 begin
   Result := ExecuteHttpMethod(TWiRLHttpMethod.DELETE, AURL, nil, AResponseStream, AHeaders,
     function (ARequest: IWiRLRequest; AResponseStream: TStream) :IWiRLResponse
     begin
-      Result := FHttpClient.Delete(ARequest.URL, AResponseStream, ARequest.Headers);
+      Result := FHttpClient.Delete(ARequest.URL, ARequestStream, AResponseStream, ARequest.Headers);
     end);
 end;
 

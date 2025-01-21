@@ -75,6 +75,7 @@ type
     [Context] FAuthContext: TWiRLAuthContext;
     [Context] FApplication: TWiRLApplication;
     function Authenticate(const AUserName, APassword: string): TWiRLAuthResult; virtual; abstract;
+    function CreateResponse(ASuccess: Boolean; const AToken: string): TWiRLLoginResponse; virtual;
   end;
 
   /// <summary>
@@ -142,7 +143,7 @@ begin
 
   FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
 
-  Result := TWiRLLoginResponse.Create(LAuthOperation.Success, FAuthContext.CompactToken);
+  Result := CreateResponse(LAuthOperation.Success, FAuthContext.CompactToken);
 end;
 
 { TWiRLAuthBasicResource }
@@ -175,7 +176,7 @@ begin
 
   FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
 
-  Result := TWiRLLoginResponse.Create(LAuthOperation.Success, FAuthContext.CompactToken);
+  Result := CreateResponse(LAuthOperation.Success, FAuthContext.CompactToken);
 end;
 
 { TWiRLAuthBodyResource }
@@ -194,7 +195,7 @@ begin
 
   FAuthContext.Generate(FApplication.GetConfiguration<TWiRLConfigurationJWT>.KeyPair.PrivateKey.Key);
 
-  Result := TWiRLLoginResponse.Create(LAuthOperation.Success, FAuthContext.CompactToken);
+  Result := CreateResponse(LAuthOperation.Success, FAuthContext.CompactToken);
 end;
 
 { TWiRLAuthResult }
@@ -223,6 +224,14 @@ constructor TWiRLLoginResponse.Create(ASuccess: Boolean; const AToken: string);
 begin
   FSuccess := ASuccess;
   FAccessToken := AToken;
+end;
+
+{ TWiRLAuthResource }
+
+function TWiRLAuthResource.CreateResponse(ASuccess: Boolean;
+  const AToken: string): TWiRLLoginResponse;
+begin
+  Result := TWiRLLoginResponse.Create(ASuccess, AToken);
 end;
 
 end.

@@ -28,6 +28,7 @@ type
 
   IWiRLConfigurationJWT = interface(IWiRLConfiguration)
   ['{BF13669E-7B9C-4D56-AE9C-C9EF6EE733DA}']
+    function SetCheckExpiration(ACheck: Boolean): IWiRLConfigurationJWT;
     function SetVerificationMode(AVerificationMode: TJWTVerificationMode = TJWTVerificationMode.Verify): IWiRLConfigurationJWT;
     function SetClaimClass(AClaimClass: TWiRLSubjectClass): IWiRLConfigurationJWT;
     function SetAlgorithm(AAlgorithm: TJOSEAlgorithmId): IWiRLConfigurationJWT;
@@ -44,6 +45,7 @@ type
   private
     const SCRT_SGN = 'd2lybC5zdXBlcnNlY3JldC5zZWVkLmZvci5zaWduaW5n';
   private
+    FCheckExpiration: Boolean;
     FVerificationMode: TJWTVerificationMode;
     FClaimClass: TWiRLSubjectClass;
     FAlgorithm: TJOSEAlgorithmId;
@@ -57,6 +59,7 @@ type
     destructor Destroy; override;
 
     // Interface IWiRLConfigurationJWT implementation
+    function SetCheckExpiration(ACheckExpiration: Boolean): IWiRLConfigurationJWT;
     function SetVerificationMode(AVerificationMode: TJWTVerificationMode): IWiRLConfigurationJWT;
     function SetClaimClass(AClaimClass: TWiRLSubjectClass): IWiRLConfigurationJWT;
     function SetAlgorithm(AAlgorithm: TJOSEAlgorithmId): IWiRLConfigurationJWT;
@@ -65,6 +68,7 @@ type
     function SetPublicKey(const APublicKey: TBytes): IWiRLConfigurationJWT;
     function SetPrivateKey(const APrivateKey: TBytes): IWiRLConfigurationJWT;
   published
+    property CheckExpiration: Boolean read FCheckExpiration write FCheckExpiration;
     property VerificationMode: TJWTVerificationMode read FVerificationMode write FVerificationMode;
     property ClaimClass: TWiRLSubjectClass read FClaimClass write FClaimClass;
     property Algorithm: TJOSEAlgorithmId read FAlgorithm write FAlgorithm;
@@ -114,6 +118,12 @@ end;
 function TWiRLConfigurationJWT.SetAlgorithm(AAlgorithm: TJOSEAlgorithmId): IWiRLConfigurationJWT;
 begin
   FAlgorithm := AAlgorithm;
+  Result := Self;
+end;
+
+function TWiRLConfigurationJWT.SetCheckExpiration(ACheckExpiration: Boolean): IWiRLConfigurationJWT;
+begin
+  FCheckExpiration := ACheckExpiration;
   Result := Self;
 end;
 
