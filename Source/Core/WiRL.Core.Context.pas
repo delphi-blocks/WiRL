@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.Rtti, System.Generics.Collections,
   WiRL.Core.Classes,
   WiRL.Rtti.Utils,
+  WiRL.http.Core,
   WiRL.http.Request,
   WiRL.http.Response,
   WiRL.http.URL;
@@ -78,11 +79,13 @@ type
     function GetRequestURL: TWiRLURL;
     function GetRequest: TWiRLRequest;
     function GetResponse: TWiRLResponse;
+    function GetConnection: TWiRLConnection;
     procedure SetRequest(const Value: TWiRLRequest);
     procedure SetResponse(const Value: TWiRLResponse);
   public
     destructor Destroy; override;
 
+    property Connection: TWiRLConnection read GetConnection;
     property Request: TWiRLRequest read GetRequest write SetRequest;
     property Response: TWiRLResponse read GetResponse write SetResponse;
     property RequestURL: TWiRLURL read GetRequestURL;
@@ -277,6 +280,11 @@ begin
   inherited;
 end;
 
+function TWiRLContextHttp.GetConnection: TWiRLConnection;
+begin
+  Result := FindContextDataAs<TWiRLConnection>;
+end;
+
 function TWiRLContextHttp.GetRequest: TWiRLRequest;
 begin
   Result := FindContextDataAs<TWiRLRequest>;
@@ -305,12 +313,14 @@ end;
 procedure TWiRLContextHttp.SetRequest(const Value: TWiRLRequest);
 begin
   AddContainerOnce(Value, False);
+  AddContainerOnce(Value.Connection, False);
   InitRequestURL(Value);
 end;
 
 procedure TWiRLContextHttp.SetResponse(const Value: TWiRLResponse);
 begin
   AddContainerOnce(Value, False);
+  AddContainerOnce(Value.Connection, False);
 end;
 
 end.

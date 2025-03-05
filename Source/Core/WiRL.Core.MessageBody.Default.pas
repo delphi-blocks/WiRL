@@ -21,6 +21,7 @@ uses
   WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Request,
+  WiRL.http.Response,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
   WiRL.Core.MessageBodyWriter,
@@ -167,6 +168,23 @@ type
       AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
   end;
   {$ENDIF}
+
+  /// <summary>
+  ///   This is the MessageBodyWriter for all TWiRLStreamingResponse descendant
+  /// </summary>
+  [Produces(TMediaType.WILDCARD)]
+  TWiRLStreamingResponseProvider = class(TMessageBodyProvider)
+  private
+    [Context]
+    FContext: TWiRLContextHttp;
+  public
+    function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
+      AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
+
+    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
+  end;
+
 
 implementation
 
@@ -544,6 +562,9 @@ begin
   TMessageBodyWriterRegistry.Instance.RegisterWriter<TMultipartFormData>(TWiRLMultipartFormDataProvider, TMessageBodyWriterRegistry.AFFINITY_HIGH);
   {$ENDIF}
 
+  // TWiRLStreamingResponse
+  TMessageBodyWriterRegistry.Instance.RegisterWriter<TWiRLStreamingResponse>(TWiRLStreamingResponseProvider);
+
 end;
 
 { TWiRLJSONProvider }
@@ -591,6 +612,23 @@ begin
   end;
 end;
 {$ENDIF}
+
+{ TWiRLStreamingResponseProvider }
+
+function TWiRLStreamingResponseProvider.ReadFrom(AType: TRttiType;
+  AMediaType: TMediaType; AHeaders: IWiRLHeaders;
+  AContentStream: TStream): TValue;
+begin
+  raise Exception.Create('Not supported');
+end;
+
+procedure TWiRLStreamingResponseProvider.WriteTo(const AValue: TValue;
+  const AAttributes: TAttributeArray; AMediaType: TMediaType;
+  AHeaders: IWiRLHeaders; AContentStream: TStream);
+begin
+  inherited;
+  AValue.AsType<TWiRLStreamingResponse>.SendResponse(FContext);
+end;
 
 initialization
   RegisterMessageBodyClasses;

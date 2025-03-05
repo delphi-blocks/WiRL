@@ -105,6 +105,7 @@ type
     function GetContentStream: TStream; virtual; abstract;
     procedure SetContentStream(const Value: TStream); virtual; abstract;
     function GetHttpPathInfo: string; virtual; abstract;
+    function GetConnection: TWiRLConnection; virtual; abstract;
   public
     destructor Destroy; override;
 
@@ -143,6 +144,7 @@ type
     property ContentMediaType: TMediaType read GetContentMediaType;
     property MultiPartFormData: TWiRLFormDataMultiPart read GetMultiPartFormData;
     property Application: TObject read FApplication write SetApplication;
+    property Connection: TWiRLConnection read GetConnection;
   end;
 
 implementation

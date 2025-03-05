@@ -52,6 +52,7 @@ type
     const TEXT_XML = 'text/xml';
     const TEXT_CSV = 'text/csv';
     const TEXT_HTML = 'text/html';
+    const TEXT_EVENT_STREAM = 'text/event-stream';
     const IMAGE_PNG = 'image/png';
     const IMAGE_JPEG = 'image/jpeg';
     const APPLICATION_PDF = 'application/pdf';

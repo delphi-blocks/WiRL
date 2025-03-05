@@ -32,6 +32,7 @@ type
     const CONTENT_LANGUAGE = 'Content-Language';
     const LOCATION = 'Location';
     const WWW_AUTHENTICATE = 'WWW-Authenticate';
+    const TRANSFER_ENCODING = 'Transfer-Encoding';
   public
     Name: string;
     Value: string;
@@ -56,6 +57,7 @@ type
     function GetContentLength: Int64;
     function GetLocation: string;
     function GetWWWAuthenticate: string;
+    function GetTransferEncoding: string;
     procedure SetAccept(const AValue: string);
     procedure SetAcceptCharSet(const AValue: string);
     procedure SetAcceptEncoding(const AValue: string);
@@ -70,6 +72,7 @@ type
     procedure SetContentLength(const AValue: Int64);
     procedure SetLocation(const AValue: string);
     procedure SetWWWAuthenticate(const AValue: string);
+    procedure SetTransferEncoding(const AValue: string);
 
     procedure Clear;
     function Count: Integer;
@@ -106,6 +109,8 @@ type
     property Location: string read GetLocation write SetLocation;
     /// <summary>Indicates the authentication scheme that should be used to access the requested entity</summary>
     property WWWAuthenticate: string read GetWWWAuthenticate write SetWWWAuthenticate;
+    /// <summary>Specifies the form of encoding used to transfer messages between nodes on the network</summary>
+    property TransferEncoding: string read GetTransferEncoding write SetTransferEncoding;
   end;
 
   TWiRLHeaders = class(TObjectList<TWiRLHeader>, IWiRLHeaders)
@@ -129,6 +134,8 @@ type
     function GetLocation: string;
     function GetUserAgent: string;
     function GetWWWAuthenticate: string;
+    function GetTransferEncoding: string;
+
     procedure SetAccept(const AValue: string);
     procedure SetAcceptCharSet(const AValue: string);
     procedure SetAcceptEncoding(const AValue: string);
@@ -143,6 +150,8 @@ type
     procedure SetLocation(const AValue: string);
     procedure SetUserAgent(const AValue: string);
     procedure SetWWWAuthenticate(const AValue: string);
+    procedure SetTransferEncoding(const AValue: string);
+
     procedure AddHeader(AHeader: TWiRLHeader);
     procedure Assign(AHeaders: IWiRLHeaders);
 
@@ -302,6 +311,11 @@ begin
   Result := GetValue(TWiRLHeader.LOCATION);
 end;
 
+function TWiRLHeaders.GetTransferEncoding: string;
+begin
+  Result := GetValue(TWiRLHeader.TRANSFER_ENCODING);
+end;
+
 function TWiRLHeaders.GetUserAgent: string;
 begin
   Result := GetValue(TWiRLHeader.USER_AGENT);
@@ -394,6 +408,11 @@ end;
 procedure TWiRLHeaders.SetLocation(const AValue: string);
 begin
   SetValue(TWiRLHeader.LOCATION, AValue);
+end;
+
+procedure TWiRLHeaders.SetTransferEncoding(const AValue: string);
+begin
+  SetValue(TWiRLHeader.TRANSFER_ENCODING, AValue);
 end;
 
 procedure TWiRLHeaders.SetUserAgent(const AValue: string);

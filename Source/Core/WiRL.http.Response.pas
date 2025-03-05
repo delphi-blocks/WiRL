@@ -14,6 +14,7 @@ interface
 uses
   System.SysUtils, System.Classes,
 
+  WiRL.Core.Attributes,
   WiRL.Http.Core,
   WiRL.http.Headers,
   WiRL.http.Cookie,
@@ -33,6 +34,45 @@ type
     constructor Create(AResponse: TWiRLResponse);
   end;
 
+  // General interface for all writers (chunk, SSE, ...)
+  IWiRLResponseWriter = interface
+    ['{B16D3D6C-685C-4076-9A8C-19861323D2CB}']
+    procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload;
+    procedure Write(const AValue: TBytes); overload;
+  end;
+
+  IWiRLSSEResponseWriter = interface
+    ['{B16D3D6C-685C-4076-9A8C-19861323D2CB}']
+    procedure Write(const AValue: string); overload;
+    procedure Write(const AEvent, AValue: string); overload;
+    procedure Write(const AEvent, AValue: string; ARetry: Integer); overload;
+    procedure WriteComment(const AValue: string); overload;
+  end;
+
+  TWriterProc = reference to procedure (AWriter: IWiRLResponseWriter);
+  TSSEWriterProc = reference to procedure (AWriter: IWiRLSSEResponseWriter);
+
+  TWiRLStreamingResponse = class(TObject)
+  public
+    procedure SendResponse(AContext: TObject); virtual; abstract;
+  end;
+
+  TWiRLChunkedResponse = class(TWiRLStreamingResponse)
+  private
+    FWriterProc: TWriterProc;
+  public
+    procedure SendResponse(AContext: TObject); override;
+    constructor Create(AWriterProc: TWriterProc);
+  end;
+
+  TWiRLSSEResponse = class(TWiRLStreamingResponse)
+  private
+    FWriterProc: TSSEWriterProc;
+  public
+    procedure SendResponse(AContext: TObject); override;
+    constructor Create(AWriterProc: TSSEWriterProc);
+  end;
+
   TWiRLResponse = class
   private
     FCookie: TWiRLCookies;
@@ -50,8 +90,6 @@ type
     function GetContentMediaType: TMediaType;
     function GetContentLength: Int64;
     procedure SetContentLength(const Value: Int64);
-    function GetConnection: string;
-    procedure SetConnection(const Value: string);
     function GetRawContent: TBytes;
     procedure SetRawContent(const Value: TBytes);
     function GetContentEncoding: string;
@@ -68,6 +106,8 @@ type
     procedure SetContentLanguage(const Value: string);
     function GetCookies: TWiRLCookies;
     function GetHeaderFields: TWiRLResponseHeaderList;
+    function GetTransferEncoding: string;
+    procedure SetTransferEncoding(const Value: string);
   protected
     function IsUnknownResponseCode: Boolean; virtual;
     function GetHeaders: IWiRLHeaders; virtual; abstract;
@@ -79,8 +119,9 @@ type
     procedure SetStatusCode(const Value: Integer); virtual; abstract;
     function GetReasonString: string; virtual; abstract;
     procedure SetReasonString(const Value: string); virtual; abstract;
+    function GetConnection: TWiRLConnection; virtual; abstract;
   public
-    procedure SendHeaders; virtual; abstract;
+    procedure SendHeaders(AImmediate: Boolean = False); virtual; abstract;
     destructor Destroy; override;
 
     procedure FromWiRLStatus(AStatus: TWiRLHttpStatus);
@@ -103,20 +144,50 @@ type
     property Headers: IWiRLHeaders read GetHeaders;
     property HeaderFields: TWiRLResponseHeaderList read GetHeaderFields;
     property ContentMediaType: TMediaType read GetContentMediaType;
-    property Connection: string read GetConnection write SetConnection;
     property RawContent: TBytes read GetRawContent write SetRawContent;
     property Allow: string read GetAllow write SetAllow;
     property Server: string read GetServer write SetServer;
     property WWWAuthenticate: string read GetWWWAuthenticate write SetWWWAuthenticate;
     property Location: string read GetLocation write SetLocation;
     property Cookies: TWiRLCookies read GetCookies;
+    property TransferEncoding: string read GetTransferEncoding write SetTransferEncoding;
+    property Connection: TWiRLConnection read GetConnection;
   end;
 
 
 implementation
 
 uses
+  System.TypInfo,
+  WiRL.Core.Context,
   IdGlobal, IdGlobalProtocols;
+
+type
+  TWiRLCunkedResponseWriter = class(TInterfacedObject, IWiRLResponseWriter)
+  private
+    FContext: TWiRLContextHttp;
+  public
+    procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload;
+    procedure Write(const AValue: TBytes); overload;
+    constructor Create(AContext: TWiRLContextHttp);
+  end;
+
+  TWiRLSSEResponseWriter = class(TInterfacedObject, IWiRLResponseWriter, IWiRLSSEResponseWriter)
+  private
+    FContext: TWiRLContextHttp;
+  private
+    function SplitString(const AValue: string): TArray<string>;
+  public
+    procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload;
+    procedure Write(const AValue: string); overload;
+    procedure Write(const AValue: TBytes); overload;
+    procedure Write(const AEvent, AValue: string); overload;
+    procedure Write(const AEvent, AValue: string; ARetry: Integer); overload;
+    procedure WriteComment(const AValue: string); overload;
+
+    constructor Create(AContext: TWiRLContextHttp);
+  end;
+
 
 { TWiRLResponse }
 
@@ -142,11 +213,6 @@ end;
 function TWiRLResponse.GetAllow: string;
 begin
   Result := Headers.Allow;
-end;
-
-function TWiRLResponse.GetConnection: string;
-begin
-  Result := Headers.Connection;
 end;
 
 function TWiRLResponse.GetContentEncoding: string;
@@ -259,6 +325,11 @@ begin
   Result := Headers.Values['Server'];
 end;
 
+function TWiRLResponse.GetTransferEncoding: string;
+begin
+  Result := Headers.TransferEncoding;
+end;
+
 function TWiRLResponse.IsUnknownResponseCode: Boolean;
 begin
   Result := False;
@@ -279,11 +350,6 @@ end;
 procedure TWiRLResponse.SetAllow(const Value: string);
 begin
   Headers.Allow := Value;
-end;
-
-procedure TWiRLResponse.SetConnection(const Value: string);
-begin
-  Headers.Connection := Value;
 end;
 
 procedure TWiRLResponse.SetContentEncoding(const Value: string);
@@ -365,6 +431,11 @@ begin
   Headers.Values['Server'] := Value;
 end;
 
+procedure TWiRLResponse.SetTransferEncoding(const Value: string);
+begin
+  Headers.TransferEncoding := Value;
+end;
+
 procedure TWiRLResponse.SetWWWAuthenticate(const Value: string);
 begin
   Headers.WWWAuthenticate := Value;
@@ -386,6 +457,159 @@ end;
 procedure TWiRLResponseHeaderList.SetValue(const AName, AValue: string);
 begin
   FResponse.Headers.Values[AName] := AValue;
+end;
+
+{ TWiRLChunkedResponse }
+
+constructor TWiRLChunkedResponse.Create(AWriterProc: TWriterProc);
+begin
+  inherited Create;
+  FWriterProc := AWriterProc;
+end;
+
+procedure TWiRLChunkedResponse.SendResponse(AContext: TObject);
+var
+  LContextHttp: TWiRLContextHttp;
+  LWriter: IWiRLResponseWriter;
+begin
+  LContextHttp := AContext as TWiRLContextHttp;
+  LContextHttp.Response.Headers.TransferEncoding := 'chunked';
+  LContextHttp.Response.SendHeaders(True);
+  LWriter := TWiRLCunkedResponseWriter.Create(LContextHttp);
+  FWriterProc(LWriter);
+  LWriter.Write('');
+end;
+
+{ TWiRLCunkedResponseWriter }
+
+constructor TWiRLCunkedResponseWriter.Create(AContext: TWiRLContextHttp);
+begin
+  inherited Create;
+  FContext := AContext;
+end;
+
+procedure TWiRLCunkedResponseWriter.Write(const AValue: string; AEncoding: TEncoding);
+var
+  LEncoding: TEncoding;
+begin
+  if Assigned(AEncoding) then
+    LEncoding := AEncoding
+  else
+    LEncoding := TEncoding.UTF8;
+  Write(LEncoding.GetBytes(AValue));
+end;
+
+procedure TWiRLCunkedResponseWriter.Write(const AValue: TBytes);
+begin
+  // Lenght of the chunk (as hexadecimal string)
+  FContext.Response.Connection.WriteLn(IntToHex(Length(AValue)));
+  // Chunk content
+  FContext.Response.Connection.Write(AValue);
+  // New line (CRLF)
+  FContext.Response.Connection.WriteLn();
+end;
+
+{ TWiRLSSEResponse }
+
+constructor TWiRLSSEResponse.Create(AWriterProc: TSSEWriterProc);
+begin
+  inherited Create;
+  FWriterProc := AWriterProc;
+end;
+
+procedure TWiRLSSEResponse.SendResponse(AContext: TObject);
+var
+  LContextHttp: TWiRLContextHttp;
+  LWriter: IWiRLSSEResponseWriter;
+begin
+  LContextHttp := AContext as TWiRLContextHttp;
+  LContextHttp.Response.ContentType := 'text/event-stream';
+  LContextHttp.Response.ContentLength := -2;
+  LContextHttp.Response.SendHeaders(True);
+  LWriter := TWiRLSSEResponseWriter.Create(LContextHttp);
+  FWriterProc(LWriter);
+end;
+
+{ TWiRLSSEResponseWriter }
+
+constructor TWiRLSSEResponseWriter.Create(AContext: TWiRLContextHttp);
+begin
+  inherited Create;
+  FContext := AContext;
+end;
+
+procedure TWiRLSSEResponseWriter.Write(const AValue: string;
+  AEncoding: TEncoding);
+begin
+  Write('', AValue);
+end;
+
+procedure TWiRLSSEResponseWriter.Write(const AValue: TBytes);
+begin
+  raise Exception.Create('Unsupported binary data');
+end;
+
+procedure TWiRLSSEResponseWriter.Write(const AValue: string);
+begin
+  Write('', AValue);
+end;
+
+function TWiRLSSEResponseWriter.SplitString(
+  const AValue: string): TArray<string>;
+var
+  LLines: TArray<string>;
+begin
+  LLines := AValue.Split([sLineBreak]);
+  if Length(LLines) = 0 then
+    LLines := AValue.Split([#13]);
+  if Length(LLines) = 0 then
+    LLines := AValue.Split([#10]);
+  if Length(LLines) = 0 then
+    LLines := [AValue];
+
+  Result := LLines;
+end;
+
+procedure TWiRLSSEResponseWriter.Write(const AEvent, AValue: string; ARetry: Integer);
+var
+  LLines: TArray<string>;
+  LLine: string;
+  LMessage: string;
+begin
+  LLines := SplitString(AValue);
+
+  LMessage := '';
+  if AEvent <> '' then
+    LMessage := LMessage + 'event: ' + AEvent + #13#10;
+  if ARetry > 0 then
+    LMessage := LMessage + 'retry: ' + IntToStr(ARetry) + #13#10;
+
+  for LLine in LLines do
+    LMessage := LMessage + 'data: ' + LLine + #13#10;
+
+  FContext.Connection.WriteLn(LMessage);
+end;
+
+procedure TWiRLSSEResponseWriter.Write(const AEvent, AValue: string);
+begin
+  Write(AEvent, AValue, 0);
+end;
+
+procedure TWiRLSSEResponseWriter.WriteComment(const AValue: string);
+var
+  LLines: TArray<string>;
+  LLine: string;
+  LMessage: string;
+begin
+  LLines := SplitString(AValue);
+
+  LMessage := '';
+
+  for LLine in LLines do
+    LMessage := LMessage + ': ' + LLine + #13#10;
+
+  FContext.Connection.WriteLn(LMessage);
+
 end;
 
 end.
