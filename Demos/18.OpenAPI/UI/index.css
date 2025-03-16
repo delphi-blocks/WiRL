@@ -14,3 +14,12 @@ body {
     margin: 0;
     background: #fafafa;
 }
+
+.mt-10 {
+  margin-top: 50px;
+}
+
+.logo {
+  display: block;
+  margin: auto;
+}
