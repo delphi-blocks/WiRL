@@ -2,7 +2,7 @@
 
 <br />
 <p align="center">
-  <img src="https://www.paolorossi.net/img/wirl-logo.png" alt="Delphi RESTful Library" width="200" />
+  <img src="./media/logo.png" alt="Delphi RESTful Library" width="300" />
 </p>
 
 ![Top language](https://img.shields.io/github/languages/top/delphi-blocks/WiRL)
