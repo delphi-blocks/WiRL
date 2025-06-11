@@ -14,7 +14,8 @@ interface
 uses
   System.Classes, System.SysUtils, System.SyncObjs,
   IdContext, IdCookie, IdCustomHTTPServer, IdHTTPServer, IdException, IdTCPServer, IdIOHandlerSocket,
-  IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI, IdResourceStringsProtocols,
+  IdSchedulerOfThreadPool, idGlobal, IdGlobalProtocols, IdURI,
+  IdResourceStringsProtocols, IdTCPConnection,
 
   WiRL.Core.Classes,
   WiRL.http.Core,
@@ -58,11 +59,25 @@ type
     destructor Destroy; override;
   end;
 
+  TWiRLConnectionIndy = class(TWiRLConnection)
+  private
+    FConnection: TIdTCPConnection;
+  public
+    procedure Write(AValue: TBytes; const ALength: Integer = -1; const AOffset: Integer = 0); overload; override;
+    procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload; override;
+    procedure WriteLn(const AValue: string); override;
+    procedure WriteLn(); override;
+
+    constructor Create(AContext: TIdContext);
+  end;
+
   TWiRLHttpResponseIndy = class(TWiRLResponse)
   private
     FContext: TIdContext;
     FResponseInfo: TIdHTTPResponseInfo;
     FHeaders: IWiRLHeaders;
+    FWriterProc: TWriterProc;
+    FConnection: TWiRLConnection;
     procedure SendCookies;
   protected
     function GetContentStream: TStream; override;
@@ -73,8 +88,10 @@ type
     procedure SetReasonString(const Value: string); override;
     function IsUnknownResponseCode: Boolean; override;
     function GetHeaders: IWiRLHeaders; override;
+    function GetConnection: TWiRLConnection; override;
   public
-    procedure SendHeaders; override;
+    procedure SendHeaders(AImmediate: Boolean); override;
+
     constructor Create(AContext: TIdContext; AResponseInfo: TIdHTTPResponseInfo);
     destructor Destroy; override;
   end;
@@ -87,6 +104,7 @@ type
     FQueryFields: TWiRLParam;
     FHeaders: IWiRLHeaders;
     FContentFields: TWiRLParam;
+    FConnection: TWiRLConnection;
     procedure ParseParams(Params :TStrings; const AValue: String);
   protected
     function GetHttpPathInfo: string; override;
@@ -99,6 +117,7 @@ type
     function GetHeaders: IWiRLHeaders; override;
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
+    function GetConnection: TWiRLConnection; override;
   public
     constructor Create(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo);
     destructor Destroy; override;
@@ -243,6 +262,7 @@ begin
   FContext := AContext;
   FRequestInfo := ARequestInfo;
   FMethod := FRequestInfo.Command;
+  FConnection := TWiRLConnectionIndy.Create(FContext);
 end;
 
 destructor TWiRLHttpRequestIndy.Destroy;
@@ -252,6 +272,7 @@ begin
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
+  FConnection.Free;
   inherited;
 end;
 
@@ -298,6 +319,11 @@ end;
 function TWiRLHttpRequestIndy.GetContentStream: TStream;
 begin
   Result := FRequestInfo.PostStream;
+end;
+
+function TWiRLHttpRequestIndy.GetConnection: TWiRLConnection;
+begin
+  Result := FConnection;
 end;
 
 function TWiRLHttpRequestIndy.GetContentFields: TWiRLParam;
@@ -392,8 +418,11 @@ var
   LIndex: Integer;
 begin
   inherited Create;
+  FWriterProc := nil;
   FContext := AContext;
   FResponseInfo := AResponseInfo;
+
+  FConnection := TWiRLConnectionIndy.Create(FContext);
 
   FHeaders := TWiRLHeaders.Create;
   for LIndex := 0 to AResponseInfo.RawHeaders.Count - 1 do
@@ -406,8 +435,14 @@ end;
 
 destructor TWiRLHttpResponseIndy.Destroy;
 begin
+  FConnection.Free;
 //  FHeaders.Free;
   inherited;
+end;
+
+function TWiRLHttpResponseIndy.GetConnection: TWiRLConnection;
+begin
+  Result := FConnection;
 end;
 
 function TWiRLHttpResponseIndy.GetContentStream: TStream;
@@ -460,11 +495,11 @@ begin
   end;
 end;
 
-procedure TWiRLHttpResponseIndy.SendHeaders;
+procedure TWiRLHttpResponseIndy.SendHeaders(AImmediate: Boolean);
 
   function IsIndyHeader(const Name: string): Boolean;
   const
-    IndyHeaders: array [0..3] of string = ('Date', 'Content-Type', 'Content-Length', 'Connection');
+    IndyHeaders: array [0..4] of string = ('Date', 'Content-Type', 'Content-Length', 'Connection', 'Transfer-Encoding');
   var
     IndyHeader: string;
   begin
@@ -492,13 +527,18 @@ begin
     ContentMediaType.Parse(ContentType);
   FResponseInfo.ContentType := ContentMediaType.AcceptItemOnly;
   FResponseInfo.CharSet := ContentMediaType.Charset;
-  if Connection <> '' then
-    FResponseInfo.Connection := Connection;
+  FResponseInfo.TransferEncoding := Headers.TransferEncoding;
+
+  if Headers.Connection <> '' then
+    FResponseInfo.Connection := Headers.Connection;
 
   if HasContentLength then
     FResponseInfo.ContentLength := ContentLength;
 
   SendCookies;
+
+  if AImmediate then
+    FResponseInfo.WriteHeader;
 end;
 
 procedure TWiRLHttpResponseIndy.SetContentStream(const Value: TStream);
@@ -529,6 +569,42 @@ begin
   // Avoid that indy Free the PostStream and put the variable to nil
   // too early. The problem is that indy, when the PostStream is
   // x-www-form-urlencoded, parses the data and frees the stream.
+end;
+
+{ TWiRLConnectionIndy }
+
+constructor TWiRLConnectionIndy.Create(AContext: TIdContext);
+begin
+  inherited Create;
+  FConnection := AContext.Connection;
+end;
+
+procedure TWiRLConnectionIndy.Write(AValue: TBytes; const ALength: Integer = -1; const AOffset: Integer = 0);
+begin
+  inherited;
+  FConnection.IOHandler.Write(TIdBytes(AValue), ALength, AOffset);
+end;
+
+procedure TWiRLConnectionIndy.Write(const AValue: string; AEncoding: TEncoding = nil);
+var
+  LEncoding: TEncoding;
+begin
+  if Assigned(AEncoding) then
+    LEncoding := AEncoding
+  else
+    LEncoding := TEncoding.UTF8;
+
+  Write(LEncoding.GetBytes(AValue));
+end;
+
+procedure TWiRLConnectionIndy.WriteLn;
+begin
+  Write(EOL);
+end;
+
+procedure TWiRLConnectionIndy.WriteLn(const AValue: string);
+begin
+  Write(AValue + EOL);
 end;
 
 initialization

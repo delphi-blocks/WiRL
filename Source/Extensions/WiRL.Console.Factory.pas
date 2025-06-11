@@ -31,7 +31,8 @@ type
 
   TWiRLConsoleFactory = class(TWiRLConsoleStatic)
   public
-    class function NewConsole(AConfigProc: TWiRLConfigProc): TWiRLConsoleBase;
+    class function NewConsole(AConsoleClass: TWiRLConsoleClass; AConfigProc: TWiRLConfigProc): TWiRLConsoleBase; overload;
+    class function NewConsole(AConfigProc: TWiRLConfigProc): TWiRLConsoleBase; overload;
   end;
 
   TWiRLConsoleLogger = class(TWiRLConsoleStatic)
@@ -73,6 +74,12 @@ end;
 class function TWiRLConsoleFactory.NewConsole(AConfigProc: TWiRLConfigProc): TWiRLConsoleBase;
 begin
   Result := ConsoleClass.Create(AConfigProc);
+end;
+
+class function TWiRLConsoleFactory.NewConsole(AConsoleClass: TWiRLConsoleClass;
+  AConfigProc: TWiRLConfigProc): TWiRLConsoleBase;
+begin
+  Result := AConsoleClass.Create(AConfigProc);
 end;
 
 { TWiRLConsoleLogger }

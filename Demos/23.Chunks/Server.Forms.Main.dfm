@@ -1,10 +1,12 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'WiRL HelloWorld'
-  ClientHeight = 317
-  ClientWidth = 554
+  Caption = 'WiRL Chunks Server'
+  ClientHeight = 201
+  ClientWidth = 464
   Color = clBtnFace
+  Constraints.MinHeight = 240
+  Constraints.MinWidth = 480
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -12,19 +14,15 @@ object MainForm: TMainForm
   Font.Style = []
   OnClose = FormClose
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   TextHeight = 13
   object TopPanel: TPanel
     Left = 0
     Top = 0
-    Width = 554
+    Width = 464
     Height = 73
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    DesignSize = (
-      554
-      73)
     object Label1: TLabel
       Left = 28
       Top = 17
@@ -37,7 +35,7 @@ object MainForm: TMainForm
       Top = 41
       Width = 75
       Height = 25
-      Action = actStartServer
+      Action = StartServerAction
       TabOrder = 0
     end
     object StopButton: TButton
@@ -45,7 +43,7 @@ object MainForm: TMainForm
       Top = 41
       Width = 75
       Height = 25
-      Action = actStopServer
+      Action = StopServerAction
       TabOrder = 1
     end
     object PortNumberEdit: TEdit
@@ -56,33 +54,37 @@ object MainForm: TMainForm
       TabOrder = 2
       Text = '8080'
     end
-    object btnDocumentation: TButton
-      Left = 393
-      Top = 41
-      Width = 153
-      Height = 25
-      Action = actShowDocumentation
-      Anchors = [akTop, akRight]
-      TabOrder = 3
-    end
+  end
+  object ButtonWebDemo: TButton
+    Left = 128
+    Top = 104
+    Width = 169
+    Height = 33
+    Caption = 'Web Demo'
+    TabOrder = 1
+    OnClick = ButtonWebDemoClick
+  end
+  object Button1: TButton
+    Left = 128
+    Top = 143
+    Width = 169
+    Height = 33
+    Caption = 'Desktop Demo'
+    TabOrder = 2
+    OnClick = Button1Click
   end
   object MainActionList: TActionList
-    Left = 64
-    Top = 104
-    object actStartServer: TAction
+    Left = 384
+    Top = 24
+    object StartServerAction: TAction
       Caption = 'Start Server'
-      OnExecute = actStartServerExecute
-      OnUpdate = actStartServerUpdate
+      OnExecute = StartServerActionExecute
+      OnUpdate = StartServerActionUpdate
     end
-    object actStopServer: TAction
+    object StopServerAction: TAction
       Caption = 'Stop Server'
-      OnExecute = actStopServerExecute
-      OnUpdate = actStopServerUpdate
-    end
-    object actShowDocumentation: TAction
-      Caption = 'Show Documentation'
-      OnExecute = actShowDocumentationExecute
-      OnUpdate = actShowDocumentationUpdate
+      OnExecute = StopServerActionExecute
+      OnUpdate = StopServerActionUpdate
     end
   end
 end

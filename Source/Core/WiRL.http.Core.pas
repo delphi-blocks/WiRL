@@ -154,6 +154,14 @@ type
     property Application: TObject read FApplication write SetApplication;
   end;
 
+  TWiRLConnection = class(TObject)
+  public
+    procedure Write(AValue: TBytes; const ALength: Integer = -1; const AOffset: Integer = 0); overload; virtual; abstract;
+    procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload; virtual; abstract;
+    procedure WriteLn(const AValue: string); overload; virtual; abstract;
+    procedure WriteLn(); overload; virtual; abstract;
+  end;
+
 var
   GetDefaultCharSetEncoding: TEncoding = nil;
 

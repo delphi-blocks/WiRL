@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{6BF71ACE-74CB-4961-B8FD-52EA3BD41C92}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="DemoChunks.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DemoChunksClient.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DemoChunks">
+        <MSBuild Projects="DemoChunks.dproj"/>
+    </Target>
+    <Target Name="DemoChunks:Clean">
+        <MSBuild Projects="DemoChunks.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoChunks:Make">
+        <MSBuild Projects="DemoChunks.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoChunksClient">
+        <MSBuild Projects="DemoChunksClient.dproj"/>
+    </Target>
+    <Target Name="DemoChunksClient:Clean">
+        <MSBuild Projects="DemoChunksClient.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoChunksClient:Make">
+        <MSBuild Projects="DemoChunksClient.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DemoChunks;DemoChunksClient"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DemoChunks:Clean;DemoChunksClient:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DemoChunks:Make;DemoChunksClient:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
