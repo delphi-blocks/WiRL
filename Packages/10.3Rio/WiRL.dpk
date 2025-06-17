@@ -100,7 +100,7 @@ contains
   WiRL.http.Server.Indy in '..\..\Source\Core\WiRL.http.Server.Indy.pas',
   WiRL.http.Server.Interfaces in '..\..\Source\Core\WiRL.http.Server.Interfaces.pas',
   WiRL.http.URL in '..\..\Source\Core\WiRL.http.URL.pas',
-  WiRL.http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
+  WiRL.http.Headers in '..\..\Source\Core\WiRL.http.Headers.pas',
   WiRL.http.MultipartData in '..\..\Source\Core\WiRL.http.MultipartData.pas',
   WiRL.http.Filters.Compression in '..\..\Source\Core\WiRL.http.Filters.Compression.pas',
   WiRL.http.Filters.CORS in '..\..\Source\Core\WiRL.http.Filters.CORS.pas',
