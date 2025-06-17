@@ -1,0 +1,70 @@
+{******************************************************************************}
+{                                                                              }
+{  Delphi OpenAPI 3.0 Generator                                                }
+{  Copyright (c) 2018-2023 Paolo Rossi                                         }
+{  https://github.com/paolo-rossi/delphi-openapi                               }
+{                                                                              }
+{******************************************************************************}
+{                                                                              }
+{  Licensed under the Apache License, Version 2.0 (the 'License");             }
+{  you may not use this file except in compliance with the License.            }
+{  You may obtain a copy of the License at                                     }
+{                                                                              }
+{      http://www.apache.org/licenses/LICENSE-2.0                              }
+{                                                                              }
+{  Unless required by applicable law or agreed to in writing, software         }
+{  distributed under the License is distributed on an "AS IS" BASIS,           }
+{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
+{  See the License for the specific language governing permissions and         }
+{  limitations under the License.                                              }
+{                                                                              }
+{******************************************************************************}
+package OpenAPI;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Delphi OpenAPI 3 Library'}
+{$LIBSUFFIX AUTO}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  Neon;
+
+contains
+  OpenAPI.Core.Exceptions in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Core.Exceptions.pas',
+  OpenAPI.Core.Interfaces in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Core.Interfaces.pas',
+  OpenAPI.Model.Any in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Model.Any.pas',
+  OpenAPI.Model.Base in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Model.Base.pas',
+  OpenAPI.Model.Classes in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Model.Classes.pas',
+  OpenAPI.Model.Expressions in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Model.Expressions.pas',
+  OpenAPI.Model.JsonPointer in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Model.JsonPointer.pas',
+  OpenAPI.Model.Reference in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Model.Reference.pas',
+  OpenAPI.Model.Schema in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Model.Schema.pas',
+  OpenAPI.Neon.Serializers in '..\..\..\Libs\OpenAPI\Source\OpenAPI.Neon.Serializers.pas';
+
+end.

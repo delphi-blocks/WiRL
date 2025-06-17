@@ -1,0 +1,89 @@
+{******************************************************************************}
+{                                                                              }
+{  Delphi JOSE Library                                                         }
+{  Copyright (c) 2015 Paolo Rossi                                              }
+{  https://github.com/paolo-rossi/delphi-jose-jwt                              }
+{                                                                              }
+{******************************************************************************}
+{                                                                              }
+{  Licensed under the Apache License, Version 2.0 (the "License");             }
+{  you may not use this file except in compliance with the License.            }
+{  You may obtain a copy of the License at                                     }
+{                                                                              }
+{      http://www.apache.org/licenses/LICENSE-2.0                              }
+{                                                                              }
+{  Unless required by applicable law or agreed to in writing, software         }
+{  distributed under the License is distributed on an "AS IS" BASIS,           }
+{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
+{  See the License for the specific language governing permissions and         }
+{  limitations under the License.                                              }
+{                                                                              }
+{******************************************************************************}
+
+package JOSE;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Delphi JOSE JWT Library'}
+{$LIBSUFFIX '250'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  IndySystem,
+  IndyProtocols,
+  IndyCore;
+
+contains
+  JOSE.OpenSSL.Headers in '..\..\..\Libs\JWT\Source\Common\JOSE.OpenSSL.Headers.pas',
+  JOSE.Encoding.Base64 in '..\..\..\Libs\JWT\Source\Common\JOSE.Encoding.Base64.pas',
+  JOSE.Hashing.HMAC in '..\..\..\Libs\JWT\Source\Common\JOSE.Hashing.HMAC.pas',
+  JOSE.Signing.Base in '..\..\..\Libs\JWT\Source\Common\JOSE.Signing.Base.pas',
+  JOSE.Signing.RSA in '..\..\..\Libs\JWT\Source\Common\JOSE.Signing.RSA.pas',
+  JOSE.Signing.ECDSA in '..\..\..\Libs\JWT\Source\Common\JOSE.Signing.ECDSA.pas',
+  JOSE.Types.Arrays in '..\..\..\Libs\JWT\Source\Common\JOSE.Types.Arrays.pas',
+  JOSE.Types.Bytes in '..\..\..\Libs\JWT\Source\Common\JOSE.Types.Bytes.pas',
+  JOSE.Types.Utils in '..\..\..\Libs\JWT\Source\Common\JOSE.Types.Utils.pas',
+  JOSE.Types.JSON in '..\..\..\Libs\JWT\Source\Common\JOSE.Types.JSON.pas',
+  JOSE.Core.Base in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.Base.pas',
+  JOSE.Core.Builder in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.Builder.pas',
+  JOSE.Core.JWA.Compression in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Compression.pas',
+  JOSE.Core.JWA.Encryption in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Encryption.pas',
+  JOSE.Core.JWA.Factory in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Factory.pas',
+  JOSE.Core.JWA in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.pas',
+  JOSE.Core.JWA.Signing in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWA.Signing.pas',
+  JOSE.Core.JWE in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWE.pas',
+  JOSE.Core.JWK in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWK.pas',
+  JOSE.Core.JWS in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWS.pas',
+  JOSE.Core.JWT in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.JWT.pas',
+  JOSE.Core.Parts in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Core.Parts.pas',
+  JOSE.Context in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Context.pas',
+  JOSE.Builder in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Builder.pas',
+  JOSE.Consumer in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Consumer.pas',
+  JOSE.Consumer.Validators in '..\..\..\Libs\JWT\Source\JOSE\JOSE.Consumer.Validators.pas';
+
+end.
