@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,7 +14,7 @@ unit WiRL.Client.Resource;
 interface
 
 uses
-  SysUtils, Classes,
+  System.SysUtils, System.Classes,
   WiRL.Client.CustomResource;
 
 type

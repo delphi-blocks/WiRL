@@ -113,7 +113,9 @@ var
 begin
   InitHttpClient;
   try
-    LHTTPResponse := FHttpClient.Delete(AURL, ARequestStream, AResponseContent, GetRequestHeaders(AHeaders));
+    LHTTPResponse := FHttpClient.Delete(AURL,
+      {$if compilerversion > 35}ARequestStream,{$endif}
+      AResponseContent, GetRequestHeaders(AHeaders));
   except
     on E: ENetHTTPException do
       Exception.RaiseOuterException(EWiRLSocketException.Create(E.Message));

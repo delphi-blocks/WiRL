@@ -3,7 +3,7 @@ unit WiRL.Wizards;
 interface
 
 uses
-  SysUtils,
+  System.SysUtils,
   ToolsAPI,
   PlatformAPI,
   WinApi.Windows,
@@ -35,7 +35,7 @@ type
     // IOTARepositoryWizard
     function GetAuthor: string;
     function GetComment: string;
-    function GetGlyph: Cardinal;
+    function GetGlyph: {$IFDEF WIN32}Cardinal{$ELSE}UInt64{$ENDIF};
     function GetPage: string;
 
     // IOTARepositoryWizard60
@@ -125,7 +125,7 @@ begin
   Result := SComment;
 end;
 
-function TWiRLServeProjectWizard.GetGlyph: Cardinal;
+function TWiRLServeProjectWizard.GetGlyph: {$IFDEF WIN32}Cardinal{$ELSE}UInt64{$ENDIF};
 begin
 { TODO : function TWiRLServeProjectWizard.GetGlyph: Cardinal; }
   Result := LoadIcon(HInstance, 'WiRLServerWizardIcon');
