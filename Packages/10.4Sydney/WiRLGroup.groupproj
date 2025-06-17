@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{CC0BFCAC-B8C8-425A-86C7-9F1419936ABE}</ProjectGuid>
+        <ProjectGuid>{05487DDC-ED85-4481-B211-A4EA9062C73D}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="WiRL.dproj">
