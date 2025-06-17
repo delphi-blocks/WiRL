@@ -1,0 +1,116 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{05487DDC-ED85-4481-B211-A4EA9062C73D}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="JOSE.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Neon.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenAPI.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="WiRL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="WiRLDesign.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="JOSE">
+        <MSBuild Projects="JOSE.dproj"/>
+    </Target>
+    <Target Name="JOSE:Clean">
+        <MSBuild Projects="JOSE.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="JOSE:Make">
+        <MSBuild Projects="JOSE.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Neon">
+        <MSBuild Projects="Neon.dproj"/>
+    </Target>
+    <Target Name="Neon:Clean">
+        <MSBuild Projects="Neon.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Neon:Make">
+        <MSBuild Projects="Neon.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenAPI">
+        <MSBuild Projects="OpenAPI.dproj"/>
+    </Target>
+    <Target Name="OpenAPI:Clean">
+        <MSBuild Projects="OpenAPI.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenAPI:Make">
+        <MSBuild Projects="OpenAPI.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="WiRL">
+        <MSBuild Projects="WiRL.dproj"/>
+    </Target>
+    <Target Name="WiRL:Clean">
+        <MSBuild Projects="WiRL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="WiRL:Make">
+        <MSBuild Projects="WiRL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="WiRLDesign">
+        <MSBuild Projects="WiRLDesign.dproj"/>
+    </Target>
+    <Target Name="WiRLDesign:Clean">
+        <MSBuild Projects="WiRLDesign.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="WiRLDesign:Make">
+        <MSBuild Projects="WiRLDesign.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="JOSE;Neon;OpenAPI;WiRL;WiRLDesign"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="JOSE:Clean;Neon:Clean;OpenAPI:Clean;WiRL:Clean;WiRLDesign:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="JOSE:Make;Neon:Make;OpenAPI:Make;WiRL:Make;WiRLDesign:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='ALL'">
+        <BuildGroupProject Include="JOSE.dproj">
+            <ProjectGuid>{6C9DE12E-3603-42EF-921C-877D0FB57D60}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Neon.dproj">
+            <ProjectGuid>{75F9AE11-84E6-446E-AEA1-A253010C6B2F}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="OpenAPI.dproj">
+            <ProjectGuid>{511659C1-0C7F-4B9E-BEDF-0B30D8057D8D}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="WiRL.dproj">
+            <ProjectGuid>{EBEA6D21-3813-485E-8BCA-048D1CABD9C1}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="WiRLDesign.dproj">
+            <ProjectGuid>{B7363784-25C2-456C-BE44-D3E58F77E983}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+</Project>

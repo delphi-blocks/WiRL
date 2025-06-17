@@ -1,0 +1,210 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{B7363784-25C2-456C-BE44-D3E58F77E983}</ProjectGuid>
+        <MainSource>WiRLDesign.dpk</MainSource>
+        <ProjectVersion>18.4</ProjectVersion>
+        <FrameworkType>VCL</FrameworkType>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <TargetedPlatforms>1</TargetedPlatforms>
+        <AppType>Package</AppType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DesignOnlyPackage>true</DesignOnlyPackage>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <GenDll>true</GenDll>
+        <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
+        <GenPackage>true</GenPackage>
+        <SanitizedProjectName>WiRLDesign</SanitizedProjectName>
+        <DCC_DcuOutput>..\..\Lib\Delphi10.2\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_E>false</DCC_E>
+        <DCC_N>false</DCC_N>
+        <DCC_S>false</DCC_S>
+        <DCC_F>false</DCC_F>
+        <DCC_K>false</DCC_K>
+        <DCC_Description>WiRL REST components</DCC_Description>
+        <DllSuffix>250</DllSuffix>
+        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="WiRL.dcp"/>
+        <DCCReference Include="DesignIDE.dcp"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.http.Client.Editor.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Server.Editor.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Register.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Application.Editor.pas">
+            <Form>WiRLAppEditor</Form>
+        </DCCReference>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Register.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Application.Editor.pas">
+            <Form>WiRLClientAppResourceEditor</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.ResourceDebugger.pas">
+            <Form>WiRLResourceRunnerForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas">
+            <Form>FormEditHeader</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas">
+            <Form>FormHeadersEditor</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas">
+            <Form>formServerProjectDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas"/>
+        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas"/>
+        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas"/>
+        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
+        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
+        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
+        <RcItem Include="..\..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerMainFormDFM</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\Source\IDE Wizard\ServerMainFormSRC.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerMainFormSRC</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\Source\IDE Wizard\ServerResources.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerResources</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\Source\IDE Wizard\WiRLServerProject.txt">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>WiRLServerProject</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\TWiRLClient.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLClient</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\TWiRLClientApplication.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLClientApplication</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\TWiRLEngine.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLEngine</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\TWiRLFileSystemEngine.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLFileSystemEngine</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\TWiRLhttpEngine.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLhttpEngine</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\TWiRLMBWDefaultProvider.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLMBWDefaultProvider</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\TWiRLServer.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>TWiRLServer</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\WiRLServerWizardIcon.ico">
+            <ResourceType>ICON</ResourceType>
+            <ResourceId>WiRLServerWizardIcon</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\..\media\WiRLSplash.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>WiRLSplash</ResourceId>
+        </RcItem>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Package</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">WiRLDesign.dpk</Source>
+                </Source>
+                <Excluded_Packages/>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Android">False</Platform>
+                <Platform value="Android64">False</Platform>
+                <Platform value="iOSDevice64">False</Platform>
+                <Platform value="iOSSimARM64">False</Platform>
+                <Platform value="Linux64">False</Platform>
+                <Platform value="OSX64">False</Platform>
+                <Platform value="OSXARM64">False</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>

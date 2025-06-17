@@ -1,0 +1,140 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015 WiRL Team                                           }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{       Licensed under the Apache License, Version 2.0                         }
+{       http://www.apache.org/licenses/LICENSE-2.0                             }
+{                                                                              }
+{******************************************************************************}
+package WiRL;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'WiRL REST Library'}
+{$LIBSUFFIX '260'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  inet,
+  dbrtl,
+  FireDACCommon,
+  FireDACCommonDriver,
+  FireDAC,
+  IndySystem,
+  IndyProtocols,
+  IndyCore,
+  bindengine,
+  bindcomp,
+  JOSE,
+  Neon,
+  OpenAPI;
+
+contains
+  WiRL.Core.Application in '..\..\..\Source\Core\WiRL.Core.Application.pas',
+  WiRL.Core.Application.Worker in '..\..\..\Source\Core\WiRL.Core.Application.Worker.pas',
+  WiRL.Core.Attributes in '..\..\..\Source\Core\WiRL.Core.Attributes.pas',
+  WiRL.Core.Auth.Context in '..\..\..\Source\Core\WiRL.Core.Auth.Context.pas',
+  WiRL.Core.Cache in '..\..\..\Source\Core\WiRL.Core.Cache.pas',
+  WiRL.Core.Classes in '..\..\..\Source\Core\WiRL.Core.Classes.pas',
+  WiRL.Core.Context in '..\..\..\Source\Core\WiRL.Core.Context.pas',
+  WiRL.Core.Declarations in '..\..\..\Source\Core\WiRL.Core.Declarations.pas',
+  WiRL.Core.Exceptions in '..\..\..\Source\Core\WiRL.Core.Exceptions.pas',
+  WiRL.Core.Injection in '..\..\..\Source\Core\WiRL.Core.Injection.pas',
+  WiRL.Core.JSON in '..\..\..\Source\Core\WiRL.Core.JSON.pas',
+  WiRL.Core.GarbageCollector in '..\..\..\Source\Core\WiRL.Core.GarbageCollector.pas',
+  WiRL.Core.Metadata.XMLDoc in '..\..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas',
+  WiRL.Core.OpenAPI in '..\..\..\Source\Core\WiRL.Core.OpenAPI.pas',
+  WiRL.Core.OpenAPI.Resource in '..\..\..\Source\Core\WiRL.Core.OpenAPI.Resource.pas',
+  WiRL.Core.MessageBody.Classes in '..\..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
+  WiRL.Core.MessageBody.Default in '..\..\..\Source\Core\WiRL.Core.MessageBody.Default.pas',
+  WiRL.Core.MessageBodyReader in '..\..\..\Source\Core\WiRL.Core.MessageBodyReader.pas',
+  WiRL.Core.MessageBodyWriter in '..\..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas',
+  WiRL.Core.Registry in '..\..\..\Source\Core\WiRL.Core.Registry.pas',
+  WiRL.Core.Singleton in '..\..\..\Source\Core\WiRL.Core.Singleton.pas',
+  WiRL.Core.Utils in '..\..\..\Source\Core\WiRL.Core.Utils.pas',
+  WiRL.Core.Tuples in '..\..\..\Source\Core\WiRL.Core.Tuples.pas',
+  WiRL.Core.Validators in '..\..\..\Source\Core\WiRL.Core.Validators.pas',
+  WiRL.Core.Converter in '..\..\..\Source\Core\WiRL.Core.Converter.pas',
+  WiRL.Core.Context.Server in '..\..\..\Source\Core\WiRL.Core.Context.Server.pas',
+  WiRL.Core.Metadata in '..\..\..\Source\Core\WiRL.Core.Metadata.pas',
+  WiRL.Core.Auth.Resource in '..\..\..\Source\Core\WiRL.Core.Auth.Resource.pas',
+  WiRL.http.Accept.Charset in '..\..\..\Source\Core\WiRL.http.Accept.Charset.pas',
+  WiRL.http.Accept.Encoding in '..\..\..\Source\Core\WiRL.http.Accept.Encoding.pas',
+  WiRL.http.Accept.Language in '..\..\..\Source\Core\WiRL.http.Accept.Language.pas',
+  WiRL.http.Accept.MediaType in '..\..\..\Source\Core\WiRL.http.Accept.MediaType.pas',
+  WiRL.http.Accept.Parser in '..\..\..\Source\Core\WiRL.http.Accept.Parser.pas',
+  WiRL.http.Cookie in '..\..\..\Source\Core\WiRL.http.Cookie.pas',
+  WiRL.http.Core in '..\..\..\Source\Core\WiRL.http.Core.pas',
+  WiRL.http.Filters in '..\..\..\Source\Core\WiRL.http.Filters.pas',
+  WiRL.http.Request in '..\..\..\Source\Core\WiRL.http.Request.pas',
+  WiRL.http.Response in '..\..\..\Source\Core\WiRL.http.Response.pas',
+  WiRL.http.Server in '..\..\..\Source\Core\WiRL.http.Server.pas',
+  WiRL.http.Server.Indy in '..\..\..\Source\Core\WiRL.http.Server.Indy.pas',
+  WiRL.http.Server.Interfaces in '..\..\..\Source\Core\WiRL.http.Server.Interfaces.pas',
+  WiRL.http.URL in '..\..\..\Source\Core\WiRL.http.URL.pas',
+  WiRL.http.Headers in '..\..\..\Source\Core\WiRL.http.Headers.pas',
+  WiRL.http.MultipartData in '..\..\..\Source\Core\WiRL.http.MultipartData.pas',
+  WiRL.http.Filters.Compression in '..\..\..\Source\Core\WiRL.http.Filters.Compression.pas',
+  WiRL.http.Filters.CORS in '..\..\..\Source\Core\WiRL.http.Filters.CORS.pas',
+  WiRL.http.Client in '..\..\..\Source\Client\WiRL.http.Client.pas',
+  WiRL.http.Client.Indy in '..\..\..\Source\Client\WiRL.http.Client.Indy.pas',
+  WiRL.http.Client.NetHttp in '..\..\..\Source\Client\WiRL.http.Client.NetHttp.pas',
+  WiRL.http.Client.Interfaces in '..\..\..\Source\Client\WiRL.http.Client.Interfaces.pas',
+  WiRL.Engine.Core in '..\..\..\Source\Core\WiRL.Engine.Core.pas',
+  WiRL.Engine.REST in '..\..\..\Source\Core\WiRL.Engine.REST.pas',
+  WiRL.Engine.HTTP in '..\..\..\Source\Core\WiRL.Engine.HTTP.pas',
+  WiRL.Engine.FileSystem in '..\..\..\Source\Core\WiRL.Engine.FileSystem.pas',
+  WiRL.Engine.WebServer in '..\..\..\Source\Core\WiRL.Engine.WebServer.pas',
+  WiRL.Data.Utils in '..\..\..\Source\Data\WiRL.Data.Utils.pas',
+  WiRL.Data.MessageBody.Default in '..\..\..\Source\Data\WiRL.Data.MessageBody.Default.pas',
+  WiRL.Data.FireDAC in '..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas',
+  WiRL.Data.FireDAC.Updates in '..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas',
+  WiRL.Data.FireDAC.Persistence in '..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas',
+  WiRL.Data.FireDAC.MessageBody.Default in '..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBody.Default.pas',
+  WiRL.Data.FireDAC.Utils in '..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas',
+  WiRL.Client.Application in '..\..\..\Source\Client\WiRL.Client.Application.pas',
+  WiRL.Client.Utils in '..\..\..\Source\Client\WiRL.Client.Utils.pas',
+  WiRL.Client.Filters in '..\..\..\Source\Client\WiRL.Client.Filters.pas',
+  WiRL.Client.Resource in '..\..\..\Source\Client\WiRL.Client.Resource.pas',
+  WiRL.Client.CustomResource in '..\..\..\Source\Client\WiRL.Client.CustomResource.pas',
+  WiRL.Client.Utils.LiveBindings in '..\..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas',
+  WiRL.Configuration.Auth in '..\..\..\Source\Core\WiRL.Configuration.Auth.pas',
+  WiRL.Configuration.Core in '..\..\..\Source\Core\WiRL.Configuration.Core.pas',
+  WiRL.Configuration.JWT in '..\..\..\Source\Core\WiRL.Configuration.JWT.pas',
+  WiRL.Configuration.Neon in '..\..\..\Source\Core\WiRL.Configuration.Neon.pas',
+  WiRL.Configuration.CORS in '..\..\..\Source\Core\WiRL.Configuration.CORS.pas',
+  WiRL.Configuration.Converter in '..\..\..\Source\Core\WiRL.Configuration.Converter.pas',
+  WiRL.Configuration.Compression in '..\..\..\Source\Core\WiRL.Configuration.Compression.pas',
+  WiRL.Configuration.OpenAPI in '..\..\..\Source\Core\WiRL.Configuration.OpenAPI.pas',
+  WiRL.Rtti.Utils in '..\..\..\Source\Core\WiRL.Rtti.Utils.pas';
+
+end.
+
