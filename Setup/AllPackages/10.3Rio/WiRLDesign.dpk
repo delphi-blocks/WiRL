@@ -1,0 +1,69 @@
+{******************************************************************************}
+{                                                                              }
+{       WiRL: RESTful Library for Delphi                                       }
+{                                                                              }
+{       Copyright (c) 2015 WiRL Team                                           }
+{       https://github.com/delphi-blocks/WiRL                                  }
+{                                                                              }
+{       Licensed under the Apache License, Version 2.0                         }
+{       http://www.apache.org/licenses/LICENSE-2.0                             }
+{                                                                              }
+{******************************************************************************}
+package WiRLDesign;
+
+{$R *.res}
+{$R *.dres}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'WiRL REST components'}
+{$LIBSUFFIX '260'}
+{$DESIGNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  WiRL,
+  DesignIDE;
+
+contains
+  WiRL.http.Client.Editor in '..\..\..\Source\Client\WiRL.http.Client.Editor.pas',
+  WiRL.http.Server.Editor in '..\..\..\Source\Core\WiRL.http.Server.Editor.pas',
+  WiRL.Core.Register in '..\..\..\Source\Core\WiRL.Core.Register.pas',
+  WiRL.Core.Application.Editor in '..\..\..\Source\Core\WiRL.Core.Application.Editor.pas' {WiRLAppEditor},
+  WiRL.Client.Register in '..\..\..\Source\Client\WiRL.Client.Register.pas',
+  WiRL.Client.CustomResource.Editor in '..\..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas',
+  WiRL.Client.Application.Editor in '..\..\..\Source\Client\WiRL.Client.Application.Editor.pas' {WiRLClientAppResourceEditor},
+  WiRL.Client.ResourceDebugger in '..\..\..\Source\Client\WiRL.Client.ResourceDebugger.pas' {WiRLResourceRunnerForm},
+  WiRL.Client.ResourceDebuggerHeader in '..\..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas' {FormEditHeader},
+  WiRL.Client.ResourceHeaderEditor in '..\..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas' {FormHeadersEditor},
+  WiRL.Wizards.Dialogs.ServerProject in '..\..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas' {formServerProjectDialog},
+  WiRL.Wizards.Modules.Classes in '..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas',
+  WiRL.Wizards.Modules.MainForm in '..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas',
+  WiRL.Wizards.Modules.Resources in '..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas',
+  WiRL.Wizards in '..\..\..\Source\IDE Wizard\WiRL.Wizards.pas',
+  WiRL.Wizards.ProjectCreator in '..\..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas',
+  WiRL.Wizards.Utils in '..\..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas';
+
+end.

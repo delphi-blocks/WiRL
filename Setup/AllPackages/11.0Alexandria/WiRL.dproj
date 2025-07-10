@@ -1,0 +1,205 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{EBEA6D21-3813-485E-8BCA-048D1CABD9C1}</ProjectGuid>
+        <MainSource>WiRL.dpk</MainSource>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <TargetedPlatforms>3</TargetedPlatforms>
+        <AppType>Package</AppType>
+        <FrameworkType>None</FrameworkType>
+        <ProjectVersion>19.5</ProjectVersion>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+        <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;../../Libs/OpenAPI/Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_DcuOutput>..\..\Lib\Delphi11\$(Platform)\$(Config)</DCC_DcuOutput>
+        <SanitizedProjectName>WiRL</SanitizedProjectName>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_Description>WiRL REST Library</DCC_Description>
+        <GenDll>true</GenDll>
+        <DCC_S>false</DCC_S>
+        <DCC_K>false</DCC_K>
+        <DCC_F>false</DCC_F>
+        <DllSuffix>$(Auto)</DllSuffix>
+        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+        <DCC_E>false</DCC_E>
+        <DCC_ImageBase>00400000</DCC_ImageBase>
+        <GenPackage>true</GenPackage>
+        <DCC_N>false</DCC_N>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="inet.dcp"/>
+        <DCCReference Include="dbrtl.dcp"/>
+        <DCCReference Include="FireDACCommon.dcp"/>
+        <DCCReference Include="FireDACCommonDriver.dcp"/>
+        <DCCReference Include="FireDAC.dcp"/>
+        <DCCReference Include="IndySystem.dcp"/>
+        <DCCReference Include="IndyProtocols.dcp"/>
+        <DCCReference Include="IndyCore.dcp"/>
+        <DCCReference Include="bindengine.dcp"/>
+        <DCCReference Include="bindcomp.dcp"/>
+        <DCCReference Include="JOSE.dcp"/>
+        <DCCReference Include="Neon.dcp"/>
+        <DCCReference Include="OpenAPI.dcp"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Application.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Application.Worker.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Attributes.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Auth.Context.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Cache.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Classes.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Context.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Declarations.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Exceptions.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Injection.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.JSON.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.GarbageCollector.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.OpenAPI.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.OpenAPI.Resource.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.MessageBody.Default.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.MessageBodyReader.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.MessageBodyWriter.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Registry.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Singleton.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Utils.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Tuples.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Validators.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Converter.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Context.Server.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Metadata.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Auth.Resource.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Accept.Language.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Accept.MediaType.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Accept.Parser.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Cookie.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Core.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Filters.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Request.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Response.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Server.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Server.Interfaces.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.URL.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Headers.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.MultipartData.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Filters.Compression.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Filters.CORS.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.http.Client.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.http.Client.Indy.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.http.Client.NetHttp.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.http.Client.Interfaces.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Engine.Core.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Engine.REST.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Engine.HTTP.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Engine.FileSystem.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Engine.WebServer.pas"/>
+        <DCCReference Include="..\..\..\Source\Data\WiRL.Data.Utils.pas"/>
+        <DCCReference Include="..\..\..\Source\Data\WiRL.Data.MessageBody.Default.pas"/>
+        <DCCReference Include="..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.pas"/>
+        <DCCReference Include="..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Updates.pas"/>
+        <DCCReference Include="..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Persistence.pas"/>
+        <DCCReference Include="..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.MessageBody.Default.pas"/>
+        <DCCReference Include="..\..\..\Source\Data\FireDAC\WiRL.Data.FireDAC.Utils.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Application.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Utils.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Filters.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Resource.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.CustomResource.pas"/>
+        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Utils.LiveBindings.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Configuration.Auth.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Configuration.Core.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Configuration.JWT.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Configuration.Neon.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Configuration.CORS.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Configuration.Converter.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Configuration.Compression.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Configuration.OpenAPI.pas"/>
+        <DCCReference Include="..\..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Package</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">WiRL.dpk</Source>
+                </Source>
+                <Excluded_Packages/>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Android">False</Platform>
+                <Platform value="Android64">False</Platform>
+                <Platform value="iOSDevice64">False</Platform>
+                <Platform value="iOSSimARM64">False</Platform>
+                <Platform value="Linux64">False</Platform>
+                <Platform value="OSX64">False</Platform>
+                <Platform value="OSXARM64">False</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">True</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>
