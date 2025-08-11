@@ -9,6 +9,7 @@ uses
   WiRL.Core.Classes,
   WiRL.http.Core,
   WiRL.http.Headers,
+  WiRL.http.Accept.MediaType,
   WiRL.http.Cookie,
   WiRL.http.Server.Interfaces,
   WiRL.http.Response,
@@ -382,7 +383,8 @@ begin
   if not Assigned(FContentFields) then
   begin
     FContentFields := TWiRLParam.Create;
-    ParseParams(FContentFields, FWebRequest.Content);
+    if FWebRequest.ContentType = TMediaType.APPLICATION_FORM_URLENCODED_TYPE then
+      ParseParams(FContentFields, FWebRequest.Content);
   end;
   Result := FContentFields;
 end;

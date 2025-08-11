@@ -201,7 +201,6 @@ begin
   try
     LResponse := LServerFactory.CreateRespone(Sender, WebResponse);
     try
-      //AResponseInfo.FreeContentStream := True;
       if LResponse.Server = '' then
         LResponse.Server := 'WiRL Server (Indy)';
       HandleRequest(LRequest, LResponse);
@@ -211,7 +210,6 @@ begin
   finally
     LRequest.Free;
   end;
-
 
   Result := True;
 end;
