@@ -13,6 +13,7 @@ uses
   WiRL.http.Server.WebBroker,
   WiRL.Engine.Core,
   WiRL.Engine.REST,
+  WiRL.Engine.WebServer,
   WiRL.Core.Converter,
   WiRL.Configuration.Converter,
   WiRL.Configuration.Neon;
@@ -56,6 +57,10 @@ begin
         .SetUseUTCDate(True)
         .SetVisibility([mvPublic, mvPublished])
         .SetMemberCase(TNeonCase.PascalCase);
+
+  RESTServer.AddEngine<TWiRLWebServerEngine>('/')
+    .SetEngineName('FileSystemEngine')
+    .SetRootFolder('..\..\www');
 
   RESTServer.Active := True;
 end;

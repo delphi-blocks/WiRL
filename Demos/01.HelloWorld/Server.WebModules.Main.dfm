@@ -3,7 +3,7 @@ object MainWebModule: TMainWebModule
     item
       Default = True
       Name = 'DefaultHandler'
-      PathInfo = '/'
+      PathInfo = '/webbroker'
       OnAction = WebModule1DefaultHandlerAction
     end>
   Height = 230

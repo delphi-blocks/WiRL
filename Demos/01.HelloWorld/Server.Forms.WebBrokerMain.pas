@@ -56,7 +56,7 @@ var
 begin
   StartServer;
 {$IFDEF MSWINDOWS}
-  LURL := Format('http://localhost:%s', [EditPort.Text]);
+  LURL := Format('http://localhost:%s/', [EditPort.Text]);
   ShellExecute(0,
         nil,
         PChar(LURL), nil, nil, SW_SHOWNOACTIVATE);
@@ -77,6 +77,7 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   FServer := TIdHTTPWebBrokerBridge.Create(Self);
+  StartServer;
 end;
 
 procedure TForm1.StartServer;
