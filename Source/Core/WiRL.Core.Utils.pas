@@ -86,6 +86,8 @@ type
 
   function EnsurePrefix(const AString, APrefix: string; const AIgnoreCase: Boolean = True): string;
   function EnsureSuffix(const AString, ASuffix: string; const AIgnoreCase: Boolean = True): string;
+  function StripPrefix(const APrefix, AString: string): string;
+  function StripSuffix(const ASuffix, AString: string): string;
 
   function IsAbsoluteUrl(const APath: string): Boolean;
 

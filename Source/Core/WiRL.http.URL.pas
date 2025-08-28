@@ -100,6 +100,8 @@ type
       const AEnsureFirst: Boolean = False; const AEnsureLast: Boolean = False): string;
     class function EnsureLastPathDelimiter(const APath: string): string;
     class function EnsureFirstPathDelimiter(const APath: string): string;
+    class function StripLastPathDelimiter(const APath: string): string;
+    class function StripFirstPathDelimiter(const APath: string): string;
 
     class function URLEncode(const AString: string): string; overload;
     class function URLEncode(const AStrings: TArray<string>): TArray<string>; overload;
@@ -379,6 +381,16 @@ begin
     FURL := Value;
     URLChanged;
   end;
+end;
+
+class function TWiRLURL.StripFirstPathDelimiter(const APath: string): string;
+begin
+  Result := StripPrefix(URL_PATH_SEPARATOR, APath);
+end;
+
+class function TWiRLURL.StripLastPathDelimiter(const APath: string): string;
+begin
+  Result := StripSuffix(URL_PATH_SEPARATOR, APath);
 end;
 
 function TWiRLURL.SubResourcesToArray: TArray<string>;

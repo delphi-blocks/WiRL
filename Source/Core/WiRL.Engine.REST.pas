@@ -304,14 +304,22 @@ begin
       );
     LApplicationPath := TWiRLURL.CombinePath([AURL.PathTokens[0], AURL.PathTokens[1]]);
   end;
-  // Change the URI BasePath (?)
-  AURL.BasePath := LApplicationPath;
 
-  if not FApplications.TryGetValue(LApplicationPath, Result) then
+  if FApplications.TryGetValue(LApplicationPath, Result) then
+  begin
+    AURL.BasePath := LApplicationPath;
+    Exit;
+  end;
+
+  // If it doesn't find a specific Application try with the default one
+  if not FApplications.TryGetValue(TWiRLURL.StripFirstPathDelimiter(BasePath), Result) then
+  begin
     raise EWiRLNotFoundException.Create(
       Format('Application [%s] not found. URL [%s]', [LApplicationPath, AURL.URL]),
       Self.ClassName, 'GetApplication'
     );
+  end;
+  AURL.BasePath := BasePath;
 end;
 
 function TWiRLRESTEngine.GetApplicationByName(const AName: string): TWiRLApplication;
