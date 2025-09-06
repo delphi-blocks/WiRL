@@ -23,26 +23,31 @@ type
     procedure HandleException(AExceptionContext: TWiRLExceptionContext); override;
   end;
 
+
+
+
 implementation
 
 
 { TWiRLMyNotFoundExceptionMapper }
 
-procedure TWiRLMyNotFoundExceptionMapper.HandleException(
-  AExceptionContext: TWiRLExceptionContext);
+procedure TWiRLMyNotFoundExceptionMapper.HandleException(AExceptionContext: TWiRLExceptionContext);
 const
   StatusCode = 400;
 var
-  MyException: EMyNotFoundException;
+  MyException: EWiRLWebApplicationException;
   LJSON: TJSONObject;
 begin
   inherited;
-  MyException := AExceptionContext.Error as EMyNotFoundException;
+  MyException := AExceptionContext.Error as EWiRLWebApplicationException;
 
   LJSON := TJSONObject.Create;
   try
-    EWiRLWebApplicationException.ExceptionToJSON(MyException, StatusCode, LJSON);
-    LJSON.AddPair(TJSONPair.Create('ErrorCode', TJSONNumber.Create(MyException.ErrorCode)));
+    LJSON.AddPair('status', MyException.Status);
+    LJSON.AddPair('class', MyException.ClassName);
+    LJSON.AddPair('test', MyException.Message);
+
+
 
     AExceptionContext.Response.StatusCode := StatusCode;
     AExceptionContext.Response.ContentType := 'application/json';
@@ -63,7 +68,6 @@ begin
 end;
 
 initialization
-
-  TWiRLExceptionMapperRegistry.Instance.RegisterExceptionMapper<TWiRLMyNotFoundExceptionMapper, EMyNotFoundException>();
+  TWiRLExceptionMapperRegistry.Instance.RegisterExceptionMapper<TWiRLMyNotFoundExceptionMapper, EWiRLWebApplicationException>();
 
 end.
