@@ -318,6 +318,10 @@ begin
   FName := AName;
   FContext := AContext;
 
+  // The Path is equal to the name. If there are multiple Paths for a class,
+  // multiple instances of TWiRLProxyResource will be created
+  FPath := AName;
+
   FAuth := TWiRLProxyAuth.Create;
   FMethods := TWiRLProxyMethods.Create(True);
   FFilters := TWiRLProxyFilters.Create(True);
@@ -428,12 +432,8 @@ begin
   // Global loop to retrieve and process ALL attributes at once
   for LAttribute in FRttiType.GetAttributes do
   begin
-    // Path Attribute
-    if LAttribute is PathAttribute then
-      FPath := PathAttribute(LAttribute).Value
-
     // Consumes Attribute
-    else if LAttribute is ConsumesAttribute then
+    if LAttribute is ConsumesAttribute then
     begin
       LMediaList := ConsumesAttribute(LAttribute).Value.Split([',']);
 

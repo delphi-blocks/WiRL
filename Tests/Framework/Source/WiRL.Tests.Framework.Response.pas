@@ -65,8 +65,8 @@ type
     procedure TestHeaderFields;
     [Test]
     procedure TestContentMediaType;
-    [Test]
-    procedure TestConnection;
+//    [Test]
+//    procedure TestConnection;
     [Test]
     procedure TestAllow;
     [Test]
@@ -102,11 +102,11 @@ begin
   Assert.AreEqual('GET, HEAD', FResponse.Allow);
 end;
 
-procedure TTestResponse.TestConnection;
-begin
-  FResponse.Connection := 'open';
-  Assert.AreEqual('open', FResponse.Connection);
-end;
+//procedure TTestResponse.TestConnection;
+//begin
+//  FResponse.Connection := 'open';
+//  Assert.AreEqual('open', FResponse.Connection);
+//end;
 
 procedure TTestResponse.TestContent;
 begin

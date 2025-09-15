@@ -37,13 +37,9 @@ type
     FQueryTokens: TDictionary<string, string>;
 
     FResource: string;
-    FSubResources: TWiRLURLDictionary;
     FPathParams: TWiRLURLDictionary;
     FBasePath: string;
 
-    procedure SetURL(const Value: string);
-
-    function GetHasSubResources: Boolean;
     function GetHasPathParams: Boolean;
     procedure SetBasePath(const Value: string);
   protected
@@ -68,15 +64,16 @@ type
     destructor Destroy; override;
 
     function MatchPath(AOtherURL: TWiRLURL): Boolean; overload; virtual;
-    function MatchPath(APath: string): Boolean; overload; virtual;
+    function MatchPath(const APath: string): Boolean; overload; virtual;
+
+    function MatchResource(const APath: string): Boolean; overload; virtual;
 
     function HasPathTokens(const AtLeast: Integer = 1): Boolean;
 
-    function SubResourcesToArray: TArray<string>;
     function ToString: string; override;
     function ToJSON: string; virtual;
     function ToJSONObject: TJSONObject; virtual;
-    property URL: string read FURL write SetURL;
+    property URL: string read FURL;
 
     // protocol://<username:password@>hostname<:port></path><?querystring>
     property Protocol: string read FProtocol;
@@ -90,10 +87,8 @@ type
     property QueryTokens: TDictionary<string, string> read FQueryTokens;
 
     property BasePath: string read FBasePath write SetBasePath;
-    property Resource: string read FResource write FResource;
-    property SubResources: TWiRLURLDictionary read FSubResources;
+    property Resource: string read FResource;
     property PathParams: TWiRLURLDictionary read FPathParams;
-    property HasSubResources: Boolean read GetHasSubResources;
     property HasPathParams: Boolean read GetHasPathParams;
 
     class function CombinePath(const APathTokens: array of string;
@@ -130,7 +125,6 @@ begin
   FPathTokens := [];
   {$endif}
 
-  FSubResources := TWiRLURLDictionary.Create;
   FPathParams := TWiRLURLDictionary.Create;
   FQueryTokens := TDictionary<string, string>.Create;
 
@@ -140,9 +134,9 @@ begin
   FPassword := '';
   FHostName := '';
   FUserName := '';
-  FResource := '';
+  FURL := AURL;
 
-  URL := AURL;
+  Parse;
 end;
 
 procedure TWiRLURL.BasePathChanged;
@@ -153,7 +147,6 @@ var
   LTokens: TArray<string>;
 begin
   FResource := '';
-  FSubResources.Clear;
   FPathParams.Clear;
 
   if StartsText(FBasePath, FPath) then
@@ -161,10 +154,10 @@ begin
     LRemainingPath := FPath;
     Delete(LRemainingPath, 1, Length(FBasePath));
     LTokens := ParsePathTokens(LRemainingPath);
+    FResource := LRemainingPath;
 
     if Length(LTokens) > 0 then
     begin
-      FResource := LTokens[0];
       for LIndex := 0 to Length(LTokens) -1 do
       begin
         LToken := LTokens[LIndex];
@@ -175,11 +168,6 @@ begin
             Delete(LToken, Length(LToken), 1);
           FPathParams.Add(LIndex, LToken);
         end
-        else
-        begin
-          if LIndex > 0 then
-            FSubResources.Add(LIndex, LToken);
-        end;
       end;
     end;
   end;
@@ -240,7 +228,6 @@ destructor TWiRLURL.Destroy;
 begin
   FQueryTokens.Free;
   FPathParams.Free;
-  FSubResources.Free;
   inherited;
 end;
 
@@ -259,19 +246,19 @@ begin
   Result := FPathParams.Count > 0;
 end;
 
-function TWiRLURL.GetHasSubResources: Boolean;
-begin
-  Result := FSubResources.Count > 0;
-end;
-
 function TWiRLURL.HasPathTokens(const AtLeast: Integer): Boolean;
 begin
   Result := Length(FPathTokens) >= AtLeast ;
 end;
 
-function TWiRLURL.MatchPath(APath: string): Boolean;
+function TWiRLURL.MatchPath(const APath: string): Boolean;
 begin
   Result := StartsText(APath, Path);
+end;
+
+function TWiRLURL.MatchResource(const APath: string): Boolean;
+begin
+  Result := StartsText(APath, FResource);
 end;
 
 function TWiRLURL.MatchPath(AOtherURL: TWiRLURL): Boolean;
@@ -374,15 +361,6 @@ begin
   end;
 end;
 
-procedure TWiRLURL.SetURL(const Value: string);
-begin
-  if FURL <> Value then
-  begin
-    FURL := Value;
-    URLChanged;
-  end;
-end;
-
 class function TWiRLURL.StripFirstPathDelimiter(const APath: string): string;
 begin
   Result := StripPrefix(URL_PATH_SEPARATOR, APath);
@@ -391,18 +369,6 @@ end;
 class function TWiRLURL.StripLastPathDelimiter(const APath: string): string;
 begin
   Result := StripSuffix(URL_PATH_SEPARATOR, APath);
-end;
-
-function TWiRLURL.SubResourcesToArray: TArray<string>;
-var
-  LKeys: TArray<Integer>;
-  LIndex: Integer;
-begin
-  LKeys := FSubResources.Keys.ToArray;
-  TArray.Sort<Integer>(LKeys);
-  SetLength(Result, Length(LKeys));
-  for LIndex := Low(LKeys) to High(LKeys) do
-    Result[LIndex] := FSubResources.Items[LKeys[LIndex]];
 end;
 
 function TWiRLURL.ToJSON: string;
@@ -444,7 +410,6 @@ begin
     + 'Query: %s' + sLineBreak
     + 'QueryTokens count: %d' + sLineBreak
     + 'Resource: %s' + sLineBreak
-    + 'SubResources count: %d' + sLineBreak
     + 'PathParams count: %d'
   , [
     FURL
@@ -458,7 +423,6 @@ begin
     , FQuery
     , FQueryTokens.Count
     , FResource
-    , FSubResources.Count
     , FPathParams.Count
   ]
   );

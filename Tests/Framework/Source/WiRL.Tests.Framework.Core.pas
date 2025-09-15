@@ -69,9 +69,6 @@ type
     [Test]
     procedure TestQueryParams;
 
-    [Test]
-    procedure TestSubResourcesToString;
-
     //[Test]
     procedure TestPathParamsToString;
 
@@ -84,6 +81,18 @@ type
     [TestCase('SomeMoreSlash', '/first/,/second/,/third/,/first/second/third/')]
     [TestCase('SomeDoubleSlash', '//first/,//second/,/third///,/first/second/third/')]
     procedure TestCombinePath(const Path1, Path2, Path3, ResultPath: string);
+
+    [Test]
+    [TestCase('Basic', 'http://localhost:1234/rest/app/hello,hello')]
+    [TestCase('TwoPartsMatch', 'http://localhost:1234/rest/app/hello/foo/bar,hello/foo')]
+    [TestCase('ThreePartsMatch', 'http://localhost:1234/rest/app/hello/foo/bar,hello/foo/bar')]
+    procedure TestMatchResource(const Path1, Path2: string);
+
+    [Test]
+    [TestCase('Basic', 'http://localhost:1234/rest/app/hello,ciao')]
+    [TestCase('TwoPartsMatch', 'http://localhost:1234/rest/app/hello/foo/bar,hello/bar')]
+    [TestCase('ThreePartsMatch', 'http://localhost:1234/rest/app/hello/foo/bar,hello/foo/foo')]
+    procedure TestNoMatchResource(const Path1, Path2: string);
   end;
 
 
@@ -148,19 +157,6 @@ end;
 { TTestUrl }
 
 // Remove?
-procedure TTestUrl.TestSubResourcesToString;
-var
-  LUrl: TWiRLURL;
-begin
-  LUrl := TWiRLURL.Create('http://localhost:1234/app/resource/subresource');
-  try
-    Assert.AreEqual('/resource/subresource', LUrl.SubResources.ToString);
-  finally
-    LUrl.Free;
-  end;
-end;
-
-// Remove?
 procedure TTestUrl.TestPathTokens;
 var
   LUrl: TWiRLURL;
@@ -181,6 +177,32 @@ end;
 procedure TTestUrl.TestCombinePath(const Path1, Path2, Path3, ResultPath: string);
 begin
   Assert.AreEqual(ResultPath, TWiRLURL.CombinePath([Path1, Path2, Path3], True, True));
+end;
+
+procedure TTestUrl.TestMatchResource(const Path1, Path2: string);
+var
+  LUrl: TWiRLURL;
+begin
+  LUrl := TWiRLURL.Create(Path1);
+  try
+    LUrl.BasePath := '/rest/app/';
+    Assert.IsTrue(LUrl.MatchResource(Path2));
+  finally
+    LUrl.Free;
+  end;
+end;
+
+procedure TTestUrl.TestNoMatchResource(const Path1, Path2: string);
+var
+  LUrl: TWiRLURL;
+begin
+  LUrl := TWiRLURL.Create(Path1);
+  try
+    LUrl.BasePath := '/rest/app/';
+    Assert.IsFalse(LUrl.MatchResource(Path2));
+  finally
+    LUrl.Free;
+  end;
 end;
 
 procedure TTestUrl.TestPathParamsToString;
@@ -212,13 +234,14 @@ procedure TTestUrl.TestResource;
 var
   LUrl: TWiRLURL;
 begin
-  LUrl := TWiRLURL.Create('http://localhost:1234/first/second/1/2/3');
+  LUrl := TWiRLURL.Create('http://localhost:1234/rest/first/second/1/2/3');
   try
+    LUrl.BasePath := '/rest/';
     Assert.AreEqual('http', LUrl.Protocol);
     Assert.AreEqual('localhost', LUrl.HostName);
     Assert.AreEqual(1234, LUrl.PortNumber);
-    Assert.AreEqual('/first/second/1/2/3', LUrl.Path);
-    Assert.AreEqual('first', LUrl.Resource);
+    Assert.AreEqual('/rest/first/second/1/2/3', LUrl.Path);
+    Assert.AreEqual('first/second/1/2/3', LUrl.Resource);
   finally
     LUrl.Free;
   end;
