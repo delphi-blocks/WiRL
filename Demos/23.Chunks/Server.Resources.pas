@@ -30,6 +30,8 @@ type
   [Path('streaming')]
   TChunksResource = class
   private
+    [Context]
+    FRequest: TWiRLResponse;
     const XML_AND_JSON = TMediaType.APPLICATION_XML + ',' + TMediaType.APPLICATION_JSON;
   public
     [GET]
@@ -86,11 +88,13 @@ begin
     var
       LCounter: Integer;
     begin
-      for LCounter := 1 to ANumOfEvents do
+      LCounter := 1;
+      while FRequest.Connection.Connected do
       begin
         AWriter.WriteComment('This is a test');
-        AWriter.Write('ping', DateTimeToStr(Now) + ' - PING EVENT');
+        AWriter.Write(LCounter, 'ping', DateTimeToStr(Now) + ' - PING EVENT');
         AWriter.Write(DateTimeToStr(Now) + ' - DEFAULT EVENT #' + IntToStr(LCounter));
+        Inc(LCounter);
         Sleep(1000);
       end;
     end
