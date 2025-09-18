@@ -206,7 +206,7 @@ begin
     if LEngineInfo.Engine.CanHandle(AURL) then
       Exit(LEngineInfo.Engine);
 
-  // Perhaps it's a file request let's try with '/'
+  // If it doesn't find a specific Engine try with the default one
   if not Assigned(Result) then
     for LEngineInfo in Self do
       if LEngineInfo.Engine.CanHandle('/') then

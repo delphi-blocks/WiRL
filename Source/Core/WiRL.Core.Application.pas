@@ -255,20 +255,13 @@ function TWiRLApplication.AddResource(const AResource: string): Boolean;
   begin
     LResult := False;
     LClass := AInfo.TypeTClass;
-    TRttiHelper.HasAttribute<PathAttribute>(RttiContext.GetType(LClass),
+    TRttiHelper.ForEachAttribute<PathAttribute>(RttiContext.GetType(LClass),
       procedure (AAttribute: PathAttribute)
-      var
-        LURL: TWiRLURL;
       begin
-        LURL := TWiRLURL.MockURL(AAttribute.Value);
-        try
-          if not FResourceRegistry.ContainsKey(LURL.PathTokens[0]) then
-          begin
-            FResourceRegistry.Add(LURL.PathTokens[0], AInfo.Clone);
-            LResult := True;
-          end;
-        finally
-          LURL.Free;
+        if not FResourceRegistry.ContainsKey(TWiRLURL.StripFirstPathDelimiter(AAttribute.Value)) then
+        begin
+          FResourceRegistry.Add(TWiRLURL.StripFirstPathDelimiter(AAttribute.Value), AInfo.Clone);
+          LResult := True;
         end;
       end
     );

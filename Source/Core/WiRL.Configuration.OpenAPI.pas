@@ -24,19 +24,21 @@ uses
 {$SCOPEDENUMS ON}
 
 type
+  TOpenAPIDocCallback = reference to procedure (ADocument: TOpenAPIDocument);
+
   IWiRLConfigurationOpenAPI = interface(IWiRLConfiguration)
   ['{BB768622-918C-4E54-A9B5-4BF6646B8F7A}']
-
     function SetOpenAPIResource(AClass: TClass): IWiRLConfigurationOpenAPI;
     function SetXMLDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetAPILogo(const AName: string): IWiRLConfigurationOpenAPI;
     function SetAPIServer(const AHost, ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
+    function SetAPIDocumentCallback(ACallback: TOpenAPIDocCallback): IWiRLConfigurationOpenAPI;
     function SetNeonConfiguration(AConfig: INeonConfiguration): IWiRLConfigurationOpenAPI;
   end;
 
-  TConfigurator = reference to procedure(AOpenAPIConf: IWiRLConfigurationOpenAPI);
+  TConfigurator = reference to procedure (AOpenAPIConf: IWiRLConfigurationOpenAPI);
 
   TServerPair = TPair<string, string>;
 
@@ -46,6 +48,7 @@ type
     FClass: TClass;
     FNeonConfig: INeonConfiguration;
     FDocument: TOpenAPIDocument;
+    FCallback: TOpenAPIDocCallback;
     FAPILogo: string;
     FServers: TArray<TOpenAPIServer>;
     FFolderXMLDoc: string;
@@ -64,6 +67,7 @@ type
     function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
     function SetAPIServer(const AHost, ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
+    function SetAPIDocumentCallback(ACallback: TOpenAPIDocCallback): IWiRLConfigurationOpenAPI;
     function SetNeonConfiguration(AConfig: INeonConfiguration): IWiRLConfigurationOpenAPI;
 
     property NeonConfig: INeonConfiguration read FNeonConfig;
@@ -72,6 +76,7 @@ type
     property FolderXMLDoc: string read FFolderXMLDoc write FFolderXMLDoc;
     property FolderGUIDoc: string read FFolderGUIDoc write FFolderGUIDoc;
     property Document: TOpenAPIDocument read FDocument write FDocument;
+    property Callback: TOpenAPIDocCallback read FCallback write FCallback;
   end;
 
 implementation
@@ -129,6 +134,12 @@ function TWiRLConfigurationOpenAPI.SetAPIDocument(ADocument: TOpenAPIDocument): 
 begin
   FDocument.Free;
   FDocument := ADocument;
+  Result := Self;
+end;
+
+function TWiRLConfigurationOpenAPI.SetAPIDocumentCallback(ACallback: TOpenAPIDocCallback): IWiRLConfigurationOpenAPI;
+begin
+  FCallback := ACallback;
   Result := Self;
 end;
 

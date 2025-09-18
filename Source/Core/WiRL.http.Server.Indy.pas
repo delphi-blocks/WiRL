@@ -67,6 +67,7 @@ type
     procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload; override;
     procedure WriteLn(const AValue: string); override;
     procedure WriteLn(); override;
+    function Connected: Boolean; override;
 
     constructor Create(AContext: TIdContext);
   end;
@@ -572,6 +573,11 @@ begin
 end;
 
 { TWiRLConnectionIndy }
+
+function TWiRLConnectionIndy.Connected: Boolean;
+begin
+  Result := FConnection.Connected;
+end;
 
 constructor TWiRLConnectionIndy.Create(AContext: TIdContext);
 begin

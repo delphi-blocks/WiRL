@@ -166,6 +166,23 @@ begin
         .SetAPILogo('api-logo.png')
         // Set the OpenAPI document for the OpenAPI engine to fill
         .SetAPIDocument(LDocument)
+
+        .SetAPIDocumentCallback(
+          procedure(ADocument: TOpenAPIDocument)
+          begin
+            ADocument.Info.Title := 'WiRL OpenAPI Integration Demo (Changed)';
+
+            var tag := ADocument.AddTag('callback', 'User added content');
+
+            var res := ADocument.AddPath('/callback');
+            res.Description := 'This is a test for the callback';
+            res.Summary := 'Sample';
+            var op := res.AddOperation(TOperationType.Get);
+            op.Summary := 'Get Sample Data';
+            op.Description := 'Sample Data description';
+          end
+        )
+
       .ApplyConfig
   ;
 

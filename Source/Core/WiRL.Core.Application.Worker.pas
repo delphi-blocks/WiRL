@@ -876,9 +876,19 @@ begin
 end;
 
 procedure TWiRLResourceLocator.LocateResource;
+var
+  LResourcePair: TPair<string, TWiRLProxyResource>;
 begin
+  FResource := nil;
   FApplication := FContext.Application as TWiRLApplication;
-  FResource := FProxy.GetResource(FContext.RequestURL.Resource);
+  for LResourcePair in FProxy.Resources do
+  begin
+    if FContext.ResourceURL.MatchResource(LResourcePair.Key) then
+    begin
+      FResource := LResourcePair.Value;
+      Exit;
+    end;
+  end;
 end;
 
 procedure TWiRLResourceLocator.LocateResourceMethod;
@@ -938,14 +948,14 @@ begin
   LocateResource;
   if not Assigned(FResource) then
     raise EWiRLNotFoundException.Create(
-      Format('Resource [%s] not found', [FContext.RequestURL.Resource]),
+      Format('Resource [%s] not found', [FContext.RequestURL.URL]),
       Self.ClassName, 'HandleRequest'
     );
 
   LocateResourceMethod;
   if not Assigned(FMethod) then
     raise EWiRLNotFoundException.Create(
-      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.RequestURL.Resource + FContext.RequestURL.SubResources.ToString]),
+      Format('Resource''s method [%s] not found to handle resource [%s]', [FContext.Request.Method, FContext.RequestURL.URL]),
       Self.ClassName, 'HandleRequest'
     );
 

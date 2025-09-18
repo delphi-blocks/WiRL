@@ -160,6 +160,7 @@ type
     procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload; virtual; abstract;
     procedure WriteLn(const AValue: string); overload; virtual; abstract;
     procedure WriteLn(); overload; virtual; abstract;
+    function Connected: Boolean; virtual; abstract;
   end;
 
 var

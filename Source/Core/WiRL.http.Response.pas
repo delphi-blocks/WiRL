@@ -46,6 +46,10 @@ type
     procedure Write(const AValue: string); overload;
     procedure Write(const AEvent, AValue: string); overload;
     procedure Write(const AEvent, AValue: string; ARetry: Integer); overload;
+    procedure Write(const AId, AEvent, AValue: string; ARetry: Integer); overload;
+    procedure Write(const AId, AEvent, AValue: string); overload;
+    procedure Write(AId: Integer; const AEvent, AValue: string; ARetry: Integer); overload;
+    procedure Write(AId: Integer; const AEvent, AValue: string); overload;
     procedure WriteComment(const AValue: string); overload;
   end;
 
@@ -183,6 +187,10 @@ type
     procedure Write(const AValue: TBytes); overload;
     procedure Write(const AEvent, AValue: string); overload;
     procedure Write(const AEvent, AValue: string; ARetry: Integer); overload;
+    procedure Write(const AId, AEvent, AValue: string; ARetry: Integer); overload;
+    procedure Write(const AId, AEvent, AValue: string); overload;
+    procedure Write(AId: Integer; const AEvent, AValue: string; ARetry: Integer); overload;
+    procedure Write(AId: Integer; const AEvent, AValue: string); overload;
     procedure WriteComment(const AValue: string); overload;
 
     constructor Create(AContext: TWiRLContextHttp);
@@ -571,23 +579,8 @@ begin
 end;
 
 procedure TWiRLSSEResponseWriter.Write(const AEvent, AValue: string; ARetry: Integer);
-var
-  LLines: TArray<string>;
-  LLine: string;
-  LMessage: string;
 begin
-  LLines := SplitString(AValue);
-
-  LMessage := '';
-  if AEvent <> '' then
-    LMessage := LMessage + 'event: ' + AEvent + #13#10;
-  if ARetry > 0 then
-    LMessage := LMessage + 'retry: ' + IntToStr(ARetry) + #13#10;
-
-  for LLine in LLines do
-    LMessage := LMessage + 'data: ' + LLine + #13#10;
-
-  FContext.Connection.WriteLn(LMessage);
+  Write('', AEvent, AValue, ARetry);
 end;
 
 procedure TWiRLSSEResponseWriter.Write(const AEvent, AValue: string);
@@ -610,6 +603,46 @@ begin
 
   FContext.Connection.WriteLn(LMessage);
 
+end;
+
+procedure TWiRLSSEResponseWriter.Write(const AId, AEvent, AValue: string);
+begin
+  Write(AId, AEvent, AValue, 0);
+end;
+
+procedure TWiRLSSEResponseWriter.Write(const AId, AEvent, AValue: string;
+  ARetry: Integer);
+var
+  LLines: TArray<string>;
+  LLine: string;
+  LMessage: string;
+begin
+  LLines := SplitString(AValue);
+
+  LMessage := '';
+  if AId <> '' then
+    LMessage := LMessage + 'id: ' + AId + #13#10;
+  if AEvent <> '' then
+    LMessage := LMessage + 'event: ' + AEvent + #13#10;
+  if ARetry > 0 then
+    LMessage := LMessage + 'retry: ' + IntToStr(ARetry) + #13#10;
+
+  for LLine in LLines do
+    LMessage := LMessage + 'data: ' + LLine + #13#10;
+
+  FContext.Connection.WriteLn(LMessage);
+end;
+
+procedure TWiRLSSEResponseWriter.Write(AId: Integer; const AEvent,
+  AValue: string);
+begin
+  Write(AId.ToString, AEvent, AValue, 0);
+end;
+
+procedure TWiRLSSEResponseWriter.Write(AId: Integer; const AEvent,
+  AValue: string; ARetry: Integer);
+begin
+  Write(AId.ToString, AEvent, AValue, ARetry);
 end;
 
 end.

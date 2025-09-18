@@ -353,8 +353,11 @@ begin
     FResponseJson := TJSONObject.ParseJSONValue(FResponseText);
     if Assigned(FResponseJson) then
     begin
-      FResponseJson.TryGetValue<string>('message', LMessage);
-      FResponseJson.TryGetValue<string>('exception', FServerException);
+      if not FResponseJson.TryGetValue<string>('message', LMessage) then
+        LMessage := FReasonString;
+
+      if not FResponseJson.TryGetValue<string>('exception', FServerException) then
+        FServerException := Exception.ClassName;
     end;
   end;
 

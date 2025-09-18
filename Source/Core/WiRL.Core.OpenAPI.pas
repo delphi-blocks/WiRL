@@ -37,6 +37,9 @@ uses
   WiRL.http.Filters;
 
 type
+  /// <summary>
+  ///   OpenAPI v3 engine
+  /// </summary>
   TOpenAPIv3Engine = class
   private
     FDocument: TOpenAPIDocument;
@@ -52,10 +55,14 @@ type
     procedure AddResource(AResource: TWiRLProxyResource);
     function CreateParameter(AParameter: TWiRLProxyParameter): TOpenAPIParameter;
     procedure ClearDocument;
+    function GetDocument: TOpenAPIDocument;
   protected
     constructor Create(AApplication: TWiRLApplication; const ASwaggerResource: string); overload;
     procedure ProcessXMLDoc;
+    procedure BuildOpenAPIDocument;
     function Build(): TJSONObject;
+  public
+    property Document: TOpenAPIDocument read GetDocument;
   public
     class function Generate(AApplication: TWiRLApplication; const ASwaggerResource: string): TJSONObject; overload;
   end;
@@ -73,12 +80,21 @@ uses
 { TOpenAPIv3Engine }
 
 function TOpenAPIv3Engine.Build: TJSONObject;
+begin
+  BuildOpenAPIDocument();
+  // Neon JSON conversion
+  Result := TNeon.ObjectToJSON(FDocument, FNeonConfiguration) as TJSONObject;
+end;
+
+procedure TOpenAPIv3Engine.BuildOpenAPIDocument;
 var
   LRes: TWiRLProxyResource;
   LPair: TPair<string, TWiRLProxyResource>;
 begin
   ClearDocument();
-  ProcessXMLDoc();
+
+  if not FConfigurationOpenAPI.FolderXMLDoc.IsEmpty then
+    ProcessXMLDoc();
 
   for LPair in FApplication.Proxy.Resources do
   begin
@@ -117,7 +133,9 @@ begin
 
     AddResource(LRes);
   end;
-  Result := TNeon.ObjectToJSON(FDocument, FNeonConfiguration) as TJSONObject;
+
+  if Assigned(FConfigurationOpenAPI.Callback) then
+    FConfigurationOpenAPI.Callback(Document);
 end;
 
 procedure TOpenAPIv3Engine.ClearDocument;
@@ -351,6 +369,11 @@ begin
   finally
     LEngine.Free;
   end;
+end;
+
+function TOpenAPIv3Engine.GetDocument: TOpenAPIDocument;
+begin
+  Result := FConfigurationOpenAPI.Document;
 end;
 
 procedure TOpenAPIv3Engine.ProcessXMLDoc;

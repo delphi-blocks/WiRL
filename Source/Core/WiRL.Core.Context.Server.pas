@@ -29,7 +29,6 @@ type
 //    FResource: TObject;
 //    FRequest: TWiRLRequest;
 //    FAuthContext: TWiRLAuthContext;
-    FResourceURL: TWiRLURL;
     FResourceMethod: TObject;
     function GetResourceURL: TWiRLURL;
     function GetServer: TObject;
@@ -52,7 +51,8 @@ type
     property Engine: TObject read GetEngine write SetEngine;
     property Application: TObject read GetApplication write SetApplication;
     property Resource: TObject read GetResource write SetResource;
-    property ResourceURL: TWiRLURL read GetResourceURL write FResourceURL;
+    // Alias for RequestURL (for compatibility reasons)
+    property ResourceURL: TWiRLURL read GetResourceURL;
     property ResourceMethod: TObject read FResourceMethod write FResourceMethod;
     property AuthContext: TWiRLAuthContext read GetAuthContext write SetAuthContext;
   end;
@@ -70,7 +70,6 @@ uses
 
 destructor TWiRLContextServer.Destroy;
 begin
-  FResourceURL.Free;
   inherited;
 end;
 
@@ -114,9 +113,7 @@ end;
 
 function TWiRLContextServer.GetResourceURL: TWiRLURL;
 begin
-  if not Assigned(FResourceURL) then
-    FResourceURL := TWiRLURL.Create(Request);
-  Result := FResourceURL;
+  Result := RequestURL;
 end;
 
 function TWiRLContextServer.GetServer: TObject;

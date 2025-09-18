@@ -40,7 +40,7 @@ type
   end;
 
   /// <summary>
-  ///   This is the <b>default</b> MessageBodyWriter for all Delphi string types.
+  ///   Default Provider for all Delphi string types
   /// </summary>
   [Produces(TMediaType.WILDCARD)]
   [Consumes(TMediaType.WILDCARD)]
@@ -54,8 +54,8 @@ type
   end;
 
   /// <summary>
-  ///   This is the <b>default</b> MessageBodyWriter for all Delphi simple types: integer,
-  ///   double, etc...
+  ///   Default Provider for all Delphi simple types:
+  ///   integer, double, etc...
   /// </summary>
   [Produces(TMediaType.TEXT_PLAIN)]
   [Consumes(TMediaType.TEXT_PLAIN)]
@@ -71,12 +71,11 @@ type
   end;
 
   /// <summary>
-  ///   Base class for the JSON-based providers. Contains the routines to write
-  ///   the JSON or JSONP to the stream
+  ///   Base class for the JSON-based Providers.
+  ///   Contains the routines to write JSON or JSONP to the stream
   /// </summary>
   TWiRLJSONProvider = class(TMessageBodyProvider)
   private
-    //[Context] FRequest: TWiRLRequest;
     [Context] FContext: TWiRLContextHttp;
     [Context] FConfigurationNeon: TWiRLConfigurationNeon;
   protected
@@ -85,7 +84,7 @@ type
   end;
 
   /// <summary>
-  ///   This is the <b>default</b> MessageBodyProvider for Delphi array and record types
+  ///   Default Provider for array and record types
   /// </summary>
   [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
@@ -102,9 +101,11 @@ type
   end;
 
   /// <summary>
-  ///   This is the standard TObject MessageBodyReader/Writer and is using the WiRL Persistence library
-  ///   (Neon Library).
+  ///   Default Provider for TObject and descendants
   /// </summary>
+  /// <remarks>
+  ///   Uses the Neon Library
+  /// </remarks>
   [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JAVASCRIPT)]
@@ -123,8 +124,11 @@ type
   end;
 
   /// <summary>
-  ///   This is the standard JSONValue MessageBodyReader/Writer using the Delphi JSON library.
+  ///   Default Provider for TJSONValue
   /// </summary>
+  /// <remarks>
+  ///   Uses the Delphi JSON library
+  /// </remarks>
   [Consumes(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JSON)]
   [Produces(TMediaType.APPLICATION_JAVASCRIPT)]
@@ -140,8 +144,11 @@ type
   end;
 
   /// <summary>
-  ///   This is the standard TStream MessageBodyReader/Writer using the Delphi TStream methods
+  ///   Default Provider for TStream
   /// </summary>
+  /// <remarks>
+  ///   Uses TStream methods
+  /// </remarks>
   [Consumes(TMediaType.APPLICATION_OCTET_STREAM), Consumes(TMediaType.WILDCARD)]
   [Produces(TMediaType.APPLICATION_OCTET_STREAM), Produces(TMediaType.WILDCARD)]
   TWiRLStreamProvider = class(TMessageBodyProvider)
@@ -158,7 +165,7 @@ type
   end;
 
   /// <summary>
-  ///   This is the standard TMultipartFormData MessageBodyWriter
+  ///   Default Provider for TMultipartFormData
   /// </summary>
   {$IFNDEF HAS_NETHTTP_CLIENT}
   [Produces(TMediaType.MULTIPART_FORM_DATA)]
@@ -170,7 +177,7 @@ type
   {$ENDIF}
 
   /// <summary>
-  ///   This is the MessageBodyWriter for all TWiRLStreamingResponse descendant
+  ///   Default Provider for TWiRLStreamingResponse and descendants
   /// </summary>
   [Produces(TMediaType.WILDCARD)]
   TWiRLStreamingResponseProvider = class(TMessageBodyProvider)
