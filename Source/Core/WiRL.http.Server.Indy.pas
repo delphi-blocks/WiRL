@@ -222,6 +222,7 @@ end;
 procedure TWiRLhttpServerIndy.SetThreadPoolSize(AValue: Integer);
 begin
   FThreadPoolSize := AValue;
+  SetupThreadPooling(AValue);
 end;
 
 procedure TWiRLhttpServerIndy.SetupThreadPooling(const APoolSize: Integer);
@@ -234,10 +235,15 @@ begin
     FHttpServer.Scheduler := nil;
   end;
 
-  LScheduler := TIdSchedulerOfThreadPool.Create(FHttpServer);
-  LScheduler.PoolSize := APoolSize;
-  FHttpServer.Scheduler := LScheduler;
-  FHttpServer.MaxConnections := LScheduler.PoolSize;
+  if APoolSize > 0 then
+  begin
+    LScheduler := TIdSchedulerOfThreadPool.Create(FHttpServer);
+    LScheduler.PoolSize := APoolSize;
+    FHttpServer.Scheduler := LScheduler;
+    FHttpServer.MaxConnections := LScheduler.PoolSize;
+  end
+  else
+    FHttpServer.MaxConnections := 0;
 end;
 
 procedure TWiRLhttpServerIndy.Shutdown;

@@ -75,3 +75,4 @@ __recovery/
 *.delphilsp.json
 *.tmp
 /Demos/22.WebStencilsDemo/data.db
+/references

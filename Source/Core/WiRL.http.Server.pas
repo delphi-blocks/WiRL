@@ -29,7 +29,7 @@ type
   TWiRLServer = class(TComponent, IWiRLListener)
   private const
     DefaultPort = 8080;
-    DefaultThreadPoolSize = 50;
+    DefaultThreadPoolSize = 0;
   private
     FServerName: string;
     FCurrentEngine: TWiRLCustomEngine;
