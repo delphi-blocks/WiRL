@@ -18,13 +18,15 @@ uses
   WiRL.Core.Classes,
   WiRL.Core.Exceptions,
   WiRL.Core.Singleton,
+  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.http.Request,
   WiRL.http.Response;
 
 type
   IWiRLListener = interface
   ['{04C4895A-23EB-46A5-98F0-B25292D7E6FC}']
-    procedure HandleRequest(LRequest: TWiRLRequest; LResponse: TWiRLResponse);
+    procedure HandleRequest(AContext: TWiRLContext; LRequest: TWiRLRequest; LResponse: TWiRLResponse);
   end;
 
   IWiRLServer = interface

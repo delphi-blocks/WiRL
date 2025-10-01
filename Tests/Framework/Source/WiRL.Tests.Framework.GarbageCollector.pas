@@ -12,6 +12,7 @@ uses
   WiRL.Core.Metadata,
   WiRL.Core.Registry,
   WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Response,
@@ -26,6 +27,7 @@ type
   TTestGarbageCollector = class(TObject)
   private
     FServer: TWiRLServer;
+    FContext: TWiRLContext;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
   public
@@ -78,13 +80,19 @@ begin
   if not FServer.Active then
     FServer.Active := True;
 
+  FContext := TWiRLContext.Create;
+
   FRequest := TWiRLTestRequest.Create;
+  FContext.AddContainer(FRequest, False);
+
   FResponse := TWiRLTestResponse.Create;
+  FContext.AddContainer(FResponse, False);
 end;
 
 procedure TTestGarbageCollector.TearDown;
 begin
   FServer.Free;
+  FContext.Free;
   FRequest.Free;
   FResponse.Free;
 end;
@@ -94,7 +102,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/gc';
   FRequest.Accept := TMediaType.APPLICATION_JSON;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
 
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.Pass();
@@ -105,7 +113,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/gc';
   FRequest.Accept := TMediaType.APPLICATION_JSON;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
 
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.Pass();

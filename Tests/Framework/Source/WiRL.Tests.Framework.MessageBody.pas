@@ -18,6 +18,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
+  WiRL.core.Context.Server,
   WiRL.Engine.REST,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
@@ -27,6 +28,7 @@ type
   TTestMessageBody = class(TObject)
   private
     FServer: TWiRLServer;
+    FContext: TWiRLContext;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
   public
@@ -101,13 +103,19 @@ begin
   if not FServer.Active then
     FServer.Active := True;
 
+  FContext := TWiRLContext.Create;
+
   FRequest := TWiRLTestRequest.Create;
+  FContext.AddContainer(FRequest, False);
+
   FResponse := TWiRLTestResponse.Create;
+  FContext.AddContainer(FResponse, False);
 end;
 
 procedure TTestMessageBody.TearDown;
 begin
   FServer.Free;
+  FContext.Free;
   FRequest.Free;
   FResponse.Free;
 end;
@@ -118,7 +126,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/testobject';
   FRequest.ContentType := TestPersonMediaType;
   FRequest.Content := 'Name=luca' + sLineBreak + 'Age=25';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('TTestPersonObject/luca/25', FResponse.Content);
 end;
 
@@ -128,7 +136,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/testobject';
   FRequest.ContentType := TMediaType.IMAGE_PNG;
   FRequest.Content := 'Name=luca' + sLineBreak + 'Age=25';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(404, FResponse.StatusCode);
 end;
 
@@ -138,7 +146,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/testrecord';
   FRequest.ContentType := TestPersonMediaType;
   FRequest.Content := 'Name=luca' + sLineBreak + 'Age=25';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('TTestPersonRecord/luca/25', FResponse.Content);
 end;
 
@@ -146,7 +154,7 @@ procedure TTestMessageBody.TestCustomMessageBodyWriterObject;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/testobject?name=luca&age=25';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('Name=luca' + sLineBreak + 'Age=25' + sLineBreak, FResponse.Content);
 end;
 
@@ -154,7 +162,7 @@ procedure TTestMessageBody.TestCustomMessageBodyWriterRecord;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/testrecord?name=luca&age=25';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('Name=luca' + sLineBreak + 'Age=25' + sLineBreak, FResponse.Content);
 end;
 
@@ -162,7 +170,7 @@ procedure TTestMessageBody.TestHelloWorld;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('Hello, message body!', FResponse.Content);
 end;
 
@@ -172,7 +180,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/json';
   FRequest.ContentType := TMediaType.APPLICATION_JSON;
   FRequest.Content := '{"name": "luca"}';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('luca', FResponse.Content);
 end;
 
@@ -180,7 +188,7 @@ procedure TTestMessageBody.TestQueryParamJsonObject;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/testobjectinurl?person={"Name":"luca","Age":25}';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('TTestPersonObject/luca/25', FResponse.Content);
 end;
 
@@ -188,7 +196,7 @@ procedure TTestMessageBody.TestReadJsonObject;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/jsonobject?name=luca&age=25';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(TMediaType.APPLICATION_JSON, FResponse.ContentType);
   Assert.AreEqual('{"Name":"luca","Age":25}', FResponse.Content);
 end;
@@ -197,7 +205,7 @@ procedure TTestMessageBody.TestReadJsonRecord;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/jsonrecord?name=luca&age=25';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(TMediaType.APPLICATION_JSON, FResponse.ContentType);
   Assert.AreEqual('{"Name":"luca","Age":25}', FResponse.Content);
 end;
@@ -208,7 +216,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/readstream';
   FRequest.ContentType := TMediaType.APPLICATION_OCTET_STREAM;
   FRequest.Content := '1234567890';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('10', FResponse.Content);
 end;
 
@@ -218,7 +226,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/readstream';
   FRequest.ContentType := TMediaType.IMAGE_PNG;
   FRequest.Content := '1234567890';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('10', FResponse.Content);
 end;
 
@@ -228,7 +236,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/jsonobject';
   FRequest.ContentType := TMediaType.APPLICATION_JSON;
   FRequest.Content := '{"Name": "luca", "Age": 25}';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('TTestPersonObject/luca/25', FResponse.Content);
 end;
 
@@ -238,7 +246,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/messagebody/jsonrecord';
   FRequest.ContentType := TMediaType.APPLICATION_JSON;
   FRequest.Content := '{"Name": "luca", "Age": 25}';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('TTestPersonRecord/luca/25', FResponse.Content);
 end;
 

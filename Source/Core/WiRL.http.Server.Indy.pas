@@ -18,6 +18,8 @@ uses
   IdResourceStringsProtocols, IdTCPConnection,
 
   WiRL.Core.Classes,
+  WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.http.Core,
   WiRL.http.Headers,
   WiRL.http.Cookie,
@@ -134,7 +136,6 @@ implementation
 uses
   System.StrUtils,
   WiRL.http.Accept.MediaType,
-  WiRL.Core.Context,
   WiRL.Core.Utils;
 
 constructor TWiRLhttpServerIndy.Create;
@@ -157,22 +158,31 @@ end;
 procedure TWiRLhttpServerIndy.DoCommandGet(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
 var
+  LContext: TWiRLContext;
   LRequest: TWiRLRequest;
   LResponse: TWiRLResponse;
 begin
-  LRequest := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
+  LContext := TWiRLContext.Create;
   try
-    LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
+    LContext.AddContainer(AContext, False);
+    LContext.AddContainer(ARequestInfo, False);
+    LContext.AddContainer(AResponseInfo, False);
+    LRequest := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
     try
-      AResponseInfo.FreeContentStream := True;
-      if LResponse.Server = '' then
-        LResponse.Server := 'WiRL Server (Indy)';
-      FListener.HandleRequest(LRequest, LResponse);
+      LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);
+      try
+        AResponseInfo.FreeContentStream := True;
+        if LResponse.Server = '' then
+          LResponse.Server := 'WiRL Server (Indy)';
+        FListener.HandleRequest(LContext, LRequest, LResponse);
+      finally
+        LResponse.Free;
+      end;
     finally
-      LResponse.Free;
+      LRequest.Free;
     end;
   finally
-    LRequest.Free;
+    LContext.Free;
   end;
 end;
 

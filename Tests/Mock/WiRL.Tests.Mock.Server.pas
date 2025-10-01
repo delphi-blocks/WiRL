@@ -80,6 +80,7 @@ type
     FResponseError: TWiRLResponseError;
     FHeadersSent: Boolean;
     FHeader: IWiRLHeaders;
+    FConnection: TWiRLConnection;
     function GetResponseError: TWiRLResponseError;
   protected
     function GetContentStream: TStream; override;
@@ -89,8 +90,9 @@ type
     function GetReasonString: string; override;
     procedure SetReasonString(const Value: string); override;
     function GetHeaders: IWiRLHeaders; override;
+    function GetConnection: TWiRLConnection; override;
   public
-    procedure SendHeaders; override;
+    procedure SendHeaders(AImmediate: Boolean = False); override;
     property Error: TWiRLResponseError read GetResponseError;
     property HeadersSent: Boolean read FHeadersSent;
     constructor Create;
@@ -111,6 +113,7 @@ type
     FServerPort: Integer;
     FContentStream: TStream;
     FHeaders: IWiRLHeaders;
+    FConnection: TWiRLConnection;
     procedure ParseQueryParams;
     procedure SetUrl(const Value: string);
   protected
@@ -124,12 +127,24 @@ type
     procedure SetContentStream(const Value: TStream); override;
     function GetHeaders: IWiRLHeaders; override;
     function GetRemoteIP: string; override;
+    function GetConnection: TWiRLConnection; override;
   public
     property Url: string read FUrl write SetUrl;
     constructor Create;
     destructor Destroy; override;
   end;
 
+  TWiRLTestConnection = class(TWiRLConnection)
+  private
+    //FConnection: TXXXConnection;
+  public
+    procedure Write(AValue: TBytes; const ALength: Integer = -1; const AOffset: Integer = 0); overload; override;
+    procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload; override;
+    procedure WriteLn(const AValue: string); override;
+    procedure WriteLn(); override;
+
+    constructor Create;
+  end;
 
 implementation
 
@@ -262,6 +277,7 @@ begin
   FCookieFields := TWiRLCookies.Create;
   FQueryFields := TWiRLParam.Create;
   FContentFields := TWiRLParam.Create;
+  FConnection := TWiRLTestConnection.Create;
   FMethod := 'GET';
   FServerPort := 80;
 end;
@@ -272,7 +288,13 @@ begin
   FQueryFields.Free;
   FContentFields.Free;
   FContentStream.Free;
+  FConnection.Free;
   inherited;
+end;
+
+function TWiRLTestRequest.GetConnection: TWiRLConnection;
+begin
+  Result := FConnection;
 end;
 
 function TWiRLTestRequest.GetContentFields: TWiRLParam;
@@ -401,6 +423,7 @@ begin
   inherited;
   FResponseError := TWiRLResponseError.Create;
   FHeader := TWiRLHeaders.Create;
+  FConnection := TWiRLTestConnection.Create;
 
   FStatusCode := 200;
   FReasonString := 'OK';
@@ -411,7 +434,13 @@ destructor TWiRLTestResponse.Destroy;
 begin
   FResponseError.Free;
   FContentStream.Free;
+  FConnection.Free;
   inherited;
+end;
+
+function TWiRLTestResponse.GetConnection: TWiRLConnection;
+begin
+  Result := FConnection;
 end;
 
 function TWiRLTestResponse.GetContentStream: TStream;
@@ -455,7 +484,7 @@ begin
   Result := FStatusCode;
 end;
 
-procedure TWiRLTestResponse.SendHeaders;
+procedure TWiRLTestResponse.SendHeaders(AImmediate: Boolean);
 begin
   inherited;
   FHeadersSent := True;
@@ -480,6 +509,34 @@ procedure TWiRLTestResponse.SetStatusCode(const Value: Integer);
 begin
   inherited;
   FStatusCode := Value;
+end;
+
+{ TWiRLTestConnection }
+
+constructor TWiRLTestConnection.Create;
+begin
+
+end;
+
+procedure TWiRLTestConnection.Write(const AValue: string; AEncoding: TEncoding);
+begin
+
+end;
+
+procedure TWiRLTestConnection.Write(AValue: TBytes; const ALength,
+  AOffset: Integer);
+begin
+
+end;
+
+procedure TWiRLTestConnection.WriteLn(const AValue: string);
+begin
+
+end;
+
+procedure TWiRLTestConnection.WriteLn;
+begin
+
 end;
 
 initialization

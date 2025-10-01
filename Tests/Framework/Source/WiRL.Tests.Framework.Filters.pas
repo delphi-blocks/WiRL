@@ -18,6 +18,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
+  WiRL.Core.Context.Server,
   WiRL.Engine.REST,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
@@ -29,6 +30,7 @@ type
     FServer: TWiRLServer;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
+    FContext: TWiRLContext;
   public
     [Setup]
     procedure Setup;
@@ -75,14 +77,20 @@ begin
   if not FServer.Active then
     FServer.Active := True;
 
+  FContext := TWiRLContext.Create;
+
   FRequest := TWiRLTestRequest.Create;
+  FContext.AddContainer(FRequest, False);
+
   FResponse := TWiRLTestResponse.Create;
+  FContext.AddContainer(FResponse, False);
 
 end;
 
 procedure TTestFilter.TearDown;
 begin
   FServer.Free;
+  FContext.Free;
   FRequest.Free;
   FResponse.Free;
 end;
@@ -91,7 +99,7 @@ procedure TTestFilter.TestChangeHeaderOnResponseFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/exception401';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(400, FResponse.StatusCode);
   Assert.IsTrue(FResponse.HeadersSent);
 end;
@@ -100,7 +108,7 @@ procedure TTestFilter.TestMatchingBindingRequestFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/bindingfilter';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('true', FRequest.Headers['x-request-binded-filter']);
 end;
 
@@ -108,7 +116,7 @@ procedure TTestFilter.TestMatchingBindingResponseFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/bindingfilter';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('true', FResponse.HeaderFields['x-response-binded-filter']);
 end;
 
@@ -116,7 +124,7 @@ procedure TTestFilter.TestNonMatchingBindingRequestFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreNotEqual('true', FRequest.Headers['x-request-binded-filter']);
 end;
 
@@ -124,7 +132,7 @@ procedure TTestFilter.TestNonMatchingBindingResponseFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreNotEqual('true', FResponse.HeaderFields['x-response-binded-filter']);
 end;
 
@@ -132,7 +140,7 @@ procedure TTestFilter.TestPerMatchingFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('true', FRequest.Headers['x-prematching-filter']);
 end;
 
@@ -140,7 +148,7 @@ procedure TTestFilter.TestPerMatchingFilterWithInvalidResource;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/xxx/yyyy/';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('true', FRequest.Headers['x-prematching-filter']);
   Assert.AreEqual(404, FResponse.StatusCode);
 end;
@@ -149,7 +157,7 @@ procedure TTestFilter.TestRequestFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('true', FRequest.Headers['x-request-filter']);
 end;
 
@@ -157,7 +165,7 @@ procedure TTestFilter.TestResponseFilter;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('true', FResponse.HeaderFields['x-response-filter']);
 end;
 
