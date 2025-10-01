@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2023 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,7 +14,10 @@ interface
 uses
   System.SysUtils,
   System.Rtti,
+  System.JSON,
   System.Generics.Collections,
+  Neon.Core.Attributes,
+  Neon.Core.Persistence.JSON.Schema,
   WiRL.Rtti.Utils,
   WiRL.Core.Classes,
   WiRL.Core.Singleton,
@@ -24,23 +27,6 @@ uses
   WiRL.http.Response;
 
 type
-  /// <entity>Error</entity>
-  TWebExceptionSchema = class
-  private
-    Fdata: TDictionary<string,string>;
-    Fexception: string;
-    Fmessage: string;
-    Fstatus: Integer;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    property status: Integer read Fstatus write Fstatus;
-    property exception: string read Fexception write Fexception;
-    property message: string read Fmessage write Fmessage;
-    property data: TDictionary<string,string> read Fdata write Fdata;
-  end;
-
   Pair = record
   public
     Name: string;
@@ -67,15 +53,17 @@ type
   /// <summary>
   ///   This exception may be thrown by a resource method if a specific HTTP error response needs to be produced.
   /// </summary>
+  [JsonSchema('title=Error')]
   EWiRLWebApplicationException = class(EWiRLException)
   private
+    class procedure SerializeException(AContext: TWiRLContext; E: Exception; const AErrorMediaType: string);
     class function HandleCustomException(AContext: TWiRLContext; E: Exception): Boolean; static;
     class procedure BuildReponse(E: Exception; const AErrorMediaType: string; AResponse: TWiRLResponse);
-  private
-    FValues: TJSONObject;
+  protected
     FStatus: Integer;
+    FException: string;
+    FData: TJSONObject;
 
-    procedure CreateAndFillValues;
     function GetStatus: Integer; virtual;
     procedure SetStatus(const Value: Integer); virtual;
   public
@@ -90,21 +78,16 @@ type
     constructor Create(const AMessage: string); overload;
 
     /// <summary>
-    ///   Construct an exception with a format string
-    /// </summary>
-    constructor CreateFmt(const Msg: string; const Args: array of const);
-
-    /// <summary>
     ///   Construct an exception with specified message and specified HTTP status code.
     /// </summary>
     constructor Create(const AMessage: string; AStatus: Integer); overload;
 
     /// <summary>
-    ///   Construct a web exception with optional values
+    ///   Construct a web exception with optional Data
     /// </summary>
     /// <param name="AMessage">The exception's message</param>
     /// <param name="AStatus">The HTTP status</param>
-    /// <param name="AValues">Optional values that will go in the data part</param>
+    /// <param name="AValues">Optional Data that will go in the data part</param>
     constructor Create(const AMessage: string; AStatus: Integer; AValues: TExceptionValues); overload;
 
     /// <summary>
@@ -112,25 +95,30 @@ type
     /// </summary>
     /// <param name="AInnerException">The inner exception object</param>
     /// <param name="AStatus">The HTTP status</param>
-    /// <param name="AValues">Optional values (will be put in "data" sub-section)</param>
+    /// <param name="AValues">Optional Data (will be put in "data" sub-section)</param>
     constructor Create(AInnerException: Exception; AStatus: Integer; AValues: TExceptionValues); overload;
 
     /// <summary>
-    ///   Construct a web exception with optional values
+    ///   Construct a web exception with optional Data
     /// </summary>
     /// <param name="AMessage">The exception's message</param>
     /// <param name="AStatus">The HTTP status</param>
-    /// <param name="AJObject">Optional JSON object (will be put in "data" sub-section)</param>
-    constructor Create(const AMessage: string; AStatus: Integer; AJObject: TJSONObject); overload;
+    /// <param name="AData">Optional JSON object (it will be **cloned** in "data" sub-section)</param>
+    constructor Create(const AMessage: string; AStatus: Integer; AData: TJSONObject); overload;
+
+    /// <summary>
+    ///   Construct an exception with a format string
+    /// </summary>
+    constructor CreateFmt(const Msg: string; const Args: array of const);
 
     destructor Destroy; override;
 
-    class function ExceptionToJSON(E: Exception): string; overload;
-    class procedure ExceptionToJSON(E: Exception; StatusCode: Integer; AJSONObject: TJSONObject); overload;
     class procedure HandleException(AContext: TWiRLContext; E: Exception); static;
-
-    function ToJSON: string;
+  public
     property Status: Integer read GetStatus write SetStatus;
+    property Exception: string read FException write FException;
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Data: TJSONObject read FData write FData;
   end;
 
   StatusCodeAttribute = class(TCustomAttribute)
@@ -159,34 +147,27 @@ type
   end;
 
   [StatusCode(400)]
-  EWiRLBadRequestException = class(EWiRLHttpStatusException)
-  end;
+  EWiRLBadRequestException = class(EWiRLHttpStatusException);
 
   [StatusCode(401)]
-  EWiRLNotAuthorizedException = class(EWiRLHttpStatusException)
-  end;
+  EWiRLNotAuthorizedException = class(EWiRLHttpStatusException);
 
   [StatusCode(404)]
-  EWiRLNotFoundException = class(EWiRLHttpStatusException)
-  end;
+  EWiRLNotFoundException = class(EWiRLHttpStatusException);
 
   [StatusCode(406)]
-  EWiRLNotAcceptableException = class(EWiRLHttpStatusException)
-  end;
+  EWiRLNotAcceptableException = class(EWiRLHttpStatusException);
 
   [StatusCode(415)]
-  EWiRLUnsupportedMediaTypeException = class(EWiRLHttpStatusException)
-  end;
+  EWiRLUnsupportedMediaTypeException = class(EWiRLHttpStatusException);
 
   // Server errors (50x)
 
   [StatusCode(500)]
-  EWiRLServerException = class(EWiRLHttpStatusException)
-  end;
+  EWiRLServerException = class(EWiRLHttpStatusException);
 
   [StatusCode(501)]
-  EWiRLNotImplementedException = class(EWiRLHttpStatusException)
-  end;
+  EWiRLNotImplementedException = class(EWiRLHttpStatusException);
 
   TWiRLExceptionContext = class(TObject)
   private
@@ -247,10 +228,13 @@ implementation
 
 uses
   System.TypInfo,
-  WiRL.Configuration.Auth,
-  WiRL.http.Accept.MediaType,
   WiRL.Engine.REST,
-  WiRL.Core.Application;
+  WiRL.Core.Injection,
+  WiRL.Core.Application,
+  WiRL.Configuration.Auth,
+  WiRL.Configuration.Errors,
+  WiRL.http.Accept.MediaType,
+  WiRL.Core.MessageBodyWriter;
 
 { Pair }
 
@@ -367,25 +351,40 @@ constructor EWiRLWebApplicationException.Create(const AMessage: string; AStatus:
 begin
   inherited Create(AMessage);
   FStatus := AStatus;
-
-  CreateAndFillValues;
+  FException := ClassName;
+  FData := TJSONObject.Create;
 end;
 
 constructor EWiRLWebApplicationException.Create(const AMessage: string;
     AStatus: Integer; AValues: TExceptionValues);
 var
   LPair: Pair;
-  LData: TJSONObject;
 begin
   Create(AMessage, AStatus);
-  if Length(AValues) > 0 then
-  begin
-    LData := TJSONObject.Create;
-    FValues.AddPair('data', LData);
-    for LPair in AValues do
-      if not LPair.Value.IsEmpty then
-        LData.AddPair(LPair.ToJSONPair);
-  end;
+
+  for LPair in AValues do
+    if not LPair.Value.IsEmpty then
+      FData.AddPair(LPair.ToJSONPair);
+end;
+
+constructor EWiRLWebApplicationException.Create(const AMessage: string; AStatus: Integer; AData: TJSONObject);
+begin
+  Create(AMessage, AStatus);
+
+  if Assigned(AData) then
+    FData := (AData.Clone as TJSONObject);
+end;
+
+constructor EWiRLWebApplicationException.Create(AInnerException: Exception;
+    AStatus: Integer; AValues: TExceptionValues);
+begin
+  Create(AInnerException.Message, AStatus, AValues);
+end;
+
+destructor EWiRLWebApplicationException.Destroy;
+begin
+  FData.Free;
+  inherited;
 end;
 
 class procedure EWiRLWebApplicationException.BuildReponse(E: Exception; const AErrorMediaType: string; AResponse: TWiRLResponse);
@@ -398,48 +397,18 @@ begin
 
     AResponse.StatusCode := LWebException.Status;
     AResponse.SetNonStandardReasonString(LWebException.Message);
-    AResponse.Content := LWebException.ToJSON;
-    AResponse.ContentType := TMediaType.APPLICATION_JSON;
+    //AResponse.Content := LWebException.ToJSON;
+    AResponse.ContentType := AErrorMediaType;
   end
-  else if E is Exception then
+  else if E is System.SysUtils.Exception then
   begin
     AResponse.StatusCode := 500;
     AResponse.SetNonStandardReasonString(E.Message);
-    AResponse.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
-    AResponse.ContentType := TMediaType.APPLICATION_JSON;
+    //AResponse.Content := EWiRLWebApplicationException.ExceptionToJSON(E);
+    AResponse.ContentType := AErrorMediaType;
   end;
-end;
 
-constructor EWiRLWebApplicationException.Create(const AMessage: string;
-    AStatus: Integer; AJObject: TJSONObject);
-var
-  LData: TJSONObject;
-begin
-  Create(AMessage, AStatus);
-  if Assigned(AJObject) then
-  begin
-    LData := (AJObject.Clone as TJSONObject);
-    FValues.AddPair('data', LData);
-  end;
-end;
 
-constructor EWiRLWebApplicationException.Create(AInnerException: Exception;
-    AStatus: Integer; AValues: TExceptionValues);
-begin
-  Create(AInnerException.Message, AStatus, AValues);
-end;
-
-destructor EWiRLWebApplicationException.Destroy;
-begin
-  FValues.Free;
-  inherited;
-end;
-
-class procedure EWiRLWebApplicationException.ExceptionToJSON(E: Exception; StatusCode: Integer; AJSONObject: TJSONObject);
-begin
-  AJSONObject.AddPair(TJSONPair.Create('status', TJSONNumber.Create(StatusCode)));
-  AJSONObject.AddPair(TJSONPair.Create('exception', TJSONString.Create(E.ClassName)));
-  AJSONObject.AddPair(TJSONPair.Create('message', TJSONString.Create(E.Message)));
 end;
 
 function EWiRLWebApplicationException.GetStatus: Integer;
@@ -456,21 +425,6 @@ begin
       FStatus := 500;
   end;
   Result := FStatus;
-end;
-
-class function EWiRLWebApplicationException.ExceptionToJSON(E: Exception): string;
-const
-  InternalServerError = 500;
-var
-  LJSON: TJSONObject;
-begin
-  LJSON := TJSONObject.Create;
-  try
-    ExceptionToJSON(E, InternalServerError, LJSON);
-    Result := TJSONHelper.ToJSON(LJSON);
-  finally
-    LJSON.Free;
-  end;
 end;
 
 class function EWiRLWebApplicationException.HandleCustomException(AContext: TWiRLContext; E: Exception): Boolean;
@@ -496,11 +450,11 @@ var
   LApplication: TWiRLApplication;
 begin
   LApplication := nil;
-  if Assigned(AContext.Application) and (AContext.Application is TWiRLApplication) then
+  if Assigned(AContext.Application) then
   begin
-    LApplication := TWiRLApplication(AContext.Application);
+    LApplication := AContext.Application as TWiRLApplication;
     LAuthChallengeHeader := LApplication.GetConfiguration<TWiRLConfigurationAuth>.AuthChallengeHeader;
-    LErrorMediaType := LApplication.ErrorMediaType;
+    LErrorMediaType := LApplication.GetConfiguration<TWiRLConfigurationErrors>.ErrorMediaType;
   end
   else
     LAuthChallengeHeader := '';
@@ -516,7 +470,10 @@ begin
       LErrorMediaType := TMediaType.APPLICATION_JSON;
   end;
 
-  EWiRLWebApplicationException.BuildReponse(E, LErrorMediaType, AContext.Response);
+  BuildReponse(E, LErrorMediaType, AContext.Response);
+
+  SerializeException(AContext, E, LErrorMediaType);
+
   if (AContext.Response.StatusCode = 401) and (LAuthChallengeHeader <> '') then
     AContext.Response.WWWAuthenticate := LAuthChallengeHeader;
 
@@ -527,31 +484,46 @@ begin
   end;
 end;
 
+class procedure EWiRLWebApplicationException.SerializeException(AContext:
+    TWiRLContext; E: Exception; const AErrorMediaType: string);
+var
+  LApplication: TWiRLApplication;
+  LErrorType: TRttiType;
+  LMediaType: TMediaType;
+  LWriter: IMessageBodyWriter;
+begin
+  if not Assigned(AContext.Application)  then
+    Exit;
+
+  if not (AContext.Application is TWiRLApplication) then
+     Exit;
+
+  LApplication := TWiRLApplication(AContext.Application);
+  LErrorType := TRttiHelper.Context.GetType(E.ClassInfo);
+  LMediaType := TMediaType.Create(AErrorMediaType);
+  try
+    LWriter := LApplication.WriterRegistry.FindWriter(LErrorType, [], LMediaType);
+    TWiRLContextInjectionRegistry.Instance.
+      ContextInjection(LWriter as TObject, AContext);
+
+    if not Assigned(LWriter) then
+      Exit;
+
+    LWriter.WriteTo(E, [], LMediaType, nil, AContext.Response.ContentStream);
+  finally
+    LMediaType.Free;
+  end;
+end;
+
 procedure EWiRLWebApplicationException.SetStatus(const Value: Integer);
 begin
   FStatus := Value;
-end;
-
-procedure EWiRLWebApplicationException.CreateAndFillValues;
-begin
-  FValues := TJSONObject.Create;
-  FValues.AddPair(TJSONPair.Create('status', TJSONNumber.Create(Status)));
-  FValues.AddPair(TJSONPair.Create('exception', TJSONString.Create(Self.ClassName)));
-  FValues.AddPair(TJSONPair.Create('message', TJSONString.Create(Self.Message)));
 end;
 
 constructor EWiRLWebApplicationException.CreateFmt(const Msg: string;
   const Args: array of const);
 begin
   Create(Format(Msg, Args));
-end;
-
-function EWiRLWebApplicationException.ToJSON: string;
-begin
-  if not Assigned(FValues) then
-    CreateAndFillValues;
-
-  Result := TJSONHelper.ToJSON(FValues)
 end;
 
 { TValuesUtil }
@@ -710,19 +682,6 @@ constructor StatusCodeAttribute.Create(AStatusCode: Integer);
 begin
   inherited Create;
   FStatusCode := AStatusCode;
-end;
-
-{ TWebExceptionSchema }
-
-constructor TWebExceptionSchema.Create;
-begin
-  fdata := TDictionary<string,string>.Create;
-end;
-
-destructor TWebExceptionSchema.Destroy;
-begin
-  fdata.Free;
-  inherited;
 end;
 
 end.

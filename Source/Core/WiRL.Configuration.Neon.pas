@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2023 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -37,6 +37,7 @@ type
   [Implements(IWiRLConfigurationNeon)]
   TWiRLConfigurationNeon = class(TWiRLConfiguration, IWiRLConfigurationNeon)
   private
+    FNeonConfiguration: INeonConfiguration;
     FPrettyPrint: Boolean;
     FIgnoreFieldPrefix: Boolean;
     FMemberCustomCase: TCaseFunc;
@@ -69,6 +70,7 @@ type
     function GetSerializers: TNeonSerializerRegistry;
 
     function GetNeonConfig: INeonConfiguration;
+    function GetNewNeonConfig: INeonConfiguration;
  published
     property Members: TNeonMembersSet read FMembers write FMembers;
     property MemberCase: TNeonCase read FMemberCase write FMemberCase;
@@ -140,7 +142,32 @@ end;
 
 function TWiRLConfigurationNeon.GetNeonConfig: INeonConfiguration;
 begin
+  if not Assigned(FNeonConfiguration) then
+  begin
+    FNeonConfiguration := GetNewNeonConfig;
+
+    FNeonConfiguration.Rules.ForClass<TCollection>.SetIgnoreMembers([
+      'ItemClass'
+    ]);
+    FNeonConfiguration.Rules.ForClass<TCollectionItem>.SetIgnoreMembers([
+      'Collection'
+    ]);
+    FNeonConfiguration.Rules.ForClass<Exception>.SetIgnoreMembers([
+      'BaseException',
+      'HelpContext',
+      'InnerException',
+      'StackTrace',
+      'StackInfo'
+    ])
+  end;
+
+  Result := FNeonConfiguration;
+end;
+
+function TWiRLConfigurationNeon.GetNewNeonConfig: INeonConfiguration;
+begin
   Result := TNeonConfiguration.Default;
+
   Result.GetSerializers.Assign(FSerializers);
   Result
    .SetMembers(FMembers)
