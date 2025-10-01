@@ -84,17 +84,17 @@ uses
 
 function TParametersResource.ParamFloat(AParam: Double): Double;
 begin
-  Result := AParam;
+  Result := AParam / 10;
 end;
 
 function TParametersResource.ParamStr(AParam: string): string;
 begin
-  Result := AParam;
+  Result := 'Value: ' + AParam;
 end;
 
 function TParametersResource.ParamDate(AParam: TDate): TDate;
 begin
-  Result := AParam;
+  Result := IncYear(AParam, 1);
 end;
 
 function TParametersResource.ParamArray(AParam: TArrayInt): TArrayInt;
@@ -109,17 +109,17 @@ end;
 
 function TParametersResource.ParamBool(AParam: Boolean): Boolean;
 begin
-  Result := AParam;
+  Result := not AParam;
 end;
 
 function TParametersResource.ParamDateTime(AParam: TDateTime): TDateTime;
 begin
-  Result := AParam;
+  Result := IncHour(AParam, 12);
 end;
 
 function TParametersResource.ParamEnum(AParam: TMyEnum): TMyEnum;
 begin
-  Result := AParam;
+  Result := TMyEnum((Ord(AParam) + 1 ) mod Ord(High(TMyEnum)));
 end;
 
 function TParametersResource.ParamTime(AParam: TTime): TTime;
@@ -129,12 +129,12 @@ end;
 
 function TParametersResource.ParamInt(AParam: Integer): Integer;
 begin
-  Result := AParam;
+  Result := AParam + 1;
 end;
 
 function TParametersResource.ParamObject(AParam: TSimpleParam): string;
 begin
-  Result := AParam.Value;
+  Result := AParam.ToString;
 end;
 
 function TParametersResource.ParamRecord(AParam: TRecordParam): TRecordParam;

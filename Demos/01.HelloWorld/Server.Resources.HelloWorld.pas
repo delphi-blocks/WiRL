@@ -115,6 +115,32 @@ uses
   System.DateUtils, System.StrUtils, System.IOUtils,
   WiRL.http.Accept.Language;
 
+function DumpStream(AStream: TStream; AMaxSize: Integer = -1): string;
+var
+  LBuffer: TBytes;
+  LByte: Byte;
+  LLen: Integer;
+begin
+  // Exit if the stream is empty
+  if AMaxSize.Size = 0 then
+    Exit('');
+
+  // If specified read only the first 'AMaxSize' bytes
+  if (AMaxSize > 0) and (AStream.Size > AMaxSize) then
+    LLen := AMaxSize
+  else
+    LLen := AStream.Size;
+
+  SetLength(LBuffer, LLen);
+  AStream.Read(LBuffer[0], LLen);
+
+  for LByte in LBuffer do
+  begin
+    Result := Result + IntToHex(LByte, 2) + ' ';
+  end;
+end;
+
+
 { THelloWorldResource }
 
 function THelloWorldResource.EchoString(AString: string): string;
@@ -171,10 +197,10 @@ begin
 end;
 
 function THelloWorldResource.PostMultiPartExample(
-      [FormParam] AValue: string;
-      [FormParam] AContent: TWiRLFormDataPart;
-      [FormParam] AJSON: TJSONObject
-    ): TJSONObject;
+  AValue: string;
+  AContent: TWiRLFormDataPart;
+  AJSON: TJSONObject
+): TJSONObject;
 var
   LContentBuffer: TBytes;
 begin
@@ -184,12 +210,15 @@ begin
     .AddPair('AValue', AValue)
     .AddPair('JSON', AJSON.ToJSON)
     .AddPair('FileName', AContent.FileName)
-    .AddPair('ContentSize', TJSONNumber.Create(Length(LContentBuffer)));
+    .AddPair('ContentSize', TJSONNumber.Create(Length(LContentBuffer)))
+    .AddPair('Content', DumpStream(AContent.ContentStream));
 end;
 
 function THelloWorldResource.PostStreamExample(AContent: TStream): string;
 begin
-  Result := 'Stream len: ' + IntToStr(AContent.Size);
+  Result :=
+    'Stream len: ' + IntToStr(AContent.Size) + sLineBreak +
+    DumpStream(AContent) +  sLineBreak;
 end;
 
 function THelloWorldResource.ReverseString(AString: string): string;

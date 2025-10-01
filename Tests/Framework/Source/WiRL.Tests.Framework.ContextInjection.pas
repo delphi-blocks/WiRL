@@ -18,6 +18,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
+  WiRL.Core.Context.Server,
   WiRL.Engine.REST,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
@@ -29,6 +30,7 @@ type
     FServer: TWiRLServer;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
+    FContext: TWiRLContext;
   public
     [Setup]
     procedure Setup;
@@ -75,13 +77,19 @@ begin
   if not FServer.Active then
     FServer.Active := True;
 
+  FContext := TWiRLContext.Create;
+
   FRequest := TWiRLTestRequest.Create;
+  FContext.AddContainer(FRequest, False);
+
   FResponse := TWiRLTestResponse.Create;
+  FContext.AddContainer(FResponse, False);
 end;
 
 procedure TTestContextInjection.TearDown;
 begin
   FServer.Free;
+  FContext.Free;
   FRequest.Free;
   FResponse.Free;
 end;
@@ -90,7 +98,7 @@ procedure TTestContextInjection.TestApplicationOnClass;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/contextinjection/application';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('/app', FResponse.Content);
 end;
 
@@ -98,7 +106,7 @@ procedure TTestContextInjection.TestHelloWorld;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/contextinjection';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('Hello, context injection!', FResponse.Content);
 end;
 
@@ -106,7 +114,7 @@ procedure TTestContextInjection.TestPersonInjection;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/contextinjection/person?name=luca&age=25';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('luca:25', FResponse.Content);
 end;
 
@@ -114,7 +122,7 @@ procedure TTestContextInjection.TestRequestOnClass;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/contextinjection/request';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('/rest/app/contextinjection/request', FResponse.Content);
 end;
 
@@ -122,7 +130,7 @@ procedure TTestContextInjection.TestRequestOnMethod;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/contextinjection/requestmethod?value=123';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('123', FResponse.Content);
 end;
 
@@ -133,7 +141,7 @@ begin
 
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/contextinjection/addcounter';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('2', FResponse.Content);
 
 end;

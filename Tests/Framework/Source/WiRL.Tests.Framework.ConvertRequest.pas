@@ -18,6 +18,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
+  WiRL.Core.Context.Server,
   WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.Configuration.Core,
@@ -29,6 +30,7 @@ type
   [TestFixture]
   TTestConvertRequest = class(TObject)
   private
+    FContext: TWiRLContext;
     FServer: TWiRLServer;
     FApplication: IWiRLApplication;
     FEngine: TWiRLRESTEngine;
@@ -113,8 +115,13 @@ begin
   if not FServer.Active then
     FServer.Active := True;
 
+  FContext := TWiRLContext.Create;
+
   FRequest := TWiRLTestRequest.Create;
+  FContext.AddContainer(FRequest, False);
+
   FResponse := TWiRLTestResponse.Create;
+  FContext.AddContainer(FResponse, False);
 
 end;
 
@@ -122,6 +129,7 @@ procedure TTestConvertRequest.TearDown;
 begin
   FApplication := nil;
   FServer.Free;
+  FContext.Free;
   FRequest.Free;
   FResponse.Free;
 end;
@@ -132,7 +140,7 @@ begin
   FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Boolean), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/boolean?value=' + ABooleanParam;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
@@ -141,7 +149,7 @@ begin
   FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(TDate), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/date?value=' + ADateParam;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
@@ -151,7 +159,7 @@ begin
   FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Double), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/double?value=' + ADoubleParam;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
@@ -161,7 +169,7 @@ begin
   FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Double), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/doublepath/' + ADoubleParam;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
@@ -169,7 +177,7 @@ procedure TTestConvertRequest.TestHelloWorld;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('Hello, convert!', FResponse.Content);
 end;
 
@@ -179,7 +187,7 @@ begin
   FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Integer), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/intpath/' + AIntegerParam;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
@@ -189,7 +197,7 @@ begin
   FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(TDate), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/request?date=' + ADateParam;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
@@ -199,7 +207,7 @@ begin
   FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Double), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/returndouble';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
@@ -208,7 +216,7 @@ begin
   FApplication.Plugin.Configure<IWiRLFormatSetting>.AddFormat(TypeInfo(Integer), AFormat);
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/convert/returnint';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(AExpectedValue, FResponse.Content);
 end;
 
