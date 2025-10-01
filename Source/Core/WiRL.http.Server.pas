@@ -195,14 +195,14 @@ begin
     Exit(False);
 
   if not Supports(FHttpServer, IWiRLServerFactory, LServerFactory) then
-    raise EWiRLServerException.Create('Http Server does''n implements "IWiRLServerHandler"');
+    raise EWiRLServerException.Create('Http Server doesn''t implements "IWiRLServerHandler"');
 
   LRequest := LServerFactory.CreateRequest(Sender, WebRequest);
   try
     LResponse := LServerFactory.CreateRespone(Sender, WebResponse);
     try
       if LResponse.Server = '' then
-        LResponse.Server := 'WiRL Server (Indy)';
+        LResponse.Server := 'WiRL Server (WebBroker)';
       HandleRequest(LRequest, LResponse);
     finally
       LResponse.Free;
