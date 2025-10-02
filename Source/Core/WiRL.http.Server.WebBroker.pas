@@ -4,6 +4,8 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.NetEncoding, System.DateUtils,
+  System.Masks,
+
   Web.HTTPApp,
 
   WiRL.Core.Classes,
@@ -11,14 +13,37 @@ uses
   WiRL.http.Headers,
   WiRL.http.Accept.MediaType,
   WiRL.http.Cookie,
+  WiRL.http.Server,
   WiRL.http.Server.Interfaces,
   WiRL.http.Response,
   WiRL.http.Request,
-  WiRL.Core.Auth.Context;
-
+  WiRL.Core.Context.Server,
+  WiRL.Core.Auth.Context,
+  WiRL.Core.Exceptions;
 
 type
-  // This is a fake implementtion of a TWiRLhttpServer. With WebBroker WiRL does
+  // This class implements the IWebDispatch interface to allow
+  // WebBroker to dispatch incoming requests to the TWiRLServer instance.
+  TWiRLDispatcher = class(TComponent, IWebDispatch)
+  private
+    FServer: TWiRLServer;
+    FDispatchMask: TMask;
+  protected
+    procedure SetServer(const Value: TWiRLServer); virtual;
+  public
+    { IWebDispatch }
+    function DispatchEnabled: Boolean;
+    function DispatchMethodType: TMethodType;
+    function DispatchRequest(Sender: TObject; WebRequest: TWebRequest; WebResponse: TWebResponse): Boolean;
+    function DispatchMask: TMask;
+
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
+    property Server: TWiRLServer read FServer write SetServer;
+  end;
+
+  // This is a fake implementation of a TWiRLhttpServer. With WebBroker WiRL does
   // not need to implement its own server.
   // It can rely on the WebBroker framework to handle HTTP requests and responses.
   // Instead it provides an implementation of the IWiRLServerFactory interface to
@@ -38,7 +63,7 @@ type
 
     { IWiRLServerFactory }
     function CreateRequest(AContext, ARequest: TObject): TWiRLRequest;
-    function CreateRespone(AContext, AResponse: TObject): TWiRLResponse;
+    function CreateResponse(AContext, AResponse: TObject): TWiRLResponse;
   end;
 
   TWiRLHttpRequestWebBroker = class(TWiRLRequest)
@@ -93,6 +118,8 @@ type
     destructor Destroy; override;
   end;
 
+  // At the moment this is just a stub. WebBroker does not expose
+  // any connection object to work with.
   TWiRLConnectionWebBroker = class(TWiRLConnection)
   private
     //FConnection: TXXXConnection;
@@ -117,7 +144,7 @@ begin
   Result := TWiRLHttpRequestWebBroker.Create(AContext, ARequest as TWebRequest);
 end;
 
-function TWiRLhttpServerWebBroker.CreateRespone(
+function TWiRLhttpServerWebBroker.CreateResponse(
   AContext, AResponse: TObject): TWiRLResponse;
 begin
   Result := TWiRLHttpResponseWebBroker.Create(AContext, AResponse as TWebResponse);
@@ -498,6 +525,89 @@ begin
   if Assigned(FContentStream) then
     FContentStream.Free;
   FContentStream := Value;
+end;
+
+{ TWiRLDispatcher }
+
+constructor TWiRLDispatcher.Create(AOwner: TComponent);
+begin
+  inherited;
+  FDispatchMask := nil;
+end;
+
+destructor TWiRLDispatcher.Destroy;
+begin
+  FDispatchMask.Free;
+  FServer := nil;
+  inherited;
+end;
+
+function TWiRLDispatcher.DispatchEnabled: Boolean;
+begin
+  Result := False;
+  if Assigned(FServer) then
+    Result := FServer.Active;
+end;
+
+function TWiRLDispatcher.DispatchMask: TMask;
+begin
+  if not Assigned(FDispatchMask) then
+  begin
+    FDispatchMask := TMask.Create('*');
+  end;
+  Result := FDispatchMask;
+end;
+
+function TWiRLDispatcher.DispatchMethodType: TMethodType;
+begin
+  Result := mtAny;
+end;
+
+function TWiRLDispatcher.DispatchRequest(Sender: TObject; WebRequest: TWebRequest;
+  WebResponse: TWebResponse): Boolean;
+var
+  LServerFactory: IWiRLServerFactory;
+  LRequest: TWiRLRequest;
+  LResponse: TWiRLResponse;
+  LContext: TWiRLContext;
+begin
+  if not Assigned(FServer) then
+    Exit(False);
+
+  // if there's not a registered engine to handle the request skip the process
+  if not Assigned(FServer.FindEngine(WebRequest.PathInfo)) then
+    Exit(False);
+
+  if not Supports(FServer.HttpServer, IWiRLServerFactory, LServerFactory) then
+    raise EWiRLServerException.Create('Http Server doesn''t implements "IWiRLServerHandler"');
+
+  LContext := TWiRLContext.Create;
+  try
+    LContext.AddContainer(WebRequest, False);
+    LContext.AddContainer(WebResponse, False);
+    LRequest := LServerFactory.CreateRequest(Sender, WebRequest);
+    try
+      LResponse := LServerFactory.CreateResponse(Sender, WebResponse);
+      try
+        if LResponse.Server = '' then
+          LResponse.Server := 'WiRL Server (WebBroker)';
+        FServer.HandleRequest(LContext, LRequest, LResponse);
+      finally
+        LResponse.Free;
+      end;
+    finally
+      LRequest.Free;
+    end;
+  finally
+    LContext.Free;
+  end;
+
+  Result := True;
+end;
+
+procedure TWiRLDispatcher.SetServer(const Value: TWiRLServer);
+begin
+  FServer := Value;
 end;
 
 initialization

@@ -53,7 +53,7 @@ type
   IWiRLServerFactory = interface
   ['{360F2B44-A164-4C34-A8AA-8E4B11C360B9}']
     function CreateRequest(AContext, ARequest: TObject): TWiRLRequest;
-    function CreateRespone(AContext, AResponse: TObject): TWiRLResponse;
+    function CreateResponse(AContext, AResponse: TObject): TWiRLResponse;
   end;
 
   TWiRLServerRegistry = class(TDictionary<string, TClass>)

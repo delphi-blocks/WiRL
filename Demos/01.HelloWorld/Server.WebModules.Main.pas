@@ -23,10 +23,13 @@ type
     procedure WebModule1DefaultHandlerAction(Sender: TObject;
       Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
   private
-    RESTServer: TWiRLServer;
+    FWiRLServer: TWiRLServer;
+    FDispatcher: TWiRLDispatcher;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    property Action;
   end;
 
 var
@@ -41,9 +44,9 @@ implementation
 constructor TMainWebModule.Create(AOwner: TComponent);
 begin
   inherited;
-  RESTServer := TWiRLServer.Create(Self);
+  FWiRLServer := TWiRLServer.Create(nil);
 
-  RESTServer.AddEngine<TWiRLRESTEngine>('/rest')
+  FWiRLServer.AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('RESTEngine')
     .AddApplication('/app')
       .SetResources('*')
@@ -58,16 +61,21 @@ begin
         .SetVisibility([mvPublic, mvPublished])
         .SetMemberCase(TNeonCase.PascalCase);
 
-  RESTServer.AddEngine<TWiRLWebServerEngine>('/')
+  FWiRLServer.AddEngine<TWiRLWebServerEngine>('/')
     .SetEngineName('FileSystemEngine')
     .SetRootFolder('..\..\www');
 
-  RESTServer.Active := True;
+  FWiRLServer.Active := True;
+
+  // Create the dispatcher for WebBroker
+  FDispatcher := TWiRLDispatcher.Create(Self);
+  FDispatcher.Server := FWiRLServer;
 end;
 
 destructor TMainWebModule.Destroy;
 begin
-  RESTServer.Free;
+  FWiRLServer.Free;
+  FDispatcher.Free;
   inherited;
 end;
 
