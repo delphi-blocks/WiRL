@@ -169,10 +169,22 @@ var
 function EncodingFromCharSet(const ACharset: string): TEncoding;
 function ContentStreamToString(const ACharset: string; AContentStream: TStream): string;
 
+function DateTimeToHTTPDate(ADateTime: TDateTime): string;
+
 implementation
 
 uses
   WiRL.Core.Application;
+
+function DateTimeToHTTPDate(ADateTime: TDateTime): string;
+const
+  HTTPDateFormat = 'ddd, dd mmm yyyy hh:nn:ss "GMT"';
+var
+  FS: TFormatSettings;
+begin
+  FS := TFormatSettings.Create('en-US');
+  Result := FormatDateTime(HTTPDateFormat, ADateTime, FS);
+end;
 
 function DefaultCharSetEncoding: TEncoding;
 begin

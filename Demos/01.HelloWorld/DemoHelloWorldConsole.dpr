@@ -19,6 +19,7 @@ uses
   WiRL.Console.Base,
   WiRL.Console.Factory,
   WiRL.Engine.REST,
+  WiRL.Engine.WebServer,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   Server.Resources.HelloWorld in 'Server.Resources.HelloWorld.pas',
@@ -49,6 +50,10 @@ begin
               'Server.Resources.Database.TDatabaseResource',
               'Server.Resources.Params.TParametersResource'])
         ;
+
+        AServer.AddEngine<TWiRLWebServerEngine>('/')
+          .SetEngineName('FileSystemEngine')
+          .SetRootFolder('..\..\www');
       end
     );
     try

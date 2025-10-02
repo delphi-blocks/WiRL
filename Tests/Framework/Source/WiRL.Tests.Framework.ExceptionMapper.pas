@@ -18,6 +18,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
+  WiRL.Core.Context.Server,
   WiRL.Core.Application,
   WiRL.Engine.REST,
   WiRL.http.Accept.MediaType,
@@ -28,6 +29,7 @@ type
   TTestExceptionMapper = class(TObject)
   private
     FServer: TWiRLServer;
+    FContext: TWiRLContext;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
     FJSon: TJSONValue;
@@ -85,14 +87,21 @@ begin
     FServer.Active := True;
 
   FJSon := nil;
+
+  FContext := TWiRLContext.Create;
+
   FRequest := TWiRLTestRequest.Create;
+  FContext.AddContainer(FRequest, False);
+
   FResponse := TWiRLTestResponse.Create;
+  FContext.AddContainer(FResponse, False);
 end;
 
 procedure TTestExceptionMapper.TearDown;
 begin
   FJSon.Free;
   FServer.Free;
+  FContext.Free;
   FRequest.Free;
   FResponse.Free;
 end;
@@ -101,7 +110,7 @@ procedure TTestExceptionMapper.TestBasicException;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/exception/basic';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   FJSon := TJSONObject.ParseJSONValue(FResponse.Content);
   Assert.AreEqual(500, FResponse.StatusCode);
   Assert.AreEqual(Exception.ClassName, FJSon.GetValue<string>('exception'));
@@ -112,7 +121,7 @@ procedure TTestExceptionMapper.TestCustomException;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/exception/customnotfound';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   FJSon := TJSONObject.ParseJSONValue(FResponse.Content);
   Assert.AreEqual(400, FResponse.StatusCode);
   Assert.AreEqual('EMyNotFoundException', FJSon.GetValue<string>('exception'));
@@ -124,7 +133,7 @@ procedure TTestExceptionMapper.TestExceptionSubScriber;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/exception/basic';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
 
   Assert.AreEqual(1, FExceptionHandlerCount);
 end;
@@ -133,7 +142,7 @@ procedure TTestExceptionMapper.TestHelloWorld;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/exception';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('Hello, exception!', FResponse.Content);
 end;
 

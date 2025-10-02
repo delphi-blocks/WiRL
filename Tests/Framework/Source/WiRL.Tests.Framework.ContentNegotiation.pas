@@ -11,6 +11,7 @@ uses
   WiRL.Core.Metadata,
   WiRL.Core.Registry,
   WiRL.Core.Context,
+  WiRL.Core.Context.Server,
   WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Response,
@@ -27,6 +28,7 @@ type
     FServer: TWiRLServer;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
+    FContext: TWiRLContext;
   public
     [Setup]
     procedure Setup;
@@ -99,13 +101,20 @@ begin
   if not FServer.Active then
     FServer.Active := True;
 
+  FContext := TWiRLContext.Create;
+
   FRequest := TWiRLTestRequest.Create;
+  FContext.AddContainer(FRequest, False);
+
   FResponse := TWiRLTestResponse.Create;
+  FContext.AddContainer(FResponse, False);
+
 end;
 
 procedure TTestContentNegotiation.TearDown;
 begin
   FServer.Free;
+  FContext.Free;
   FRequest.Free;
   FResponse.Free;
 end;
@@ -115,7 +124,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/coneg';
   FRequest.Accept := TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.AreEqual(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8, FResponse.ContentType);
 end;
@@ -125,7 +134,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/coneg';
   FRequest.Accept := TMediaType.TEXT_CSV;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(404, FResponse.StatusCode);
 end;
 
@@ -133,7 +142,7 @@ procedure TTestContentNegotiation.TestMainWithoutAccept;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/coneg';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.AreEqual('ciaoà€', FResponse.Content);
   Assert.AreEqual(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8, FResponse.ContentType);
@@ -145,7 +154,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/coneg/xml';
   //FRequest.Accept := TMediaType.TEXT_XML;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.AreEqual('GetObjectXml', FResponse.HeaderFields['X-Resource-Name']);
   Assert.AreEqual(TMediaType.APPLICATION_XML, FResponse.ContentType);
@@ -156,7 +165,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/coneg';
   FRequest.Accept := TMediaType.APPLICATION_JSON;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.AreEqual(TMediaType.APPLICATION_JSON, FResponse.ContentType);
 end;
@@ -166,7 +175,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/coneg';
   FRequest.Accept := TMediaType.APPLICATION_XML;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.AreEqual(TMediaType.APPLICATION_XML, FResponse.ContentType);
 end;
@@ -176,7 +185,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/coneg';
   FRequest.Accept := TMediaType.TEXT_PLAIN;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.AreEqual(TMediaType.TEXT_PLAIN + TMediaType.WITH_CHARSET_UTF8, FResponse.ContentType);
 end;
@@ -186,7 +195,7 @@ begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/coneg/text-nocharset';
   FRequest.Accept := TMediaType.TEXT_PLAIN;
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(200, FResponse.StatusCode);
   Assert.AreEqual(TMediaType.TEXT_PLAIN, FResponse.ContentType);
   Assert.AreEqual('TextPlain', FResponse.HeaderFields['X-Resource-Name']);
