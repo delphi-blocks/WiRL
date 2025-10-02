@@ -3,10 +3,11 @@ unit ServerResources;
 interface
 
 uses
+  System.SysUtils,
+  System.Classes,
+
   WiRL.Core.Attributes,
-  WiRL.http.Accept.MediaType,
-  SysUtils,
-  Classes;
+  WiRL.http.Accept.MediaType;
 
 type
   [Path('helloworld')]
