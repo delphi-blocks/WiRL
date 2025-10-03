@@ -165,6 +165,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.Compression.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.OpenAPI.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.WebBroker.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

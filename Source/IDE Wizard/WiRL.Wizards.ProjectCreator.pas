@@ -9,7 +9,7 @@ resourcestring
   SWiRLServerProject = 'WiRLServerProject';
 
 type
-  TWiRLServerProjectCreator = class(TInterfacedObject, IOTACreator, IOTAProjectCreator50, IOTAProjectCreator80,IOTAProjectCreator160, IOTAProjectCreator)
+  TWiRLServerProjectCreator = class(TInterfacedObject, IOTACreator, IOTAProjectCreator50, IOTAProjectCreator80,IOTAProjectCreator160, IOTAProjectCreator{$IF CompilerVersion >= 32.0}, IOTAProjectCreator190 {$ENDIF})
   private
     FServerConfig: TServerConfig;
   public
@@ -40,6 +40,9 @@ type
     function GetPlatforms: TArray<string>;
     function GetPreferredPlatform: string;
     procedure SetInitialOptions(const NewProject: IOTAProject);
+
+    // IOTAProjectCreator190
+    function GetSupportedPlatforms: TArray<string>;
 
     constructor Create(AServerConfig: TServerConfig);
   end;
@@ -92,8 +95,11 @@ end;
 {$REGION 'IOTAProjectCreator'}
 
 function TWiRLServerProjectCreator.GetFileName: string;
+var
+  LSuffix: string;
 begin
-  Result := GetCurrentDir + '\' + SWiRLServerProject + '.dpr';
+  Result := GetNewModuleFileName('Project', '',
+      '', False, LSuffix, '.bdsproj;.dproj;.dpr;.dpk;.cbproj')
 end;
 
 function TWiRLServerProjectCreator.GetOptionFileName: string; deprecated;
@@ -104,6 +110,11 @@ end;
 function TWiRLServerProjectCreator.GetShowSource: Boolean;
 begin
   Result := True;
+end;
+
+function TWiRLServerProjectCreator.GetSupportedPlatforms: TArray<string>;
+begin
+  Result := [GetPreferredPlatform];
 end;
 
 function TWiRLServerProjectCreator.NewProjectSource(const ProjectName: string): IOTAFile;
