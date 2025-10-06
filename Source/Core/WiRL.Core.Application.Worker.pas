@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2024 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -611,10 +611,11 @@ begin
     AddArgumentsToGarbage(LArgumentArray);
 
     LMethodResult := FLocator.Method.RttiObject.Invoke(AInstance, LArgumentArray);
-    AddResultToGarbage(LMethodResult);
 
     if FLocator.Method.IsFunction then
     begin
+      AddResultToGarbage(LMethodResult);
+
       if LMethodResult.IsInstanceOf(TWiRLResponse) then
       begin
         // Request is already done
@@ -643,6 +644,10 @@ begin
           'Resource''s returned type not supported',
           Self.ClassName, 'InvokeResourceMethod'
         );
+    end
+    else // It's a procedure so we must set the 204 (no content) status code
+    begin
+      FContext.Response.StatusCode := 204;
     end;
   finally
     FGC.CollectGarbage;
