@@ -24,7 +24,8 @@ uses
   WiRL.Engine.WebServer,
   WiRL.Engine.FileSystem,
   WiRL.http.Server,
-  WiRL.http.Server.Indy;
+  WiRL.http.Server.Indy,
+  WiRL.http.Server.WebBroker;
 
 procedure Register;
 
@@ -107,8 +108,10 @@ begin
   RegisterComponents('WiRL Server', [TWiRLWebServerEngine]);
   RegisterComponents('WiRL Server', [TWiRLFileSystemEngine]);
   RegisterComponents('WiRL Server', [TWiRLMBWDefaultProvider]);
+  RegisterComponents('WiRL Server', [TWiRLDispatcher]);
 
   RegisterPackageWizard(TWiRLServeProjectWizard.Create);
+  RegisterPackageWizard(TWiRLResourceModuleWizard.Create);
 
   RegisterSplashScreen;
   RegisterAboutBox;

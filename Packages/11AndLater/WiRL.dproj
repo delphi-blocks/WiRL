@@ -7,8 +7,9 @@
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Package</AppType>
         <FrameworkType>None</FrameworkType>
-        <ProjectVersion>19.5</ProjectVersion>
+        <ProjectVersion>20.3</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectName Condition="'$(ProjectName)'==''">WiRL</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -42,7 +43,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;../../Libs/OpenAPI/Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_DcuOutput>..\..\Lib\280\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>..\..\Lib\290\$(Platform)\$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>WiRL</SanitizedProjectName>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_Description>WiRL REST Library</DCC_Description>
@@ -127,6 +128,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.http.Response.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Indy.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.WebBroker.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Interfaces.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.URL.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Headers.pas"/>
@@ -163,7 +165,9 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.Converter.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.Compression.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.OpenAPI.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Configuration.Errors.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.WebBroker.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -196,6 +200,7 @@
                 <Platform value="OSXARM64">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
+                <Platform value="Win64x">False</Platform>
             </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

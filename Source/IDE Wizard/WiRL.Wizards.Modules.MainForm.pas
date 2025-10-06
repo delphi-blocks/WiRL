@@ -9,12 +9,14 @@ uses
 resourcestring
   SWiRLServerMainFormSRC = 'WiRLServerMainFormSRC';
   SWiRLServerMainFormDFM = 'WiRLServerMainFormDFM';
-  SMainFormFileName = 'ServerMainForm';
+  SMainFormFileName = 'FormUnit';
 
 type
   TWiRLServerMainFormCreator = class(TInterfacedObject, IOTACreator, IOTAModuleCreator)
   private
     FServerConfig: TServerConfig;
+    FFileName: string;
+    FUnitName: string;
   public
     // IOTACreator
     function GetCreatorType: string;
@@ -45,7 +47,7 @@ type
   public
     function GetSource: string; override;
 
-    constructor Create(const AResourceName: string; AServerConfig: TServerConfig);
+    constructor Create(const AUnitName: string; AServerConfig: TServerConfig);
   end;
 
   TWiRLMainFormDfm = class(TWiRLSourceFile)
@@ -54,7 +56,7 @@ type
   public
     function GetSource: string; override;
 
-    constructor Create(const AResourceName: string; AServerConfig: TServerConfig);
+    constructor Create(AServerConfig: TServerConfig);
   end;
 
 implementation
@@ -99,7 +101,7 @@ end;
 
 function TWiRLServerMainFormCreator.GetImplFileName: string;
 begin
-  Result := GetCurrentDir + '\' + SMainFormFileName + '.pas';
+  Result := FFileName;
 end;
 
 function TWiRLServerMainFormCreator.GetIntfFileName: string;
@@ -129,23 +131,28 @@ end;
 
 function TWiRLServerMainFormCreator.NewFormFile(const FormIdent, AncestorIdent: string): IOTAFile;
 begin
-  Result := TWiRLMainFormDfm.Create(SWiRLServerMainFormDFM, FServerConfig);
+  Result := TWiRLMainFormDfm.Create(FServerConfig);
 end;
 
 function TWiRLServerMainFormCreator.NewImplSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
 begin
-  Result := TWiRLMainFormSource.Create(SWiRLServerMainFormSRC, FServerConfig);
+  Result := TWiRLMainFormSource.Create(FUnitName, FServerConfig);
 end;
 
 function TWiRLServerMainFormCreator.NewIntfSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
 begin
-  Result := NIL;
+  Result := nil;
 end;
 
 constructor TWiRLServerMainFormCreator.Create(AServerConfig: TServerConfig);
+var
+  LSuffix: string;
 begin
   inherited Create;
   FServerConfig := AServerConfig;
+  //FFileName := IncludeTrailingPathDelimiter(GetDefaultDirectory) + SMainFormFileName + '.pas';
+  FFileName := GetNewModuleFileName(SMainFormFileName, '', '', False, LSuffix);
+  FUnitName := ExtractFileName(ChangeFileExt(FFileName, ''));
 end;
 
 procedure TWiRLServerMainFormCreator.FormCreated(const FormEditor: IOTAFormEditor);
@@ -156,10 +163,10 @@ end;
 
 { TWiRLMainFormSource }
 
-constructor TWiRLMainFormSource.Create(const AResourceName: string;
+constructor TWiRLMainFormSource.Create(const AUnitName: string;
   AServerConfig: TServerConfig);
 begin
-  inherited Create(AResourceName);
+  inherited Create(SWiRLServerMainFormSRC, AUnitName);
   FServerConfig := AServerConfig;
 end;
 
@@ -182,10 +189,9 @@ end;
 
 { TWiRLMainFormDfm }
 
-constructor TWiRLMainFormDfm.Create(const AResourceName: string;
-  AServerConfig: TServerConfig);
+constructor TWiRLMainFormDfm.Create(AServerConfig: TServerConfig);
 begin
-  inherited Create(AResourceName);
+  inherited Create(SWiRLServerMainFormDFM);
   FServerConfig := AServerConfig;
 end;
 

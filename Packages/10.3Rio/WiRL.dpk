@@ -134,7 +134,8 @@ contains
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Configuration.Compression in '..\..\Source\Core\WiRL.Configuration.Compression.pas',
   WiRL.Configuration.OpenAPI in '..\..\Source\Core\WiRL.Configuration.OpenAPI.pas',
-  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas';
+  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
+  WiRL.http.Server.WebBroker in '..\..\Source\Core\WiRL.http.Server.WebBroker.pas';
 
 end.
 

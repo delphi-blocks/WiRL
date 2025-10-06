@@ -8,12 +8,15 @@ uses
 
 resourcestring
   SWiRLServerResources = 'WiRLServerResources';
-  SServerResourcesFileName = 'ServerResources';
+  //SServerResourcesFileName = 'ServerResources';
+  SServerResourcesFileName = 'ResourceUnit';
 
 type
   TWiRLServerResourcesCreator = class(TInterfacedObject, IOTACreator, IOTAModuleCreator)
   private
     FServerConfig: TServerConfig;
+    FFileName: string;
+    FUnitName: string;
   public
     // IOTACreator
     function GetCreatorType: string;
@@ -36,6 +39,12 @@ type
     procedure FormCreated(const FormEditor: IOTAFormEditor);
 
     constructor Create(AServerConfig: TServerConfig);
+  end;
+
+  TWiRLResourceFile = class(TWiRLSourceFile)
+  public
+    function GetSource: string; override;
+    constructor Create(const AUnitName: string);
   end;
 
 implementation
@@ -80,7 +89,7 @@ end;
 
 function TWiRLServerResourcesCreator.GetImplFileName: string;
 begin
-  Result := GetCurrentDir + '\' + SServerResourcesFileName + '.pas';
+  Result := FFileName;
 end;
 
 function TWiRLServerResourcesCreator.GetIntfFileName: string;
@@ -105,7 +114,7 @@ end;
 
 function TWiRLServerResourcesCreator.GetShowSource: Boolean;
 begin
-  Result := False;
+  Result := True;
 end;
 
 function TWiRLServerResourcesCreator.NewFormFile(const FormIdent, AncestorIdent: string): IOTAFile;
@@ -115,18 +124,22 @@ end;
 
 function TWiRLServerResourcesCreator.NewImplSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
 begin
-  Result := TWiRLSourceFile.Create(SWiRLServerResources);
+  Result := TWiRLResourceFile.Create(FUnitName);
 end;
 
 function TWiRLServerResourcesCreator.NewIntfSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
 begin
-  Result := NIL;
+  Result := nil;
 end;
 
 constructor TWiRLServerResourcesCreator.Create(AServerConfig: TServerConfig);
+var
+  LSuffix: string;
 begin
   inherited Create;
   FServerConfig := AServerConfig;
+  FFileName := GetNewModuleFileName(SServerResourcesFileName, '', '', False, LSuffix);
+  FUnitName := ExtractFileName(ChangeFileExt(FFileName, ''));
 end;
 
 procedure TWiRLServerResourcesCreator.FormCreated(const FormEditor: IOTAFormEditor);
@@ -134,5 +147,24 @@ begin
 end;
 
 {$ENDREGION}
+
+{ TWiRLResourceFile }
+
+constructor TWiRLResourceFile.Create(const AUnitName: string);
+begin
+  inherited Create(SWiRLServerResources, AUnitName);
+end;
+
+function TWiRLResourceFile.GetSource: string;
+var
+  LResourcePath: string;
+  LClassName: string;
+begin
+  LClassName := 'T' + ModuleName;
+  LResourcePath := StringReplace(LowerCase(ModuleName), 'unit', '', []);
+  Result := inherited GetSource;
+  Result := StringReplace(Result, '%RESOURCE_PATH%', LResourcePath, [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, '%CLASS_NAME%', LClassName, [rfReplaceAll, rfIgnoreCase]);
+end;
 
 end.

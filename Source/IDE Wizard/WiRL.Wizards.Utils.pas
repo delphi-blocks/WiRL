@@ -49,13 +49,24 @@ type
   TWiRLSourceFile = class(TInterfacedObject, IOTAFile)
   strict private
     FResourceName: string;
+    FModuleName: string;
   strict protected
     property ResourceName: string read FResourceName;
+    property ModuleName: string read FModuleName;
   public
-    constructor Create(const AResourceName: string);
+    constructor Create(const AResourceName: string); overload;
+    constructor Create(const AResourceName, AModuleName: string); overload;
     function GetAge: TDateTime; virtual;
     function GetSource: string; virtual;
   end;
+
+function GetDefaultDirectory: string;
+
+function GetUniqueUnitName(const BaseUnitName: string): string;
+
+function GetNewModuleFileName(const APrefix, AOptionalDirectory,
+  AOptionalFileName: string; AUseDefaultFileExt: Boolean;
+  out LSuffix: string; const AExtensions: string = ''): string;
 
 implementation
 
@@ -63,6 +74,176 @@ uses
   System.Types,
   System.SysUtils,
 	System.Classes;
+
+function ExistsModule(const AModuleName: string): Boolean;
+var
+  ModuleServices: IOTAModuleServices;
+  I: Integer;
+begin
+  Result := False;
+  ModuleServices := BorlandIDEServices as IOTAModuleServices;
+  for I := 0 to ModuleServices.ModuleCount - 1 do
+  begin
+    if SameText(ExtractFileName(ModuleServices.Modules[I].FileName), AModuleName) then
+      Exit(True);
+  end;
+end;
+
+function GetNewModuleFileName(const APrefix, AOptionalDirectory,
+  AOptionalFileName: string; AUseDefaultFileExt: Boolean;
+  out LSuffix: string; const AExtensions: string): string;
+var
+  LServices: IOTAModuleServices;
+
+  function CheckFileExists(const AFileName: string): Boolean;
+  begin
+    Result := FileExists(AFileName) or
+      ((BorlandIDEServices as IOTAModuleServices).FindModule(AFileName) <> nil);
+  end;
+
+  function CheckExtensions(const AFileName: string; const AExtensions: TStrings): Boolean;
+  var
+    Index: Integer;
+  begin
+    Result := False;
+    for Index := 0 to AExtensions.Count - 1 do
+    begin
+      Result := CheckFileExists(ChangeFileExt(AFileName, AExtensions[Index]));
+      if Result then
+        Break;
+    end;
+  end;
+
+  function ModuleOrFileExists(const AFileName: string; const AExtensions: TStrings): Boolean;
+  begin
+    Result := CheckFileExists(AFileName);
+    if (not Result) and (AExtensions <> nil) then
+      Result := CheckExtensions(AFileName, AExtensions)
+  end;
+
+  function CanFormatFileName(const AFileName: string): Boolean;
+  begin
+    Result := (Pos('%d', Lowercase(AFileName)) >= 1) or (Pos('%0:d', Lowercase(AFileName)) >= 1);
+  end;
+
+  function MakeFileName(const ADirectory, AFileName, AFileExt: string): string; overload;
+  begin
+    Result := Format('%0:s%1:s%2:d%3:s', [ADirectory, AFileName, AFileExt]);
+  end;
+
+  function MakeFileName(const ADirectory, AFileName, AIndex, AFileExt: string): string; overload;
+  begin
+    Assert(AFileName <> Format(AFileName, [AIndex]));
+    Result := MakeFileName(ADirectory, Format(AFileName, [AIndex]), AFileExt);
+  end;
+
+  function FindNextAvailableFileName(const AFileName: string; out LSuffix: string; const AExtensions: TStrings): string;
+  var
+    I: Integer;
+    LFileNameFormat: string;
+  begin
+    LSuffix := '';
+    LFileNameFormat := AFileName;
+    if not CanFormatFileName(LFileNameFormat) then
+      LFileNameFormat := ExtractFilePath(LFileNameFormat) +
+        ChangeFileExt(ExtractFileName(LFileNameFormat), '') + '%d' +
+        ExtractFileExt(LFileNameFormat);
+    I := 1;
+    Result := Format(LFileNameFormat, [I]);
+    while ModuleOrFileExists(Result, AExtensions) do
+    begin
+      Inc(I);
+      Result := Format(LFileNameFormat, [I]);
+    end;
+    LSuffix := IntToStr(I);
+  end;
+
+  function GetDefaultFileExt: string;
+  var
+    LNewTextFileIdent, LNewClassName, LNewFileName: string;
+  begin
+    LServices.GetNewModuleAndClassName(APrefix,    // Do not localize
+      LNewTextFileIdent, LNewClassName, LNewFileName);
+    Result := ExtractFileExt(LNewFileName);
+  end;
+
+  function GetDefaultDirectory: string;
+  var
+    LNewTextFileIdent, LNewClassName, LNewFileName: string;
+  begin
+    LServices.GetNewModuleAndClassName(APrefix,    // Do not localize
+      LNewTextFileIdent, LNewClassName, LNewFileName);
+    Result := ExtractFilePath(LNewFileName);
+  end;
+var
+  LFileName:string;
+  LDirectory: string;
+  LExtensions: TStrings;
+begin
+  LExtensions := nil;
+  try
+    if AExtensions <> '' then
+    begin
+      LExtensions := TStringList.Create;
+      LExtensions.Delimiter := ';';
+      LExtensions.DelimitedText := AExtensions;
+      Assert(LExtensions.Count >= 1);
+    end;
+
+    LSuffix := '';
+    LServices := (BorlandIDEServices as IOTAModuleServices);
+    if AOptionalFileName = '' then
+      LFileName := ChangeFileExt(APrefix + '%d', GetDefaultFileExt) // do not localize
+    else
+    begin
+      LFileName := AOptionalFileName;
+      if AUseDefaultFileExt then
+        LFileName := ChangeFileExt(LFileName, GetDefaultFileExt);
+    end;
+    if AOptionalDirectory <> '' then
+      LDirectory := ExtractFilePath(AOptionalDirectory)
+    else
+      LDirectory := GetDefaultDirectory;
+    if not CanFormatFileName(LFileName) then
+    begin
+      Result := LDirectory + LFileName;
+      if ModuleOrFileExists(Result, LExtensions) then
+        Result := FindNextAvailableFileName(Result, LSuffix, LExtensions);
+    end
+    else
+      Result := FindNextAvailableFileName(LDirectory + LFileName, LSuffix, LExtensions);
+  finally
+    LExtensions.Free;
+  end;
+end;
+
+function GetDefaultDirectory: string;
+var
+  LServices: IOTAModuleServices;
+  LNewTextFileIdent, LNewClassName, LNewFileName: string;
+begin
+  LServices := (BorlandIDEServices as IOTAModuleServices);
+  LServices.GetNewModuleAndClassName('Unnamed',    // Do not localize
+    LNewTextFileIdent, LNewClassName, LNewFileName);
+  Result := ExtractFilePath(LNewFileName);
+end;
+
+function GetUniqueUnitName(const BaseUnitName: string): string;
+var
+  ModuleServices: IOTAModuleServices;
+  Suffix: Integer;
+begin
+  ModuleServices := BorlandIDEServices as IOTAModuleServices;
+
+  Suffix := 1;
+  Result := BaseUnitName + IntToStr(Suffix);
+
+  while ExistsModule(Result + '.pas') do
+  begin
+    Result := BaseUnitName + IntToStr(Suffix);
+    Inc(Suffix);
+  end;
+end;
 
 function ActiveProjectGroup: IOTAProjectGroup;
 var
@@ -169,6 +350,13 @@ begin
   FResourceName := AResourceName;
 end;
 
+constructor TWiRLSourceFile.Create(const AResourceName, AModuleName: string);
+begin
+  inherited Create;
+  FResourceName := AResourceName;
+  FModuleName := AModuleName;
+end;
+
 function TWiRLSourceFile.GetAge: TDateTime;
 begin
   Result := -1;
@@ -179,6 +367,11 @@ var
   Res: TResourceStream;
   S: TStrings;
 begin
+  if FModuleName = '' then
+  begin
+    FModuleName := GetUniqueUnitName('Unit');
+  end;
+
   Res := TResourceStream.Create(HInstance, ResourceName, RT_RCDATA);
   try
     if Res.Size = 0 then
@@ -195,6 +388,7 @@ begin
   finally
     Res.Free;
   end;
+  Result := StringReplace(Result, '%UNIT_NAME%', FModuleName, [rfReplaceAll, rfIgnoreCase]);
 end;
 
 {$ENDREGION}

@@ -1,4 +1,4 @@
-unit ServerMainForm;
+unit %UNIT_NAME%;
 
 interface
 
@@ -6,7 +6,7 @@ uses
   System.Actions, System.SysUtils, System.Classes, Vcl.Forms, Vcl.ActnList,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
 
-  WiRL.Core.Engine,
+  WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   WiRL.Core.Application;
@@ -42,9 +42,9 @@ implementation
 {$R *.dfm}
 
 uses
+  %MESSAGE_BODY_UNIT%
   WiRL.Core.JSON,
-  WiRL.Rtti.Utils,%MESSAGE_BODY_UNIT%
-  ServerResources;
+  WiRL.Rtti.Utils;
 
 constructor TMainForm.Create(AOwner: TComponent);
 begin
@@ -52,7 +52,7 @@ begin
   PortNumberEdit.Text := '%SERVICE_PORT%';
   FServer := TWiRLServer.Create(Self);
 
-  FServer.AddEngine<TWiRLEngine>('%ENGINE_PATH%')
+  FServer.AddEngine<TWiRLRESTEngine>('%ENGINE_PATH%')
     .SetEngineName('RESTEngine')
     .AddApplication('%APP_PATH%')
       .SetResources('*')
