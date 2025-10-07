@@ -22,10 +22,27 @@ uses
   WiRL.Rtti.Utils;
 
 type
+  /// <summary>
+  /// Factory interface to create context objects. The class implementing this
+  /// interface must be registered in the global TWiRLContextInjectionRegistry.
+  /// If a custom disposer is needed, the class must also implement IContextObjectDisposer.
+  /// </summary>
   IContextObjectFactory = interface
   ['{43596462-9B26-4B84-BD5C-0225900F6C93}']
     function CreateContextObject(const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
   end;
+
+  /// <summary>
+  /// Optional interface for custom disposal of context objects. 
+  /// Classes implementing this interface must also implement IContextObjectFactory 
+  /// and be registered in the global TWiRLContextInjectionRegistry.
+  /// This allows factories to define custom cleanup logic for their context objects.
+  /// </summary>
+  IContextObjectDisposer = interface
+  ['{2E2950CE-93C7-463D-8C2A-B336E8FD3BD4}']
+    procedure FreeContextObject(AObject: TObject);
+  end;
+
 
   TWiRLContextInjectionRegistry = class
   private
@@ -35,13 +52,14 @@ type
       TEntryInfo = record
         ContextClass: TClass;
         FactoryClass: TClass;
-        ConstructorFunc: TFunc<IInterface>
+        ConstructorFunc: TFunc<IInterface>;
+        DisposeFunc: TDisposeProc;
       end;
   private
     FRegistry: TList<TEntryInfo>;
     class function GetInstance: TWiRLContextInjectionRegistry; static; inline;
     function CustomContextInjectionByType(const AObject: TRttiObject;
-      AContext: TWiRLContextBase; out AValue: TValue): Boolean;
+      AContext: TWiRLContextBase; out AValue: TValue; AOptions: TContextOptions = []): Boolean;
     function IsSigleton(const AObject: TRttiObject): Boolean;
     function GetContextObject(AEntry: TEntryInfo; const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
   public
@@ -49,11 +67,11 @@ type
     destructor Destroy; override;
 
     procedure RegisterFactory<T: class>(const AFactoryClass: TClass); overload;
-    procedure RegisterFactory<T: class>(const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>); overload;
+    procedure RegisterFactory<T: class>(const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>; const ADisponseProc: TDisposeProc); overload;
 
     procedure ContextInjection(AInstance: TObject; AContext: TWiRLContextBase);
     function ContextInjectionByType(const AObject: TRttiObject;
-      AContext: TWiRLContextBase; out AValue: TValue): Boolean;
+      AContext: TWiRLContextBase; out AValue: TValue; AOptions: TContextOptions = []): Boolean;
 
     class property Instance: TWiRLContextInjectionRegistry read GetInstance;
   end;
@@ -75,7 +93,7 @@ begin
 end;
 
 function TWiRLContextInjectionRegistry.CustomContextInjectionByType(
-  const AObject: TRttiObject; AContext: TWiRLContextBase; out AValue: TValue): Boolean;
+  const AObject: TRttiObject; AContext: TWiRLContextBase; out AValue: TValue; AOptions: TContextOptions): Boolean;
 var
   LType: TClass;
   LEntry: TEntryInfo;
@@ -91,8 +109,14 @@ begin
       AValue := GetContextObject(LEntry, AObject, AContext);
       if AValue.IsObject then  // Only object should be released
       begin
+        if TContextOption.Recursive in AOptions then
+          ContextInjection(AValue.AsObject, AContext);
+
         LContextOwned := not IsSigleton(AObject); // Singleton should not be released
-        AContext.ContextData.Add(AValue.AsObject, LContextOwned);
+        if LContextOwned then
+          AContext.ContextData.Add(AValue.AsObject, LEntry.DisposeFunc)
+        else
+          AContext.ContextData.Add(AValue.AsObject, nil);
       end;
       Exit(True);
     end;
@@ -139,13 +163,15 @@ begin
 end;
 
 procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(
-  const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>);
+  const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>;
+  const ADisponseProc: TDisposeProc);
 var
   LEntryInfo: TEntryInfo;
 begin
   LEntryInfo.ContextClass := TClass(T);
   LEntryInfo.FactoryClass := AFactoryClass;
   LEntryInfo.ConstructorFunc := AConstructorFunc;
+  LEntryInfo.DisposeFunc := ADisponseProc;
   FRegistry.Add(LEntryInfo)
 end;
 
@@ -164,11 +190,29 @@ begin
       if (not Supports(Result, IContextObjectFactory)) and
          (not Supports(Result, IContextHttpFactory)) then
         raise EWiRLServerException.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
+    end,
+    procedure (AObject: TObject)
+    var
+      LInstance: TObject;
+      LContextHttpDisposer: IContextHttpDisposer;
+      LContextObjectDisposer: IContextObjectDisposer;
+    begin
+      LInstance := (TRttiHelper.CreateInstance(AFactoryClass));
+      if Supports(LInstance, IContextHttpDisposer, LContextHttpDisposer) then
+      begin
+        LContextHttpDisposer.FreeContextObject(AObject);
+      end
+      else if Supports(LInstance, IContextObjectDisposer, LContextObjectDisposer) then
+      begin
+        LContextObjectDisposer.FreeContextObject(AObject);
+      end
+      else
+        AObject.Free;
     end);
 end;
 
 function TWiRLContextInjectionRegistry.ContextInjectionByType(const AObject: TRttiObject;
-  AContext: TWiRLContextBase; out AValue: TValue): Boolean;
+  AContext: TWiRLContextBase; out AValue: TValue; AOptions: TContextOptions): Boolean;
 var
   LType: TClass;
 begin
@@ -178,7 +222,7 @@ begin
   if not AValue.IsEmpty then
     Exit(True);
 
-  Result := CustomContextInjectionByType(AObject, AContext, AValue);
+  Result := CustomContextInjectionByType(AObject, AContext, AValue, AOptions);
 end;
 
 // Must be thread safe
@@ -199,7 +243,7 @@ begin
       begin
         LFieldClassType := TRttiInstanceType(AField.FieldType).MetaclassType;
 
-        if not ContextInjectionByType(AField, AContext, LValue) then
+        if not ContextInjectionByType(AField, AContext, LValue, AAttrib.Options) then
           raise EWiRLServerException.Create(
             Format('Unable to inject class [%s] in resource [%s]', [LFieldClassType.ClassName, AInstance.ClassName]),
             Self.ClassName, 'ContextInjection'

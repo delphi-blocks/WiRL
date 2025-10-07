@@ -583,8 +583,8 @@ begin
 
   LContext := TWiRLContext.Create;
   try
-    LContext.AddContainer(WebRequest, False);
-    LContext.AddContainer(WebResponse, False);
+    LContext.AddContainer(WebRequest);
+    LContext.AddContainer(WebResponse);
     LRequest := LServerFactory.CreateRequest(Sender, WebRequest);
     try
       LResponse := LServerFactory.CreateResponse(Sender, WebResponse);

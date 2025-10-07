@@ -35,16 +35,19 @@ type
     function MoveNext: Boolean;
   end;
 
+  TDisposeProc = reference to procedure (AObject: TObject);
+
   TWiRLContextDataList = class
   private
     FList: TObjectList<TObject>;
-    FOwnedObjects: TObjectList<TObject>;
+    FDisposeProcs: TList<TDisposeProc>;
+    procedure Clear;
   public
     constructor Create;
     destructor Destroy; override;
 
     function GetEnumerator: TWiRLContextDataListEnumerator<TObject>;
-    procedure Add(AValue: TObject; AOwned: Boolean);
+    procedure Add(AValue: TObject; ADisposeProc: TDisposeProc);
     procedure Delete(AValue: TObject);
   end;
 
@@ -55,13 +58,18 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure AddContainer(AContainer: TObject; AOwned: Boolean);
-    procedure AddContainerOnce(AContainer: TObject; AOwned: Boolean);
+    procedure AddContainer(AContainer: TObject; ADisposeProc: TDisposeProc); overload;
+    procedure AddContainer(AContainer: TObject); overload;
+    procedure AddContainerOnce(AContainer: TObject; ADisposeProc: TDisposeProc); overload;
+    procedure AddContainerOnce(AContainer: TObject); overload;
     procedure RemoveContainer(AValue: TObject);
 
-    // raise an exception if not found
+    // Injects context data into fields and properties marked with [Context] attribute
+    procedure Inject(AInstance: TObject);
+
+    // Look up context data by type and raise an exception if not found
     function GetContextDataAs<T: class>: T;
-    // return nil if not found
+    // Look up context data by type and return nil if not found
     function FindContextDataAs<T: class>: T; overload;
     function FindContextDataAs(AClass: TClass): TObject; overload;
 
@@ -91,51 +99,85 @@ type
     property RequestURL: TWiRLURL read GetRequestURL;
   end;
 
+  /// <summary>
+  /// Factory interface to create context objects. The class implementing this
+  /// interface must be registered in the global TWiRLContextInjectionRegistry.
+  /// If a custom disposer is needed, the class must also implement IContextHttpDisposer.
+  /// </summary>
   IContextHttpFactory = interface
   ['{152751D7-F806-4EF3-B095-4E0D9545F6C7}']
     function CreateContextObject(const AObject: TRttiObject; AContext: TWiRLContextHttp): TValue;
+  end;
+
+  /// <summary>
+  /// Optional interface for custom disposal of context objects. 
+  /// Classes implementing this interface must also implement IContextHttpFactory 
+  /// and be registered in the global TWiRLContextInjectionRegistry.
+  /// This allows factories to define custom cleanup logic for their context objects.
+  /// </summary>
+  IContextHttpDisposer = interface
+  ['{5DA5F130-8B49-4874-B6D5-BD40AC8A4996}']
+    procedure FreeContextObject(AObject: TObject);
   end;
 
 
 implementation
 
 uses
-  WiRL.Configuration.Core;
+  WiRL.Configuration.Core, WiRL.Core.Injection;
 
 { TWiRLContextDataList }
 
-procedure TWiRLContextDataList.Add(AValue: TObject; AOwned: Boolean);
+procedure TWiRLContextDataList.Add(AValue: TObject; ADisposeProc: TDisposeProc);
 begin
   FList.Add(AValue);
-  if AOwned then
-    FOwnedObjects.Add(AValue);
+  FDisposeProcs.Add(ADisposeProc);
+end;
+
+procedure TWiRLContextDataList.Clear;
+var
+  LIndex: Integer;
+  LDisposeProc: TDisposeProc;
+begin
+  for LIndex := 0 to FList.Count - 1 do
+  begin
+    LDisposeProc := FDisposeProcs[LIndex];
+    if Assigned(LDisposeProc) then
+    begin
+      LDisposeProc(FList[LIndex]);
+    end;
+  end;
+  FDisposeProcs.Clear;
+  FList.Clear;
 end;
 
 constructor TWiRLContextDataList.Create;
 begin
   inherited;
   FList := TObjectList<TObject>.Create(False);
-  FOwnedObjects := TObjectList<TObject>.Create(True);
+  FDisposeProcs := TList<TDisposeProc>.Create();
 end;
 
 procedure TWiRLContextDataList.Delete(AValue: TObject);
 var
   LIndex: Integer;
+  LProc: TDisposeProc;
 begin
-  FList.Remove(AValue);
-
-  LIndex := FOwnedObjects.IndexOf(AValue);
-  if LIndex >= 0 then
+  LIndex := FList.Remove(AValue);
+  if (LIndex >= 0) then
   begin
-    FOwnedObjects.Delete(LIndex);
-    AValue.Free;
+    LProc := FDisposeProcs[LIndex];
+    if Assigned(LProc) then
+      LProc(AValue);
+    FDisposeProcs.Delete(LIndex);
   end;
 end;
 
 destructor TWiRLContextDataList.Destroy;
 begin
+  Clear;
   FList.Free;
-  FOwnedObjects.Free;
+  FDisposeProcs.Free;
   inherited;
 end;
 
@@ -178,13 +220,13 @@ end;
 
 { TWiRLContextBase }
 
-procedure TWiRLContextBase.AddContainer(AContainer: TObject; AOwned: Boolean);
+procedure TWiRLContextBase.AddContainer(AContainer: TObject; ADisposeProc: TDisposeProc);
 begin
-  FContextDataList.Add(AContainer, AOwned);
+  FContextDataList.Add(AContainer, ADisposeProc);
 end;
 
 procedure TWiRLContextBase.AddContainerOnce(AContainer: TObject;
-  AOwned: Boolean);
+  ADisposeProc: TDisposeProc);
 var
   LItem: TObject;
 begin
@@ -192,13 +234,18 @@ begin
   if Assigned(LItem) then
     FContextDataList.Delete(LItem);
 
-  FContextDataList.Add(AContainer, AOwned);
+  FContextDataList.Add(AContainer, ADisposeProc);
+end;
+
+procedure TWiRLContextBase.AddContainerOnce(AContainer: TObject);
+begin
+  AddContainerOnce(AContainer, nil);
 end;
 
 constructor TWiRLContextBase.Create;
 begin
   FContextDataList := TWiRLContextDataList.Create;
-  AddContainerOnce(Self, False);
+  AddContainerOnce(Self);
 end;
 
 destructor TWiRLContextBase.Destroy;
@@ -266,9 +313,19 @@ begin
     raise Exception.CreateFmt('Class [%s] not found', [TClass(T).ClassName]);
 end;
 
+procedure TWiRLContextBase.Inject(AInstance: TObject);
+begin
+  TWiRLContextInjectionRegistry.Instance.ContextInjection(AInstance, Self);
+end;
+
 procedure TWiRLContextBase.RemoveContainer(AValue: TObject);
 begin
   FContextDataList.Delete(AValue);
+end;
+
+procedure TWiRLContextBase.AddContainer(AContainer: TObject);
+begin
+  AddContainer(AContainer, nil);
 end;
 
 { TWiRLContextHttp }
@@ -307,20 +364,20 @@ begin
   if Assigned(FRequestURL) then
     FRequestURL.Free;
   FRequestURL := TWiRLURL.Create(ARequest);
-  AddContainerOnce(FRequestURL, False);
+  AddContainerOnce(FRequestURL);
 end;
 
 procedure TWiRLContextHttp.SetRequest(const Value: TWiRLRequest);
 begin
-  AddContainerOnce(Value, False);
-  AddContainerOnce(Value.Connection, False);
+  AddContainerOnce(Value);
+  AddContainerOnce(Value.Connection);
   InitRequestURL(Value);
 end;
 
 procedure TWiRLContextHttp.SetResponse(const Value: TWiRLResponse);
 begin
-  AddContainerOnce(Value, False);
-  AddContainerOnce(Value.Connection, False);
+  AddContainerOnce(Value);
+  AddContainerOnce(Value.Connection);
 end;
 
 end.

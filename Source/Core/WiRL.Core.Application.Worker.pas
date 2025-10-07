@@ -149,7 +149,7 @@ begin
   FAppConfig := AContext.Application as TWiRLApplication;
   FLocator := TWiRLResourceLocator.Create(FAppConfig.Proxy, FContext);
   FGC := TWiRLGarbageCollector.Create(nil);
-  FContext.AddContainerOnce(FGC, False);
+  FContext.AddContainerOnce(FGC);
   //FResource := TWiRLProxyResource.Create(FAppConfig.Resources);
 end;
 

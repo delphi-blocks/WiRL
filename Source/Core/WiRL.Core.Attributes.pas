@@ -233,11 +233,32 @@ type
   TMethodParamType = (Path, Query, Form, Header, Cookie, Body, FormData, MultiPart);
 
   /// <summary>
+  ///   The TContextOption enumeration defines options for the Context attribute.
+  ///
+  ///   Recursive: If this option is specified, when WiRL performs context injection on a
+  ///   resource, it will also inject the context into any nested objects.
+  ///   This is only meaningful for custom objects.
+  /// </summary>
+  TContextOption = (Recursive);
+
+  /// <summary>
+  ///   A set of TContextOption for the Context attribute
+  /// </summary>
+  TContextOptions = set of TContextOption;
+
+  /// <summary>
   ///   WiRL provides the Context attribute to inject a variety of resources in your
   ///   RESTful services. Some of the most commonly injected components are HTTP headers,
   ///   HTTP URL related information.
   /// </summary>
-  ContextAttribute = class(TCustomAttribute);
+  ContextAttribute = class(TCustomAttribute)
+  private
+    FOptions: TContextOptions;
+  public
+    constructor Create(AOptions: TContextOptions = []);
+
+    property Options: TContextOptions read FOptions;
+  end;
 
   /// <summary>
   ///   Base class for all auth related attributes.
@@ -678,6 +699,14 @@ end;
 constructor CookieAuthAttribute.Create(const ACookieName: string);
 begin
   FCookieName := ACookieName;
+end;
+
+{ ContextAttribute }
+
+constructor ContextAttribute.Create(AOptions: TContextOptions);
+begin
+  inherited Create;
+  FOptions := AOptions;
 end;
 
 end.

@@ -165,9 +165,9 @@ var
 begin
   LContext := TWiRLContext.Create;
   try
-    LContext.AddContainer(AContext, False);
-    LContext.AddContainer(ARequestInfo, False);
-    LContext.AddContainer(AResponseInfo, False);
+    LContext.AddContainer(AContext);
+    LContext.AddContainer(ARequestInfo);
+    LContext.AddContainer(AResponseInfo);
     LRequest := TWiRLHttpRequestIndy.Create(AContext, ARequestInfo);
     try
       LResponse := TWiRLHttpResponseIndy.Create(AContext, AResponseInfo);

@@ -80,10 +80,10 @@ begin
   FContext := TWiRLContext.Create;
 
   FRequest := TWiRLTestRequest.Create;
-  FContext.AddContainer(FRequest, False);
+  FContext.AddContainer(FRequest);
 
   FResponse := TWiRLTestResponse.Create;
-  FContext.AddContainer(FResponse, False);
+  FContext.AddContainer(FResponse);
 
 end;
 
