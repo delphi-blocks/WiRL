@@ -129,7 +129,7 @@ begin
 
     FDocument.Components.AddSchema('Error')
       .WithNeonConfig(FAppNeonConfig)
-      .SetJSONFromClass(TWebExceptionSchema);
+      .SetJSONFromClass(EWiRLWebApplicationException);
 
     AddResource(LRes);
   end;
