@@ -12,6 +12,8 @@ type
   TWiRLServerProjectCreator = class(TInterfacedObject, IOTACreator, IOTAProjectCreator50, IOTAProjectCreator80,IOTAProjectCreator160, IOTAProjectCreator{$IF CompilerVersion >= 32.0}, IOTAProjectCreator190 {$ENDIF})
   private
     FServerConfig: TServerConfig;
+    FFileName: string;
+    FProjectName: string;
   public
     // IOTACreator
     function GetCreatorType: string;
@@ -61,9 +63,14 @@ uses
 {$REGION 'IOTACreator'}
 
 constructor TWiRLServerProjectCreator.Create(AServerConfig: TServerConfig);
+var
+  LSuffix: string;
 begin
   inherited Create;
   FServerConfig := AServerConfig;
+  FFileName := GetNewModuleFileName('Project', '',
+      '', False, LSuffix, '.bdsproj;.dproj;.dpr;.dpk;.cbproj');
+  FProjectName := ExtractFileName(ChangeFileExt(FFileName, ''));
 end;
 
 function TWiRLServerProjectCreator.GetCreatorType: string;
@@ -95,11 +102,8 @@ end;
 {$REGION 'IOTAProjectCreator'}
 
 function TWiRLServerProjectCreator.GetFileName: string;
-var
-  LSuffix: string;
 begin
-  Result := GetNewModuleFileName('Project', '',
-      '', False, LSuffix, '.bdsproj;.dproj;.dpr;.dpk;.cbproj')
+  Result := FFileName;
 end;
 
 function TWiRLServerProjectCreator.GetOptionFileName: string; deprecated;
@@ -119,7 +123,11 @@ end;
 
 function TWiRLServerProjectCreator.NewProjectSource(const ProjectName: string): IOTAFile;
 begin
-  Result := TWiRLSourceFile.Create(SWiRLServerProject);
+  Result := TWiRLSourceFile.Create(
+    TSourceBuilder.FromResource(SWiRLServerProject)
+      .Add('PROJECT_NAME', FProjectName)
+      .Build
+  );
 end;
 
 function TWiRLServerProjectCreator.NewOptionSource(const ProjectName: string): IOTAFile; deprecated;

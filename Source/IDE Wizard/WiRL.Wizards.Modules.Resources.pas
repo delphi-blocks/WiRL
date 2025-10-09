@@ -41,12 +41,6 @@ type
     constructor Create(AServerConfig: TServerConfig);
   end;
 
-  TWiRLResourceFile = class(TWiRLSourceFile)
-  public
-    function GetSource: string; override;
-    constructor Create(const AUnitName: string);
-  end;
-
 implementation
 
 uses
@@ -119,12 +113,24 @@ end;
 
 function TWiRLServerResourcesCreator.NewFormFile(const FormIdent, AncestorIdent: string): IOTAFile;
 begin
-  Result := NIL;
+  Result := nil;
 end;
 
 function TWiRLServerResourcesCreator.NewImplSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
+var
+  LResourcePath: string;
+  LClassName: string;
 begin
-  Result := TWiRLResourceFile.Create(FUnitName);
+  LClassName := 'T' + FUnitName;
+  LResourcePath := StringReplace(LowerCase(FUnitName), 'unit', '', []);
+
+  Result := TWiRLSourceFile.Create(
+    TSourceBuilder.FromResource(SWiRLServerResources)
+      .Add('UNIT_NAME', FUnitName)
+      .Add('RESOURCE_PATH', LResourcePath)
+      .Add('CLASS_NAME', LClassName)
+      .Build
+  );
 end;
 
 function TWiRLServerResourcesCreator.NewIntfSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
@@ -148,23 +154,5 @@ end;
 
 {$ENDREGION}
 
-{ TWiRLResourceFile }
-
-constructor TWiRLResourceFile.Create(const AUnitName: string);
-begin
-  inherited Create(SWiRLServerResources, AUnitName);
-end;
-
-function TWiRLResourceFile.GetSource: string;
-var
-  LResourcePath: string;
-  LClassName: string;
-begin
-  LClassName := 'T' + ModuleName;
-  LResourcePath := StringReplace(LowerCase(ModuleName), 'unit', '', []);
-  Result := inherited GetSource;
-  Result := StringReplace(Result, '%RESOURCE_PATH%', LResourcePath, [rfReplaceAll, rfIgnoreCase]);
-  Result := StringReplace(Result, '%CLASS_NAME%', LClassName, [rfReplaceAll, rfIgnoreCase]);
-end;
 
 end.

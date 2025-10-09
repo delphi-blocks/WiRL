@@ -41,24 +41,6 @@ type
     constructor Create(AServerConfig: TServerConfig);
   end;
 
-  TWiRLMainFormSource = class(TWiRLSourceFile)
-  private
-    FServerConfig: TServerConfig;
-  public
-    function GetSource: string; override;
-
-    constructor Create(const AUnitName: string; AServerConfig: TServerConfig);
-  end;
-
-  TWiRLMainFormDfm = class(TWiRLSourceFile)
-  private
-    FServerConfig: TServerConfig;
-  public
-    function GetSource: string; override;
-
-    constructor Create(AServerConfig: TServerConfig);
-  end;
-
 implementation
 
 uses
@@ -131,12 +113,32 @@ end;
 
 function TWiRLServerMainFormCreator.NewFormFile(const FormIdent, AncestorIdent: string): IOTAFile;
 begin
-  Result := TWiRLMainFormDfm.Create(FServerConfig);
+  Result := TWiRLSourceFile.Create(
+    TSourceBuilder.FromResource(SWiRLServerMainFormDFM)
+      .Add('SERVICE_PORT', IntToStr(FServerConfig.ServerPort))
+      .Build
+  );
 end;
 
 function TWiRLServerMainFormCreator.NewImplSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
+var
+  LMessageBodyUnit: string;
 begin
-  Result := TWiRLMainFormSource.Create(FUnitName, FServerConfig);
+  if FServerConfig.UseDefaultMessageBody then
+    LMessageBodyUnit := 'WiRL.Core.MessageBody.Default,' + sLineBreak
+  else
+    LMessageBodyUnit := '';
+
+  Result := TWiRLSourceFile.Create(
+    TSourceBuilder.FromResource(SWiRLServerMainFormSRC)
+      .Add('UNIT_NAME', FUnitName)
+      .Add('ENGINE_PATH', FServerConfig.EnginePath)
+      .Add('APP_PATH', FServerConfig.AppPath)
+      .Add('SERVICE_PORT', IntToStr(FServerConfig.ServerPort))
+      .Add('MESSAGE_BODY_UNIT', LMessageBodyUnit)
+      .Build
+  );
+
 end;
 
 function TWiRLServerMainFormCreator.NewIntfSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
@@ -150,7 +152,6 @@ var
 begin
   inherited Create;
   FServerConfig := AServerConfig;
-  //FFileName := IncludeTrailingPathDelimiter(GetDefaultDirectory) + SMainFormFileName + '.pas';
   FFileName := GetNewModuleFileName(SMainFormFileName, '', '', False, LSuffix);
   FUnitName := ExtractFileName(ChangeFileExt(FFileName, ''));
 end;
@@ -160,46 +161,5 @@ begin
 end;
 
 {$ENDREGION}
-
-{ TWiRLMainFormSource }
-
-constructor TWiRLMainFormSource.Create(const AUnitName: string;
-  AServerConfig: TServerConfig);
-begin
-  inherited Create(SWiRLServerMainFormSRC, AUnitName);
-  FServerConfig := AServerConfig;
-end;
-
-function TWiRLMainFormSource.GetSource: string;
-var
-  MessageBodyUnit: string;
-begin
-  Result := inherited GetSource;
-
-  if FServerConfig.UseDefaultMessageBody then
-    MessageBodyUnit := '  WiRL.Core.MessageBody.Default,' + sLineBreak
-  else
-    MessageBodyUnit := '';
-
-  Result := StringReplace(Result, '%ENGINE_PATH%', FServerConfig.EnginePath, [rfReplaceAll, rfIgnoreCase]);
-  Result := StringReplace(Result, '%APP_PATH%', FServerConfig.AppPath, [rfReplaceAll, rfIgnoreCase]);
-  Result := StringReplace(Result, '%SERVICE_PORT%', IntToStr(FServerConfig.ServerPort), [rfReplaceAll, rfIgnoreCase]);
-  Result := StringReplace(Result, '%MESSAGE_BODY_UNIT%', MessageBodyUnit, [rfReplaceAll, rfIgnoreCase]);
-end;
-
-{ TWiRLMainFormDfm }
-
-constructor TWiRLMainFormDfm.Create(AServerConfig: TServerConfig);
-begin
-  inherited Create(SWiRLServerMainFormDFM);
-  FServerConfig := AServerConfig;
-end;
-
-function TWiRLMainFormDfm.GetSource: string;
-begin
-  Result := inherited GetSource;
-
-  Result := StringReplace(Result, '%SERVICE_PORT%', IntToStr(FServerConfig.ServerPort), [rfReplaceAll, rfIgnoreCase]);
-end;
 
 end.

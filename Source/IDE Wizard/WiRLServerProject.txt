@@ -1,4 +1,4 @@
-program WiRLServerProject;
+program %PROJECT_NAME%;
 {$APPTYPE GUI}
 
 uses

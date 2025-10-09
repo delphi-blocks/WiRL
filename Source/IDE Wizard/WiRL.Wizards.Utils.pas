@@ -3,77 +3,73 @@ unit WiRL.Wizards.Utils;
 interface
 
 uses
+  System.Classes, System.SysUtils,
   ToolsAPI;
 
 /// <summary>
-///  These funcions are all by David Hoyle's, and you can find them all in his book:
-///  The Delphi Open Tools API book at:
-/// </summary>
-
-/// <summary>
 ///  Returns the current Project Group opened in the IDE
-///  If there is no Project Group opened, returns NIL
 /// </summary>
 function ActiveProjectGroup: IOTAProjectGroup;
 
 /// <summary>
-///  Returns the current Project active (ie. in Bold) in the Project Manager
-///  If there is no Project active, returns NILL
+///  Returns the current Project active in the Project Manager
 /// </summary>
 function ActiveProject: IOTAProject;
 
-/// <summary>
-///  Retunrs Source Modules (DPR, DPK, etc) for the given Project
-/// </summary>
-function ProjectModule(const Project: IOTAProject): IOTAModule;
-
-/// <summary>
-///  Returns the active IDE Source Editor Interface. If there is no active Editor then this method returns NIL.
-/// </summary>
-function ActiveSourceEditor: IOTASourceEditor;
-
-/// <summary>
-///  Returns the IDE Source Editor Interface for a given Module. If there is no Editor then this method returns NIL.
-/// </summary>
-function SourceEditor(const Module: IOTAModule): IOTASourceEditor;
-
-/// <summary>
-///  Returns the SourceEditor source code as string
-/// </summary>
-function EditorAsString(const SourceEditor: IOTASourceEditor): string;
-
 type
-/// <summary>
-///   Reads source code from a RT_RCDATA Resource
-/// </summary>
+  /// <summary>
+  /// Simple implementation of IOTAFile interface.
+  /// The constructor parameter is returned by GetSource method.
+  /// </summary>
   TWiRLSourceFile = class(TInterfacedObject, IOTAFile)
-  strict private
-    FResourceName: string;
-    FModuleName: string;
-  strict protected
-    property ResourceName: string read FResourceName;
-    property ModuleName: string read FModuleName;
+  private
+    FSource: string;
   public
-    constructor Create(const AResourceName: string); overload;
-    constructor Create(const AResourceName, AModuleName: string); overload;
+    constructor Create(const ASource: string);
     function GetAge: TDateTime; virtual;
     function GetSource: string; virtual;
   end;
 
-function GetDefaultDirectory: string;
+  /// <summary>
+  /// Interface for building source code by replacing text portions.
+  /// Use the class through this interface to avoid manual memory management.
+  /// </summary>
+  ISourceBuilder = interface
+    ['{CFEF5D9B-047C-4475-859A-E67565D02D3C}']
+    function Add(const AName, AValue: string): ISourceBuilder;
+    function Build: string;
+  end;
 
-function GetUniqueUnitName(const BaseUnitName: string): string;
+  /// <summary>
+  /// Builder class for replacing text portions in source code templates.
+  /// Always use through the ISourceBuilder interface to avoid manual memory management.
+  /// Initialize with FromResource to load text from a resource, or FromString for direct text input.
+  /// </summary>
+  TSourceBuilder = class(TInterfacedObject, ISourceBuilder)
+  private
+    FValues: TStrings;
+    FSource: string;
+  public
+    class function FromResource(const AResourceName: string): ISourceBuilder;
+    class function FromString(const ASource: string): ISourceBuilder;
+  public
+    function Add(const AName, AValue: string): ISourceBuilder;
+    function Build: string;
+
+    constructor Create(const ASource: string);
+    destructor Destroy; override;
+  end;
 
 function GetNewModuleFileName(const APrefix, AOptionalDirectory,
   AOptionalFileName: string; AUseDefaultFileExt: Boolean;
   out LSuffix: string; const AExtensions: string = ''): string;
 
+function LoadStringResource(const ResourceName: string): string;
+
 implementation
 
 uses
-  System.Types,
-  System.SysUtils,
-	System.Classes;
+  System.Types;
 
 function ExistsModule(const AModuleName: string): Boolean;
 var
@@ -217,144 +213,51 @@ begin
   end;
 end;
 
-function GetDefaultDirectory: string;
-var
-  LServices: IOTAModuleServices;
-  LNewTextFileIdent, LNewClassName, LNewFileName: string;
-begin
-  LServices := (BorlandIDEServices as IOTAModuleServices);
-  LServices.GetNewModuleAndClassName('Unnamed',    // Do not localize
-    LNewTextFileIdent, LNewClassName, LNewFileName);
-  Result := ExtractFilePath(LNewFileName);
-end;
-
-function GetUniqueUnitName(const BaseUnitName: string): string;
-var
-  ModuleServices: IOTAModuleServices;
-  Suffix: Integer;
-begin
-  ModuleServices := BorlandIDEServices as IOTAModuleServices;
-
-  Suffix := 1;
-  Result := BaseUnitName + IntToStr(Suffix);
-
-  while ExistsModule(Result + '.pas') do
-  begin
-    Result := BaseUnitName + IntToStr(Suffix);
-    Inc(Suffix);
-  end;
-end;
-
 function ActiveProjectGroup: IOTAProjectGroup;
 var
-  I: Integer;
   AModuleServices: IOTAModuleServices;
-  AModule: IOTAModule;
-  AProjectGroup: IOTAProjectGroup;
 begin
-  Result := NIL;
   AModuleServices := BorlandIDEServices as IOTAModuleServices;
-  for I := 0 to AModuleServices.ModuleCount - 1 do
-  begin
-    AModule := AModuleServices.Modules[I];
-    if AModule.QueryInterface(IOTAProjectGroup, AProjectGroup) = S_OK then
-      Break;
-  end;
-  Result := AProjectGroup;
+  Result := AModuleServices.MainProjectGroup;
 end;
 
 function ActiveProject: IOTAProject;
 var
-  PG: IOTAProjectGroup;
+  LModuleServices: IOTAModuleServices;
 begin
-  PG := ActiveProjectGroup;
-  if PG <> NIL then
-    Result := PG.ActiveProject;
+  LModuleServices := BorlandIDEServices as IOTAModuleServices;
+  Result := LModuleServices.GetActiveProject;
 end;
 
-function ProjectModule(const Project: IOTAProject): IOTAModule;
+function LoadStringResource(const ResourceName: string): string;
 var
-  I: Integer;
-  AModuleServices: IOTAModuleServices;
-  AModule: IOTAModule;
-  AProject: IOTAProject;
+  LResourceStream: TResourceStream;
+  LValue: TStrings;
 begin
-  Result := NIL;
-  AModuleServices := BorlandIDEServices as IOTAModuleServices;
-  for I := 0 to AModuleServices.ModuleCount - 1 do
-  begin
-    AModule := AModuleServices.Modules[I];
-    if (AModule.QueryInterface(IOTAProject, AProject) = S_OK) and (Project = AProject) then
-      Break;
-  end;
-  Result := AProject;
-end;
-
-function SourceEditor(const Module: IOTAModule): IOTASourceEditor;
-var
-  I, LFileCount: Integer;
-begin
-  Result := NIL;
-  if Module = NIL then
-    Exit;
-
-  LFileCount := Module.GetModuleFileCount;
-  for I := 0 to LFileCount - 1 do
-  begin
-    if Module.GetModuleFileEditor(I).QueryInterface(IOTASourceEditor, Result) = S_OK then
-      Break;
-  end;
-end;
-
-function ActiveSourceEditor: IOTASourceEditor;
-var
-  CM: IOTAModule;
-begin
-  Result := NIL;
-  if BorlandIDEServices = NIL then
-    Exit;
-
-  CM := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
-  Result := SourceEditor(CM);
-end;
-
-function EditorAsString(const SourceEditor: IOTASourceEditor): string;
-Const
-  iBufferSize: Integer = 1024;
-var
-  Reader: IOTAEditReader;
-  iPosition, iRead: Integer;
-  strBuffer: AnsiString;
-begin
-  Result := '';
-  Reader := SourceEditor.CreateReader;
+  LResourceStream := TResourceStream.Create(HInstance, ResourceName, RT_RCDATA);
   try
-    iPosition := 0;
-    repeat
-      SetLength(strBuffer, iBufferSize);
-      iRead := Reader.GetText(iPosition, PAnsiChar(strBuffer), iBufferSize);
-      SetLength(strBuffer, iRead);
-      Result := Result + string(strBuffer);
-      Inc(iPosition, iRead);
-    until iRead < iBufferSize;
+    if LResourceStream.Size = 0 then
+      raise Exception.CreateFmt('Resource %s is empty', [ResourceName]);
+
+    LValue := TStringList.Create;
+    try
+      LResourceStream.Position := 0;
+      LValue.LoadFromStream(LResourceStream);
+      Result := LValue.Text;
+    finally
+      LValue.Free;
+    end;
   finally
-    Reader := NIL;
+    LResourceStream.Free;
   end;
 end;
 
-{$REGION 'TWiRLSourceFile'}
+{ TWiRLSourceFile }
 
-constructor TWiRLSourceFile.Create(const AResourceName: string);
+constructor TWiRLSourceFile.Create(const ASource: string);
 begin
   inherited Create;
-  FResourceName := AResourceName;
-end;
-
-constructor TWiRLSourceFile.Create(const AResourceName, AModuleName: string);
-begin
-  inherited Create;
-  FResourceName := AResourceName;
-  FModuleName := AModuleName;
+  FSource := ASource;
 end;
 
 function TWiRLSourceFile.GetAge: TDateTime;
@@ -363,34 +266,50 @@ begin
 end;
 
 function TWiRLSourceFile.GetSource: string;
-var
-  Res: TResourceStream;
-  S: TStrings;
 begin
-  if FModuleName = '' then
-  begin
-    FModuleName := GetUniqueUnitName('Unit');
-  end;
-
-  Res := TResourceStream.Create(HInstance, ResourceName, RT_RCDATA);
-  try
-    if Res.Size = 0 then
-      raise Exception.CreateFmt('Resource %s is empty', [ResourceName]);
-
-    S := TStringList.Create;
-    try
-      Res.Position := 0;
-      S.LoadFromStream(Res);
-      Result := s.Text;
-    finally
-      S.Free;
-    end;
-  finally
-    Res.Free;
-  end;
-  Result := StringReplace(Result, '%UNIT_NAME%', FModuleName, [rfReplaceAll, rfIgnoreCase]);
+  Result := FSource;
 end;
 
-{$ENDREGION}
+{ TSourceBuilder }
+
+function TSourceBuilder.Add(const AName, AValue: string): ISourceBuilder;
+begin
+  FValues.Add(AName + FValues.NameValueSeparator + AValue);
+  Result := Self;
+end;
+
+function TSourceBuilder.Build: string;
+var
+  I: Integer;
+begin
+  Result := FSource;
+  for I := 0 to FValues.Count - 1 do
+  begin
+    Result := StringReplace(Result, '%' + FValues.Names[I] + '%', FValues.ValueFromIndex[I], [rfReplaceAll, rfIgnoreCase]);
+  end;
+end;
+
+constructor TSourceBuilder.Create(const ASource: string);
+begin
+  inherited Create;
+  FValues := TStringList.Create;
+  FSource := ASource;
+end;
+
+destructor TSourceBuilder.Destroy;
+begin
+  FValues.Free;
+  inherited;
+end;
+
+class function TSourceBuilder.FromResource(const AResourceName: string): ISourceBuilder;
+begin
+  Result := TSourceBuilder.Create(LoadStringResource(AResourceName));
+end;
+
+class function TSourceBuilder.FromString(const ASource: string): ISourceBuilder;
+begin
+  Result := TSourceBuilder.Create(ASource);
+end;
 
 end.
