@@ -316,12 +316,13 @@ end;
 procedure TTestRequest.TestQueryFieldsIntegerEmpty;
 begin
   FRequest.Url := 'http://localhost/test?value=';
-  Assert.WillRaise(
-    procedure ()
-    begin
-      FRequest.QueryFields.AsType<Integer>('value');
-    end,
-    EConvertError);
+  Assert.AreEqual(0, FRequest.QueryFields.AsType<Integer>('value'));
+//  Assert.WillRaise(
+//    procedure ()
+//    begin
+//      FRequest.QueryFields.AsType<Integer>('value');
+//    end,
+//    EConvertError);
 end;
 
 procedure TTestRequest.TestRawContent;

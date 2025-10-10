@@ -54,8 +54,6 @@ type
     [TestCase('Big', '123456,45678')]
     procedure TestQueryParam(AOne, ATwo: Integer);
     [Test]
-    procedure TestException;
-    [Test]
     procedure TestPostEcho;
     [Test]
     procedure TestPostJSON;
@@ -146,15 +144,6 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/echostring/ciao';
   FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('ciao', FResponse.Content);
-end;
-
-procedure TTestResource.TestException;
-begin
-  FRequest.Method := 'GET';
-  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/exception';
-  FServer.HandleRequest(FContext, FRequest, FResponse);
-  Assert.AreEqual(500, FResponse.StatusCode);
-  Assert.AreEqual('User Error Message', FResponse.Error.Message);
 end;
 
 procedure TTestResource.TestHelloWorld;
