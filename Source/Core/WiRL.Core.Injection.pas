@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2023 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -40,9 +40,8 @@ type
   /// </summary>
   IContextObjectDisposer = interface
   ['{2E2950CE-93C7-463D-8C2A-B336E8FD3BD4}']
-    procedure FreeContextObject(AObject: TObject);
+    procedure DisposeContextObject(AObject: TObject; AContext: TWiRLContextBase);
   end;
-
 
   TWiRLContextInjectionRegistry = class
   private
@@ -53,7 +52,6 @@ type
         ContextClass: TClass;
         FactoryClass: TClass;
         ConstructorFunc: TFunc<IInterface>;
-        DisposeFunc: TDisposeProc;
       end;
   private
     FRegistry: TList<TEntryInfo>;
@@ -61,13 +59,13 @@ type
     function CustomContextInjectionByType(const AObject: TRttiObject;
       AContext: TWiRLContextBase; out AValue: TValue; AOptions: TContextOptions = []): Boolean;
     function IsSigleton(const AObject: TRttiObject): Boolean;
-    function GetContextObject(AEntry: TEntryInfo; const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
+    function GetContextObject(AFactory: IInterface; const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
   public
     constructor Create; virtual;
     destructor Destroy; override;
 
     procedure RegisterFactory<T: class>(const AFactoryClass: TClass); overload;
-    procedure RegisterFactory<T: class>(const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>; const ADisponseProc: TDisposeProc); overload;
+    procedure RegisterFactory<T: class>(const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>); overload;
 
     procedure ContextInjection(AInstance: TObject; AContext: TWiRLContextBase);
     function ContextInjectionByType(const AObject: TRttiObject;
@@ -97,6 +95,7 @@ function TWiRLContextInjectionRegistry.CustomContextInjectionByType(
 var
   LType: TClass;
   LEntry: TEntryInfo;
+  LFactory: IInterface;
   LContextOwned: Boolean;
 begin
   Result := False;
@@ -106,17 +105,15 @@ begin
   begin
     if LType.InheritsFrom(LEntry.ContextClass) then
     begin
-      AValue := GetContextObject(LEntry, AObject, AContext);
+      LFactory := LEntry.ConstructorFunc();
+      AValue := GetContextObject(LFactory, AObject, AContext);
       if AValue.IsObject then  // Only object should be released
       begin
         if TContextOption.Recursive in AOptions then
           ContextInjection(AValue.AsObject, AContext);
 
         LContextOwned := not IsSigleton(AObject); // Singleton should not be released
-        if LContextOwned then
-          AContext.ContextData.Add(AValue.AsObject, LEntry.DisposeFunc)
-        else
-          AContext.ContextData.Add(AValue.AsObject, nil);
+        AContext.ContextData.Add(AValue.AsObject, LFactory, LContextOwned);
       end;
       Exit(True);
     end;
@@ -130,23 +127,21 @@ begin
 end;
 
 function TWiRLContextInjectionRegistry.GetContextObject(
-  AEntry: TEntryInfo; const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
+  AFactory: IInterface; const AObject: TRttiObject; AContext: TWiRLContextBase): TValue;
 var
-  LFactory: IInterface;
   LContextFactory: IContextObjectFactory;
   LContextHttpFactory: IContextHttpFactory;
 begin
-  LFactory := AEntry.ConstructorFunc();
-  if Supports(LFactory, IContextObjectFactory, LContextFactory) then
+  if Supports(AFactory, IContextObjectFactory, LContextFactory) then
   begin
     Result := LContextFactory.CreateContextObject(AObject, AContext);
   end
-  else if Supports(LFactory, IContextHttpFactory, LContextHttpFactory) then
+  else if Supports(AFactory, IContextHttpFactory, LContextHttpFactory) then
   begin
     Result := LContextHttpFactory.CreateContextObject(AObject, AContext as TWiRLContextHttp);
   end
   else
-    raise EWiRLServerException.Create('Invalid context factory');
+    raise EWiRLServerException.CreateFmt('Interface IContextObjectFactory or IContextHttpFactory not implemented in []', [TObject(AFactory).ClassName]);
 end;
 
 class function TWiRLContextInjectionRegistry.GetInstance: TWiRLContextInjectionRegistry;
@@ -163,15 +158,13 @@ begin
 end;
 
 procedure TWiRLContextInjectionRegistry.RegisterFactory<T>(
-  const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>;
-  const ADisponseProc: TDisposeProc);
+  const AFactoryClass: TClass; const AConstructorFunc: TFunc<IInterface>);
 var
   LEntryInfo: TEntryInfo;
 begin
   LEntryInfo.ContextClass := TClass(T);
   LEntryInfo.FactoryClass := AFactoryClass;
   LEntryInfo.ConstructorFunc := AConstructorFunc;
-  LEntryInfo.DisposeFunc := ADisponseProc;
   FRegistry.Add(LEntryInfo)
 end;
 
@@ -183,31 +176,8 @@ begin
       LInstance: TObject;
     begin
       LInstance := (TRttiHelper.CreateInstance(AFactoryClass));
-
       if not Supports(LInstance, IInterface, Result) then
         raise EWiRLServerException.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
-
-      if (not Supports(Result, IContextObjectFactory)) and
-         (not Supports(Result, IContextHttpFactory)) then
-        raise EWiRLServerException.Create('Interface IContextObjectFactory or IContextHttpFactory not implemented');
-    end,
-    procedure (AObject: TObject)
-    var
-      LInstance: TObject;
-      LContextHttpDisposer: IContextHttpDisposer;
-      LContextObjectDisposer: IContextObjectDisposer;
-    begin
-      LInstance := (TRttiHelper.CreateInstance(AFactoryClass));
-      if Supports(LInstance, IContextHttpDisposer, LContextHttpDisposer) then
-      begin
-        LContextHttpDisposer.FreeContextObject(AObject);
-      end
-      else if Supports(LInstance, IContextObjectDisposer, LContextObjectDisposer) then
-      begin
-        LContextObjectDisposer.FreeContextObject(AObject);
-      end
-      else
-        AObject.Free;
     end);
 end;
 
