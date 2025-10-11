@@ -668,20 +668,13 @@ var
 begin
   LConfig := FWiRLConfigNeon.GetNewNeonConfig
     .SetMemberCase(FWiRLConfigErrors.ErrorCase)
-    .RegisterSerializer(TJSONValueSerializer)
-    .Rules.ForClass<Exception>.SetIgnoreMembers([
-      'BaseException',
-      'HelpContext',
-      'InnerException',
-      'StackTrace',
-      'StackInfo'
-    ])
-    .ApplyConfig
   ;
 
+  { TODO -opaolo -c : Use TNeon 10/10/2025 12:31:58 }
   LErr := AValue.AsObject as Exception;
   LJSON := TNeon.ObjectToJSON(LErr, LConfig);
   try
+    (LJSON as TJSONObject).AddPair('exception', LErr.ClassName);
     if FWiRLConfigErrors.ErrorDebugInfo then
     begin
       // Using TNeonCase algorithm

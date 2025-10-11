@@ -101,6 +101,7 @@ begin
   SetVisibility([mvPublic, mvPublished]);
   SetUseUTCDate(True);
   SetPrettyPrint(False);
+
 end;
 
 class function TWiRLConfigurationNeon.Default: IWiRLConfigurationNeon;
@@ -143,23 +144,7 @@ end;
 function TWiRLConfigurationNeon.GetNeonConfig: INeonConfiguration;
 begin
   if not Assigned(FNeonConfiguration) then
-  begin
     FNeonConfiguration := GetNewNeonConfig;
-
-    FNeonConfiguration.Rules.ForClass<TCollection>.SetIgnoreMembers([
-      'ItemClass'
-    ]);
-    FNeonConfiguration.Rules.ForClass<TCollectionItem>.SetIgnoreMembers([
-      'Collection'
-    ]);
-    FNeonConfiguration.Rules.ForClass<Exception>.SetIgnoreMembers([
-      'BaseException',
-      'HelpContext',
-      'InnerException',
-      'StackTrace',
-      'StackInfo'
-    ])
-  end;
 
   Result := FNeonConfiguration;
 end;
@@ -169,6 +154,21 @@ begin
   Result := TNeonConfiguration.Default;
 
   Result.GetSerializers.Assign(FSerializers);
+  Result.Rules.ForClass<TCollection>.SetIgnoreMembers([
+    'ItemClass'
+  ]);
+  Result.Rules.ForClass<TCollectionItem>.SetIgnoreMembers([
+    'Collection'
+  ]);
+  Result.Rules.ForClass<Exception>.SetIgnoreMembers([
+    'BaseException',
+    'HelpContext',
+    'InnerException',
+    'StackTrace',
+    'StackInfo'
+  ]);
+
+  // Use custom settings (from the WiRL (app) configuration)
   Result
    .SetMembers(FMembers)
    .SetMemberCase(FMemberCase)
@@ -178,6 +178,7 @@ begin
    .SetUseUTCDate(FUseUTCDate)
    .SetPrettyPrint(FPrettyPrint)
    .GetSerializers
+     .RegisterSerializer(TJSONValueSerializer)
      .RegisterSerializer(TGUIDSerializer)
      .RegisterSerializer(TStreamSerializer)
      .RegisterSerializer(TDataSetSerializer)
