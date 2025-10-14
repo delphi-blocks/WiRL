@@ -235,11 +235,10 @@ type
   /// <summary>
   ///   The TContextOption enumeration defines options for the Context attribute.
   ///
-  ///   Recursive: If this option is specified, when WiRL performs context injection on a
-  ///   resource, it will also inject the context into any nested objects.
-  ///   This is only meaningful for custom objects.
+  ///   Recursive: Context is injected into the target object and all its nested objects (default)
+  ///   NoRecursive: Context is injected only into the target object, excluding nested objects
   /// </summary>
-  TContextOption = (Recursive);
+  TContextOption = (Recursive, NoRecursive);
 
   /// <summary>
   ///   A set of TContextOption for the Context attribute

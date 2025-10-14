@@ -109,7 +109,7 @@ begin
       AValue := GetContextObject(LFactory, AObject, AContext);
       if AValue.IsObject then  // Only object should be released
       begin
-        if TContextOption.Recursive in AOptions then
+        if not (TContextOption.NoRecursive in AOptions) then
           ContextInjection(AValue.AsObject, AContext);
 
         LContextOwned := not IsSigleton(AObject); // Singleton should not be released
