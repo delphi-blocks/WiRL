@@ -63,6 +63,7 @@ contains
   WiRL.Wizards.Modules.Resources in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas',
   WiRL.Wizards in '..\..\Source\IDE Wizard\WiRL.Wizards.pas',
   WiRL.Wizards.ProjectCreator in '..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas',
-  WiRL.Wizards.Utils in '..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas';
+  WiRL.Wizards.Utils in '..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas',
+  WiRL.Wizards.Dialogs.NewResource in '..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.NewResource.pas' {formNewResourceDialog};
 
 end.

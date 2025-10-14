@@ -88,7 +88,7 @@ implementation
 
 uses
   WiRL.Wizards.Modules.Resources,
-  WiRL.Wizards.ProjectCreator;
+  WiRL.Wizards.ProjectCreator, WiRL.Wizards.Dialogs.NewResource;
 
 { TWiRLServeProjectWizard }
 
@@ -232,13 +232,16 @@ end;
 
 procedure TWiRLResourceModuleWizard.Execute;
 var
-  LServerConfig: TServerConfig;
+  LResourceConfig: TResourceConfig;
   LModuleServices: IOTAModuleServices;
   LModule: IOTAModule;
 begin
-  LModuleServices := BorlandIDEServices as IOTAModuleServices;
-  LModule := LModuleServices.CreateModule(TWiRLServerResourcesCreator.Create(LServerConfig));
-  LModuleServices.OpenModule(LModule.FileName);
+  if TformNewResourceDialog.FindConfig(LResourceConfig) then
+  begin
+    LModuleServices := BorlandIDEServices as IOTAModuleServices;
+    LModule := LModuleServices.CreateModule(TWiRLServerResourcesCreator.Create(LResourceConfig));
+    LModuleServices.OpenModule(LModule.FileName);
+  end;
 end;
 
 function TWiRLResourceModuleWizard.GetAuthor: string;

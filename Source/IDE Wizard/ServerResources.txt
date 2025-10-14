@@ -13,8 +13,7 @@ type
   [Path('%RESOURCE_PATH%')]
   %CLASS_NAME% = class
   public
-    [GET, Produces(TMediaType.TEXT_PLAIN)]
-    function GetValue: string;
+%METHODS_INTERFACE%
   end;
 
 implementation
@@ -24,11 +23,7 @@ uses
 
 { %CLASS_NAME% }
 
-function %CLASS_NAME%.GetValue: string;
-begin
-  Result := 'Hello World!';
-end;
-
+%METHODS_IMPLEMENTATION%
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<%CLASS_NAME%>;
 

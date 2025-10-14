@@ -14,7 +14,7 @@ resourcestring
 type
   TWiRLServerResourcesCreator = class(TInterfacedObject, IOTACreator, IOTAModuleCreator)
   private
-    FServerConfig: TServerConfig;
+    FResourceConfig: TResourceConfig;
     FFileName: string;
     FUnitName: string;
   public
@@ -38,7 +38,7 @@ type
     function NewIntfSource(const ModuleIdent, FormIdent, AncestorIdent: string): IOTAFile;
     procedure FormCreated(const FormEditor: IOTAFormEditor);
 
-    constructor Create(AServerConfig: TServerConfig);
+    constructor Create(AResourceConfig: TResourceConfig);
   end;
 
 implementation
@@ -120,15 +120,77 @@ function TWiRLServerResourcesCreator.NewImplSource(const ModuleIdent, FormIdent,
 var
   LResourcePath: string;
   LClassName: string;
+  LMethodsInterface: string;
+  LMethodsImplementation: string;
 begin
   LClassName := 'T' + FUnitName;
-  LResourcePath := StringReplace(LowerCase(FUnitName), 'unit', '', []);
+  LResourcePath := FResourceConfig.Name;
+
+  LMethodsInterface := '';
+  LMethodsImplementation := '';
+
+  if FResourceConfig.MethodGET then
+  begin
+    LMethodsInterface := LMethodsInterface +
+      '    [GET]' + sLineBreak +
+      '    [Produces(TMediaType.TEXT_PLAIN)]' + sLineBreak +
+      '    function GetValue([QueryParam(''name'')] const AName: string): string;' + sLineBreak + sLineBreak;
+    LMethodsImplementation := LMethodsImplementation +
+      'function ' + LClassName + '.GetValue(const AName: string): string;' + sLineBreak +
+      'begin' + sLineBreak +
+      '  Result := ''Hello '' + AName + ''!'';' + sLineBreak +
+      'end;' + sLineBreak + sLineBreak;
+  end;
+
+  if FResourceConfig.MethodPOST then
+  begin
+    LMethodsInterface := LMethodsInterface +
+      '    [POST]' + sLineBreak +
+      '    [Consumes(TMediaType.TEXT_PLAIN)]' + sLineBreak +
+      '    [Produces(TMediaType.TEXT_PLAIN)]' + sLineBreak +
+      '    function PostValue([BodyParam] const AValue: string): string;' + sLineBreak + sLineBreak;
+    LMethodsImplementation := LMethodsImplementation +
+      'function ' + LClassName + '.PostValue(const AValue: string): string;' + sLineBreak +
+      'begin' + sLineBreak +
+      '  Result := AValue;' + sLineBreak +
+      'end;' + sLineBreak + sLineBreak;
+  end;
+
+  if FResourceConfig.MethodPUT then
+  begin
+    LMethodsInterface := LMethodsInterface +
+      '    [PUT]' + sLineBreak +
+      '    [Consumes(TMediaType.TEXT_PLAIN)]' + sLineBreak +
+      '    [Produces(TMediaType.TEXT_PLAIN)]' + sLineBreak +
+      '    function PutValue([BodyParam] const AValue: string): string;' + sLineBreak + sLineBreak;
+    LMethodsImplementation := LMethodsImplementation +
+      'function ' + LClassName + '.PutValue(const AValue: string): string;' + sLineBreak +
+      'begin' + sLineBreak +
+      '  Result := AValue;' + sLineBreak +
+      'end;' + sLineBreak + sLineBreak;
+  end;
+
+  if FResourceConfig.MethodDELETE then
+  begin
+    LMethodsInterface := LMethodsInterface +
+      '    [DELETE]' + sLineBreak +
+      '    [Path(''{id}'')]' + sLineBreak +
+      '    [Produces(TMediaType.TEXT_PLAIN)]' + sLineBreak +
+      '    function DeleteValue([PathParam(''id'')] AId: Integer): string;' + sLineBreak + sLineBreak;
+    LMethodsImplementation := LMethodsImplementation +
+      'function ' + LClassName + '.DeleteValue(AId: Integer): string;' + sLineBreak +
+      'begin' + sLineBreak +
+      '  Result := ''Delete value with id equals to '' + IntToStr(AId) + ''!'';' + sLineBreak +
+      'end;' + sLineBreak + sLineBreak;
+  end;
 
   Result := TWiRLSourceFile.Create(
     TSourceBuilder.FromResource(SWiRLServerResources)
       .Add('UNIT_NAME', FUnitName)
       .Add('RESOURCE_PATH', LResourcePath)
       .Add('CLASS_NAME', LClassName)
+      .Add('METHODS_INTERFACE', LMethodsInterface)
+      .Add('METHODS_IMPLEMENTATION', LMethodsImplementation)
       .Build
   );
 end;
@@ -138,12 +200,12 @@ begin
   Result := nil;
 end;
 
-constructor TWiRLServerResourcesCreator.Create(AServerConfig: TServerConfig);
+constructor TWiRLServerResourcesCreator.Create(AResourceConfig: TResourceConfig);
 var
   LSuffix: string;
 begin
   inherited Create;
-  FServerConfig := AServerConfig;
+  FResourceConfig := AResourceConfig;
   FFileName := GetNewModuleFileName(SServerResourcesFileName, '', '', False, LSuffix);
   FUnitName := ExtractFileName(ChangeFileExt(FFileName, ''));
 end;

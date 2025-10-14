@@ -20,12 +20,13 @@ type
     EditServerPort: TEdit;
     Button1: TButton;
     Button2: TButton;
+    CheckCreateTheFirstResource: TCheckBox;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
   private
     { Private declarations }
   public
-    class function FindConfig(var LServerConfig: TServerConfig): Boolean;
+    class function FindConfig(var AServerConfig: TServerConfig): Boolean;
   public
     { Public declarations }
   end;
@@ -46,22 +47,23 @@ begin
   ModalResult := mrCancel;
 end;
 
-class function TformServerProjectDialog.FindConfig(var LServerConfig: TServerConfig): Boolean;
+class function TformServerProjectDialog.FindConfig(var AServerConfig: TServerConfig): Boolean;
 var
-  Dialog: TformServerProjectDialog;
+  LDialog: TformServerProjectDialog;
 begin
-  Dialog := TformServerProjectDialog.Create(nil);
+  LDialog := TformServerProjectDialog.Create(nil);
   try
-    Result := Dialog.ShowModal = mrOk;
+    Result := LDialog.ShowModal = mrOk;
     if Result then
     begin
-      LServerConfig.ServerPort := StrToIntDef(Dialog.EditServerPort.Text, 8080);
-      LServerConfig.EnginePath := Dialog.EditEnginePath.Text;
-      LServerConfig.AppPath := Dialog.EditMainAppPath.Text;
-      LServerConfig.UseDefaultMessageBody := Dialog.CheckMessageBodyWriter.Checked;
+      AServerConfig.ServerPort := StrToIntDef(LDialog.EditServerPort.Text, 8080);
+      AServerConfig.EnginePath := LDialog.EditEnginePath.Text;
+      AServerConfig.AppPath := LDialog.EditMainAppPath.Text;
+      AServerConfig.UseDefaultMessageBody := LDialog.CheckMessageBodyWriter.Checked;
+      AServerConfig.CreateTheFirstResource := LDialog.CheckCreateTheFirstResource.Checked;
     end;
   finally
-    Dialog.Free;
+    LDialog.Free;
   end;
 end;
 

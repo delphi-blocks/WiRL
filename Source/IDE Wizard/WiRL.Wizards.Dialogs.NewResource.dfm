@@ -1,46 +1,43 @@
-object formServerProjectDialog: TformServerProjectDialog
+object formNewResourceDialog: TformNewResourceDialog
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Create WiRL server project'
-  ClientHeight = 380
-  ClientWidth = 444
+  Caption = 'New Resource'
+  ClientHeight = 390
+  ClientWidth = 442
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poScreenCenter
-  TextHeight = 13
-  object Label1: TLabel
-    Left = 32
-    Top = 189
-    Width = 95
-    Height = 13
-    Alignment = taRightJustify
-    Caption = 'Default engine path'
-  end
-  object Label2: TLabel
-    Left = 59
-    Top = 216
-    Width = 68
-    Height = 13
-    Alignment = taRightJustify
-    Caption = 'Main app path'
-  end
+  TextHeight = 15
   object Label3: TLabel
-    Left = 72
+    Left = 46
     Top = 162
-    Width = 55
-    Height = 13
+    Width = 81
+    Height = 15
     Alignment = taRightJustify
-    Caption = 'Server port'
+    Caption = 'Resource name'
+  end
+  object LabelMethods: TLabel
+    Left = 46
+    Top = 195
+    Width = 83
+    Height = 15
+    Caption = 'HTTP Methods:'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsUnderline]
+    ParentFont = False
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 444
+    Width = 442
     Height = 145
     Align = alTop
     BevelOuter = bvNone
@@ -800,67 +797,64 @@ object formServerProjectDialog: TformServerProjectDialog
         81B8D4F97FB16DF2CE98A0567A0000000049454E44AE426082}
     end
   end
-  object CheckMessageBodyWriter: TCheckBox
-    Left = 32
-    Top = 264
-    Width = 329
-    Height = 17
-    Caption = 'Use all default Message Body Reader and Writer'
-    Checked = True
-    State = cbChecked
-    TabOrder = 4
-  end
-  object EditEnginePath: TEdit
-    Left = 152
-    Top = 186
-    Width = 121
-    Height = 21
-    TabOrder = 2
-    Text = '/rest'
-  end
-  object EditMainAppPath: TEdit
-    Left = 152
-    Top = 213
-    Width = 121
-    Height = 21
-    TabOrder = 3
-    Text = '/app'
-  end
-  object EditServerPort: TEdit
-    Left = 152
-    Top = 159
-    Width = 121
-    Height = 21
-    NumbersOnly = True
-    TabOrder = 1
-    Text = '8080'
-  end
   object Button1: TButton
     Left = 92
-    Top = 339
+    Top = 349
     Width = 115
     Height = 33
     Caption = 'OK'
-    TabOrder = 5
+    TabOrder = 1
     OnClick = Button1Click
   end
   object Button2: TButton
     Left = 213
-    Top = 339
+    Top = 349
     Width = 115
     Height = 33
     Caption = 'Cancel'
-    TabOrder = 6
+    TabOrder = 2
     OnClick = Button2Click
   end
-  object CheckCreateTheFirstResource: TCheckBox
-    Left = 32
-    Top = 293
-    Width = 329
+  object CheckMethodGET: TCheckBox
+    Left = 64
+    Top = 224
+    Width = 225
     Height = 17
-    Caption = 'Create the first resource'
+    Caption = 'GET'
     Checked = True
     State = cbChecked
+    TabOrder = 3
+  end
+  object EditResourceName: TEdit
+    Left = 144
+    Top = 159
+    Width = 209
+    Height = 23
+    TabOrder = 4
+    Text = 'resource1'
+  end
+  object CheckMethodPOST: TCheckBox
+    Left = 64
+    Top = 251
+    Width = 225
+    Height = 17
+    Caption = 'POST'
+    TabOrder = 5
+  end
+  object CheckMethodPUT: TCheckBox
+    Left = 64
+    Top = 279
+    Width = 225
+    Height = 17
+    Caption = 'PUT'
+    TabOrder = 6
+  end
+  object CheckMethodDELETE: TCheckBox
+    Left = 64
+    Top = 307
+    Width = 225
+    Height = 17
+    Caption = 'DELETE'
     TabOrder = 7
   end
 end

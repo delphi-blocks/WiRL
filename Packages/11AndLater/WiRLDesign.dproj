@@ -114,6 +114,10 @@
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.NewResource.pas">
+            <Form>formNewResourceDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
@@ -209,4 +213,5 @@
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
 </Project>

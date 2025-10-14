@@ -58,7 +58,8 @@ uses
   PlatformAPI,
   WiRL.Wizards.Utils,
   WiRL.Wizards.Modules.MainForm,
-  WiRL.Wizards.Modules.Resources;
+  WiRL.Wizards.Modules.Resources,
+  WiRL.Wizards.Dialogs.NewResource;
 
 {$REGION 'IOTACreator'}
 
@@ -149,10 +150,12 @@ end;
 procedure TWiRLServerProjectCreator.NewDefaultProjectModule(const Project: IOTAProject);
 var
   LModuleServices: IOTAModuleServices;
+  LResourceConfig: TResourceConfig;
 begin
   LModuleServices := BorlandIDEServices as IOTAModuleServices;
   LModuleServices.CreateModule(TWiRLServerMainFormCreator.Create(FServerConfig));
-  LModuleServices.CreateModule(TWiRLServerResourcesCreator.Create(FServerConfig));
+  if FServerConfig.CreateTheFirstResource and TformNewResourceDialog.FindConfig(LResourceConfig) then
+    LModuleServices.CreateModule(TWiRLServerResourcesCreator.Create(LResourceConfig));
 end;
 
 {$ENDREGION}

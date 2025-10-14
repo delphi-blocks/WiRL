@@ -113,6 +113,10 @@
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.NewResource.pas">
+            <Form>formNewResourceDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
