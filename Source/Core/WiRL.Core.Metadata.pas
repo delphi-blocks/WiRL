@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -11,10 +11,13 @@ unit WiRL.Core.Metadata;
 
 interface
 
+{$SCOPEDENUMS ON}
+
 uses
   System.Classes, System.SysUtils, System.Generics.Collections, System.Rtti,
   System.TypInfo,
 
+  Neon.Core.Nullables,
   WiRL.http.Core,
   WiRL.http.Accept.MediaType,
   WiRL.Core.Attributes,
@@ -27,17 +30,21 @@ type
 
   TWiRLProxyBase = class
   protected
-    FProcessed: Boolean;
+    FCode: string;
     FName: string;
-    FRemarks: string;
     FSummary: string;
+    FRemarks: string;
+    FDescription: string;
+    FProcessed: Boolean;
   public
     procedure Process(); virtual;
     procedure Reset(); virtual;
 
+    property Code: string read FCode write FCode;
     property Name: string read FName write FName;
     property Summary: string read FSummary write FSummary;
     property Remarks: string read FRemarks write FRemarks;
+    property Description: string read FDescription write FDescription;
   end;
 
   TWiRLProxyFilter = class(TWiRLProxyBase)
@@ -73,6 +80,7 @@ type
     FRest: Boolean;
     FContext: TRttiType;
     FEntity: TWiRLProxyEntity;
+    FRequired: Boolean;
     procedure ProcessAttributes;
   public
     constructor Create(AParam: TRttiParameter);
@@ -86,6 +94,7 @@ type
     property Injected: Boolean read FInjected write FInjected;
     property Entity: TWiRLProxyEntity read FEntity write FEntity;
     property Context: TRttiType read FContext write FContext;
+    property Required: Boolean read FRequired write FRequired;
 
     property RttiParam: TRttiParameter read FRttiParam write FRttiParam;
     property Attributes: TArray<TCustomAttribute> read FAttributes write FAttributes;
@@ -93,22 +102,35 @@ type
 
   TWiRLProxyParameters = class(TObjectList<TWiRLProxyParameter>);
 
-  TStatusCategory = (Informational, Success, Redirection, ClientError, ServerError, Custom);
+  TResponseType = (Content, Ref, RefSchema);
+  TStatusCategory = (Unknown, Informational, Success, Redirection, ClientError, ServerError, Custom);
   TWiRLProxyMethodResponse = class
   private
-    FCode: Integer;
-    FDescription: string;
+    FCode: string;
+    FRef: NullString;
+    FDescription: NullString;
+    FSchema: NullString;
+    function GetHttpCode: Integer;
     function GetCategory: TStatusCategory;
+    function GetResponseType: TResponseType;
   public
-    property Code: Integer read FCode write FCode;
-    property Description: string read FDescription write FDescription;
+    property Code: string read FCode write FCode;
+    property Ref: NullString read FRef write FRef;
+    property Description: NullString read FDescription write FDescription;
+    property Schema: NullString read FSchema write FSchema;
+
+    property HttpCode: Integer read GetHttpCode;
     property Category: TStatusCategory read GetCategory;
+    property ResponseType: TResponseType read GetResponseType;
   end;
 
   TWiRLProxyMethodResponses = class(TObjectList<TWiRLProxyMethodResponse>)
   public
     function Contains(ACategory: TStatusCategory): Boolean;
-    function AddResponse(ACode: Integer; const ADescription: string): TWiRLProxyMethodResponse;
+
+    function AddResponse(const ACode, ADescription: string): TWiRLProxyMethodResponse;
+    function AddResponseRef(const ACode, ARef: string): TWiRLProxyMethodResponse;
+    function AddResponseSchemaRef(const ACode, ASchema, ADescription: string): TWiRLProxyMethodResponse;
   end;
 
   TWiRLProxyMethodResult = class(TWiRLProxyBase)
@@ -266,6 +288,7 @@ type
     // Rtti-based properties (to be removed)
     // Introduce: ClassName, UnitName
     property ResourceClass: TClass read FResourceClass write FResourceClass;
+    property RttiType: TRttiType read FRttiType;
   end;
 
   //TWiRLProxyResources = class(TObjectList<TWiRLProxyResource>);
@@ -317,10 +340,6 @@ constructor TWiRLProxyResource.Create(const AName: string; AContext: TWiRLResour
 begin
   FName := AName;
   FContext := AContext;
-
-  // The Path is equal to the name. If there are multiple Paths for a class,
-  // multiple instances of TWiRLProxyResource will be created
-  FPath := AName;
 
   FAuth := TWiRLProxyAuth.Create;
   FMethods := TWiRLProxyMethods.Create(True);
@@ -416,6 +435,8 @@ procedure TWiRLProxyResource.Process;
 begin
   inherited;
 
+  FCode := FResourceClass.ClassName;
+
   ProcessAttributes;
   ProcessMethods;
   //FSummary := FindReadXMLDoc();
@@ -432,8 +453,12 @@ begin
   // Global loop to retrieve and process ALL attributes at once
   for LAttribute in FRttiType.GetAttributes do
   begin
+    // Path Attribute
+    if LAttribute is PathAttribute then
+      FPath := PathAttribute(LAttribute).Value
+
     // Consumes Attribute
-    if LAttribute is ConsumesAttribute then
+    else if LAttribute is ConsumesAttribute then
     begin
       LMediaList := ConsumesAttribute(LAttribute).Value.Split([',']);
 
@@ -565,6 +590,7 @@ end;
 procedure TWiRLProxyMethod.Process;
 begin
   inherited;
+  FCode := FRttiMethod.Name;
 
   ProcessAttributes();
   ProcessParams();
@@ -714,14 +740,19 @@ begin
         FEntity := TWiRLProxyEntity.Create(FRttiType);
         FEntity.Process();
       end;
+
       tkRecord:
       begin
         FIsRecord := True;
         FEntity := TWiRLProxyEntity.Create(FRttiType);
         FEntity.Process();
       end;
-      tkArray,
-      tkDynArray: FIsArray := True;
+
+      tkArray, tkDynArray:
+      begin
+        { TODO -opaolo -c : Finire TArray<TPet> 07/10/2025 13:49:17 }
+        FIsArray := True;
+      end
     else
       FIsSimple := True;
     end;
@@ -808,6 +839,7 @@ procedure TWiRLProxyParameter.Process;
 begin
   inherited;
 
+  FCode := FRttiParam.Name;
   ProcessAttributes;
   FProcessed := True;
 end;
@@ -932,29 +964,39 @@ begin
   FProcessed := False;
 end;
 
-{ TWiRLProxyMethodResponse }
-
-function TWiRLProxyMethodResponse.GetCategory: TStatusCategory;
-begin
-  case Self.FCode of
-    100..199: Result := TStatusCategory.Informational;
-    200..299: Result := TStatusCategory.Success;
-    300..399: Result := TStatusCategory.Redirection;
-    400..499: Result := TStatusCategory.ClientError;
-    500..599: Result := TStatusCategory.ServerError;
-  else
-    Result := TStatusCategory.Custom;
-  end;
-end;
-
 { TWiRLProxyMethodResponses }
 
-function TWiRLProxyMethodResponses.AddResponse(ACode: Integer;
-    const ADescription: string): TWiRLProxyMethodResponse;
+function TWiRLProxyMethodResponses.AddResponse(const ACode, ADescription: string): TWiRLProxyMethodResponse;
 begin
+  if ACode.IsEmpty then
+    raise EWiRLWebApplicationException.Create('OpenAPI: Code cannot be empty');
+
   Result := TWiRLProxyMethodResponse.Create;
   Result.Code := ACode;
   Result.Description := ADescription;
+  Self.Add(Result);
+end;
+
+function TWiRLProxyMethodResponses.AddResponseRef(const ACode, ARef: string): TWiRLProxyMethodResponse;
+begin
+  if ACode.IsEmpty then
+    raise EWiRLWebApplicationException.Create('OpenAPI: Code cannot be empty');
+
+  Result := TWiRLProxyMethodResponse.Create;
+  Result.Code := ACode;
+  Result.Ref := ARef;
+  Self.Add(Result);
+end;
+
+function TWiRLProxyMethodResponses.AddResponseSchemaRef(const ACode, ASchema, ADescription: string): TWiRLProxyMethodResponse;
+begin
+  if ACode.IsEmpty then
+    raise EWiRLWebApplicationException.Create('OpenAPI: Code cannot be empty');
+
+  Result := TWiRLProxyMethodResponse.Create;
+  Result.Code := ACode;
+  Result.Description := ADescription;
+  Result.Schema := ASchema;
   Self.Add(Result);
 end;
 
@@ -964,14 +1006,8 @@ var
 begin
   Result := False;
   for LRes in Self do
-  begin
     if LRes.Category = ACategory then
-    begin
-      Result := True;
-      Break;
-    end;
-  end;
-
+      Exit(True);
 end;
 
 { TWiRLProxyEntity }
@@ -984,13 +1020,50 @@ end;
 procedure TWiRLProxyEntity.Process;
 begin
   inherited;
-
+  FCode := FRttiType.Name;
   FName := FRttiType.Name;
 
   //ProcessAttributes;
   //FSummary := FindReadXMLDoc();
 
   FProcessed := True;
+end;
+
+{ TWiRLProxyMethodResponse }
+
+function TWiRLProxyMethodResponse.GetCategory: TStatusCategory;
+var
+  LHundreds: UInt8;
+begin
+  if FCode.IsEmpty then
+    Exit(TStatusCategory.Unknown);
+
+  LHundreds := StrToIntDef(FCode.Chars[0], 0);
+  case LHundreds of
+    1: Result := TStatusCategory.Informational;
+    2: Result := TStatusCategory.Success;
+    3: Result := TStatusCategory.Redirection;
+    4: Result := TStatusCategory.ClientError;
+    5: Result := TStatusCategory.ServerError;
+    else
+      Result := TStatusCategory.Custom;
+  end;
+end;
+
+function TWiRLProxyMethodResponse.GetHttpCode: Integer;
+begin
+  Result := StrToIntDef(FCode, 0);
+end;
+
+function TWiRLProxyMethodResponse.GetResponseType: TResponseType;
+begin
+  if FRef.HasValue then
+    Exit(TResponseType.Ref);
+
+  if FSchema.HasValue then
+    Exit(TResponseType.RefSchema);
+
+  Result := TResponseType.Content;
 end;
 
 end.

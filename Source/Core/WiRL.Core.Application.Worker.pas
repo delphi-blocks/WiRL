@@ -14,7 +14,10 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
-  WiRL.Configuration.Auth,
+  WiRL.http.Core,
+  WiRL.http.Headers,
+  WiRL.http.Filters,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.Metadata,
@@ -23,14 +26,11 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
-  WiRL.http.Core,
-  WiRL.http.Headers,
-  WiRL.http.Accept.MediaType,
   WiRL.Core.Context.Server,
   WiRL.Core.Auth.Context,
   WiRL.Core.Validators,
-  WiRL.http.Filters,
-  WiRL.Core.Injection;
+  WiRL.Core.Injection,
+  WiRL.Configuration.Auth;
 
 type
   TWiRLResourceLocator = class
@@ -103,8 +103,6 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Exceptions,
   WiRL.Core.Converter,
-  WiRL.Core.Utils,
-  WiRL.Core.JSON,
   WiRL.Rtti.Utils,
   WiRL.Engine.REST;
 

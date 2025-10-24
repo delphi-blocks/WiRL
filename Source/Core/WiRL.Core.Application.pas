@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -17,7 +17,7 @@ uses
   System.SysUtils, System.Classes, System.Rtti, System.TypInfo,
   System.Generics.Collections,
 
-  WiRL.Configuration.Core,
+  WiRL.http.Filters,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.MessageBodyReader,
@@ -26,8 +26,8 @@ uses
   WiRL.Core.Context,
   WiRL.Core.Metadata,
   WiRL.Core.Auth.Context,
-  WiRL.http.Filters,
-  WiRL.Core.Injection;
+  WiRL.Core.Injection,
+  WiRL.Configuration.Core;
 
 type
   TWiRLApplication = class(TComponent, IWiRLApplication)
@@ -142,15 +142,15 @@ implementation
 uses
   System.StrUtils,
 
+  WiRL.http.URL,
+  WiRL.http.Accept.MediaType,
   WiRL.Configuration.Converter,
   WiRL.Core.Exceptions,
   WiRL.Core.Attributes,
   WiRL.Core.Converter,
   WiRL.Core.Utils,
-  WiRL.Rtti.Utils,
-  WiRL.http.URL,
-  WiRL.http.Accept.MediaType,
-  WiRL.Engine.REST;
+  WiRL.Engine.REST,
+  WiRL.Rtti.Utils;
 
 function ExtractToken(const AString: string; const ATokenIndex: Integer; const ADelimiter: Char = '/'): string;
 var
