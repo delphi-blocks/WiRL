@@ -1,0 +1,25 @@
+html {
+    box-sizing: border-box;
+    overflow: -moz-scrollbars-vertical;
+    overflow-y: scroll;
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+body {
+    margin: 0;
+    background: #fafafa;
+}
+
+.mt-10 {
+  margin-top: 50px;
+}
+
+.logo {
+  display: block;
+  margin: auto;
+}
