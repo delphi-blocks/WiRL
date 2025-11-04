@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -15,6 +15,7 @@ uses
   System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections,
   System.Math, System.Math.Vectors, System.Types,
 
+  Neon.Core.Persistence.JSON.Schema,
   Neon.Core.Types,
   Neon.Core.Attributes;
 
@@ -37,13 +38,13 @@ type
   TOrderItems = class(TObjectList<TOrderItem>)
   end;
 
+  [JsonSchema('title=Order')]
   TOrder = class
   private
     FId: Integer;
     FIdCustomer: Integer;
     FItems: TOrderItems;
     FTotal: Double;
-    FPippo: string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -53,9 +54,9 @@ type
     property IdCustomer: Integer read FIdCustomer write FIdCustomer;
     property Items: TOrderItems read FItems write FItems;
     property Total: Double read FTotal write FTotal;
-    property Pippo: string read FPippo write FPippo;
   end;
 
+  [JsonSchema('title=Orders')]
   TOrders = class(TObjectList<TOrder>)
   public
     function AddOrder(AID: Integer): TOrder;
@@ -64,6 +65,7 @@ type
   /// <summary>
   ///   Customer entiry
   /// </summary>
+  [JsonSchema('title=Customer')]
   TCustomer = class
   private
     FCity: string;
@@ -75,12 +77,15 @@ type
     destructor Destroy; override;
     function AddOrder: TOrder;
 
+    [JsonSchema('description=Code for the customer,required')]
     property Id: Integer read FId write FId;
     property CompanyName: string read FCompanyName write FCompanyName;
     property City: string read FCity write FCity;
+    [JsonSchema('description=List of orders')]
     property Orders: TOrders read FOrders write FOrders;
   end;
 
+  [JsonSchema('title=Customers')]
   TCustomers = class(TObjectList<TCustomer>)
   public
     function AddCustomer(const ACompanyName: string): TCustomer;

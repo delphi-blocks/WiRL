@@ -98,6 +98,7 @@ contains
   WiRL.http.Response in '..\..\Source\Core\WiRL.http.Response.pas',
   WiRL.http.Server in '..\..\Source\Core\WiRL.http.Server.pas',
   WiRL.http.Server.Indy in '..\..\Source\Core\WiRL.http.Server.Indy.pas',
+  WiRL.http.Server.WebBroker in '..\..\Source\Core\WiRL.http.Server.WebBroker.pas',
   WiRL.http.Server.Interfaces in '..\..\Source\Core\WiRL.http.Server.Interfaces.pas',
   WiRL.http.URL in '..\..\Source\Core\WiRL.http.URL.pas',
   WiRL.http.Headers in '..\..\Source\Core\WiRL.http.Headers.pas',
@@ -134,6 +135,7 @@ contains
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Configuration.Compression in '..\..\Source\Core\WiRL.Configuration.Compression.pas',
   WiRL.Configuration.OpenAPI in '..\..\Source\Core\WiRL.Configuration.OpenAPI.pas',
+  WiRL.Configuration.Errors in '..\..\Source\Core\WiRL.Configuration.Errors.pas',
   WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas';
 
 end.

@@ -81,7 +81,6 @@ type
     FHeadersSent: Boolean;
     FHeader: IWiRLHeaders;
     FConnection: TWiRLConnection;
-    function GetResponseError: TWiRLResponseError;
   protected
     function GetContentStream: TStream; override;
     procedure SetContentStream(const Value: TStream); override;
@@ -93,7 +92,6 @@ type
     function GetConnection: TWiRLConnection; override;
   public
     procedure SendHeaders(AImmediate: Boolean = False); override;
-    property Error: TWiRLResponseError read GetResponseError;
     property HeadersSent: Boolean read FHeadersSent;
     constructor Create;
     destructor Destroy; override;
@@ -460,24 +458,6 @@ end;
 function TWiRLTestResponse.GetReasonString: string;
 begin
   Result := FReasonString;
-end;
-
-function TWiRLTestResponse.GetResponseError: TWiRLResponseError;
-var
-  LJsonError: TJSONValue;
-begin
-  LJsonError := TJSONObject.ParseJSONValue(Content);
-  try
-    if not Assigned(LJsonError) then
-      raise Exception.Create('Error is not a valid Json');
-
-    FResponseError.Message := LJsonError.GetValue<string>('message');
-    FResponseError.Status := LJsonError.GetValue<string>('status');
-    FResponseError.Exception := LJsonError.GetValue<string>('exception');
-  finally
-    LJsonError.Free;
-  end;
-  Result := FResponseError;
 end;
 
 function TWiRLTestResponse.GetStatusCode: Integer;

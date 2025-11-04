@@ -42,8 +42,10 @@ begin
 
   LJSON := TJSONObject.Create;
   try
-    EWiRLWebApplicationException.ExceptionToJSON(LMyException, StatusCode, LJSON);
-    LJSON.AddPair(TJSONPair.Create('ErrorCode', TJSONNumber.Create(LMyException.ErrorCode)));
+    LJSON.AddPair(TJSONPair.Create('stausCode', TJSONNumber.Create(StatusCode)));
+    LJSON.AddPair(TJSONPair.Create('message', TJSONString.Create(LMyException.Message)));
+    LJSON.AddPair(TJSONPair.Create('exception', TJSONString.Create(LMyException.ClassName)));
+    LJSON.AddPair(TJSONPair.Create('errorCode', TJSONNumber.Create(LMyException.ErrorCode)));
 
     AExceptionContext.Response.StatusCode := StatusCode;
     AExceptionContext.Response.ContentType := 'application/json';

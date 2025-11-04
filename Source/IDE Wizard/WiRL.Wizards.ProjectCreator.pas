@@ -9,9 +9,11 @@ resourcestring
   SWiRLServerProject = 'WiRLServerProject';
 
 type
-  TWiRLServerProjectCreator = class(TInterfacedObject, IOTACreator, IOTAProjectCreator50, IOTAProjectCreator80,IOTAProjectCreator160, IOTAProjectCreator)
+  TWiRLServerProjectCreator = class(TInterfacedObject, IOTACreator, IOTAProjectCreator50, IOTAProjectCreator80,IOTAProjectCreator160, IOTAProjectCreator{$IF CompilerVersion >= 32.0}, IOTAProjectCreator190 {$ENDIF})
   private
     FServerConfig: TServerConfig;
+    FFileName: string;
+    FProjectName: string;
   public
     // IOTACreator
     function GetCreatorType: string;
@@ -41,6 +43,9 @@ type
     function GetPreferredPlatform: string;
     procedure SetInitialOptions(const NewProject: IOTAProject);
 
+    // IOTAProjectCreator190
+    function GetSupportedPlatforms: TArray<string>;
+
     constructor Create(AServerConfig: TServerConfig);
   end;
 
@@ -53,14 +58,20 @@ uses
   PlatformAPI,
   WiRL.Wizards.Utils,
   WiRL.Wizards.Modules.MainForm,
-  WiRL.Wizards.Modules.Resources;
+  WiRL.Wizards.Modules.Resources,
+  WiRL.Wizards.Dialogs.NewResource;
 
 {$REGION 'IOTACreator'}
 
 constructor TWiRLServerProjectCreator.Create(AServerConfig: TServerConfig);
+var
+  LSuffix: string;
 begin
   inherited Create;
   FServerConfig := AServerConfig;
+  FFileName := GetNewModuleFileName('Project', '',
+      '', False, LSuffix, '.bdsproj;.dproj;.dpr;.dpk;.cbproj');
+  FProjectName := ExtractFileName(ChangeFileExt(FFileName, ''));
 end;
 
 function TWiRLServerProjectCreator.GetCreatorType: string;
@@ -93,7 +104,7 @@ end;
 
 function TWiRLServerProjectCreator.GetFileName: string;
 begin
-  Result := GetCurrentDir + '\' + SWiRLServerProject + '.dpr';
+  Result := FFileName;
 end;
 
 function TWiRLServerProjectCreator.GetOptionFileName: string; deprecated;
@@ -106,9 +117,18 @@ begin
   Result := True;
 end;
 
+function TWiRLServerProjectCreator.GetSupportedPlatforms: TArray<string>;
+begin
+  Result := [GetPreferredPlatform];
+end;
+
 function TWiRLServerProjectCreator.NewProjectSource(const ProjectName: string): IOTAFile;
 begin
-  Result := TWiRLSourceFile.Create(SWiRLServerProject);
+  Result := TWiRLSourceFile.Create(
+    TSourceBuilder.FromResource(SWiRLServerProject)
+      .Add('PROJECT_NAME', FProjectName)
+      .Build
+  );
 end;
 
 function TWiRLServerProjectCreator.NewOptionSource(const ProjectName: string): IOTAFile; deprecated;
@@ -130,10 +150,12 @@ end;
 procedure TWiRLServerProjectCreator.NewDefaultProjectModule(const Project: IOTAProject);
 var
   LModuleServices: IOTAModuleServices;
+  LResourceConfig: TResourceConfig;
 begin
   LModuleServices := BorlandIDEServices as IOTAModuleServices;
   LModuleServices.CreateModule(TWiRLServerMainFormCreator.Create(FServerConfig));
-  LModuleServices.CreateModule(TWiRLServerResourcesCreator.Create(FServerConfig));
+  if FServerConfig.CreateTheFirstResource and TformNewResourceDialog.FindConfig(LResourceConfig) then
+    LModuleServices.CreateModule(TWiRLServerResourcesCreator.Create(LResourceConfig));
 end;
 
 {$ENDREGION}

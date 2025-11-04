@@ -324,10 +324,10 @@ var
   LPair: TPair<TWiRLConfigurationClass, TWiRLConfiguration>;
 begin
   // Fill the context
-  FContext.AddContainerOnce(FApplication, False);
+  FContext.AddContainerOnce(FApplication);
 
   for LPair in FApplication.Configs do
-    FContext.AddContainerOnce(LPair.Value, False);
+    FContext.AddContainerOnce(LPair.Value);
 end;
 
 function TWiRLClientCustomResource.InternalHttpRequest(

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2024 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,7 +14,10 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
-  WiRL.Configuration.Auth,
+  WiRL.http.Core,
+  WiRL.http.Headers,
+  WiRL.http.Filters,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Declarations,
   WiRL.Core.Classes,
   WiRL.Core.Metadata,
@@ -23,14 +26,11 @@ uses
   WiRL.Core.MessageBodyReader,
   WiRL.Core.MessageBodyWriter,
   WiRL.Core.Registry,
-  WiRL.http.Core,
-  WiRL.http.Headers,
-  WiRL.http.Accept.MediaType,
   WiRL.Core.Context.Server,
   WiRL.Core.Auth.Context,
   WiRL.Core.Validators,
-  WiRL.http.Filters,
-  WiRL.Core.Injection;
+  WiRL.Core.Injection,
+  WiRL.Configuration.Auth;
 
 type
   TWiRLResourceLocator = class
@@ -103,8 +103,6 @@ uses
   WiRL.Core.Attributes,
   WiRL.Core.Exceptions,
   WiRL.Core.Converter,
-  WiRL.Core.Utils,
-  WiRL.Core.JSON,
   WiRL.Rtti.Utils,
   WiRL.Engine.REST;
 
@@ -149,7 +147,7 @@ begin
   FAppConfig := AContext.Application as TWiRLApplication;
   FLocator := TWiRLResourceLocator.Create(FAppConfig.Proxy, FContext);
   FGC := TWiRLGarbageCollector.Create(nil);
-  FContext.AddContainerOnce(FGC, False);
+  FContext.AddContainerOnce(FGC);
   //FResource := TWiRLProxyResource.Create(FAppConfig.Resources);
 end;
 
@@ -611,10 +609,11 @@ begin
     AddArgumentsToGarbage(LArgumentArray);
 
     LMethodResult := FLocator.Method.RttiObject.Invoke(AInstance, LArgumentArray);
-    AddResultToGarbage(LMethodResult);
 
     if FLocator.Method.IsFunction then
     begin
+      AddResultToGarbage(LMethodResult);
+
       if LMethodResult.IsInstanceOf(TWiRLResponse) then
       begin
         // Request is already done
@@ -643,6 +642,10 @@ begin
           'Resource''s returned type not supported',
           Self.ClassName, 'InvokeResourceMethod'
         );
+    end
+    else // It's a procedure so we must set the 204 (no content) status code
+    begin
+      FContext.Response.StatusCode := 204;
     end;
   finally
     FGC.CollectGarbage;

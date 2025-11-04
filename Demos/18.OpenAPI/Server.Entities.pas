@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -16,7 +16,8 @@ uses
   System.Math, System.Math.Vectors, System.Types,
 
   Neon.Core.Types,
-  Neon.Core.Attributes;
+  Neon.Core.Attributes,
+  Neon.Core.Persistence.JSON.Schema;
 
 {$M+}
 
@@ -107,6 +108,7 @@ type
     property Text: string read FText write FText;
   end;
 
+  [JsonSchema('title=Person')]
   TPerson = class
   private
     FAddresses: TAddresses;

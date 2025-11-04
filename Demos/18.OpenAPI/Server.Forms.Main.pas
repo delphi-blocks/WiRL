@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2023 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -19,8 +19,10 @@ uses
   WiRL.Configuration.Neon,
   WiRL.Configuration.CORS,
   WiRL.Configuration.OpenAPI,
+  WiRL.Core.Exceptions,
   Neon.Core.Types,
   Neon.Core.Persistence,
+  Neon.Core.Persistence.JSON.Schema,
   WiRL.Core.Application,
   WiRL.Engine.REST,
   WiRL.Engine.FileSystem,
@@ -70,6 +72,7 @@ implementation
 uses
   System.TypInfo,
   WiRL.Core.Utils,
+  WiRL.http.Accept.MediaType,
   WiRL.Core.Metadata.XMLDoc,
   WiRL.Core.OpenAPI.Resource;
 
@@ -111,6 +114,11 @@ begin
   LExtensionObject.AddPair('backgroundColor', '#FFFFFF');
   LExtensionObject.AddPair('altText', 'API Logo');
   Result.Info.Extensions.Add('x-logo', LExtensionObject);
+
+
+  //var res := Result.Components.AddResponse('BadRequest', 'Bad Request');
+  //var mt := res.AddMediaType(TMediaType.APPLICATION_JSON);
+  //mt.Schema.SetSchemaReference()
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -137,7 +145,6 @@ begin
 
   FEngine.AddApplication(APP_PATH)
       .SetAppName('demo')
-      // Test for namespaces
       .SetResources('Server.Resources.Demo.*')
       .SetResources('Server.Resources.Customer.*')
       .SetResources('Server.Resources.OpenAPI')
@@ -155,15 +162,31 @@ begin
       .ApplyConfig
 
       .Plugin.Configure<IWiRLConfigurationOpenAPI>
+        .SetNeonConfiguration(
+          TNeonConfiguration.Camel
+            .Rules.ForClass<Exception>
+              .SetIgnoreMembers([
+                'BaseException',
+                'HelpContext',
+                'InnerException',
+                'StackTrace',
+                'StackInfo'])
+          .ApplyConfig
+        )
+
         // Set the OpenAPI resource (to skip it in the documentation generation)
         .SetOpenAPIResource(TDocumentationResource)
+
         // Set the Delphi XML documentation output directory (Project -> Options -> Compiler)
         .SetXMLDocFolder('{AppPath}\..\..\Docs')
+
         // Set the folder to the html UI assets location
         .SetGUIDocFolder('{AppPath}\..\..\UI')
         //.SetGUIDocFolder('{AppPath}\..\..\ReDoc')
+
         // Set the (optional) API logo
         .SetAPILogo('api-logo.png')
+
         // Set the OpenAPI document for the OpenAPI engine to fill
         .SetAPIDocument(LDocument)
 
@@ -172,11 +195,12 @@ begin
           begin
             ADocument.Info.Title := 'WiRL OpenAPI Integration Demo (Changed)';
 
-            var tag := ADocument.AddTag('callback', 'User added content');
+            ADocument.AddTag('callback', 'User added content');
 
             var res := ADocument.AddPath('/callback');
             res.Description := 'This is a test for the callback';
             res.Summary := 'Sample';
+
             var op := res.AddOperation(TOperationType.Get);
             op.Summary := 'Get Sample Data';
             op.Description := 'Sample Data description';

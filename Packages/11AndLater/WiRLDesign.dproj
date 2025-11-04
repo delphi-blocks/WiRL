@@ -2,13 +2,14 @@
     <PropertyGroup>
         <ProjectGuid>{B7363784-25C2-456C-BE44-D3E58F77E983}</ProjectGuid>
         <MainSource>WiRLDesign.dpk</MainSource>
-        <ProjectVersion>19.5</ProjectVersion>
+        <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <TargetedPlatforms>1</TargetedPlatforms>
+        <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Package</AppType>
+        <ProjectName Condition="'$(ProjectName)'==''">WiRLDesign</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -47,7 +48,7 @@
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <GenPackage>true</GenPackage>
         <SanitizedProjectName>WiRLDesign</SanitizedProjectName>
-        <DCC_DcuOutput>..\..\Lib\280\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>..\..\Lib\290\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
@@ -113,6 +114,10 @@
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.NewResource.pas">
+            <Form>formNewResourceDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
@@ -200,11 +205,13 @@
                 <Platform value="OSX64">False</Platform>
                 <Platform value="OSXARM64">False</Platform>
                 <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
+                <Platform value="Win64">True</Platform>
+                <Platform value="Win64x">False</Platform>
             </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
 </Project>

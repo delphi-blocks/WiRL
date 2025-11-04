@@ -1,0 +1,39 @@
+{
+  "name": "pet",
+  "description": "Everything about your Pets",
+  "methods": {
+		"GetPetByTags": {
+		  "id": "getPetById",
+			"name": "findPetsByTags",
+			"summary": "Finds Pets by tags",
+			"description": "Multiple tags can be provided with comma separated strings",
+			"params": {
+				"ATags": {
+					"required": true,
+					"description": "Tags to filter by"
+				}
+			},
+			"responses": {
+        "200": {
+					"description": "Successful operation",
+					"headers": {
+  				  "X-RateLimit-Remaining": {
+  				    "delphiType": "integer"
+  				  }
+  				}          
+				},
+				"400": {
+					"ref": "BadRequest",
+				},
+				"500": {
+					"schema": "Error",
+					"description": "Generic Server Error"
+				},
+				"zzz": {
+					"schema": "Error",
+					"description": "Standard API Error"				  
+				},
+			}
+    }
+  }
+}

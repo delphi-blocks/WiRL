@@ -29,7 +29,7 @@ type
   TWiRLServer = class(TComponent, IWiRLListener)
   private const
     DefaultPort = 8080;
-    DefaultThreadPoolSize = 50;
+    DefaultThreadPoolSize = 0;
   private
     FServerName: string;
     FCurrentEngine: TWiRLCustomEngine;
@@ -59,6 +59,7 @@ type
     procedure RemoveEngine(AEngine: TWiRLCustomEngine); overload;
     procedure RemoveEngine(const ABasePath: string); overload;
     function GetEngine(const AURL: string): TWiRLCustomEngine;
+    function FindEngine(const AURL: string): TWiRLCustomEngine;
     function CurrentEngine<T: constructor, TWiRLCustomEngine>: T;
     function SetServerName(const AName: string): TWiRLServer;
     function SetPort(APort: Integer): TWiRLServer;
@@ -66,7 +67,7 @@ type
     function AddSinkPath(const APath: string): TWiRLServer;
 
     { IWiRLListener }
-    procedure HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
+    procedure HandleRequest(AContext: TWiRLContext; ARequest: TWiRLRequest; AResponse: TWiRLResponse);
 
     property HttpServer: IWiRLServer read FHttpServer;
     property Engines: TWiRLEngineList read FEngineList;
@@ -151,6 +152,11 @@ begin
   inherited;
 end;
 
+function TWiRLServer.FindEngine(const AURL: string): TWiRLCustomEngine;
+begin
+  Result := FEngines.GetEngine(AURL);
+end;
+
 procedure TWiRLServer.FreeEngines;
 var
   LEngineInfo: TWiRLEngineInfo;
@@ -177,9 +183,8 @@ begin
     raise EWiRLNotFoundException.Create(Format('Engine not found for URL [%s]', [AURL]));
 end;
 
-procedure TWiRLServer.HandleRequest(ARequest: TWiRLRequest; AResponse: TWiRLResponse);
+procedure TWiRLServer.HandleRequest(AContext: TWiRLContext; ARequest: TWiRLRequest; AResponse: TWiRLResponse);
 var
-  LContext: TWiRLContext;
   LEngine: TWiRLCustomEngine;
   LPath: string;
 begin
@@ -190,29 +195,24 @@ begin
       Exit;
     end;
 
-  LContext := TWiRLContext.Create;
+  AContext.Server := Self;
+  AContext.Request := ARequest;
+  AContext.Response := AResponse;
   try
-    LContext.Server := Self;
-    LContext.Request := ARequest;
-    LContext.Response := AResponse;
     try
-      try
-        if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(LContext) then
-        begin
-          LEngine := GetEngine(ARequest.PathInfo);
-          LContext.Engine := LEngine;
-          LEngine.HandleRequest(LContext);
-        end;
-        TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(LContext);
-      except
-        on E: Exception do
-          EWiRLWebApplicationException.HandleException(LContext, E);
+      if not TWiRLFilterRegistry.Instance.ApplyPreMatchingRequestFilters(AContext) then
+      begin
+        LEngine := GetEngine(ARequest.PathInfo);
+        AContext.Engine := LEngine;
+        LEngine.HandleRequest(AContext);
       end;
-    finally
-      AResponse.SendHeaders;
+      TWiRLFilterRegistry.Instance.ApplyPreMatchingResponseFilters(AContext);
+    except
+      on E: Exception do
+        EWiRLWebApplicationException.HandleException(AContext, E);
     end;
   finally
-    LContext.Free;
+    AResponse.SendHeaders;
   end;
 end;
 

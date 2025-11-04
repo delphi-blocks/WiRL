@@ -1,19 +1,19 @@
-unit ServerResources;
+unit %UNIT_NAME%;
 
 interface
 
 uses
+  System.SysUtils,
+  System.Classes,
+
   WiRL.Core.Attributes,
-  WiRL.http.Accept.MediaType,
-  SysUtils,
-  Classes;
+  WiRL.http.Accept.MediaType;
 
 type
-  [Path('helloworld')]
-  THelloWorldResource = class
+  [Path('%RESOURCE_PATH%')]
+  %CLASS_NAME% = class
   public
-    [GET, Produces(TMediaType.TEXT_PLAIN)]
-    function SayHelloWorld: string;
+%METHODS_INTERFACE%
   end;
 
 implementation
@@ -21,14 +21,10 @@ implementation
 uses
   WiRL.Core.Registry;
 
-{ THelloWorldResource }
+{ %CLASS_NAME% }
 
-function THelloWorldResource.SayHelloWorld: string;
-begin
-  Result := 'Hello World!';
-end;
-
+%METHODS_IMPLEMENTATION%
 initialization
-  TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<%CLASS_NAME%>;
 
 end.

@@ -1,0 +1,21 @@
+{
+  "X-RateLimit-Limit": {
+    "description": "Request limit per hour.",
+    "schema": {
+      "type": "integer"
+    }
+  },
+  "X-RateLimit-Remaining": {
+    "description": "The number of requests left for the time window.",
+    "schema": {
+      "type": "integer"
+    }
+  },
+  "X-RateLimit-Reset": {
+    "description": "The UTC date/time at which the current rate limit window resets.",
+    "schema": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

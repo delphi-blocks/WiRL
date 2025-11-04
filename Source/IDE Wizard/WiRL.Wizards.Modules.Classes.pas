@@ -11,6 +11,15 @@ type
     EnginePath: string;
     AppPath: string;
     UseDefaultMessageBody: Boolean;
+    CreateTheFirstResource: Boolean;
+  end;
+
+  TResourceConfig = record
+    Name: string;
+    MethodGET: Boolean;
+    MethodPOST: Boolean;
+    MethodPUT: Boolean;
+    MethodDELETE: Boolean;
   end;
 
 implementation

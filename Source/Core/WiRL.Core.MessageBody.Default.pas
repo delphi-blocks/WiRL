@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2023 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -30,6 +30,7 @@ uses
   WiRL.Core.Exceptions,
   WiRL.Configuration.Core,
   WiRL.Configuration.Neon,
+  WiRL.Configuration.Errors,
   WiRL.Configuration.Converter;
 
 type
@@ -61,7 +62,7 @@ type
   [Consumes(TMediaType.TEXT_PLAIN)]
   TWiRLSimpleTypesProvider = class(TMessageBodyProvider)
   private
-    [Context] FFormatSettingConfig: TWiRLFormatSettingConfig;
+    [Context] FConfigSetting: TWiRLFormatSettingConfig;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
@@ -77,7 +78,7 @@ type
   TWiRLJSONProvider = class(TMessageBodyProvider)
   private
     [Context] FContext: TWiRLContextHttp;
-    [Context] FConfigurationNeon: TWiRLConfigurationNeon;
+    [Context] FWiRLConfigNeon: TWiRLConfigurationNeon;
   protected
     procedure WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
     procedure WriteJSONPToStream(AJSON: TJSONValue; AStream: TStream);
@@ -91,7 +92,7 @@ type
   [Produces(TMediaType.APPLICATION_JAVASCRIPT)]
   TWiRLValueTypesProvider = class(TWiRLJSONProvider)
   private
-    [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
+    [Context] FWiRLConfigNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
@@ -111,7 +112,7 @@ type
   [Produces(TMediaType.APPLICATION_JAVASCRIPT)]
   TWiRLObjectProvider = class(TWiRLJSONProvider)
   private
-    [Context] WiRLConfigurationNeon: TWiRLConfigurationNeon;
+    [Context] FWiRLConfigNeon: TWiRLConfigurationNeon;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; overload; override;
@@ -141,6 +142,19 @@ type
       AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream); override;
 
     function AsObject: TObject;
+  end;
+
+  /// <summary>
+  ///   Default Writer for Exceptions
+  /// </summary>
+  [Produces(TMediaType.APPLICATION_JSON)]
+  TWiRLExceptionWriter = class(TInterfacedObject, IMessageBodyWriter)
+  private
+    [Context] FWiRLConfigNeon: TWiRLConfigurationNeon;
+    [Context] FWiRLConfigErrors: TWiRLConfigurationErrors;
+  public
+    procedure WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+      AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
   end;
 
   /// <summary>
@@ -182,8 +196,7 @@ type
   [Produces(TMediaType.WILDCARD)]
   TWiRLStreamingResponseProvider = class(TMessageBodyProvider)
   private
-    [Context]
-    FContext: TWiRLContextHttp;
+    [Context] FContext: TWiRLContextHttp;
   public
     function ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaders: IWiRLHeaders; AContentStream: TStream): TValue; override;
@@ -204,7 +217,8 @@ uses
   WiRL.Core.Converter,
   WiRL.Rtti.Utils,
   Neon.Core.Persistence,
-  Neon.Core.Persistence.JSON;
+  Neon.Core.Persistence.JSON,
+  Neon.Core.Serializers.RTL;
 
 { TWiRLStringProvider }
 
@@ -291,7 +305,7 @@ var
   LEncoding: TEncoding;
   LStringValue: string;
 begin
-  LFormatSetting := FFormatSettingConfig.GetFormatSettingFor(AType.Handle);
+  LFormatSetting := FConfigSetting.GetFormatSettingFor(AType.Handle);
 
   LEncoding := AMediaType.GetDelphiEncoding;
   try
@@ -319,7 +333,7 @@ var
   LStringValue: string;
   LBytes: TBytes;
 begin
-  LFormatSetting := FFormatSettingConfig.GetFormatSettingFor(AValue.TypeInfo);
+  LFormatSetting := FConfigSetting.GetFormatSettingFor(AValue.TypeInfo);
 
   LEncoding := AMediaType.GetDelphiEncoding;
   try
@@ -340,7 +354,7 @@ var
   LJSON: TJSONValue;
   LValue: TValue;
 begin
-  LDes := TNeonDeserializerJSON.Create(WiRLConfigurationNeon.GetNeonConfig);
+  LDes := TNeonDeserializerJSON.Create(FWiRLConfigNeon.GetNeonConfig);
   try
     LJSON := TJSONObject.ParseJSONValue(ContentStreamToString(AMediaType.Charset, AContentStream));
     try
@@ -364,7 +378,7 @@ begin
     tkDynArray,
     tkRecord:
     begin
-      LJSON := TNeon.ValueToJSON(AValue, WiRLConfigurationNeon.GetNeonConfig);
+      LJSON := TNeon.ValueToJSON(AValue, FWiRLConfigNeon.GetNeonConfig);
       try
         if AMediaType.IsType(TMediaType.APPLICATION_JAVASCRIPT) then
           WriteJSONPToStream(LJSON, AContentStream)
@@ -382,13 +396,13 @@ end;
 function TWiRLObjectProvider.ReadFrom(AType: TRttiType; AMediaType: TMediaType;
       AHeaders: IWiRLHeaders; AContentStream: TStream): TValue;
 begin
-  Result := TNeon.JSONToObject(AType, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
+  Result := TNeon.JSONToObject(AType, ContentStreamToString(AMediaType.Charset, AContentStream), FWiRLConfigNeon.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.ReadFrom(AObject: TObject; AType: TRttitype;
   AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
 begin
-  TNeon.JSONToObject(AObject, ContentStreamToString(AMediaType.Charset, AContentStream), WiRLConfigurationNeon.GetNeonConfig);
+  TNeon.JSONToObject(AObject, ContentStreamToString(AMediaType.Charset, AContentStream), FWiRLConfigNeon.GetNeonConfig);
 end;
 
 procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
@@ -396,7 +410,7 @@ procedure TWiRLObjectProvider.WriteTo(const AValue: TValue; const AAttributes: T
 var
   LJSON: TJSONValue;
 begin
-  LJSON := TNeon.ObjectToJSON(AValue.AsObject, WiRLConfigurationNeon.GetNeonConfig);
+  LJSON := TNeon.ObjectToJSON(AValue.AsObject, FWiRLConfigNeon.GetNeonConfig);
   try
     if AMediaType.IsType(TMediaType.APPLICATION_JAVASCRIPT) then
       WriteJSONPToStream(LJSON, AContentStream)
@@ -445,7 +459,7 @@ end;
 
 procedure RegisterMessageBodyClasses;
 begin
-  // TWiRLStringProvider
+  // TWiRLStringProvider Writer
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TWiRLStringProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
@@ -462,6 +476,7 @@ begin
     end
   );
 
+  // TWiRLStringProvider Reader
   TMessageBodyReaderRegistry.Instance.RegisterReader(
     TWiRLStringProvider,
     function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
@@ -479,7 +494,7 @@ begin
   );
 
 
-  // TWiRLSimpleTypesProvider
+  // TWiRLSimpleTypesProvider Writer
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TWiRLSimpleTypesProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
@@ -496,6 +511,7 @@ begin
     end
   );
 
+  // TWiRLSimpleTypesProvider  Reader
   TMessageBodyReaderRegistry.Instance.RegisterReader(
     TWiRLSimpleTypesProvider,
     function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
@@ -512,7 +528,7 @@ begin
     end
   );
 
-  // TWiRLValueTypesProvider
+  // TWiRLValueTypesProvider Reader
   TMessageBodyReaderRegistry.Instance.RegisterReader(
     TWiRLValueTypesProvider,
     function(AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
@@ -528,6 +544,7 @@ begin
     end
   );
 
+  // TWiRLValueTypesProvider Writer
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TWiRLValueTypesProvider,
     function (AType: TRttiType; const AAttributes: TAttributeArray; AMediaType: TMediaType): Boolean
@@ -543,7 +560,7 @@ begin
     end
   );
 
-  // TWiRLObjectProvider
+  // TWiRLObjectProvider Reader/Writer
   TMessageBodyReaderRegistry.Instance.RegisterReader<TObject>(TWiRLObjectProvider, TMessageBodyReaderRegistry.AFFINITY_VERY_LOW);
   TMessageBodyWriterRegistry.Instance.RegisterWriter(
     TWiRLObjectProvider,
@@ -556,6 +573,9 @@ begin
       Result := TMessageBodyWriterRegistry.AFFINITY_VERY_LOW;
     end
   );
+
+  // TWiRLExceptionWriter
+  TMessageBodyWriterRegistry.Instance.RegisterWriter<Exception>(TWiRLExceptionWriter);
 
   // TWiRLJSONValueProvider
   TMessageBodyReaderRegistry.Instance.RegisterReader<TJSONValue>(TWiRLJSONValueProvider);
@@ -591,7 +611,7 @@ begin
   LBytes := TEncoding.UTF8.GetBytes(LCallback + '(');
   AStream.Write(LBytes[0], Length(LBytes));
 
-  TNeon.PrintToStream(AJSON, AStream, FConfigurationNeon.GetNeonConfig.GetPrettyPrint);
+  TNeon.PrintToStream(AJSON, AStream, FWiRLConfigNeon.GetNeonConfig.GetPrettyPrint);
 
   LBytes := TEncoding.UTF8.GetBytes(');');
   AStream.Write(LBytes[0], Length(LBytes));
@@ -599,7 +619,7 @@ end;
 
 procedure TWiRLJSONProvider.WriteJSONToStream(AJSON: TJSONValue; AStream: TStream);
 begin
-  TNeon.PrintToStream(AJSON, AStream, FConfigurationNeon.GetNeonConfig.GetPrettyPrint);
+  TNeon.PrintToStream(AJSON, AStream, FWiRLConfigNeon.GetNeonConfig.GetPrettyPrint);
 end;
 
 { TWiRLMultipartFormDataProvider }
@@ -635,6 +655,39 @@ procedure TWiRLStreamingResponseProvider.WriteTo(const AValue: TValue;
 begin
   inherited;
   AValue.AsType<TWiRLStreamingResponse>.SendResponse(FContext);
+end;
+
+{ TWiRLExceptionWriter }
+
+procedure TWiRLExceptionWriter.WriteTo(const AValue: TValue; const AAttributes: TAttributeArray;
+  AMediaType: TMediaType; AHeaders: IWiRLHeaders; AContentStream: TStream);
+var
+  LErr: Exception;
+  LJSON: TJSONValue;
+  LConfig: INeonConfiguration;
+begin
+  LConfig := FWiRLConfigNeon.GetNewNeonConfig
+    .SetMemberCase(FWiRLConfigErrors.ErrorCase)
+  ;
+
+  { TODO -opaolo -c : Use TNeon 10/10/2025 12:31:58 }
+  LErr := AValue.AsObject as Exception;
+  LJSON := TNeon.ObjectToJSON(LErr, LConfig);
+  try
+    (LJSON as TJSONObject).AddPair('exception', LErr.ClassName);
+    if FWiRLConfigErrors.ErrorDebugInfo then
+    begin
+      // Using TNeonCase algorithm
+      if not LErr.StackTrace.IsEmpty then
+        (LJSON as TJSONObject).AddPair('stackTrace', LErr.StackTrace);
+      if Assigned(LErr.InnerException) then
+        (LJSON as TJSONObject).AddPair('innerException', TNeon.ObjectToJSON(LErr.InnerException, LConfig));
+    end;
+
+    TNeon.PrintToStream(LJSON, AContentStream, LConfig.GetPrettyPrint);
+  finally
+    LJSON.Free;
+  end;
 end;
 
 initialization

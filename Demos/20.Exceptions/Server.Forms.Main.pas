@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2022 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -14,9 +14,11 @@ interface
 uses
   System.Classes, System.SysUtils, Vcl.Forms, Vcl.ActnList, Vcl.ComCtrls,
   Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Diagnostics, System.Actions,
+
   WiRL.Engine.REST,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
+  WiRL.Core.Exceptions,
   WiRL.Core.Application;
 
 type
@@ -52,6 +54,7 @@ implementation
 uses
   Neon.Core.Types,
   WiRL.Configuration.Neon,
+  WiRL.Configuration.Errors,
   WiRL.Core.JSON,
   WiRL.Rtti.Utils;
 
@@ -84,7 +87,6 @@ begin
   // Engine configuration
   FServer
     .SetPort(StrToIntDef(PortNumberEdit.Text, 8080))
-    .SetThreadPoolSize(5)
     .AddEngine<TWiRLRESTEngine>('/rest')
     .SetEngineName('WiRL custom Exceptions')
 
@@ -98,6 +100,14 @@ begin
         .SetUseUTCDate(True)
         .SetMemberCase(TNeonCase.SnakeCase)
         .ApplyConfig
+
+      .Plugin.Configure<IWiRLConfigurationErrors>
+        .SetErrorClass(EWiRLWebApplicationException)
+        .SetErrorCase(TNeonCase.CamelCase)
+        .SetErrorDebugInfo(True)
+        //.SetErrorMediaType()
+        .ApplyConfig
+
   ;
 
   if not FServer.Active then

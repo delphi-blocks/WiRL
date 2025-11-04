@@ -155,13 +155,13 @@ end;
 
 procedure TWiRLCustomEngine.SetEngineServer(AServer: TComponent);
 begin
-  if FServer <> Self then
-    FServer := Self;
+  if FServer <> AServer then
+    FServer := AServer;
 end;
 
 procedure TWiRLCustomEngine.SetServer(const Value: TComponent);
 begin
-  if not (Value is TWiRLServer) then
+  if Assigned(Value) and not (Value is TWiRLServer) then
     raise EWiRLException.Create('Please select a TWiRLServer component');
 
   if FServer <> Value then

@@ -23,6 +23,7 @@ object MainForm: TMainForm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 458
     object Label1: TLabel
       Left = 28
       Top = 17
@@ -63,6 +64,8 @@ object MainForm: TMainForm
     Align = alClient
     ItemHeight = 13
     TabOrder = 1
+    ExplicitWidth = 458
+    ExplicitHeight = 111
   end
   object MainActionList: TActionList
     Left = 384

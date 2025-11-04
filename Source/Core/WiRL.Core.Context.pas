@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -21,31 +21,42 @@ uses
   WiRL.http.URL;
 
 type
-  TWiRLContextDataListEnumerator<T> = class(TEnumerator<T>)
+  TContextEntry = record
+    Value: TObject;
+    Factory: IInterface;
+    ContextOwned: Boolean;
+  end;
+
+  TWiRLContextDataListEnumerator = class(TEnumerator<TObject>)
   private
-    FList: TList<T>;
+    FList: TList<TContextEntry>;
     FIndex: Integer;
-    function GetCurrent: T;
+    function GetCurrent: TObject;
   protected
-    function DoGetCurrent: T; override;
+    function DoGetCurrent: TObject; override;
     function DoMoveNext: Boolean; override;
   public
-    constructor Create(const AList: TList<T>);
-    property Current: T read GetCurrent;
+    constructor Create(const AList: TList<TContextEntry>);
+    property Current: TObject read GetCurrent;
     function MoveNext: Boolean;
   end;
 
+  TWiRLContextBase = class;
+
   TWiRLContextDataList = class
   private
-    FList: TObjectList<TObject>;
-    FOwnedObjects: TObjectList<TObject>;
+    FContext: TWiRLContextBase;
+    FList: TList<TContextEntry>;
+    procedure DisposeValue(LEntry: TContextEntry);
   public
-    constructor Create;
+    constructor Create(AContext: TWiRLContextBase);
     destructor Destroy; override;
 
-    function GetEnumerator: TWiRLContextDataListEnumerator<TObject>;
-    procedure Add(AValue: TObject; AOwned: Boolean);
+    function GetEnumerator: TWiRLContextDataListEnumerator;
+    procedure Add(AValue: TObject); overload;
+    procedure Add(AValue: TObject; AFactory: IInterface; AContextOwned: Boolean); overload;
     procedure Delete(AValue: TObject);
+    procedure Clear;
   end;
 
   TWiRLContextBase = class
@@ -55,13 +66,16 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure AddContainer(AContainer: TObject; AOwned: Boolean);
-    procedure AddContainerOnce(AContainer: TObject; AOwned: Boolean);
+    procedure AddContainer(AContainer: TObject);
+    procedure AddContainerOnce(AContainer: TObject);
     procedure RemoveContainer(AValue: TObject);
 
-    // raise an exception if not found
+    // Injects context data into fields and properties marked with [Context] attribute
+    procedure Inject(AInstance: TObject);
+
+    // Look up context data by type and raise an exception if not found
     function GetContextDataAs<T: class>: T;
-    // return nil if not found
+    // Look up context data by type and return nil if not found
     function FindContextDataAs<T: class>: T; overload;
     function FindContextDataAs(AClass: TClass): TObject; overload;
 
@@ -91,84 +105,147 @@ type
     property RequestURL: TWiRLURL read GetRequestURL;
   end;
 
+  /// <summary>
+  /// Factory interface to create context objects. The class implementing this
+  /// interface must be registered in the global TWiRLContextInjectionRegistry.
+  /// If a custom disposer is needed, the class must also implement IContextHttpDisposer.
+  /// </summary>
   IContextHttpFactory = interface
   ['{152751D7-F806-4EF3-B095-4E0D9545F6C7}']
     function CreateContextObject(const AObject: TRttiObject; AContext: TWiRLContextHttp): TValue;
   end;
 
+  /// <summary>
+  /// Optional interface for custom disposal of context objects. 
+  /// Classes implementing this interface must also implement IContextHttpFactory 
+  /// and be registered in the global TWiRLContextInjectionRegistry.
+  /// This allows factories to define custom cleanup logic for their context objects.
+  /// </summary>
+  IContextHttpDisposer = interface
+  ['{5DA5F130-8B49-4874-B6D5-BD40AC8A4996}']
+    procedure DisposeContextObject(AObject: TObject; AContext: TWiRLContextHttp);
+  end;
 
 implementation
 
 uses
-  WiRL.Configuration.Core;
+  WiRL.Configuration.Core, WiRL.Core.Injection, WiRL.Core.Exceptions;
 
 { TWiRLContextDataList }
 
-procedure TWiRLContextDataList.Add(AValue: TObject; AOwned: Boolean);
+procedure TWiRLContextDataList.Add(AValue: TObject);
 begin
-  FList.Add(AValue);
-  if AOwned then
-    FOwnedObjects.Add(AValue);
+  Add(AValue, nil, False);
 end;
 
-constructor TWiRLContextDataList.Create;
+procedure TWiRLContextDataList.Add(AValue: TObject; AFactory: IInterface;
+  AContextOwned: Boolean);
+var
+  LContextEntry: TContextEntry;
 begin
-  inherited;
-  FList := TObjectList<TObject>.Create(False);
-  FOwnedObjects := TObjectList<TObject>.Create(True);
+  LContextEntry.Value := AValue;
+  LContextEntry.Factory := AFactory;
+  LContextEntry.ContextOwned := AContextOwned;
+  FList.Add(LContextEntry);
+end;
+
+procedure TWiRLContextDataList.Clear;
+var
+  LEntry: TContextEntry;
+begin
+  for LEntry in FList do
+  begin
+    DisposeValue(LEntry);
+  end;
+  FList.Clear;
+end;
+
+constructor TWiRLContextDataList.Create(AContext: TWiRLContextBase);
+begin
+  inherited Create;
+  FContext := AContext;
+  FList := TList<TContextEntry>.Create;
 end;
 
 procedure TWiRLContextDataList.Delete(AValue: TObject);
 var
-  LIndex: Integer;
+  LEntry: TContextEntry;
 begin
-  FList.Remove(AValue);
-
-  LIndex := FOwnedObjects.IndexOf(AValue);
-  if LIndex >= 0 then
+  for LEntry in FList do
   begin
-    FOwnedObjects.Delete(LIndex);
-    AValue.Free;
+    if LEntry.Value = AValue then
+    begin
+      DisposeValue(LEntry);
+      FList.Remove(LEntry);
+    end;
   end;
 end;
 
 destructor TWiRLContextDataList.Destroy;
 begin
+  Clear;
   FList.Free;
-  FOwnedObjects.Free;
   inherited;
 end;
 
-function TWiRLContextDataList.GetEnumerator: TWiRLContextDataListEnumerator<TObject>;
+procedure TWiRLContextDataList.DisposeValue(LEntry: TContextEntry);
+var
+  LContextDisposer: IContextObjectDisposer;
+  LContextHttpDisposer: IContextHttpDisposer;
 begin
-  Result := TWiRLContextDataListEnumerator<TObject>.Create(FList);
+  if not LEntry.ContextOwned then
+    Exit;
+
+  if not Assigned(LEntry.Factory) then
+  begin
+    LEntry.Value.Free;
+    Exit;
+  end;
+
+  if Supports(LEntry.Factory, IContextObjectDisposer, LContextDisposer) then
+  begin
+    LContextDisposer.DisposeContextObject(LEntry.Value, FContext);
+  end
+  else if Supports(LEntry.Factory, IContextHttpDisposer, LContextHttpDisposer) then
+  begin
+    LContextHttpDisposer.DisposeContextObject(LEntry.Value, FContext as TWiRLContextHttp);
+  end
+  else
+  begin
+    LEntry.Value.Free;
+  end;
 end;
 
-{ TWiRLContextDataListEnumerator<T> }
+function TWiRLContextDataList.GetEnumerator: TWiRLContextDataListEnumerator;
+begin
+  Result := TWiRLContextDataListEnumerator.Create(FList);
+end;
 
-constructor TWiRLContextDataListEnumerator<T>.Create(const AList: TList<T>);
+{ TWiRLContextDataListEnumerator }
+
+constructor TWiRLContextDataListEnumerator.Create(const AList: TList<TContextEntry>);
 begin
   inherited Create;
   FList := AList;
   FIndex := -1;
 end;
 
-function TWiRLContextDataListEnumerator<T>.DoGetCurrent: T;
+function TWiRLContextDataListEnumerator.DoGetCurrent: TObject;
 begin
   Result := GetCurrent;
 end;
 
-function TWiRLContextDataListEnumerator<T>.DoMoveNext: Boolean;
+function TWiRLContextDataListEnumerator.DoMoveNext: Boolean;
 begin
   Result := MoveNext;
 end;
 
-function TWiRLContextDataListEnumerator<T>.GetCurrent: T;
+function TWiRLContextDataListEnumerator.GetCurrent: TObject;
 begin
-  Result := FList[FIndex];
+  Result := FList[FIndex].Value;
 end;
 
-function TWiRLContextDataListEnumerator<T>.MoveNext: Boolean;
+function TWiRLContextDataListEnumerator.MoveNext: Boolean;
 begin
   if FIndex >= FList.Count then
     Exit(False);
@@ -178,13 +255,12 @@ end;
 
 { TWiRLContextBase }
 
-procedure TWiRLContextBase.AddContainer(AContainer: TObject; AOwned: Boolean);
+procedure TWiRLContextBase.AddContainer(AContainer: TObject);
 begin
-  FContextDataList.Add(AContainer, AOwned);
+  FContextDataList.Add(AContainer);
 end;
 
-procedure TWiRLContextBase.AddContainerOnce(AContainer: TObject;
-  AOwned: Boolean);
+procedure TWiRLContextBase.AddContainerOnce(AContainer: TObject);
 var
   LItem: TObject;
 begin
@@ -192,13 +268,13 @@ begin
   if Assigned(LItem) then
     FContextDataList.Delete(LItem);
 
-  FContextDataList.Add(AContainer, AOwned);
+  FContextDataList.Add(AContainer);
 end;
 
 constructor TWiRLContextBase.Create;
 begin
-  FContextDataList := TWiRLContextDataList.Create;
-  AddContainerOnce(Self, False);
+  FContextDataList := TWiRLContextDataList.Create(Self);
+  AddContainerOnce(Self);
 end;
 
 destructor TWiRLContextBase.Destroy;
@@ -266,6 +342,11 @@ begin
     raise Exception.CreateFmt('Class [%s] not found', [TClass(T).ClassName]);
 end;
 
+procedure TWiRLContextBase.Inject(AInstance: TObject);
+begin
+  TWiRLContextInjectionRegistry.Instance.ContextInjection(AInstance, Self);
+end;
+
 procedure TWiRLContextBase.RemoveContainer(AValue: TObject);
 begin
   FContextDataList.Delete(AValue);
@@ -307,20 +388,20 @@ begin
   if Assigned(FRequestURL) then
     FRequestURL.Free;
   FRequestURL := TWiRLURL.Create(ARequest);
-  AddContainerOnce(FRequestURL, False);
+  AddContainerOnce(FRequestURL);
 end;
 
 procedure TWiRLContextHttp.SetRequest(const Value: TWiRLRequest);
 begin
-  AddContainerOnce(Value, False);
-  AddContainerOnce(Value.Connection, False);
+  AddContainerOnce(Value);
+  AddContainerOnce(Value.Connection);
   InitRequestURL(Value);
 end;
 
 procedure TWiRLContextHttp.SetResponse(const Value: TWiRLResponse);
 begin
-  AddContainerOnce(Value, False);
-  AddContainerOnce(Value.Connection, False);
+  AddContainerOnce(Value);
+  AddContainerOnce(Value.Connection);
 end;
 
 end.

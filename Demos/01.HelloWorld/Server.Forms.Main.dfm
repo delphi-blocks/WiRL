@@ -52,6 +52,15 @@ object MainForm: TMainForm
       TabOrder = 2
       Text = '8080'
     end
+    object ButtonOpenBrowser: TButton
+      Left = 200
+      Top = 41
+      Width = 107
+      Height = 25
+      Caption = 'Open Browser'
+      TabOrder = 3
+      OnClick = ButtonOpenBrowserClick
+    end
   end
   object MainActionList: TActionList
     Left = 104

@@ -18,6 +18,7 @@ uses
   DUnitX.TestFramework,
 
   WiRL.http.Server,
+  WiRL.Core.Context.Server,
   WiRL.Engine.REST,
   WiRL.http.Accept.MediaType,
   WiRL.Tests.Mock.Server;
@@ -27,6 +28,7 @@ type
   TTestResource = class(TObject)
   private
     FServer: TWiRLServer;
+    FContext: TWiRLContext;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
   public
@@ -51,8 +53,6 @@ type
     [TestCase('Low', '1,2')]
     [TestCase('Big', '123456,45678')]
     procedure TestQueryParam(AOne, ATwo: Integer);
-    [Test]
-    procedure TestException;
     [Test]
     procedure TestPostEcho;
     [Test]
@@ -101,14 +101,20 @@ begin
   if not FServer.Active then
     FServer.Active := True;
 
+  FContext := TWiRLContext.Create;
+
   FRequest := TWiRLTestRequest.Create;
+  FContext.AddContainer(FRequest);
+
   FResponse := TWiRLTestResponse.Create;
+  FContext.AddContainer(FResponse);
 
 end;
 
 procedure TTestResource.TearDown;
 begin
   FServer.Free;
+  FContext.Free;
   FRequest.Free;
   FResponse.Free;
 end;
@@ -124,7 +130,7 @@ begin
   FRequest.ContentStream.Write(BinaryRequest[0], Length(BinaryRequest));
   FRequest.ContentStream.Position := 0;
 
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
 
   SetLength(BinaryResponse, FResponse.ContentStream.Size);
   FResponse.ContentStream.Read(BinaryResponse[0], FResponse.ContentStream.Size);
@@ -136,24 +142,15 @@ procedure TTestResource.TestEcho;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/echostring/ciao';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('ciao', FResponse.Content);
-end;
-
-procedure TTestResource.TestException;
-begin
-  FRequest.Method := 'GET';
-  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/exception';
-  FServer.HandleRequest(FRequest, FResponse);
-  Assert.AreEqual(500, FResponse.StatusCode);
-  Assert.AreEqual('User Error Message', FResponse.Error.Message);
 end;
 
 procedure TTestResource.TestHelloWorld;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('Hello, world!', FResponse.Content);
 end;
 
@@ -161,7 +158,7 @@ procedure TTestResource.TestInvalidMethod;
 begin
   FRequest.Method := 'POST';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(404, FResponse.StatusCode);
 end;
 
@@ -171,7 +168,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postjson';
   FRequest.ContentType := TMediaType.TEXT_XML;
   FRequest.Content := '<xml><name>test</name></xml>';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(404, FResponse.StatusCode);
 end;
 
@@ -179,7 +176,7 @@ procedure TTestResource.TestParams;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/params/ciao/luca';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('ciaoluca', FResponse.Content);
 end;
 
@@ -188,7 +185,7 @@ begin
   FRequest.Method := 'POST';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postecho';
   FRequest.Content := 'ciao';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('ciao', FResponse.Content);
 end;
 
@@ -198,7 +195,7 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postjson';
   FRequest.ContentType := TMediaType.APPLICATION_JSON;
   FRequest.Content := '{"name": "luca"}';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('luca', FResponse.Content);
 end;
 
@@ -206,7 +203,7 @@ procedure TTestResource.TestQueryParam(AOne, ATwo: Integer);
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/sumwithqueryparam?AOne=' + IntToStr(AOne) + '&ATwo=' + IntToStr(ATwo);
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(IntToStr(AOne + ATwo), FResponse.Content);
 end;
 
@@ -214,7 +211,7 @@ procedure TTestResource.TestReverse;
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/reversestring/ciao';
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('oaic', FResponse.Content);
 end;
 
@@ -222,7 +219,7 @@ procedure TTestResource.TestSum(AOne, ATwo: Integer);
 begin
   FRequest.Method := 'GET';
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/sum/' + IntToStr(AOne) + '/' + IntToStr(ATwo);
-  FServer.HandleRequest(FRequest, FResponse);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(IntToStr(AOne + ATwo), FResponse.Content);
 end;
 

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2023 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -38,6 +38,7 @@ type
   [Implements(IWiRLConfigurationNeon)]
   TWiRLConfigurationNeon = class(TWiRLConfiguration, IWiRLConfigurationNeon)
   private
+    FNeonConfiguration: INeonConfiguration;
     FPrettyPrint: Boolean;
     FRaiseExceptions: Boolean;
     FIgnoreFieldPrefix: Boolean;
@@ -72,6 +73,7 @@ type
     function GetSerializers: TNeonSerializerRegistry;
 
     function GetNeonConfig: INeonConfiguration;
+    function GetNewNeonConfig: INeonConfiguration;
  published
     property Members: TNeonMembersSet read FMembers write FMembers;
     property MemberCase: TNeonCase read FMemberCase write FMemberCase;
@@ -103,7 +105,11 @@ begin
   SetVisibility([mvPublic, mvPublished]);
   SetUseUTCDate(True);
   SetPrettyPrint(False);
+<<<<<<< HEAD
   SetRaiseExceptions(False);
+=======
+
+>>>>>>> e466b2663c61646f27771d59940fec20081c5377
 end;
 
 class function TWiRLConfigurationNeon.Default: IWiRLConfigurationNeon;
@@ -145,8 +151,32 @@ end;
 
 function TWiRLConfigurationNeon.GetNeonConfig: INeonConfiguration;
 begin
+  if not Assigned(FNeonConfiguration) then
+    FNeonConfiguration := GetNewNeonConfig;
+
+  Result := FNeonConfiguration;
+end;
+
+function TWiRLConfigurationNeon.GetNewNeonConfig: INeonConfiguration;
+begin
   Result := TNeonConfiguration.Default;
+
   Result.GetSerializers.Assign(FSerializers);
+  Result.Rules.ForClass<TCollection>.SetIgnoreMembers([
+    'ItemClass'
+  ]);
+  Result.Rules.ForClass<TCollectionItem>.SetIgnoreMembers([
+    'Collection'
+  ]);
+  Result.Rules.ForClass<Exception>.SetIgnoreMembers([
+    'BaseException',
+    'HelpContext',
+    'InnerException',
+    'StackTrace',
+    'StackInfo'
+  ]);
+
+  // Use custom settings (from the WiRL (app) configuration)
   Result
    .SetMembers(FMembers)
    .SetMemberCase(FMemberCase)
@@ -157,6 +187,7 @@ begin
    .SetPrettyPrint(FPrettyPrint)
    .SetRaiseExceptions(FRaiseExceptions)
    .GetSerializers
+     .RegisterSerializer(TJSONValueSerializer)
      .RegisterSerializer(TGUIDSerializer)
      .RegisterSerializer(TStreamSerializer)
      .RegisterSerializer(TDataSetSerializer)

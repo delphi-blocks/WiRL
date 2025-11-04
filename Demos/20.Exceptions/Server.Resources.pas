@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2019 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -52,13 +52,17 @@ implementation
 
 { TDemoResource }
 
-
-{ TDemoResource }
-
 function TDemoResource.GetCustomException: string;
 begin
-  raise EMyNotFoundException.Create(102, 'Exception Message');
-  Result := 'Hello, Error!';
+  //raise EMyNotFoundException.Create(102, 'Exception Message');
+  try
+    raise Exception.Create('Simple Exception');
+  except
+    on E: Exception do
+    begin
+      Exception.RaiseOuterException(EWiRLNotFoundException.Create('Not Found'));
+    end;
+  end;
 end;
 
 function TDemoResource.GetDivByZero: string;
@@ -81,6 +85,8 @@ end;
 function TDemoResource.GetException: string;
 begin
   raise Exception.Create('Test');
+
+  raise Exception.Create('Error Message');
 end;
 
 function TDemoResource.SampleText: string;

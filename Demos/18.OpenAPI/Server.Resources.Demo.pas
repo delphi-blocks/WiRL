@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -18,6 +18,7 @@ uses
   WiRL.Engine.REST,
   WiRL.Core.Application,
   WiRL.Core.Registry,
+  WiRL.Core.Exceptions,
   WiRL.Core.Attributes,
   WiRL.Core.Application.Worker,
   WiRL.Core.MessageBody.Default,
@@ -27,7 +28,7 @@ uses
   WiRL.http.URL,
   WiRL.http.Request,
   WiRL.http.Response,
-
+  Neon.Core.Persistence.JSON.Schema,
   Server.Entities;
 
 type
@@ -45,7 +46,7 @@ type
     function ParamTestList: string;
 
     /// <summary>
-    ///   Method with a *sample* documentation
+    ///   Test doc method
     /// </summary>
     /// <param name="APathParam" required="true">
     ///   The first parameter
@@ -53,17 +54,31 @@ type
     /// <returns>
     ///   Result is a string representing the input parameter
     /// </returns>
-    /// <remarks>
-    ///   Here is a sample remarks placeholder.
-    /// </remarks>
-    /// <response code="200">Succesful response description</response>
-    ///  <header name="X-Header" type="string">Description of the header</header>
-    /// <response code="400">Bad request</response>
-    /// <response code="404">[resource] not found in the database</response>
     [GET, Path('/test/{p}'), Produces(TMediaType.TEXT_PLAIN)]
     function ParamTest([PathParam('p')] APathParam: string): string;
 
-    [POST, Path('/record')]
+    /// <summary>
+    ///   Thist method shows several response codes
+    /// </summary>
+    /// <returns>
+    ///   Resource's return value
+    /// </returns>
+    /// <remarks>
+    ///   Here is a sample remarks placeholder.
+    /// </remarks>
+    /// <header name="X-Header" type="string">
+    ///   Description of the header
+    /// </header>
+    /// <response code="405" name="BadRequest">
+    ///   Bad request
+    /// </response>
+    /// <response code="400" name="BadRequest">
+    ///   Bad request
+    /// </response>
+    /// <response code="404" name="NotFound">
+    ///   [resource] not found in the database
+    /// </response>
+    [POST, Path('/record'), ResponseStatus(201, 'Entity created')]
     [Consumes(TMediaType.APPLICATION_JSON), Produces(TMediaType.APPLICATION_JSON)]
     function ParamRecord([BodyParam] ABodyParam: TRecordParam): TRecordParam;
 
@@ -101,6 +116,7 @@ end;
 
 function TParametersResource.ParamRecord(ABodyParam: TRecordParam): TRecordParam;
 begin
+  // It's a record so there's a copy.
   Result := ABodyParam;
 end;
 
@@ -145,3 +161,4 @@ initialization
   TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
 
 end.
+

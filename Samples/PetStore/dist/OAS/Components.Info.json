@@ -1,0 +1,15 @@
+{
+  "title": "string",
+  "description": "NullString",
+  "termsOfService": "NullString",
+  "contact": {
+    "name": "NullString",
+    "url": "NullString",
+    "email": "NullString"
+  },
+  "license": {
+    "name": "NullString",
+    "url": "NullString"
+  },
+  "version": "string"
+}

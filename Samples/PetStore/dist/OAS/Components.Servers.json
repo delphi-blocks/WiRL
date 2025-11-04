@@ -1,0 +1,10 @@
+[
+  {
+    "url": "http://localhost:8080/",
+    "description": "Test Server"
+  },
+  {
+    "url": "http://server.api:8080/",
+    "description": "Production Server"
+  }
+]

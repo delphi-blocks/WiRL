@@ -126,32 +126,32 @@ var
   LApp: TWiRLApplication;
   LPair: TPair<TWiRLConfigurationClass, TWiRLConfiguration>;
 begin
-  AddContainerOnce(Value, False);
+  AddContainerOnce(Value);
   LApp := TWiRLApplication(Value);
 
   for LPair in LApp.Configs do
-    AddContainerOnce(LPair.Value, False);
+    AddContainerOnce(LPair.Value);
 end;
 
 procedure TWiRLContextServer.SetAuthContext(const Value: TWiRLAuthContext);
 begin
-  AddContainerOnce(Value, False);
-  AddContainerOnce(Value.Subject, False);
+  AddContainerOnce(Value);
+  AddContainerOnce(Value.Subject);
 end;
 
 procedure TWiRLContextServer.SetEngine(const Value: TObject);
 begin
-  AddContainerOnce(Value, False);
+  AddContainerOnce(Value);
 end;
 
 procedure TWiRLContextServer.SetResource(const Value: TObject);
 begin
-  AddContainerOnce(Value, False);
+  AddContainerOnce(Value);
 end;
 
 procedure TWiRLContextServer.SetServer(const Value: TObject);
 begin
-  AddContainerOnce(Value, False);
+  AddContainerOnce(Value);
 end;
 
 end.

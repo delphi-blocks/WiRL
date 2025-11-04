@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -128,8 +128,12 @@ begin
 end;
 
 function TOpenAPIResourceCustom.GetSwaggerJSON: TJSONObject;
+var
+  LConfig: TOpenAPIv3EngineConfig;
 begin
-  Result := TOpenAPIv3Engine.Generate(App, Resource.Path);
+  LConfig.Application := App;
+  LConfig.SwaggerResource := Resource.Path;
+  Result := TOpenAPIv3Engine.Generate(LConfig);
 end;
 
 function TOpenAPIResourceCustom.GetSwaggerAssets: TStream;

@@ -9,6 +9,9 @@
         <Projects Include="DemoHelloWorldConsole.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="DemoHelloWorldWebBroker.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="FMXClientProject.dproj">
             <Dependencies/>
         </Projects>
@@ -38,6 +41,15 @@
     <Target Name="DemoHelloWorldConsole:Make">
         <MSBuild Projects="DemoHelloWorldConsole.dproj" Targets="Make"/>
     </Target>
+    <Target Name="DemoHelloWorldWebBroker">
+        <MSBuild Projects="DemoHelloWorldWebBroker.dproj"/>
+    </Target>
+    <Target Name="DemoHelloWorldWebBroker:Clean">
+        <MSBuild Projects="DemoHelloWorldWebBroker.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoHelloWorldWebBroker:Make">
+        <MSBuild Projects="DemoHelloWorldWebBroker.dproj" Targets="Make"/>
+    </Target>
     <Target Name="FMXClientProject">
         <MSBuild Projects="FMXClientProject.dproj"/>
     </Target>
@@ -48,13 +60,13 @@
         <MSBuild Projects="FMXClientProject.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="DemoHelloWorld;DemoHelloWorldConsole;FMXClientProject"/>
+        <CallTarget Targets="DemoHelloWorld;DemoHelloWorldConsole;DemoHelloWorldWebBroker;FMXClientProject"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DemoHelloWorld:Clean;DemoHelloWorldConsole:Clean;FMXClientProject:Clean"/>
+        <CallTarget Targets="DemoHelloWorld:Clean;DemoHelloWorldConsole:Clean;DemoHelloWorldWebBroker:Clean;FMXClientProject:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DemoHelloWorld:Make;DemoHelloWorldConsole:Make;FMXClientProject:Make"/>
+        <CallTarget Targets="DemoHelloWorld:Make;DemoHelloWorldConsole:Make;DemoHelloWorldWebBroker:Make;FMXClientProject:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

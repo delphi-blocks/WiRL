@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2022 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -58,6 +58,8 @@ type
     const APPLICATION_PDF = 'application/pdf';
     const APPLICATION_XML = 'application/xml';
     const APPLICATION_JSON = 'application/json';
+    const APPLICATION_PROBLEM_XML = 'application/problem+xml';
+    const APPLICATION_PROBLEM_JSON = 'application/problem+json';
     const APPLICATION_JAVASCRIPT = 'application/javascript';
     const APPLICATION_XHTML_XML = 'application/xhtml+xml';
     const APPLICATION_SVG_XML = 'application/svg+xml';

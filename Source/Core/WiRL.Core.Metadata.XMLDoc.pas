@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2025 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -44,11 +44,17 @@ type
   end;
 
   TWiRLProxyEngineXMLDoc = class
+  private const
+    OAS_METHOD   = 'method';
+    OAS_RESOURCE = 'resource';
+    OAS_RESPONSE = 'response';
+
   private
     FPathEngine: TWiRLTemplatePaths;
 
     FContext: TWiRLXMLDocContext;
 
+    function TextToBool(ANode: IXMLNode; ADefault: Boolean = False): Boolean;
     function BuildXPath(const ATag, AAttrName, AAttrValue: string): string;
     function SelectText(ANode: IXMLNode): string; overload;
     function SelectText(ARoot: IXMLNode; const ANodePath: WideString): string; overload;
@@ -64,7 +70,7 @@ type
     procedure ProcessXMLDoc;
     procedure ProcessParams(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
     procedure ProcessResponses(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
-    procedure ProcessMethods(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
+    procedure ProcessMethod(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
     procedure ProcessResource(AResource: TWiRLProxyResource);
   public
     class procedure Process(AContext: TWiRLXMLDocContext);
@@ -154,6 +160,14 @@ begin
     Result := LNode.Text;
 end;
 
+function TWiRLProxyEngineXMLDoc.TextToBool(ANode: IXMLNode; ADefault: Boolean): Boolean;
+begin
+  if ANode.Text.IsEmpty then
+    Exit(ADefault);
+
+  Result := StrToBool(ANode.Text);
+end;
+
 function TWiRLProxyEngineXMLDoc.BuildXPath(const ATag, AAttrName, AAttrValue: string): string;
 begin
   Result := Format('%s[@%s=%s]', [ATag, AAttrName, QuotedStr(AAttrValue)]);
@@ -163,7 +177,7 @@ constructor TWiRLProxyEngineXMLDoc.Create(AContext: TWiRLXMLDocContext);
 begin
   FContext := AContext;
   FPathEngine := TWiRLTemplatePaths.Create();
-  DefaultDOMVendor := OmniXML4Factory.Description;  // 'Omni XML'
+  DefaultDOMVendor := OmniXML4Factory.Description;
 end;
 
 destructor TWiRLProxyEngineXMLDoc.Destroy;
@@ -184,7 +198,6 @@ end;
 
 procedure TWiRLProxyEngineXMLDoc.ProcessXMLDoc;
 var
-  //LResource: TWiRLProxyResource;
   LPair: TPair<string, TWiRLProxyResource>;
 begin
   //1. Riempire l'oggetto TWiRLProxyApplication con i valori della classe scelta
@@ -206,10 +219,11 @@ begin
   end;
 end;
 
-procedure TWiRLProxyEngineXMLDoc.ProcessMethods(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
+procedure TWiRLProxyEngineXMLDoc.ProcessMethod(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
 var
+  LName: string;
   LDevNotes: IXMLNode;
-  //LAttributes, LParameters: IXMLNode;
+  LMethod: IXMLNode;
 begin
   if not Assigned(ANode) then
     Exit;
@@ -218,42 +232,59 @@ begin
   AMethod.Summary := SelectText(LDevNotes, 'summary');
   AMethod.Remarks := SelectText(LDevNotes, 'remarks');
 
+  LMethod := SelectNode(LDevNotes, OAS_METHOD);
+  if Assigned(LMethod) then
+  begin
+    LName := LMethod.AttributeNodes['id'].Text;
+
+    if not LName.IsEmpty then
+      AMethod.Name := LName;
+
+    AMethod.Description := SelectText(LMethod);
+  end;
+
   ProcessParams(AMethod, LDevNotes);
   ProcessResponses(AMethod, ANode);
 end;
 
 procedure TWiRLProxyEngineXMLDoc.ProcessParams(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
 var
-  LXMLParameter: IXMLNode;
+  LParamNode: IXMLNode;
   LParam: TWiRLProxyParameter;
 begin
   for LParam in AMethod.Params do
   begin
-    LXMLParameter := SelectNode(ANode, BuildXPath('param', 'name', LParam.Name));
-    if Assigned(LXMLParameter) then
+    LParamNode := SelectNode(ANode, BuildXPath('param', 'name', LParam.Code));
+    if Assigned(LParamNode) then
     begin
-      LParam.Summary := SelectText(LXMLParameter);
+      LParam.Summary := SelectText(LParamNode);
+      LParam.Description := SelectText(LParamNode);
+      LParam.Required := TextToBool(LParamNode.AttributeNodes['required'], True);
     end;
   end;
-
 end;
 
 procedure TWiRLProxyEngineXMLDoc.ProcessResponses(AMethod: TWiRLProxyMethod; ANode: IXMLNode);
 var
+  LCode, LRef, LDesc: string;
   LIndex: Integer;
-  LResponse: TWiRLProxyMethodResponse;
   LXMLResponse: IXMLNode;
   LResponses: IXMLNodeList;
 begin
-  LResponses := SelectNodes(ANode, '//response');
+  LResponses := SelectNodes(ANode, '//' + OAS_RESPONSE);
   // Responses
   for LIndex := 0 to LResponses.Count - 1 do
   begin
     LXMLResponse := LResponses[LIndex];
-    LResponse := TWiRLProxyMethodResponse.Create;
-    LResponse.Code := LXMLResponse.AttributeNodes['code'].Text.ToInteger;
-    LResponse.Description := SelectText(LXMLResponse);
-    AMethod.Responses.Add(LResponse);
+
+    LCode := LXMLResponse.AttributeNodes['code'].Text;
+    LRef := LXMLResponse.AttributeNodes['name'].Text;
+    LDesc := SelectText(LXMLResponse);
+
+    if LRef.IsEmpty then
+      AMethod.Responses.AddResponse(LCode, LDesc)
+    else
+      AMethod.Responses.AddResponse(LCode, LRef);
   end;
 end;
 
@@ -262,8 +293,10 @@ var
   LXPathClass: string;
   LDoc: IXMLDocument;
   LDevNotes, LAttributes, LMembers: IXMLNode;
-  LMember: IXMLNode;
+  LNodeResource: IXMLNode;
+  LNodeMember: IXMLNode;
   LMethod: TWiRLProxyMethod;
+  LMethodPath: string;
 begin
   //1.   Find the Unit containing the resource
   //2.   Open the file
@@ -272,7 +305,7 @@ begin
   //4.   Load the <attributes> tag
   //5.   Load the <devnotes> tag
   //5.1    Search the standard tags: <summary>, <param name="AParam">, <returns>, <remarks>
-  //5.2    Search the wirl-api tags: <response code="200">, <url>, <example>
+  //5.2    Search the wirl-api tags: <oas-response code="200">, <oas-url>, <oas-example>
   //5.3    https://github.com/microsoft/OpenAPI.NET.CSharpAnnotations/wiki/C%23-Comment-Tag-Guide
   //6.   Load the <members> tag
 
@@ -282,6 +315,13 @@ begin
   LDevNotes := SelectNode(LDoc.DocumentElement, LXPathClass + '/devnotes');
   if Assigned(LDevNotes) then
   begin
+    LNodeResource := SelectNode(LDevNotes, OAS_RESOURCE);
+    if Assigned(LNodeResource) then
+    begin
+      AResource.Name := LNodeResource.AttributeNodes['name'].Text;
+      AResource.Description := SelectText(LNodeResource);
+    end;
+
     AResource.Summary := SelectText(LDevNotes, 'summary');
     AResource.Remarks := SelectText(LDevNotes, 'remarks');
   end;
@@ -290,8 +330,13 @@ begin
   LMembers := SelectNode(LDoc.DocumentElement, LXPathClass + '/members');
   for LMethod in AResource.Methods do
   begin
-    LMember := SelectNode(LMembers, BuildXPath('function', 'name', LMethod.Name));
-    ProcessMethods(LMethod, LMember);
+    if LMethod.IsFunction then
+      LMethodPath := BuildXPath('function', 'name', LMethod.Name)
+    else
+      LMethodPath := BuildXPath('procedure', 'name', LMethod.Name);
+
+    LNodeMember := SelectNode(LMembers, LMethodPath);
+    ProcessMethod(LMethod, LNodeMember);
   end;
 
 end;
