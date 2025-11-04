@@ -105,11 +105,7 @@ begin
   SetVisibility([mvPublic, mvPublished]);
   SetUseUTCDate(True);
   SetPrettyPrint(False);
-<<<<<<< HEAD
   SetRaiseExceptions(False);
-=======
-
->>>>>>> e466b2663c61646f27771d59940fec20081c5377
 end;
 
 class function TWiRLConfigurationNeon.Default: IWiRLConfigurationNeon;
