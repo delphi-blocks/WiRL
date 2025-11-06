@@ -26,6 +26,9 @@ type
     function SetOrigin(const AOrigin: string): IWiRLConfigurationCORS;
     function SetMethods(const AMethods: string = 'HEAD,GET,PUT,POST,DELETE,OPTIONS'): IWiRLConfigurationCORS;
     function SetHeaders(const AHeaders: string): IWiRLConfigurationCORS;
+    function SetExposeHeaders(const AHeaders: string): IWiRLConfigurationCORS;
+    function SetCredentials(ACredentials: Boolean): IWiRLConfigurationCORS;
+    function SetMaxAge(AMaxAge: Integer): IWiRLConfigurationCORS;
   end;
 
   TConfigurator = reference to procedure(AConf: IWiRLConfigurationCORS);
@@ -37,6 +40,9 @@ type
     FHeaders: string;
     FOrigin: string;
     FMethods: string;
+    FExposeHeaders: string;
+    FCredentials: Boolean;
+    FMaxAge: Integer;
   public
     class function Default: IWiRLConfigurationCORS; static;
   public
@@ -46,10 +52,16 @@ type
     function SetOrigin(const AOrgin: string): IWiRLConfigurationCORS;
     function SetMethods(const AMethods: string): IWiRLConfigurationCORS;
     function SetHeaders(const AHeaders: string): IWiRLConfigurationCORS;
+    function SetExposeHeaders(const AHeaders: string): IWiRLConfigurationCORS;
+    function SetCredentials(ACredentials: Boolean): IWiRLConfigurationCORS;
+    function SetMaxAge(AMaxAge: Integer): IWiRLConfigurationCORS;
   published
     property Origin: string read FOrigin write FOrigin;
     property Methods: string read FMethods write FMethods;
     property Headers: string read FHeaders write FHeaders;
+    property ExposeHeaders: string read FExposeHeaders write FExposeHeaders;
+    property Credentials: Boolean read FCredentials write FCredentials;
+    property MaxAge: Integer read FMaxAge write FMaxAge;
     property Enabled: Boolean read FEnabled write FEnabled;
   end;
 
@@ -74,9 +86,30 @@ begin
   FApplication.SetFilters(TCORSFilter.QualifiedClassName);
 end;
 
+function TWiRLConfigurationCORS.SetCredentials(
+  ACredentials: Boolean): IWiRLConfigurationCORS;
+begin
+  FCredentials := ACredentials;
+  Result := Self;
+end;
+
+function TWiRLConfigurationCORS.SetExposeHeaders(
+  const AHeaders: string): IWiRLConfigurationCORS;
+begin
+  FExposeHeaders := AHeaders;
+  Result := Self;
+end;
+
 function TWiRLConfigurationCORS.SetHeaders(const AHeaders: string): IWiRLConfigurationCORS;
 begin
   FHeaders := AHeaders;
+  Result := Self;
+end;
+
+function TWiRLConfigurationCORS.SetMaxAge(
+  AMaxAge: Integer): IWiRLConfigurationCORS;
+begin
+  FMaxAge := AMaxAge;
   Result := Self;
 end;
 
