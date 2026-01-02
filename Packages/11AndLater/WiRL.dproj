@@ -100,7 +100,6 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Injection.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.JSON.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.GarbageCollector.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.OpenAPI.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.OpenAPI.Resource.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas"/>
@@ -115,6 +114,8 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Converter.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Context.Server.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.OASDoc.pas"/>        
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Resource.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>

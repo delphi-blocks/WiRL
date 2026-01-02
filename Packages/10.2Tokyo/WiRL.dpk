@@ -70,7 +70,6 @@ contains
   WiRL.Core.Injection in '..\..\Source\Core\WiRL.Core.Injection.pas',
   WiRL.Core.JSON in '..\..\Source\Core\WiRL.Core.JSON.pas',
   WiRL.Core.GarbageCollector in '..\..\Source\Core\WiRL.Core.GarbageCollector.pas',
-  WiRL.Core.Metadata.XMLDoc in '..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas',
   WiRL.Core.OpenAPI in '..\..\Source\Core\WiRL.Core.OpenAPI.pas',
   WiRL.Core.OpenAPI.Resource in '..\..\Source\Core\WiRL.Core.OpenAPI.Resource.pas',
   WiRL.Core.MessageBody.Classes in '..\..\Source\Core\WiRL.Core.MessageBody.Classes.pas',
@@ -85,6 +84,8 @@ contains
   WiRL.Core.Converter in '..\..\Source\Core\WiRL.Core.Converter.pas',
   WiRL.Core.Context.Server in '..\..\Source\Core\WiRL.Core.Context.Server.pas',
   WiRL.Core.Metadata in '..\..\Source\Core\WiRL.Core.Metadata.pas',
+  WiRL.Core.Metadata.XMLDoc in '..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas',
+  WiRL.Core.Metadata.OASDoc in '..\..\Source\Core\WiRL.Core.Metadata.OASDoc.pas',
   WiRL.Core.Auth.Resource in '..\..\Source\Core\WiRL.Core.Auth.Resource.pas',
   WiRL.http.Accept.Charset in '..\..\Source\Core\WiRL.http.Accept.Charset.pas',
   WiRL.http.Accept.Encoding in '..\..\Source\Core\WiRL.http.Accept.Encoding.pas',
@@ -98,9 +99,10 @@ contains
   WiRL.http.Response in '..\..\Source\Core\WiRL.http.Response.pas',
   WiRL.http.Server in '..\..\Source\Core\WiRL.http.Server.pas',
   WiRL.http.Server.Indy in '..\..\Source\Core\WiRL.http.Server.Indy.pas',
+  WiRL.http.Server.WebBroker in '..\..\Source\Core\WiRL.http.Server.WebBroker.pas',
   WiRL.http.Server.Interfaces in '..\..\Source\Core\WiRL.http.Server.Interfaces.pas',
   WiRL.http.URL in '..\..\Source\Core\WiRL.http.URL.pas',
-  WiRL.http.Headers in '..\..\Source\Core\WiRL.Http.Headers.pas',
+  WiRL.http.Headers in '..\..\Source\Core\WiRL.http.Headers.pas',
   WiRL.http.MultipartData in '..\..\Source\Core\WiRL.http.MultipartData.pas',
   WiRL.http.Filters.Compression in '..\..\Source\Core\WiRL.http.Filters.Compression.pas',
   WiRL.http.Filters.CORS in '..\..\Source\Core\WiRL.http.Filters.CORS.pas',
@@ -134,8 +136,8 @@ contains
   WiRL.Configuration.Converter in '..\..\Source\Core\WiRL.Configuration.Converter.pas',
   WiRL.Configuration.Compression in '..\..\Source\Core\WiRL.Configuration.Compression.pas',
   WiRL.Configuration.OpenAPI in '..\..\Source\Core\WiRL.Configuration.OpenAPI.pas',
-  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas',
-  WiRL.http.Server.WebBroker in '..\..\Source\Core\WiRL.http.Server.WebBroker.pas';
+  WiRL.Configuration.Errors in '..\..\Source\Core\WiRL.Configuration.Errors.pas',
+  WiRL.Rtti.Utils in '..\..\Source\Core\WiRL.Rtti.Utils.pas';
 
 end.
 
