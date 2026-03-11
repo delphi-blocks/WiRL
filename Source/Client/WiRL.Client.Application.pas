@@ -64,6 +64,8 @@ type
     function Patch<T, V>(const ARequestEntity: T): V; overload;
     procedure Patch<T>(const ARequestEntity: T; AResponseEntity: TObject); overload;
 
+    function GetURL: string;
+
     constructor Create(AApplication: TWiRLClientApplication);
   end;
 
@@ -198,6 +200,7 @@ type
     FResource: TWiRLClientCustomResource;
   protected
     function GetResource: TObject;
+    function GetURL: string;
   public
     procedure Target(const AUrl: string);
     procedure ContentType(const AContentType: string);
@@ -937,6 +940,11 @@ begin
   Result := Self;
 end;
 
+function TWiRLInvocation.GetURL: string;
+begin
+  Result := FWiRLInvocation.GetURL;
+end;
+
 function TWiRLInvocation.Delete<T, V>(const ARequestEntity: T): V;
 begin
   Result := (FWiRLInvocation.Resource as TWiRLClientCustomResource).Delete<T, V>(ARequestEntity);
@@ -983,6 +991,13 @@ begin
   if not Assigned(FResource) then
     raise EWiRLClientException.Create('Resource not found');
   Result := FResource;
+end;
+
+function TWiRLResourceProxy.GetURL: string;
+begin
+  if not Assigned(FResource) then
+    raise EWiRLClientException.Create('Resource not found');
+  Result := FResource.URL;
 end;
 
 procedure TWiRLResourceProxy.PathParam(const AName: string; const AValue: TValue);

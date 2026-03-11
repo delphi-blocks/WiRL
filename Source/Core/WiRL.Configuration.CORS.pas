@@ -86,15 +86,13 @@ begin
   FApplication.SetFilters(TCORSFilter.QualifiedClassName);
 end;
 
-function TWiRLConfigurationCORS.SetCredentials(
-  ACredentials: Boolean): IWiRLConfigurationCORS;
+function TWiRLConfigurationCORS.SetCredentials(ACredentials: Boolean): IWiRLConfigurationCORS;
 begin
   FCredentials := ACredentials;
   Result := Self;
 end;
 
-function TWiRLConfigurationCORS.SetExposeHeaders(
-  const AHeaders: string): IWiRLConfigurationCORS;
+function TWiRLConfigurationCORS.SetExposeHeaders(const AHeaders: string): IWiRLConfigurationCORS;
 begin
   FExposeHeaders := AHeaders;
   Result := Self;
@@ -106,8 +104,7 @@ begin
   Result := Self;
 end;
 
-function TWiRLConfigurationCORS.SetMaxAge(
-  AMaxAge: Integer): IWiRLConfigurationCORS;
+function TWiRLConfigurationCORS.SetMaxAge(AMaxAge: Integer): IWiRLConfigurationCORS;
 begin
   FMaxAge := AMaxAge;
   Result := Self;

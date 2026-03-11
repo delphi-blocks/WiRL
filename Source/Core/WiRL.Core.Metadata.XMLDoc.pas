@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2025 WiRL Team                                      }
+{       Copyright (c) 2015-2026 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -305,7 +305,7 @@ begin
   //4.   Load the <attributes> tag
   //5.   Load the <devnotes> tag
   //5.1    Search the standard tags: <summary>, <param name="AParam">, <returns>, <remarks>
-  //5.2    Search the wirl-api tags: <oas-response code="200">, <oas-url>, <oas-example>
+  //5.2    Search the wirl-api tags: <response code="200">, <url>, <example>
   //5.3    https://github.com/microsoft/OpenAPI.NET.CSharpAnnotations/wiki/C%23-Comment-Tag-Guide
   //6.   Load the <members> tag
 

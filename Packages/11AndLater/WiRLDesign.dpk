@@ -59,12 +59,12 @@ contains
   WiRL.Client.ResourceDebuggerHeader in '..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas' {FormEditHeader},
   WiRL.Client.ResourceHeaderEditor in '..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas' {FormHeadersEditor},
   WiRL.Wizards.Dialogs.ServerProject in '..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas' {formServerProjectDialog},
+  WiRL.Wizards.Dialogs.NewResource in '..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.NewResource.pas' {formNewResourceDialog},
   WiRL.Wizards.Modules.Classes in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas',
   WiRL.Wizards.Modules.MainForm in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas',
   WiRL.Wizards.Modules.Resources in '..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas',
-  WiRL.Wizards in '..\..\Source\IDE Wizard\WiRL.Wizards.pas',
   WiRL.Wizards.ProjectCreator in '..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas',
   WiRL.Wizards.Utils in '..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas',
-  WiRL.Wizards.Dialogs.NewResource in '..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.NewResource.pas' {formNewResourceDialog};
+  WiRL.Wizards in '..\..\Source\IDE Wizard\WiRL.Wizards.pas';
 
 end.
