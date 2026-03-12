@@ -428,6 +428,49 @@ procedure TOpenAPIv3Engine.FillResponse(ASource: TWiRLProxyMethodResponse;
 var
   LMediaType: TOpenAPIMediaType;
   LProduce: TMediaType;
+
+  function ProcessArrayResponse(AMethodResult: TWiRLProxyMethodResult): Boolean;
+  var
+    LItemType: TRttiType;
+  begin
+    Result := False;
+
+    LItemType := nil;
+
+    if not AMethodResult.IsArray then
+      Exit;
+
+    if AMethodResult.RttiType is TRttiDynamicArrayType then
+      LItemType := (AMethodResult.RttiType as TRttiDynamicArrayType).ElementType;
+
+    if AMethodResult.RttiType is TRttiArrayType then
+      LItemType := (AMethodResult.RttiType as TRttiArrayType).ElementType;
+
+    if not Assigned(LItemType) then
+      raise EWiRLServerException.CreateFmt('Error determining type for %s', [AMethodResult.RttiType.Name]);
+
+    case LItemType.TypeKind of
+      tkClass, tkRecord:
+      begin
+        var LEntity :=  TWiRLProxyEntity.Create(LItemType);
+        try
+          EntityToSchema(LEntity);
+          LMediaType.Schema.Type_ := 'array';
+          if not Assigned(LMediaType.Schema.Items) then
+            LMediaType.Schema.Items := TOpenAPISchema.Create;
+
+          LMediaType.Schema.Items.SetSchemaReference(LEntity.Name);
+
+          Result := True;
+        finally
+          LEntity.Free;
+        end;
+
+      end;
+      //tkArray, tkDynArray: ;
+    end;
+  end;
+
 begin
   case ASource.Category of
 
@@ -441,6 +484,9 @@ begin
       for LProduce in AMethod.Produces do
       begin
         LMediaType := AResponse.AddMediaType(LProduce.Value);
+
+        if ProcessArrayResponse(AMethod.MethodResult) then
+          Continue;
 
         if Assigned(AMethod.MethodResult.Entity) then
         begin
