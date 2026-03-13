@@ -82,6 +82,7 @@ type
     function IsType(const AType: string): Boolean;
     function GetDelphiEncoding: TEncoding;
 
+    class function MediaIsType(const AMedia, AType: string): Boolean;
     class function GetWildcard: string; override;
 
     property MediaType: string read GetMediaType;
@@ -168,6 +169,18 @@ end;
 class function TMediaType.GetWildcard: string;
 begin
   Result := WILDCARD;
+end;
+
+class function TMediaType.MediaIsType(const AMedia, AType: string): Boolean;
+var
+  LMedia: TMediaType;
+begin
+  LMedia := TMediaType.Create(AMedia);
+  try
+    Result := SameText(LMedia.MediaType, AType);
+  finally
+    LMedia.Free;
+  end;
 end;
 
 function TMediaType.IsType(const AType: string): Boolean;

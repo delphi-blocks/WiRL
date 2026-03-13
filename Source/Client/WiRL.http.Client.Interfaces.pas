@@ -348,7 +348,7 @@ begin
   FServerException := Exception.ClassName;
   LMessage := FReasonString;
 
-  if AResponse.ContentType = TMediaType.APPLICATION_JSON then
+  if TMediaType.MediaIsType(AResponse.ContentType, TMediaType.APPLICATION_JSON) then
   begin
     FResponseJson := TJSONObject.ParseJSONValue(FResponseText);
     if Assigned(FResponseJson) then
