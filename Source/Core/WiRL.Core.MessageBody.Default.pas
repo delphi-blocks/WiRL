@@ -674,7 +674,9 @@ begin
   LErr := AValue.AsObject as Exception;
   LJSON := TNeon.ObjectToJSON(LErr, LConfig);
   try
-    (LJSON as TJSONObject).AddPair('exception', LErr.ClassName);
+    // Don't add 'exception' pair for EWiRLWebApplicationException (already has its own Exception property)
+    if not (LErr is EWiRLWebApplicationException) then
+      (LJSON as TJSONObject).AddPair('exception', LErr.ClassName);
     if FWiRLConfigErrors.ErrorDebugInfo then
     begin
       // Using TNeonCase algorithm
