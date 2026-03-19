@@ -43,7 +43,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_UnitSearchPath>../../Source/Core;../../Source/Data/FireDAC;../../Libs/Neon/Source;../../Libs/JWT/Source/Common;../../Libs/JWT/Source/JOSE;../../Libs/OpenAPI/Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_DcuOutput>..\..\Lib\290\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>..\..\Lib\$(ProductVersion)\$(Platform)\$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>WiRL</SanitizedProjectName>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_Description>WiRL REST Library</DCC_Description>
@@ -115,7 +115,7 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Context.Server.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.XMLDoc.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.OASDoc.pas"/>        
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Metadata.OASDoc.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Core.Auth.Resource.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Charset.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.http.Accept.Encoding.pas"/>
@@ -168,7 +168,6 @@
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.OpenAPI.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Configuration.Errors.pas"/>
         <DCCReference Include="..\..\Source\Core\WiRL.Rtti.Utils.pas"/>
-        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.WebBroker.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
