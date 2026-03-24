@@ -14,6 +14,13 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
 
+{$IFDEF MSWINDOWS}
+  Winapi.Windows,
+{$ENDIF}
+{$IFDEF POSIX}
+  Posix.SysTypes, Posix.Errno, Posix.Unistd,
+{$ENDIF}
+
   WiRL.http.Accept.MediaType,
   WiRL.Core.Context,
   WiRL.Core.Context.Server,
