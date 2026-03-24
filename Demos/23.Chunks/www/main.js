@@ -1,7 +1,9 @@
+const baseUrl = 'http://localhost:8080/rest/app/streaming';
+//const baseUrl = '/streaming';
 let evtSource;
 
 async function handleSSEClick() {
-    evtSource = new EventSource("http://localhost:8080/rest/app/streaming/sse");
+    evtSource = new EventSource(`${baseUrl}/sse`);
     const output = document.getElementById('output');
     output.value = '';
 
@@ -26,7 +28,7 @@ async function handleChunkClick() {
     output.value = '';
     //const response = await fetch('http://127.0.0.1:5000/api/stream');
     //const response = await fetch('http://localhost:5005/');
-    const response = await fetch('http://localhost:8080/rest/app/streaming/chunks');
+    const response = await fetch(`${baseUrl}/chunks`);
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();

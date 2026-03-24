@@ -1,5 +1,7 @@
 unit WiRL.http.Server.WebBroker;
 
+{$I WiRL.inc}
+
 interface
 
 uses
@@ -122,7 +124,14 @@ type
   // any connection object to work with.
   TWiRLConnectionWebBroker = class(TWiRLConnection)
   private
-    //FConnection: TXXXConnection;
+    FWebRequest: TWebRequest;
+    FWebResponse: TWebResponse;
+    {$IFDEF HAS_WEBBROKER_SSE}
+    FOriginalStream: TStream;
+    FResponseStream: TWebResponseStream;
+    function ResponseStream: TWebResponseStream;
+    procedure InitResponseStream(const AContentType: string);
+    {$ENDIF}
   public
     procedure Write(AValue: TBytes; const ALength: Integer = -1; const AOffset: Integer = 0); overload; override;
     procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload; override;
@@ -130,11 +139,22 @@ type
     procedure WriteLn(); override;
     function Connected: Boolean; override;
 
-    constructor Create;
+    constructor Create(AWebRequest: TWebRequest); overload;
+    constructor Create(AWebRequest: TWebRequest; AWebResponse: TWebResponse); overload;
+    destructor Destroy; override;
   end;
 
-
 implementation
+
+uses
+  WiRL.core.Context;
+
+const
+  LF = #10;
+  CR = #13;
+  EOL = CR + LF;
+
+  sSSENotImplemented = '"%s" not yet implemented with WebBroker in this Delphi version';
 
 { TWiRLhttpServerWebBroker }
 
@@ -200,7 +220,7 @@ begin
   FWriterProc := nil;
   FWebResponse := AWebResponse;
 
-  FConnection := TWiRLConnectionWebBroker.Create();
+  FConnection := TWiRLConnectionWebBroker.Create(AWebResponse.HTTPRequest, AWebResponse);
 
   FHeaders := TWiRLHeaders.Create;
   for LIndex := 0 to AWebResponse.CustomHeaders.Count - 1 do
@@ -327,34 +347,126 @@ end;
 
 function TWiRLConnectionWebBroker.Connected: Boolean;
 begin
-  raise EWiRLException.Create('TWiRLConnectionWebBroker.Write not yet implemented');
+  {$IFDEF HAS_WEBBROKER_SSE}
+  Result := ResponseStream.Connected;
+  {$ELSE}
+  raise EWiRLException.CreateFmt(sSSENotImplemented, ['TWiRLConnectionWebBroker.Connected']);
+  {$ENDIF}
 end;
 
-constructor TWiRLConnectionWebBroker.Create;
+{$IFDEF HAS_WEBBROKER_SSE}
+
+procedure TWiRLConnectionWebBroker.InitResponseStream(const AContentType: string);
+var
+  LContentType: string;
 begin
-  // Not yet implemented
+  if not Assigned(FWebResponse) then
+    raise EWiRLException.Create('TWiRLConnectionWebBroker: cannot stream on a request-only connection (FWebResponse is nil)');
+
+  if not Assigned(FResponseStream) then
+  begin
+    LContentType := AContentType;
+    if LContentType = TMediaType.TEXT_EVENT_STREAM then
+      LContentType := LContentType + '; charset=utf-8';
+
+    FOriginalStream := FWebResponse.ContentStream;
+    FWebResponse.FreeContentStream := False;
+    FResponseStream := TWebResponseStream.BeginStream(FWebResponse, LContentType);
+    //FWebResponse.FreeContentStream := True;
+  end;
+end;
+
+
+function TWiRLConnectionWebBroker.ResponseStream: TWebResponseStream;
+var
+  LContentType: string;
+begin
+  LContentType := FWebResponse.ContentType;
+  InitResponseStream(LContentType);
+  Result := FResponseStream;
+end;
+{$ENDIF}
+
+constructor TWiRLConnectionWebBroker.Create(AWebRequest: TWebRequest; AWebResponse: TWebResponse);
+begin
+  inherited Create;
+  FWebRequest := AWebRequest;
+  FWebResponse := AWebResponse;
+end;
+
+constructor TWiRLConnectionWebBroker.Create(AWebRequest: TWebRequest);
+begin
+  inherited Create;
+  FWebRequest := AWebRequest;
+  FWebResponse := nil;
+end;
+
+destructor TWiRLConnectionWebBroker.Destroy;
+begin
+  {$IFDEF HAS_WEBBROKER_SSE}
+  if Assigned(FOriginalStream) then
+    FOriginalStream.Free;
+  {$ENDIF}
+  inherited;
 end;
 
 procedure TWiRLConnectionWebBroker.Write(const AValue: string;
   AEncoding: TEncoding);
+{$IFDEF HAS_WEBBROKER_SSE}
+var
+  LEncoding: TEncoding;
+{$ENDIF}
 begin
-  raise EWiRLException.Create('TWiRLConnectionWebBroker.Write not yet implemented');
+  {$IFDEF HAS_WEBBROKER_SSE}
+  if Assigned(AEncoding) then
+    LEncoding := AEncoding
+  else
+    LEncoding := TEncoding.UTF8;
+
+  Write(LEncoding.GetBytes(AValue));
+  {$ELSE}
+  raise EWiRLException.CreateFmt(sSSENotImplemented, ['TWiRLConnectionWebBroker.Write']);
+  {$ENDIF}
 end;
 
 procedure TWiRLConnectionWebBroker.Write(AValue: TBytes; const ALength,
   AOffset: Integer);
 begin
-  raise EWiRLException.Create('TWiRLConnectionWebBroker.Write not yet implemented');
+  {$IFDEF HAS_WEBBROKER_SSE}
+  // TWebResponseStream only supports SSE (text/event-stream). For chunked
+  // encoding and other streaming use cases we bypass it and write directly
+  // via FWebRequest.WriteClient, which sends raw bytes to the client.
+  // InitResponseStream is still called to set up the HTTP response headers
+  // (Content-Type, chunked transfer encoding, etc.) before the first write.
+  InitResponseStream(FWebResponse.ContentType);
+  if Length(AValue) > 0 then
+  begin
+    if ALength = -1 then
+      FWebRequest.WriteClient(AValue[AOffset], Length(AValue))
+    else
+      FWebRequest.WriteClient(AValue[AOffset], ALength);
+  end;
+  {$ELSE}
+  raise EWiRLException.CreateFmt(sSSENotImplemented, ['TWiRLConnectionWebBroker.Write']);
+  {$ENDIF}
 end;
 
 procedure TWiRLConnectionWebBroker.WriteLn(const AValue: string);
 begin
-  raise EWiRLException.Create('TWiRLConnectionWebBroker.WriteLn not yet implemented');
+  {$IFDEF HAS_WEBBROKER_SSE}
+  Write(AValue + EOL);
+  {$ELSE}
+  raise EWiRLException.CreateFmt(sSSENotImplemented, ['TWiRLConnectionWebBroker.WriteLn']);
+  {$ENDIF}
 end;
 
 procedure TWiRLConnectionWebBroker.WriteLn;
 begin
-  raise EWiRLException.Create('TWiRLConnectionWebBroker.WriteLn not yet implemented');
+  {$IFDEF HAS_WEBBROKER_SSE}
+  Write(EOL);
+  {$ELSE}
+  raise EWiRLException.CreateFmt(sSSENotImplemented, ['TWiRLConnectionWebBroker.WriteLn']);
+  {$ENDIF}
 end;
 
 { TWiRLHttpRequestWebBroker }
@@ -364,7 +476,7 @@ constructor TWiRLHttpRequestWebBroker.Create(AContext: TObject;
 begin
   FWebRequest := AWebRequest;
   FMethod := FWebRequest.Method;
-  FConnection := TWiRLConnectionWebBroker.Create();
+  FConnection := TWiRLConnectionWebBroker.Create(FWebRequest);
 end;
 
 destructor TWiRLHttpRequestWebBroker.Destroy;
@@ -374,8 +486,8 @@ begin
   FCookieFields.Free;
   FQueryFields.Free;
   FContentFields.Free;
-  FConnection.Free;
   FContentStream.Free;
+  FConnection.Free;
   inherited;
 end;
 

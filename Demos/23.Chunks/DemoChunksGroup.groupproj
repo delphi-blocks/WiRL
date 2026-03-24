@@ -6,6 +6,9 @@
         <Projects Include="DemoChunks.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="DemoWBSSE.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="DemoChunksClient.dproj">
             <Dependencies/>
         </Projects>
@@ -26,6 +29,15 @@
     <Target Name="DemoChunks:Make">
         <MSBuild Projects="DemoChunks.dproj" Targets="Make"/>
     </Target>
+    <Target Name="DemoWBSSE">
+        <MSBuild Projects="DemoWBSSE.dproj"/>
+    </Target>
+    <Target Name="DemoWBSSE:Clean">
+        <MSBuild Projects="DemoWBSSE.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoWBSSE:Make">
+        <MSBuild Projects="DemoWBSSE.dproj" Targets="Make"/>
+    </Target>
     <Target Name="DemoChunksClient">
         <MSBuild Projects="DemoChunksClient.dproj"/>
     </Target>
@@ -36,13 +48,13 @@
         <MSBuild Projects="DemoChunksClient.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="DemoChunks;DemoChunksClient"/>
+        <CallTarget Targets="DemoChunks;DemoWBSSE;DemoChunksClient"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DemoChunks:Clean;DemoChunksClient:Clean"/>
+        <CallTarget Targets="DemoChunks:Clean;DemoWBSSE:Clean;DemoChunksClient:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DemoChunks:Make;DemoChunksClient:Make"/>
+        <CallTarget Targets="DemoChunks:Make;DemoWBSSE:Make;DemoChunksClient:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
