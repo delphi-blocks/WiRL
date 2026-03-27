@@ -2,6 +2,8 @@ unit Server.WebModule;
 
 interface
 
+{$I WiRL.inc}
+
 uses
   System.SysUtils, System.Classes, System.IOUtils, System.TypInfo,
 
