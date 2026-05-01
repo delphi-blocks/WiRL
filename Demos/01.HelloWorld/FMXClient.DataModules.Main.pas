@@ -162,12 +162,12 @@ begin
     .Get<TPerson>;
 end;
 
-function TMainDataModule.GetPersonAndHeader(
-  Id: Integer): TPair<TPerson, string>;
+function TMainDataModule.GetPersonAndHeader(Id: Integer): TPair<TPerson, string>;
 var
   LResponse: IWiRLResponse;
   LPerson: TPerson;
   LContentType: string;
+  LCustomHeader: string;
 begin
   // If I want an object but I need the raw response too
   // I can get the object from the response
@@ -181,8 +181,10 @@ begin
     .QueryParam('Id', Id.ToString)
     .Get<IWiRLResponse>;
 
-  // 2. Read the header from the response
+  // 2. Read the header(s) from the response
   LContentType := LResponse.ContentType;
+  LCustomHeader := LResponse.Headers.Values['X-Custom-Header'];
+
   // 3. Read the object (TPerson) from the response
   LPerson := LResponse.Content.AsType<TPerson>;
 

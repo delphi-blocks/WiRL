@@ -48,14 +48,14 @@
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <GenPackage>true</GenPackage>
         <SanitizedProjectName>WiRLDesign</SanitizedProjectName>
-        <DCC_DcuOutput>..\..\Lib\290\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>..\..\Lib\$(ProductVersion)\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
         <DCC_F>false</DCC_F>
         <DCC_K>false</DCC_K>
-        <DCC_Description>WiRL REST components</DCC_Description>
+        <DCC_Description>WiRL REST Components</DCC_Description>
         <DllSuffix>$(Auto)</DllSuffix>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
     </PropertyGroup>
@@ -108,16 +108,16 @@
             <Form>formServerProjectDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas"/>
-        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas"/>
-        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas"/>
-        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
-        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
-        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.NewResource.pas">
             <Form>formNewResourceDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
         <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>

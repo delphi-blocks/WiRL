@@ -46,6 +46,7 @@ type
     procedure SetContentStream(AStream: TStream);
 
     function GetResource: TObject;
+    function GetURL: string;
 
     property Resource: TObject read GetResource;
   end;

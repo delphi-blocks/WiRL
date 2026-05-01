@@ -44,5 +44,14 @@
     <Target Name="Make">
         <CallTarget Targets="WiRL:Make;WiRLDesign:Make"/>
     </Target>
+    <Target Name="Build64">
+        <CallTarget Targets="WiRL"/>
+    </Target>
+    <Target Name="Clean64">
+        <CallTarget Targets="WiRL:Clean"/>
+    </Target>
+    <Target Name="Make64">
+        <CallTarget Targets="WiRL:Make"/>
+    </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -54,3 +54,11 @@
   {$DEFINE HAS_ARRAY_TO_STRING}
 {$ENDIF}
 
+{$IF RTLVersion131} // Delphi 13.1 Florence
+  {$DEFINE HAS_WEBBROKER_SSE}
+{$ENDIF}
+
+{$IF CompilerVersion > 37}
+  {$DEFINE HAS_WEBBROKER_SSE}
+{$ENDIF}
+

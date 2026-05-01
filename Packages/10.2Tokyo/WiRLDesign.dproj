@@ -54,7 +54,7 @@
         <DCC_S>false</DCC_S>
         <DCC_F>false</DCC_F>
         <DCC_K>false</DCC_K>
-        <DCC_Description>WiRL REST components</DCC_Description>
+        <DCC_Description>WiRL REST Components</DCC_Description>
         <DllSuffix>250</DllSuffix>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
     </PropertyGroup>
@@ -79,97 +79,97 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="WiRL.dcp"/>
         <DCCReference Include="DesignIDE.dcp"/>
-        <DCCReference Include="..\..\..\Source\Client\WiRL.http.Client.Editor.pas"/>
-        <DCCReference Include="..\..\..\Source\Core\WiRL.http.Server.Editor.pas"/>
-        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Register.pas"/>
-        <DCCReference Include="..\..\..\Source\Core\WiRL.Core.Application.Editor.pas">
+        <DCCReference Include="..\..\Source\Client\WiRL.http.Client.Editor.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.http.Server.Editor.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Register.pas"/>
+        <DCCReference Include="..\..\Source\Core\WiRL.Core.Application.Editor.pas">
             <Form>WiRLAppEditor</Form>
         </DCCReference>
-        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Register.pas"/>
-        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
-        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.Application.Editor.pas">
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.Register.pas"/>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.CustomResource.Editor.pas"/>
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.Application.Editor.pas">
             <Form>WiRLClientAppResourceEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.ResourceDebugger.pas">
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceDebugger.pas">
             <Form>WiRLResourceRunnerForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas">
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceDebuggerHeader.pas">
             <Form>FormEditHeader</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas">
+        <DCCReference Include="..\..\Source\Client\WiRL.Client.ResourceHeaderEditor.pas">
             <Form>FormHeadersEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas">
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.ServerProject.pas">
             <Form>formServerProjectDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas"/>
-        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas"/>
-        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas"/>
-        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
-        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
-        <DCCReference Include="..\..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Classes.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.MainForm.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Modules.Resources.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.ProjectCreator.pas"/>
+        <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Utils.pas"/>
         <DCCReference Include="..\..\Source\IDE Wizard\WiRL.Wizards.Dialogs.NewResource.pas">
             <Form>formNewResourceDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <RcItem Include="..\..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
+        <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormDFM.txt">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>WiRLServerMainFormDFM</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\Source\IDE Wizard\ServerMainFormSRC.txt">
+        <RcItem Include="..\..\Source\IDE Wizard\ServerMainFormSRC.txt">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>WiRLServerMainFormSRC</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\Source\IDE Wizard\ServerResources.txt">
+        <RcItem Include="..\..\Source\IDE Wizard\ServerResources.txt">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>WiRLServerResources</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\Source\IDE Wizard\WiRLServerProject.txt">
+        <RcItem Include="..\..\Source\IDE Wizard\WiRLServerProject.txt">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>WiRLServerProject</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\TWiRLClient.bmp">
+        <RcItem Include="..\..\media\TWiRLClient.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLClient</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\TWiRLClientApplication.bmp">
+        <RcItem Include="..\..\media\TWiRLClientApplication.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLClientApplication</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\TWiRLEngine.bmp">
+        <RcItem Include="..\..\media\TWiRLEngine.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLEngine</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\TWiRLFileSystemEngine.bmp">
+        <RcItem Include="..\..\media\TWiRLFileSystemEngine.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLFileSystemEngine</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\TWiRLhttpEngine.bmp">
+        <RcItem Include="..\..\media\TWiRLhttpEngine.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLhttpEngine</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\TWiRLMBWDefaultProvider.bmp">
+        <RcItem Include="..\..\media\TWiRLMBWDefaultProvider.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLMBWDefaultProvider</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\TWiRLServer.bmp">
+        <RcItem Include="..\..\media\TWiRLServer.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TWiRLServer</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\WiRLServerWizardIcon.ico">
+        <RcItem Include="..\..\media\WiRLServerWizardIcon.ico">
             <ResourceType>ICON</ResourceType>
             <ResourceId>WiRLServerWizardIcon</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\..\media\WiRLSplash.bmp">
+        <RcItem Include="..\..\media\WiRLSplash.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>WiRLSplash</ResourceId>
         </RcItem>

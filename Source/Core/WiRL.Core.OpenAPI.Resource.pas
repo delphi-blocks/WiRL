@@ -108,7 +108,7 @@ begin
   else
     LURL := 'http://localhost/';
 
-  LURL := CombineURL(LURL, Resource.GetSanitizedPath);
+  LURL := IncludeTrailingSlash(CombineURL(LURL, Resource.GetSanitizedPath));
 
   Result := TMemoryStream.Create;
   LReader := TStreamReader.Create(AFileName);
