@@ -91,7 +91,7 @@ end;
 
 function TWiRLConfigurationErrors.SetErrorDebugInfo(ADebug: Boolean): IWiRLConfigurationErrors;
 begin
-  FErrorDebugInfo := True;
+  FErrorDebugInfo := ADebug;
   Result := Self;
 end;
 
