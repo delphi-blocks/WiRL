@@ -110,6 +110,7 @@ type
     FConnection: TWiRLConnection;
     procedure ParseParams(Params :TStrings; const AValue: String);
   protected
+    function GetHttpURI: string; override;
     function GetHttpPathInfo: string; override;
     function GetHttpQuery: string; override;
     function GetRemoteIP: string; override;
@@ -394,6 +395,11 @@ end;
 function TWiRLHttpRequestIndy.GetHttpQuery: string;
 begin
   Result := FRequestInfo.QueryParams;
+end;
+
+function TWiRLHttpRequestIndy.GetHttpURI: string;
+begin
+  Result := FRequestInfo.URI;
 end;
 
 function TWiRLHttpRequestIndy.GetQueryFields: TWiRLParam;

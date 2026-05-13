@@ -40,6 +40,7 @@ type
 
   TWiRLRequest = class
   private
+    FURI: string;
     FPathInfo: string;
     FQuery: string;
     FContentMediaType: TMediaType;
@@ -93,6 +94,8 @@ type
     procedure SetReferer(const Value: string);
     function GetMultiPartFormData: TWiRLFormDataMultiPart;
     procedure SetApplication(const Value: TObject);
+    function GetURI: string;
+    procedure SetURI(const Value: string);
   protected
     FMethod: string;
     function GetHttpQuery: string; virtual; abstract;
@@ -105,12 +108,14 @@ type
     function GetContentStream: TStream; virtual; abstract;
     procedure SetContentStream(const Value: TStream); virtual; abstract;
     function GetHttpPathInfo: string; virtual; abstract;
+    function GetHttpURI: string; virtual; abstract;
     function GetConnection: TWiRLConnection; virtual; abstract;
   public
     destructor Destroy; override;
 
     function HeaderFields: TWiRLRequestHeaderList; deprecated;
 
+    property URI: string read GetURI write SetURI;
     property PathInfo: string read GetPathInfo write SetPathInfo;
     property Query: string read GetQuery write SetQuery;
     property Method: string read FMethod write FMethod;
@@ -337,6 +342,14 @@ begin
   Result := Headers.Values['Referer'];
 end;
 
+function TWiRLRequest.GetURI: string;
+begin
+  if FURI <> '' then
+    Result := FURI
+  else
+    Result := GetHttpURI;
+end;
+
 function TWiRLRequest.GetUserAgent: string;
 begin
   Result := Headers.UserAgent;
@@ -442,6 +455,11 @@ end;
 procedure TWiRLRequest.SetReferer(const Value: string);
 begin
   Headers.Values['Referer'] := Value;
+end;
+
+procedure TWiRLRequest.SetURI(const Value: string);
+begin
+  FURI := Value;
 end;
 
 procedure TWiRLRequest.SetUserAgent(const Value: string);
