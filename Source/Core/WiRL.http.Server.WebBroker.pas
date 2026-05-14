@@ -614,7 +614,7 @@ end;
 
 function TWiRLHttpRequestWebBroker.GetHttpURI: string;
 begin
-  Result := FWebRequest.URL;
+  Result := FWebRequest.RawPathInfo;
 end;
 
 function TWiRLHttpRequestWebBroker.GetQueryFields: TWiRLParam;
