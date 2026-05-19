@@ -39,6 +39,7 @@ type
     ['{B16D3D6C-685C-4076-9A8C-19861323D2CB}']
     procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload;
     procedure Write(const AValue: TBytes); overload;
+    function Connected: Boolean;
   end;
 
   IWiRLSSEResponseWriter = interface
@@ -51,6 +52,7 @@ type
     procedure Write(AId: Integer; const AEvent, AValue: string; ARetry: Integer); overload;
     procedure Write(AId: Integer; const AEvent, AValue: string); overload;
     procedure WriteComment(const AValue: string); overload;
+    function Connected: Boolean;
   end;
 
   TWriterProc = reference to procedure (AWriter: IWiRLResponseWriter);
@@ -171,6 +173,7 @@ type
   private
     FContext: TWiRLContextHttp;
   public
+    function Connected: Boolean;
     procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload;
     procedure Write(const AValue: TBytes); overload;
     constructor Create(AContext: TWiRLContextHttp);
@@ -182,6 +185,7 @@ type
   private
     function SplitString(const AValue: string): TArray<string>;
   public
+    function Connected: Boolean;
     procedure Write(const AValue: string; AEncoding: TEncoding = nil); overload;
     procedure Write(const AValue: string); overload;
     procedure Write(const AValue: TBytes); overload;
@@ -490,6 +494,11 @@ end;
 
 { TWiRLCunkedResponseWriter }
 
+function TWiRLCunkedResponseWriter.Connected: Boolean;
+begin
+  Result := FContext.Response.Connection.Connected;
+end;
+
 constructor TWiRLCunkedResponseWriter.Create(AContext: TWiRLContextHttp);
 begin
   inherited Create;
@@ -539,6 +548,11 @@ begin
 end;
 
 { TWiRLSSEResponseWriter }
+
+function TWiRLSSEResponseWriter.Connected: Boolean;
+begin
+  Result := FContext.Response.Connection.Connected;
+end;
 
 constructor TWiRLSSEResponseWriter.Create(AContext: TWiRLContextHttp);
 begin
