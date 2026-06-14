@@ -294,7 +294,7 @@ procedure TWiRLHttpResponseWebBroker.SendHeaders(AImmediate: Boolean);
 
   function IsStandardHeader(const AHeaderName: string): Boolean;
   const
-    StandardHeaders: array of string = ['Content-Type'];
+    StandardHeaders: array of string = ['Content-Type', 'Content-Length'];
   var
     LHeaderName: string;
   begin
@@ -318,7 +318,8 @@ begin
 
   FWebResponse.ContentType := Headers.ContentType;
   FWebResponse.ContentEncoding := Headers.ContentEncoding;
-  FWebResponse.ContentLength := Headers.ContentLength;
+  if Headers.ContentLength > 0 then
+    FWebResponse.ContentLength := Headers.ContentLength;
 
   SendCookies;
 end;

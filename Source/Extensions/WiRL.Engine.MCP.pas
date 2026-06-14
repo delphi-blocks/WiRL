@@ -20,141 +20,155 @@ uses
   Neon.Core.Persistence.JSON,
 
   MCPConnect.JRPC.Core,
+  MCPConnect.JRPC.Classes,
   MCPConnect.JRPC.Invoker,
   MCPConnect.JRPC.Server,
+  MCPConnect.Transport.Base,
 
   MCPConnect.Configuration.Auth,
 
   WiRL.Engine.Core,
   WiRL.http.Request,
   WiRL.http.Response,
+  WiRL.http.Headers,
   WiRL.Core.Context.Server;
 
 type
   TMCPEngine = class(TWiRLCustomEngine)
   private
-    FServer: TJRPCServer;
+    FJRPCServer: TJRPCServer;
     FAuthTokenConfig: TAuthTokenConfig;
-    function CheckAuthorization(Request: TWiRLRequest; Response: TWiRLResponse): Boolean;
+    //function CheckAuthorization(Request: TWiRLRequest; Response: TWiRLResponse): Boolean;
+    procedure SendHeaders(AMCPResponse: TMCPTransportResponse; AContext: TWiRLContext);
   public
-    procedure HandleRequest(AWiRLContext: TWiRLContext); override;
+    procedure HandleRequest(AContext: TWiRLContext); override;
 
     function SetServer(AServer: TJRPCServer): TMCPEngine;
 
-    property Server: TJRPCServer read FServer write FServer;
+    property JRPCServer: TJRPCServer read FJRPCServer write FJRPCServer;
   end;
+
+  TMCPTransportWriterWiRL = class(TInterfacedObject, IMCPTransportWriter)
+  private
+    FContext: TWiRLContext;
+  protected
+    { IMCPTransportWriter }
+    function Connected: Boolean;
+    procedure Write(const AValue: string);
+    procedure WriteComment(const AValue: string); overload;
+    function SupportsStreaming: Boolean;
+  public
+    constructor Create(AContext: TWiRLContext);
+  end;
+
 
 implementation
 
 uses
-  MCPConnect.Core.Utils;
+  Logify;
 
 { TMCPEngine }
 
-function TMCPEngine.CheckAuthorization(Request: TWiRLRequest; Response: TWiRLResponse): Boolean;
+procedure TMCPEngine.HandleRequest(AContext: TWiRLContext);
+var
+  LMcpHandler: IMCPTransportHandler;
+  LWiRLRequest: TWiRLRequest;
+  LWiRLResponse: TWiRLResponse;
 begin
-  Result := True;
-  if Assigned(FAuthTokenConfig) and (FAuthTokenConfig.Token <> '') then
-  begin
-    case FAuthTokenConfig.Location of
-      TAuthTokenLocation.Bearer:
-      begin
-        if Request.Authorization <> 'Bearer ' + FAuthTokenConfig.Token then
-          Exit(False);
-      end;
+  if not Assigned(FJRPCServer) then
+    raise EJRPCException.Create('JRPC JRPCServer not found');
 
-      TAuthTokenLocation.Cookie:
-      begin
-        if Request.CookieFields.Values[FAuthTokenConfig.CustomHeader] <> FAuthTokenConfig.Token then
-          Exit(False);
-      end;
+  LWiRLRequest := AContext.Request;
+  LWiRLResponse := AContext.Response;
 
-      TAuthTokenLocation.Header:
-      begin
-        if Request.Headers.Values[FAuthTokenConfig.CustomHeader] <> FAuthTokenConfig.Token then
-          Exit(False);
-      end;
+  LMcpHandler := TMCPTransportHandler.Create(FJRPCServer, TMCPTransportWriterWiRL.Create(AContext));
 
-      else
-        raise EJSONRPCException.Create('Invalid token location');
+  LMcpHandler.SendResponseHeadersProc :=
+    procedure (AResponse: TMCPTransportResponse)
+    begin
+      SendHeaders(AResponse, AContext);
     end;
-  end;
+
+  LMcpHandler.ProcessRequest(
+
+    procedure (ARequest: TMCPTransportRequest)
+    var
+      LHeader: TWiRLHeader;
+    begin
+      for LHeader in LWiRLRequest.Headers do
+      begin
+        var n := LHeader.Name;
+        var v := LHeader.Value;
+        ARequest.AddOrSetHeader(n, v);
+      end;
+
+      ARequest.Url := LWiRLRequest.PathInfo;
+      ARequest.Command := LWiRLRequest.Method;
+      ARequest.Content := LWiRLRequest.Content;
+
+      Logger.LogInfo('SessionID ' + ARequest.Command + ' - ' + ARequest.GetHeader('Mcp-Session-Id'));
+    end,
+
+    procedure (AResponse: TMCPTransportResponse)
+    begin
+      LWiRLResponse.StatusCode := AResponse.Code;
+      LWiRLResponse.Content := AResponse.Content;
+      // SendHeaders after ContentText so indy can handle Content-Length
+      SendHeaders(AResponse, AContext);
+
+      //LogHttpResponse(AResponseInfo);
+    end
+  );
 end;
 
-procedure TMCPEngine.HandleRequest(AWiRLContext: TWiRLContext);
+procedure TMCPEngine.SendHeaders(AMCPResponse: TMCPTransportResponse;
+  AContext: TWiRLContext);
 var
-  LGarbageCollector: IGarbageCollector;
-  LRequest: TJRPCRequest;
-  LResponse: TJRPCResponse;
-  LConstructorProxy: TJRPCConstructorProxy;
-  LInstance: TObject;
-  LInvokable: IJRPCInvokable;
-  LContext: TJRPCContext;
+  LHeader: TPair<string, string>;
+  LWiRLResponse: TWiRLResponse;
 begin
-  if not Assigned(FServer) then
-    raise EJSONRPCException.Create('Server not found');
-
-  if not CheckAuthorization(AWiRLContext.Request, AWiRLContext.Response) then
+  LWiRLResponse := AContext.Response;
+  LWiRLResponse.StatusCode := AMCPResponse.Code;
+  for LHeader in AMCPResponse.Headers do
   begin
-    AWiRLContext.Response.StatusCode := 403;
-    AWiRLContext.Response.Content := '';
-    Exit;
-  end;
-
-  LGarbageCollector := TGarbageCollector.CreateInstance;
-
-  LResponse := TJRPCResponse.Create;
-  LGarbageCollector.Add(LResponse);
-
-  LRequest := TNeon.JSONToObject<TJRPCRequest>(AWiRLContext.Request.Content, JRPCNeonConfig);
-  LGarbageCollector.Add(LRequest);
-
-  if not TJRPCRegistry.Instance.GetConstructorProxy(LRequest.Method, LConstructorProxy) then
-  begin
-    AWiRLContext.Response.StatusCode := 404;
-    AWiRLContext.Response.ReasonString := 'Not found';
-    Exit;
-  end;
-  LInstance := LConstructorProxy.ConstructorFunc();
-  LGarbageCollector.Add(LInstance);
-
-  LContext := TJRPCContext.Create;
-  LGarbageCollector.Add(LContext);
-
-  LContext.AddContent(LRequest);
-  LContext.AddContent(LResponse);
-  LContext.AddContent(FServer);
-
-  // Injects the context inside the instance
-  LContext.Inject(LInstance);
-
-  LInvokable := TJRPCObjectInvoker.Create(LInstance);
-  LInvokable.NeonConfig := LConstructorProxy.NeonConfig;
-  if not LInvokable.Invoke(LContext, LRequest, LResponse) then
-  begin
-    AWiRLContext.Response.StatusCode := 404;
-    AWiRLContext.Response.ReasonString := 'Not found';
-    Exit;
-  end;
-
-  AWiRLContext.Response.ContentType := 'application/json';
-  if LResponse.IsNotification then
-  begin
-    AWiRLContext.Response.StatusCode := 204;
-    AWiRLContext.Response.Content := '';
-  end
-  else
-  begin
-    AWiRLContext.Response.Content := TNeon.ObjectToJSONString(LResponse, JRPCNeonConfig);
+    LWiRLResponse.Headers.Values[LHeader.Key] := LHeader.Value;
   end;
 end;
 
 function TMCPEngine.SetServer(AServer: TJRPCServer): TMCPEngine;
 begin
-  FServer := AServer;
+  FJRPCServer := AServer;
   Result := Self;
 
-  FAuthTokenConfig := FServer.GetConfiguration<TAuthTokenConfig>;
+  FAuthTokenConfig := FJRPCServer.GetConfiguration<TAuthTokenConfig>;
+end;
+
+{ TMCPTransportWriterWiRL }
+
+function TMCPTransportWriterWiRL.Connected: Boolean;
+begin
+  Result := False;
+end;
+
+constructor TMCPTransportWriterWiRL.Create(AContext: TWiRLContext);
+begin
+  inherited Create;
+  FContext := AContext;
+end;
+
+function TMCPTransportWriterWiRL.SupportsStreaming: Boolean;
+begin
+  Result := False;
+end;
+
+procedure TMCPTransportWriterWiRL.Write(const AValue: string);
+begin
+
+end;
+
+procedure TMCPTransportWriterWiRL.WriteComment(const AValue: string);
+begin
+
 end;
 
 end.
