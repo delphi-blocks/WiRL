@@ -22,7 +22,6 @@ object MainForm: TMainForm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1232
     DesignSize = (
       451
       73)
@@ -65,7 +64,6 @@ object MainForm: TMainForm
       Action = actShowDocumentation
       Anchors = [akTop, akRight]
       TabOrder = 3
-      ExplicitLeft = 1065
     end
   end
   object MainActionList: TActionList

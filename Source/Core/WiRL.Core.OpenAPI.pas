@@ -481,6 +481,9 @@ begin
       if ASource.HttpCode = 204 then
         Exit;
 
+      if not Assigned(AMethod.MethodResult) then
+        Exit;
+
       for LProduce in AMethod.Produces do
       begin
         LMediaType := AResponse.AddMediaType(LProduce.Value);

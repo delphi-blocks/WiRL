@@ -56,11 +56,12 @@ type
     /// <summary>
     ///   Finds Pets by tags
     /// </summary>
-    /// <param name="ATags" required="true">
+    /// <param name="ATags">
     ///   Tags to filter by
     /// </param>
     /// <method id="findPetsByTags">
-    ///   Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
+    ///   Multiple tags can be provided with comma separated strings. Use tag1,
+    ///   tag2, tag3 for testing.
     /// </method>
     /// <response code="200" name="OK">
     ///   Successful operation
@@ -74,7 +75,7 @@ type
     /// <summary>
     ///   Finds Pets by status
     /// </summary>
-    /// <param name="AStatus" required="true">
+    /// <param name="AStatus">
     ///   Status values that need to be considered for filter
     /// </param>
     /// <method id="findPetsByStatus">
@@ -272,7 +273,6 @@ type
   end;
 
 
-
 implementation
 
 uses
@@ -318,7 +318,12 @@ end;
 
 function TPetResource.GetPetById(APetID: Int64): TPet;
 begin
-  Result.Id := 123;
+  Result.Id := APetId;
+  case APetID of
+    0..100:  Result.Name := 'Cat';
+    101..200: Result.Name := 'Dog';
+    201..300: Result.Name := 'Fish';
+  end;
 end;
 
 function TPetResource.GetPetByStatus([QueryParam('status')] AStatus: TPetStatus): TArray<TPet>;
@@ -367,12 +372,10 @@ end;
 
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<TPetResource>;
-  {
   TWiRLResourceRegistry.Instance.RegisterResource<TStoreResource>;
   TWiRLResourceRegistry.Instance.RegisterResource<TUserResource>;
   TWiRLResourceRegistry.Instance.RegisterResource<TBasicAuthResource>;
   TWiRLResourceRegistry.Instance.RegisterResource<TDocumentationResource>;
-  }
   TWiRLContextInjectionRegistry.Instance.RegisterFactory<TMyClass>(TMyClassFactory);
 
 end.

@@ -95,7 +95,7 @@ begin
 
   Result.SetExternalDocs('https://swagger.io', 'Find out more about Swagger');
 
-  Result.AddServer('/api/v3', '');
+  Result.AddServer('http://localhost:8080/api/v3', '');
   Result.AddServer('https://api.example.com/rest/app', 'Production Server');
 end;
 
@@ -145,8 +145,9 @@ begin
       .SetOASDocFolder('{AppPath}\..\dist\OAS')
 
       // Set the folder to the html UI assets location
-      .SetGUIDocFolder('{AppPath}\..\dist\UI')
-      //.SetGUIDocFolder('{AppPath}\..\dist\ReDoc')
+      .SetGUIDocFolder('{AppPath}\..\dist\UI\Scalar')
+      //.SetGUIDocFolder('{AppPath}\..\dist\UI\Swagger')
+      //.SetGUIDocFolder('{AppPath}\..\dist\UI\Redoc')
 
       // Set the (optional) API logo
       .SetAPILogo('api-logo.png')
