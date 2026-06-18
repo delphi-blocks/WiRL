@@ -264,7 +264,7 @@ begin
   Result := (BorlandIDEServices as IOTAGalleryCategoryManager).FindCategory(SIDString);
 end;
 
-function TWiRLResourceModuleWizard.GetGlyph: Cardinal;
+function TWiRLResourceModuleWizard.GetGlyph: {$IFDEF WIN32}Cardinal{$ELSE}UInt64{$ENDIF};
 begin
 { TODO : function TWiRLServeProjectWizard.GetGlyph: Cardinal; }
   Result := LoadIcon(HInstance, 'WiRLServerWizardIcon');
