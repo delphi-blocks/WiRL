@@ -38,25 +38,29 @@ type
   private
     FEnabled: Boolean;
     FHeaders: string;
-    FOrigin: string;
+    FOrigin: TArray<string>;
     FMethods: string;
     FExposeHeaders: string;
     FCredentials: Boolean;
     FMaxAge: Integer;
+    function GetAllowAllOrigins: Boolean;
   public
     class function Default: IWiRLConfigurationCORS; static;
   public
     procedure DoAfterCreate; override;
 
     // Interface IWiRLConfigurationCORS implementation
-    function SetOrigin(const AOrgin: string): IWiRLConfigurationCORS;
+    function SetOrigin(const AOrigin: string): IWiRLConfigurationCORS;
     function SetMethods(const AMethods: string): IWiRLConfigurationCORS;
     function SetHeaders(const AHeaders: string): IWiRLConfigurationCORS;
     function SetExposeHeaders(const AHeaders: string): IWiRLConfigurationCORS;
     function SetCredentials(ACredentials: Boolean): IWiRLConfigurationCORS;
     function SetMaxAge(AMaxAge: Integer): IWiRLConfigurationCORS;
+
+    function IsOriginAllowed(const AOrigin: string): Boolean;
+    property AllowAllOrigins: Boolean read GetAllowAllOrigins;
   published
-    property Origin: string read FOrigin write FOrigin;
+    property Origin: TArray<string> read FOrigin write FOrigin;
     property Methods: string read FMethods write FMethods;
     property Headers: string read FHeaders write FHeaders;
     property ExposeHeaders: string read FExposeHeaders write FExposeHeaders;
@@ -71,6 +75,20 @@ uses
   WiRL.http.Filters,
   WiRL.http.Filters.CORS;
 
+function TWiRLConfigurationCORS.IsOriginAllowed(const AOrigin: string): Boolean;
+var
+  LOrigin: string;
+begin
+  Result := False;
+  if AOrigin = '' then
+    Exit;
+  for LOrigin in FOrigin do
+  begin
+    if SameText(LOrigin, AOrigin) then
+      Exit(True);
+  end;
+end;
+
 class function TWiRLConfigurationCORS.Default: IWiRLConfigurationCORS;
 begin
   Result := TWiRLConfigurationCORS.Create
@@ -84,6 +102,11 @@ procedure TWiRLConfigurationCORS.DoAfterCreate;
 begin
   TWiRLFilterRegistry.Instance.RegisterFilter<TCORSFilter>;
   FApplication.SetFilters(TCORSFilter.QualifiedClassName);
+end;
+
+function TWiRLConfigurationCORS.GetAllowAllOrigins: Boolean;
+begin
+  Result := IsOriginAllowed('*');
 end;
 
 function TWiRLConfigurationCORS.SetCredentials(ACredentials: Boolean): IWiRLConfigurationCORS;
@@ -116,9 +139,16 @@ begin
   Result := Self;
 end;
 
-function TWiRLConfigurationCORS.SetOrigin(const AOrgin: string): IWiRLConfigurationCORS;
+function TWiRLConfigurationCORS.SetOrigin(const AOrigin: string): IWiRLConfigurationCORS;
+var
+  LOrigin: string;
 begin
-  FOrigin := AOrgin;
+  FOrigin := [];
+  for LOrigin in AOrigin.Split([',']) do
+  begin
+    if LOrigin.Trim <> '' then
+      FOrigin := FOrigin + [LOrigin.Trim];
+  end;
   Result := Self;
 end;
 

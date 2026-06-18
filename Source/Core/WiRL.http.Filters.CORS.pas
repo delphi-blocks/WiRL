@@ -53,12 +53,27 @@ uses
 procedure TCORSFilter.Filter(ARequestContext: TWiRLContainerRequestContext);
 var
   LConf: TWiRLConfigurationCORS;
+  LOrigin: string;
+  LVary: string;
 begin
   LConf := (ARequestContext.Context.Application as TWiRLApplication).GetConfiguration<TWiRLConfigurationCORS>;
 
   // Add CORS headers to all responses
-  if LConf.Origin <> '' then
-    ARequestContext.Response.Headers.Values['Access-Control-Allow-Origin'] := LConf.Origin;
+  LOrigin := ARequestContext.Request.Headers['Origin'];
+  // Echo back the request Origin (instead of '*') so the response stays valid
+  // even when Allow-Credentials is enabled
+  if (LOrigin <> '') and (LConf.AllowAllOrigins or LConf.IsOriginAllowed(LOrigin)) then
+  begin
+    ARequestContext.Response.Headers.Values['Access-Control-Allow-Origin'] := LOrigin;
+    // Append (don't overwrite) 'Origin' to Vary so caches vary on it without losing existing values
+    LVary := ARequestContext.Response.Headers.Values['Vary'];
+    if Pos('origin', LowerCase(LVary)) = 0 then
+    begin
+      if LVary <> '' then
+        LVary := LVary + ', ';
+      ARequestContext.Response.Headers.Values['Vary'] := LVary + 'Origin';
+    end;
+  end;
   if LConf.ExposeHeaders <> '' then
     ARequestContext.Response.Headers.Values['Access-Control-Expose-Headers'] := LConf.ExposeHeaders;
   if LConf.Credentials then
