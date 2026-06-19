@@ -115,7 +115,7 @@ uses
   System.DateUtils, System.StrUtils, System.IOUtils,
   WiRL.http.Accept.Language;
 
-function DumpStream(AStream: TStream; AMaxSize: Integer = -1): string;
+function DumpStream(AStream: TStream; AMaxSize: Integer = 10000): string;
 var
   LBuffer: TBytes;
   LByte: Byte;

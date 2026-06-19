@@ -391,8 +391,9 @@ begin
         // TODO: this code forces a conversion to string (probably not a good idea)
         ValidateMethodParam(AParam.Attributes, LParamValue.AsString, True);
 
-      // TODO: Modify, try first GetObjectFromParam (to rename!) and then GetSimpleParam
-      if LParam.ParamType.TypeKind in [tkDynArray] then
+      if AParam.Kind in [TMethodParamType.Body, TMethodParamType.Form, TMethodParamType.MultiPart] then
+        Result := GetObjectFromParam(FLocator.Method, LParam, LParamValue)
+      else if LParam.ParamType.TypeKind in [tkDynArray] then
         Result := GetArrayFromParam(FLocator.Method, LParam, LParamValue)
       else if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
         Result := GetObjectFromParam(FLocator.Method, LParam, LParamValue)

@@ -407,7 +407,7 @@ var
 begin
   LObject := TSimpleParam.Create('Test data');
   try
-    LResult := MainDataModule.PostMultiPart(ParamStr(0), LObject, 'AString');
+    LResult := MainDataModule.PostMultiPart('..\..\..\..\media\logo.png', LObject, 'AString');
     ParamLog('GetMultiPart', TJSONHelper.PrettyPrint(LResult));
   finally
     LObject.Free;

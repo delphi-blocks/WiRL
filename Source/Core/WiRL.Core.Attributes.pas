@@ -230,8 +230,6 @@ type
     property MediaType: string read FMediaType write FMediaType;
   end;
 
-  TMethodParamType = (Path, Query, Form, Header, Cookie, Body, FormData, MultiPart);
-
   /// <summary>
   ///   The TContextOption enumeration defines options for the Context attribute.
   ///

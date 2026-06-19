@@ -31,7 +31,6 @@ type
   TChunksResource = class
   private
     [Context]
-    FRequest: TWiRLResponse;
     const XML_AND_JSON = TMediaType.APPLICATION_XML + ',' + TMediaType.APPLICATION_JSON;
   public
     [GET]
@@ -89,7 +88,7 @@ begin
       LCounter: Integer;
     begin
       LCounter := 1;
-      while FRequest.Connection.Connected do
+      while AWriter.Connected do
       begin
         AWriter.WriteComment('This is a test');
         AWriter.Write(LCounter, 'ping', DateTimeToStr(Now) + ' - PING EVENT');
