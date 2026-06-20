@@ -432,18 +432,17 @@ var
   function ProcessArrayResponse(AMethodResult: TWiRLProxyMethodResult): Boolean;
   var
     LItemType: TRttiType;
+    LEntity: TWiRLProxyEntity;
   begin
     Result := False;
-
     LItemType := nil;
 
     if not AMethodResult.IsArray then
       Exit;
 
     if AMethodResult.RttiType is TRttiDynamicArrayType then
-      LItemType := (AMethodResult.RttiType as TRttiDynamicArrayType).ElementType;
-
-    if AMethodResult.RttiType is TRttiArrayType then
+      LItemType := (AMethodResult.RttiType as TRttiDynamicArrayType).ElementType
+    else if AMethodResult.RttiType is TRttiArrayType then
       LItemType := (AMethodResult.RttiType as TRttiArrayType).ElementType;
 
     if not Assigned(LItemType) then
@@ -452,7 +451,8 @@ var
     case LItemType.TypeKind of
       tkClass, tkRecord:
       begin
-        var LEntity :=  TWiRLProxyEntity.Create(LItemType);
+        LEntity := TWiRLProxyEntity.Create(LItemType);
+        LEntity.Process();
         try
           EntityToSchema(LEntity);
           LMediaType.Schema.Type_ := 'array';
@@ -465,8 +465,9 @@ var
         finally
           LEntity.Free;
         end;
-
       end;
+
+      { TODO -opaolo -c : Multi-dimensional arrays 20/06/2026 09:14:43 }
       //tkArray, tkDynArray: ;
     end;
   end;
