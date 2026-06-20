@@ -617,6 +617,8 @@ var
 begin
   LContext.Proxy := FConfig.Application.Proxy;
   LContext.XMLDocFolder := TWiRLTemplatePaths.Render(FConfigurationOpenAPI.FolderXMLDoc);
+  LContext.DefaultResponses := FConfigurationOpenAPI.DefaultResponses;
+
   TWiRLProxyEngineXMLDoc.Process(LContext);
 end;
 

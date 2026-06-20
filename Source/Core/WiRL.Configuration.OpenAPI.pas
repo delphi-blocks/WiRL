@@ -56,6 +56,7 @@ type
     FFolderXMLDoc: string;
     FFolderGUIDoc: string;
     FFolderOASDoc: string;
+    FDefaultResponses: Boolean;
   public
     class function Default: IWiRLConfigurationOpenAPI; static;
   public
@@ -68,6 +69,7 @@ type
     function SetXMLDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetOASDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
     function SetGUIDocFolder(const AFolder: string): IWiRLConfigurationOpenAPI;
+    function SetDefaultResponses(AInclude: Boolean): IWiRLConfigurationOpenAPI;
     function SetAPILogo(const ALogo: string): IWiRLConfigurationOpenAPI;
     function SetAPIServer(const AHost, ADescription: string): IWiRLConfigurationOpenAPI;
     function SetAPIDocument(ADocument: TOpenAPIDocument): IWiRLConfigurationOpenAPI;
@@ -80,6 +82,7 @@ type
     property FolderXMLDoc: string read FFolderXMLDoc write FFolderXMLDoc;
     property FolderOASDoc: string read FFolderOASDoc write FFolderOASDoc;
     property FolderGUIDoc: string read FFolderGUIDoc write FFolderGUIDoc;
+    property DefaultResponses: Boolean read FDefaultResponses write FDefaultResponses;
     property Document: TOpenAPIDocument read FDocument write FDocument;
     property Callback: TOpenAPIDocCallback read FCallback write FCallback;
   end;
@@ -113,6 +116,7 @@ constructor TWiRLConfigurationOpenAPI.Create;
 begin
   inherited;
   FServers := [];
+  FDefaultResponses := True;
   FDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
 end;
 
@@ -161,6 +165,12 @@ begin
   LURL := TWiRLURL.CombinePath([AHost, FApplication.GetPath]);
   LServer := TOpenAPIServer.Create(LURL, ADescription);
   FServers := FServers + [LServer];
+  Result := Self;
+end;
+
+function TWiRLConfigurationOpenAPI.SetDefaultResponses(AInclude: Boolean): IWiRLConfigurationOpenAPI;
+begin
+  FDefaultResponses := AInclude;
   Result := Self;
 end;
 

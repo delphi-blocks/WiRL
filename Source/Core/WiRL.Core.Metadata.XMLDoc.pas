@@ -31,9 +31,11 @@ type
   private
     FProxy: TWiRLProxyApplication;
     FXMLDocFolder: string;
+    FDefaultResponses: Boolean;
   public
     property Proxy: TWiRLProxyApplication read FProxy write FProxy;
     property XMLDocFolder: string read FXMLDocFolder write FXMLDocFolder;
+    property DefaultResponses: Boolean read FDefaultResponses write FDefaultResponses;
   end;
 
   TWiRLOpenAPITags = class
@@ -80,9 +82,9 @@ type
 implementation
 
 uses
+  System.StrUtils, System.IOUtils,
   Xml.xmldom, Xml.omnixmldom,
-  Xml.Internal.OmniXML,
-  System.IOUtils;
+  Xml.Internal.OmniXML;
 
 
 { TWiRLProxyEngineXMLDoc }
@@ -271,7 +273,11 @@ var
   LXMLResponse: IXMLNode;
   LResponses: IXMLNodeList;
 begin
-  LResponses := SelectNodes(ANode, '//' + OAS_RESPONSE);
+  if FContext.FDefaultResponses then
+    LResponses := SelectNodes(ANode, '//' + OAS_RESPONSE)
+  else
+    LResponses := SelectNodes(ANode, './/' + OAS_RESPONSE);
+
   // Responses
   for LIndex := 0 to LResponses.Count - 1 do
   begin
