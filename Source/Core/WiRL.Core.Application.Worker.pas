@@ -391,10 +391,13 @@ begin
         // TODO: this code forces a conversion to string (probably not a good idea)
         ValidateMethodParam(AParam.Attributes, LParamValue.AsString, True);
 
-      if AParam.Kind in [TMethodParamType.Body, TMethodParamType.Form, TMethodParamType.MultiPart] then
-        Result := GetObjectFromParam(FLocator.Method, LParam, LParamValue)
-      else if LParam.ParamType.TypeKind in [tkDynArray] then
-        Result := GetArrayFromParam(FLocator.Method, LParam, LParamValue)
+      if LParam.ParamType.TypeKind in [tkDynArray] then
+      begin
+        if AParam.Kind in [TMethodParamType.Body, TMethodParamType.Form, TMethodParamType.MultiPart] then
+          Result := GetObjectFromParam(FLocator.Method, LParam, LParamValue)
+        else
+          Result := GetArrayFromParam(FLocator.Method, LParam, LParamValue);
+      end
       else if LParam.ParamType.TypeKind in [tkClass, tkInterface, tkRecord, tkDynArray] then
         Result := GetObjectFromParam(FLocator.Method, LParam, LParamValue)
       else
@@ -669,6 +672,8 @@ begin
     for LIndex := 0 to FContext.Request.MultiPartFormData.Count - 1 do
     begin
       if FContext.Request.MultiPartFormData.GetPart(LIndex) = LObject then
+        Exit(True);
+      if FContext.Request.MultiPartFormData.GetPart(LIndex).ContentStream = LObject then
         Exit(True);
     end;
   end;
