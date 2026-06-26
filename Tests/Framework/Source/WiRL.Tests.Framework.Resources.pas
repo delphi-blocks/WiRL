@@ -31,6 +31,7 @@ type
     FContext: TWiRLContext;
     FRequest: TWiRLTestRequest;
     FResponse: TWiRLTestResponse;
+    procedure WriteMultipartBody(const ABoundary, ABody: string);
   public
     [Setup]
     procedure Setup;
@@ -63,6 +64,28 @@ type
     procedure TestInvalidPostMediaType;
     [Test]
     procedure TestInvalidMethod;
+    [Test]
+    procedure PostIntForm;
+    [Test]
+    procedure PostStringForm;
+    [Test]
+    procedure PostBoolForm;
+    [Test]
+    procedure PostFloatForm;
+    [Test]
+    procedure PostMultipleParamsForm;
+    [Test]
+    procedure PostMultipartString;
+    [Test]
+    procedure PostMultipartInteger;
+    [Test]
+    procedure PostMultipartBool;
+    [Test]
+    procedure PostMultipartStream;
+    [Test]
+    procedure PostMultipartFile;
+    [Test]
+    procedure PostMultipartMixed;
   end;
 
 implementation
@@ -83,7 +106,104 @@ const
     'ZWQJAKwAsQC9AMIAyADNANUA5ADxAAoAAAAAAAAAAAA=';
 
 
+const
+  MultipartCRLF = #13#10;
+
+function MultipartTextPart(const ABoundary, AName, AValue: string): string;
+begin
+  Result :=
+    '--' + ABoundary + MultipartCRLF +
+    'Content-Disposition: form-data; name="' + AName + '"' + MultipartCRLF +
+    MultipartCRLF +
+    AValue + MultipartCRLF;
+end;
+
+function MultipartFilePart(const ABoundary, AName, AFileName, AContentType, AValue: string): string;
+begin
+  Result :=
+    '--' + ABoundary + MultipartCRLF +
+    'Content-Disposition: form-data; name="' + AName + '"; filename="' + AFileName + '"' + MultipartCRLF +
+    'Content-Type: ' + AContentType + MultipartCRLF +
+    MultipartCRLF +
+    AValue + MultipartCRLF;
+end;
+
+function MultipartBinaryPart(const ABoundary, AName, AValue: string): string;
+begin
+  Result :=
+    '--' + ABoundary + MultipartCRLF +
+    'Content-Disposition: form-data; name="' + AName + '"' + MultipartCRLF +
+    'Content-Type: ' + TMediaType.APPLICATION_OCTET_STREAM + MultipartCRLF +
+    MultipartCRLF +
+    AValue + MultipartCRLF;
+end;
+
+function MultipartEnd(const ABoundary: string): string;
+begin
+  Result := '--' + ABoundary + '--' + MultipartCRLF;
+end;
+
 { TTestResource }
+
+procedure TTestResource.WriteMultipartBody(const ABoundary, ABody: string);
+var
+  LBytes: TBytes;
+begin
+  FRequest.ContentType := TMediaType.MULTIPART_FORM_DATA + '; boundary=' + ABoundary;
+  LBytes := TEncoding.ANSI.GetBytes(ABody);
+  FRequest.ContentStream.WriteBuffer(LBytes[0], Length(LBytes));
+  FRequest.ContentStream.Position := 0;
+end;
+
+procedure TTestResource.PostIntForm;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postintform';
+  FRequest.ContentType := TMediaType.APPLICATION_FORM_URLENCODED_TYPE;
+  FRequest.Content := 'id=42';
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('42', FResponse.Content);
+end;
+
+procedure TTestResource.PostStringForm;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/poststringform';
+  FRequest.ContentType := TMediaType.APPLICATION_FORM_URLENCODED_TYPE;
+  FRequest.Content := 'name=hello';
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('hello', FResponse.Content);
+end;
+
+procedure TTestResource.PostBoolForm;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postboolform';
+  FRequest.ContentType := TMediaType.APPLICATION_FORM_URLENCODED_TYPE;
+  FRequest.Content := 'flag=true';
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('True', FResponse.Content);
+end;
+
+procedure TTestResource.PostFloatForm;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postfloatform';
+  FRequest.ContentType := TMediaType.APPLICATION_FORM_URLENCODED_TYPE;
+  FRequest.Content := 'value=3.14';
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('3.14', FResponse.Content);
+end;
+
+procedure TTestResource.PostMultipleParamsForm;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postmultipleparamsform';
+  FRequest.ContentType := TMediaType.APPLICATION_FORM_URLENCODED_TYPE;
+  FRequest.Content := 'name=hello&id=42';
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('hello42', FResponse.Content);
+end;
 
 procedure TTestResource.Setup;
 begin
@@ -221,6 +341,97 @@ begin
   FRequest.Url := 'http://localhost:1234/rest/app/helloworld/sum/' + IntToStr(AOne) + '/' + IntToStr(ATwo);
   FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual(IntToStr(AOne + ATwo), FResponse.Content);
+end;
+
+procedure TTestResource.PostMultipartString;
+const
+  LBoundary = 'TestBnd';
+var
+  LBody: string;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postmultipartstring';
+  LBody := MultipartTextPart(LBoundary, 'text', 'hello') + MultipartEnd(LBoundary);
+  WriteMultipartBody(LBoundary, LBody);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('hello', FResponse.Content);
+end;
+
+procedure TTestResource.PostMultipartInteger;
+const
+  LBoundary = 'TestBnd';
+var
+  LBody: string;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postmultipartinteger';
+  LBody := MultipartTextPart(LBoundary, 'count', '42') + MultipartEnd(LBoundary);
+  WriteMultipartBody(LBoundary, LBody);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('42', FResponse.Content);
+end;
+
+procedure TTestResource.PostMultipartBool;
+const
+  LBoundary = 'TestBnd';
+var
+  LBody: string;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postmultipartbool';
+  LBody := MultipartTextPart(LBoundary, 'active', 'true') + MultipartEnd(LBoundary);
+  WriteMultipartBody(LBoundary, LBody);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('True', FResponse.Content);
+end;
+
+procedure TTestResource.PostMultipartStream;
+const
+  LBoundary = 'TestBnd';
+  LExpected = 'StreamData';
+var
+  LBody: string;
+  LResponseBytes: TBytes;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postmultipartstream';
+  LBody := MultipartBinaryPart(LBoundary, 'data', LExpected) + MultipartEnd(LBoundary);
+  WriteMultipartBody(LBoundary, LBody);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  SetLength(LResponseBytes, FResponse.ContentStream.Size);
+  FResponse.ContentStream.Read(LResponseBytes[0], FResponse.ContentStream.Size);
+  Assert.AreEqual<TBytes>(TEncoding.ANSI.GetBytes(LExpected), LResponseBytes);
+end;
+
+procedure TTestResource.PostMultipartFile;
+const
+  LBoundary = 'TestBnd';
+var
+  LBody: string;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postmultipartfile';
+  LBody := MultipartFilePart(LBoundary, 'file', 'document.txt', TMediaType.TEXT_PLAIN, 'file content') +
+    MultipartEnd(LBoundary);
+  WriteMultipartBody(LBoundary, LBody);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('document.txt', FResponse.Content);
+end;
+
+procedure TTestResource.PostMultipartMixed;
+const
+  LBoundary = 'TestBnd';
+var
+  LBody: string;
+begin
+  FRequest.Method := 'POST';
+  FRequest.Url := 'http://localhost:1234/rest/app/helloworld/postmultipartmixed';
+  LBody := MultipartTextPart(LBoundary, 'name', 'hello') +
+    MultipartTextPart(LBoundary, 'qty', '7') +
+    MultipartEnd(LBoundary);
+  WriteMultipartBody(LBoundary, LBody);
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual('hello7', FResponse.Content);
 end;
 
 initialization

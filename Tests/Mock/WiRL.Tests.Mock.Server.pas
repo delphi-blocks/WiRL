@@ -113,7 +113,9 @@ type
     FHeaders: IWiRLHeaders;
     FConnection: TWiRLConnection;
     procedure ParseQueryParams;
+    procedure ParseFormParams;
     procedure SetUrl(const Value: string);
+    procedure ParseQueryString(const AQueryString: string; AFields: TStrings);
   protected
     function GetHttpPathInfo: string; override;
     function GetHttpQuery: string; override;
@@ -298,6 +300,8 @@ end;
 
 function TWiRLTestRequest.GetContentFields: TWiRLParam;
 begin
+  if ContentType = TMediaType.APPLICATION_FORM_URLENCODED_TYPE then
+    ParseFormParams;
   Result := FContentFields;
 end;
 
@@ -345,16 +349,26 @@ begin
   Result := FServerPort;
 end;
 
+procedure TWiRLTestRequest.ParseFormParams;
+begin
+  ParseQueryString(Content, FContentFields);
+end;
+
 procedure TWiRLTestRequest.ParseQueryParams;
+begin
+  ParseQueryString(FQuery, FQueryFields);
+end;
+
+procedure TWiRLTestRequest.ParseQueryString(const AQueryString: string; AFields: TStrings);
 var
   Params: TArray<string>;
   Param: string;
   EqualIndex: Integer;
 begin
-  FQueryFields.Clear;
-  if FQuery <> '' then
+  AFields.Clear;
+  if AQueryString <> '' then
   begin
-    Params := FQuery.Split(['&']);
+    Params := AQueryString.Split(['&']);
     for Param in Params do
     begin
       // I can't use split: I need only the first equal symbol
@@ -362,9 +376,9 @@ begin
       if EqualIndex > 0 then
       begin
         {$IFDEF CompilerVersion >=28} //XE7
-          FQueryFields.AddPair(TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)), TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1)));
+          AFields.AddPair(TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)), TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1)));
         {$ELSE}
-          FQueryFields.Add(
+          AFields.Add(
             TNetEncoding.URL.Decode(Param.Substring(0, EqualIndex)) + '=' +
             TNetEncoding.URL.Decode(Param.Substring(EqualIndex + 1))
           );

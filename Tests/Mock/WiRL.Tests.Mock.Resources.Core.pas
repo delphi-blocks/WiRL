@@ -15,6 +15,7 @@ uses
   System.Classes, System.SysUtils, System.StrUtils, System.JSON,
 
   WiRL.http.Accept.MediaType,
+  WiRL.http.MultipartData,
   WiRL.Core.Attributes,
   WiRL.Core.MessageBody.Default,
   WiRL.http.Request,
@@ -75,6 +76,39 @@ type
 
     [POST, Path('/postbinary'), Produces(TMediaType.APPLICATION_OCTET_STREAM), Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
     function PostBinary([BodyParam] AContent: TStream): TStream;
+
+    [POST, Path('/postintform'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_FORM_URLENCODED_TYPE)]
+    function PostIntForm([FormParam('id')] AId: Integer): Integer;
+
+    [POST, Path('/poststringform'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_FORM_URLENCODED_TYPE)]
+    function PostStringForm([FormParam('name')] AName: string): string;
+
+    [POST, Path('/postboolform'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_FORM_URLENCODED_TYPE)]
+    function PostBoolForm([FormParam('flag')] AFlag: Boolean): Boolean;
+
+    [POST, Path('/postfloatform'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_FORM_URLENCODED_TYPE)]
+    function PostFloatForm([FormParam('value')] AValue: Double): Double;
+
+    [POST, Path('/postmultipleparamsform'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.APPLICATION_FORM_URLENCODED_TYPE)]
+    function PostMultipleParamsForm([FormParam('name')] AName: string; [FormParam('id')] AId: Integer): string;
+
+    [POST, Path('/postmultipartstring'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.MULTIPART_FORM_DATA)]
+    function PostMultipartString([FormParam('text')] AText: string): string;
+
+    [POST, Path('/postmultipartinteger'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.MULTIPART_FORM_DATA)]
+    function PostMultipartInteger([FormParam('count')] ACount: Integer): Integer;
+
+    [POST, Path('/postmultipartbool'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.MULTIPART_FORM_DATA)]
+    function PostMultipartBool([FormParam('active')] AActive: Boolean): Boolean;
+
+    [POST, Path('/postmultipartstream'), Produces(TMediaType.APPLICATION_OCTET_STREAM), Consumes(TMediaType.MULTIPART_FORM_DATA)]
+    function PostMultipartStream([FormParam('data')] AData: TStream): TStream;
+
+    [POST, Path('/postmultipartfile'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.MULTIPART_FORM_DATA)]
+    function PostMultipartFile([FormParam('file')] AFile: TWiRLFormDataPart): string;
+
+    [POST, Path('/postmultipartmixed'), Produces(TMediaType.TEXT_PLAIN), Consumes(TMediaType.MULTIPART_FORM_DATA)]
+    function PostMultipartMixed([FormParam('name')] AName: string; [FormParam('qty')] AQty: Integer): string;
   end;
 
 implementation
@@ -111,6 +145,63 @@ end;
 function THelloWorldResource.PostEcho(AContent: string): string;
 begin
   Result := AContent;
+end;
+
+function THelloWorldResource.PostIntForm(AId: Integer): Integer;
+begin
+  Result := AId;
+end;
+
+function THelloWorldResource.PostStringForm(AName: string): string;
+begin
+  Result := AName;
+end;
+
+function THelloWorldResource.PostBoolForm(AFlag: Boolean): Boolean;
+begin
+  Result := AFlag;
+end;
+
+function THelloWorldResource.PostFloatForm(AValue: Double): Double;
+begin
+  Result := AValue;
+end;
+
+function THelloWorldResource.PostMultipleParamsForm(AName: string; AId: Integer): string;
+begin
+  Result := AName + IntToStr(AId);
+end;
+
+function THelloWorldResource.PostMultipartString(AText: string): string;
+begin
+  Result := AText;
+end;
+
+function THelloWorldResource.PostMultipartInteger(ACount: Integer): Integer;
+begin
+  Result := ACount;
+end;
+
+function THelloWorldResource.PostMultipartBool(AActive: Boolean): Boolean;
+begin
+  Result := AActive;
+end;
+
+function THelloWorldResource.PostMultipartStream(AData: TStream): TStream;
+begin
+  Result := TMemoryStream.Create;
+  Result.CopyFrom(AData, 0);
+  Result.Position := 0;
+end;
+
+function THelloWorldResource.PostMultipartFile(AFile: TWiRLFormDataPart): string;
+begin
+  Result := AFile.FileName;
+end;
+
+function THelloWorldResource.PostMultipartMixed(AName: string; AQty: Integer): string;
+begin
+  Result := AName + IntToStr(AQty);
 end;
 
 function THelloWorldResource.PostJSONExample(AContent: TJSONObject): string;
