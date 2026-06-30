@@ -80,6 +80,7 @@ type
     procedure ParseParams(Params: TStrings; const AValue: String);
     //procedure ParseParams(Params :TStrings; const AValue: String);
   protected
+    function GetHttpURI: string; override;
     function GetHttpPathInfo: string; override;
     function GetHttpQuery: string; override;
     function GetRemoteIP: string; override;
@@ -610,6 +611,11 @@ end;
 function TWiRLHttpRequestWebBroker.GetHttpQuery: string;
 begin
   Result := FWebRequest.Query;
+end;
+
+function TWiRLHttpRequestWebBroker.GetHttpURI: string;
+begin
+  Result := FWebRequest.RawPathInfo;
 end;
 
 function TWiRLHttpRequestWebBroker.GetQueryFields: TWiRLParam;

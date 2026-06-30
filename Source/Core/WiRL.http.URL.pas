@@ -44,6 +44,7 @@ type
     procedure SetBasePath(const Value: string);
   protected
     procedure Parse; virtual;
+    procedure ParseURI; virtual;
     function ParsePathTokens(const APath: string): TArray<string>; virtual;
     procedure ParseQueryTokens; virtual;
     procedure URLChanged; virtual;
@@ -107,6 +108,7 @@ type
 implementation
 
 uses
+  System.Net.URLClient,
   System.StrUtils, IdURI,
   WiRL.Core.Utils;
 
@@ -136,7 +138,7 @@ begin
   FUserName := '';
   FURL := AURL;
 
-  Parse;
+  ParseURI;
 end;
 
 procedure TWiRLURL.BasePathChanged;
@@ -196,9 +198,9 @@ begin
   // Add the protocol in order to make Parse work.
   { TODO -opaolo -c : https handling? 27/11/2016 09:41:01 }
   if ARequest.Host.Contains(':') then
-    Create('http://' + ARequest.Host.Split([':'])[0] + ':' + ARequest.ServerPort.ToString + ARequest.PathInfo + LQuery)
+    Create('http://' + ARequest.Host.Split([':'])[0] + ':' + ARequest.ServerPort.ToString + ARequest.URI + LQuery)
   else
-    Create('http://' + ARequest.Host + ':' + ARequest.ServerPort.ToString + ARequest.PathInfo + LQuery);
+    Create('http://' + ARequest.Host + ':' + ARequest.ServerPort.ToString + ARequest.URI + LQuery);
 end;
 
 constructor TWiRLURL.MockURL(const AEnginePath, AAppPath, AResourcePath, AMethodPath: string);
@@ -320,6 +322,8 @@ begin
   LPath := EnsureFirstPathDelimiter(EnsureLastPathDelimiter(APath));
   Result := TArray<string>(SplitString(LPath, URL_PATH_SEPARATOR));
 
+  Result := URLDecode(Result);
+
   while (Length(Result) > 0) and (Result[0] = '') do
     Result := Copy(Result, 1);
   while (Length(Result) > 0) and (Result[High(Result)] = '') do
@@ -336,7 +340,7 @@ begin
 
   if FQuery <> '' then
   begin
-    LQuery := FQuery;
+    LQuery := URLDecode(FQuery);
     while StartsStr(LQuery, URL_QUERY_START) do
       LQuery := RightStr(LQuery, Length(LQuery) - 1);
 
@@ -350,6 +354,31 @@ begin
       LStrings.Free;
     end;
   end;
+end;
+
+procedure TWiRLURL.ParseURI;
+var
+  LDefaultPortNumber: Integer;
+  LURI: TURI;
+begin
+  LURI := TURI.Create(FURL);
+
+  FProtocol := LURI.Scheme;
+  if SameText(FProtocol, '') or SameText(FProtocol, 'http') then
+    LDefaultPortNumber := 80
+  else if SameText(FProtocol, 'https') then
+    LDefaultPortNumber := 443
+  else
+    LDefaultPortNumber := 0;
+  FUserName := LURI.Username;
+  FPassword := LURI.Password;
+  FHostName := LURI.Host;
+  FPortNumber := LURI.Port; // Default??
+  FPath := LURI.Path + LURI.Fragment;
+  FPathTokens := ParsePathTokens(FPath);
+  FQuery := LURI.Query;
+  ParseQueryTokens;
+  BasePathChanged;
 end;
 
 procedure TWiRLURL.SetBasePath(const Value: string);
@@ -430,7 +459,7 @@ end;
 
 procedure TWiRLURL.URLChanged;
 begin
-  Parse;
+  ParseURI;
 end;
 
 class function TWiRLURL.URLDecode(const AString: string): string;
