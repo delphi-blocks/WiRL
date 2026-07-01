@@ -117,6 +117,7 @@ type
     procedure SetUrl(const Value: string);
     procedure ParseQueryString(const AQueryString: string; AFields: TStrings);
   protected
+    function GetHttpURI: string; override;
     function GetHttpPathInfo: string; override;
     function GetHttpQuery: string; override;
     function GetServerPort: Integer; override;
@@ -332,6 +333,11 @@ end;
 function TWiRLTestRequest.GetHttpQuery: string;
 begin
   Result := FQuery;
+end;
+
+function TWiRLTestRequest.GetHttpURI: string;
+begin
+  Result := FPathInfo;
 end;
 
 function TWiRLTestRequest.GetQueryFields: TWiRLParam;
