@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2026 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -442,8 +442,14 @@ type
   /// WiRL.MessageBody.SingleRecord
   /// somewhere in the project.
   /// </remarks>
-  SingleRecordAttribute = class(TCustomAttribute)
-  end;
+  SingleRecordAttribute = class(TCustomAttribute);
+
+
+  /// <summary>
+  ///   Exclude the resource or endpoint from the OpenAPI documentation
+  /// </summary>
+  ExcludeFromOpenAPIAttribute = class(TCustomAttribute);
+
 
 {$ENDREGION}
 

@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2025 WiRL Team                                      }
+{       Copyright (c) 2015-2026 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -25,8 +25,8 @@ uses
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON,
   Neon.Core.Persistence.JSON.Schema,
-  Neon.Core.Serializers.RTL,
 
+  WiRl.Core.Attributes,
   WiRL.Core.Declarations,
   WiRL.Core.Exceptions,
   WiRL.Core.Metadata,
@@ -54,13 +54,11 @@ type
     private
       class function SearchForTags(AType: TRttiType): TAttributeTags;
     public
-      class procedure ProcessEntity(AEntity: TWiRLProxyEntity);
+      class procedure ProcessType(AType: TWiRLProxyType);
       class procedure ProcessResource(AResource: TWiRLProxyResource);
     end;
-
   private
     FDocument: TOpenAPIDocument;
-
     FConfig: TOpenAPIv3EngineConfig;
     FNeonConfigApp: INeonConfiguration;
     FNeonConfigCustom: INeonConfiguration;
@@ -80,17 +78,16 @@ type
     procedure AddMethodResponses(AMethod: TWiRLProxyMethod);
     procedure AddOperationResponses(AOperation: TOpenAPIOperation; AMethod: TWiRLProxyMethod);
 
-    procedure FillResponse(ASource: TWiRLProxyMethodResponse; AMethod:
-        TWiRLProxyMethod; AResponse: TOpenAPIResponse);
+    procedure FillResponse(ASource: TWiRLProxyMethodResponse; AMethod: TWiRLProxyMethod; AResponse: TOpenAPIResponse);
 
     function CreateParameter(AParameter: TWiRLProxyParameter): TOpenAPIParameter;
 
     procedure ClearDocument;
     function GetDocument: TOpenAPIDocument;
 
-    procedure EntityToSchema(AEntity: TWiRLProxyEntity);
     function ClassToSchema(AClass: TClass): string;
-    function TypeToSchema(AType: TRttiType): string;
+    function RttiTypeToSchema(AType: TRttiType): string;
+    procedure ProxyTypeToSchema(AType: TWiRLProxyType; ASchema: TOpenAPISchema);
   protected
     constructor Create(const AConfig: TOpenAPIv3EngineConfig); overload;
     procedure ProcessXMLDoc;
@@ -147,7 +144,7 @@ end;
 
 function TOpenAPIv3Engine.ClassToSchema(AClass: TClass): string;
 begin
-  Result := TypeToSchema(TRttiHelper.Context.GetType(AClass));
+  Result := RttiTypeToSchema(TRttiHelper.Context.GetType(AClass));
 end;
 
 procedure TOpenAPIv3Engine.ClearDocument;
@@ -251,6 +248,9 @@ begin
   // Loop on every method of the current resource object
   for LMethod in AResource.Methods do
   begin
+    if LMethod.ExcludeOpenAPI then
+      Continue;
+
     if LMethod.Name <> '' then
     begin
       LFullPath := IncludeLeadingSlash(CombineURL(AResource.Path, LMethod.Path));
@@ -284,18 +284,7 @@ begin
       for LConsume in AMethod.Consumes do
       begin
         LMediaType := LRequestBody.AddMediaType(LConsume.Value);
-        if Assigned(LParam.Entity) then
-        begin
-          EntityToSchema(LParam.Entity);
-          LMediaType
-            .Schema
-            .SetSchemaReference(LParam.Entity.Name);
-        end
-        else
-          LMediaType
-            .Schema
-            .WithNeonConfig(FNeonConfigCustom)
-            .SetJSONFromType(LParam.RttiParam.ParamType);
+        ProxyTypeToSchema(LParam.ProxyType, LMediaType.Schema);
       end;
 
       Continue;
@@ -321,6 +310,9 @@ begin
   begin
     LRes := LPair.Value;
     if LRes.IsSwagger(FConfig.SwaggerResource) then
+      Continue;
+
+    if LRes.ExcludeOpenAPI then
       Continue;
 
     // Adds a tag to the tags array
@@ -428,50 +420,6 @@ procedure TOpenAPIv3Engine.FillResponse(ASource: TWiRLProxyMethodResponse;
 var
   LMediaType: TOpenAPIMediaType;
   LProduce: TMediaType;
-
-  function ProcessArrayResponse(AMethodResult: TWiRLProxyMethodResult): Boolean;
-  var
-    LItemType: TRttiType;
-    LEntity: TWiRLProxyEntity;
-  begin
-    Result := False;
-    LItemType := nil;
-
-    if not AMethodResult.IsArray then
-      Exit;
-
-    if AMethodResult.RttiType is TRttiDynamicArrayType then
-      LItemType := (AMethodResult.RttiType as TRttiDynamicArrayType).ElementType
-    else if AMethodResult.RttiType is TRttiArrayType then
-      LItemType := (AMethodResult.RttiType as TRttiArrayType).ElementType;
-
-    if not Assigned(LItemType) then
-      raise EWiRLServerException.CreateFmt('Error determining type for %s', [AMethodResult.RttiType.Name]);
-
-    case LItemType.TypeKind of
-      tkClass, tkRecord:
-      begin
-        LEntity := TWiRLProxyEntity.Create(LItemType);
-        LEntity.Process();
-        try
-          EntityToSchema(LEntity);
-          LMediaType.Schema.Type_ := 'array';
-          if not Assigned(LMediaType.Schema.Items) then
-            LMediaType.Schema.Items := TOpenAPISchema.Create;
-
-          LMediaType.Schema.Items.SetSchemaReference(LEntity.Name);
-
-          Result := True;
-        finally
-          LEntity.Free;
-        end;
-      end;
-
-      { TODO -opaolo -c : Multi-dimensional arrays 20/06/2026 09:14:43 }
-      //tkArray, tkDynArray: ;
-    end;
-  end;
-
 begin
   case ASource.Category of
 
@@ -488,22 +436,7 @@ begin
       for LProduce in AMethod.Produces do
       begin
         LMediaType := AResponse.AddMediaType(LProduce.Value);
-
-        if ProcessArrayResponse(AMethod.MethodResult) then
-          Continue;
-
-        if Assigned(AMethod.MethodResult.Entity) then
-        begin
-          EntityToSchema(AMethod.MethodResult.Entity);
-          LMediaType
-            .Schema
-            .SetSchemaReference(AMethod.MethodResult.Entity.Name);
-        end
-        else
-          LMediaType
-            .Schema
-            .WithNeonConfig(FNeonConfigCustom)
-            .SetJSONFromType(AMethod.MethodResult.RttiType);
+        ProxyTypeToSchema(AMethod.MethodResult.ProxyType, LMediaType.Schema);
       end;
     end;
 
@@ -541,19 +474,6 @@ begin
   end;
 end;
 
-procedure TOpenAPIv3Engine.EntityToSchema(AEntity: TWiRLProxyEntity);
-begin
-  JSchemaProcessor.ProcessEntity(AEntity);
-
-  if FDocument.Components.SchemaExists(AEntity.Name) then
-    Exit;
-
-  FDocument.Components
-    .AddSchema(AEntity.Name)
-    .WithNeonConfig(FNeonConfigCustom)
-    .SetJSONFromType(AEntity.RttiType);
-end;
-
 class function TOpenAPIv3Engine.Generate(const AConfig: TOpenAPIv3EngineConfig): TJSONObject;
 var
   LEngine: TOpenAPIv3Engine;
@@ -571,7 +491,7 @@ begin
   Result := FConfigurationOpenAPI.Document;
 end;
 
-function TOpenAPIv3Engine.TypeToSchema(AType: TRttiType): string;
+function TOpenAPIv3Engine.RttiTypeToSchema(AType: TRttiType): string;
 var
   LAttr: JsonSchemaAttribute;
   LSummary: string;
@@ -622,21 +542,39 @@ begin
   TWiRLProxyEngineXMLDoc.Process(LContext);
 end;
 
-{ TOpenAPIv3Engine.JSchemaProcessor }
-
-class procedure TOpenAPIv3Engine.JSchemaProcessor.ProcessEntity(AEntity: TWiRLProxyEntity);
-var
-  LTags: TAttributeTags;
+procedure TOpenAPIv3Engine.ProxyTypeToSchema(AType: TWiRLProxyType; ASchema: TOpenAPISchema);
 begin
-  LTags := SearchForTags(AEntity.RttiType);
-  if not Assigned(LTags) then
-    Exit;
+  case AType.Kind of
+    TWiRLTypeKind.Unsupported: ;
+    TWiRLTypeKind.Simple:
+    begin
+      ASchema
+        .WithNeonConfig(FNeonConfigCustom)
+        .SetJSONFromType(AType.RttiType);
+    end;
+    TWiRLTypeKind.Entity:
+    begin
+      JSchemaProcessor.ProcessType(AType);
 
-  if LTags.Exists('title') then
-    AEntity.Name := LTags.GetValueAs<string>('title');
+      if FDocument.Components.SchemaExists(AType.Name) then
+        Exit;
 
-  if LTags.Exists('description') then
-    AEntity.Summary := LTags.GetValueAs<string>('description');
+      FDocument.Components
+        .AddSchema(AType.Name)
+        .WithNeonConfig(FNeonConfigCustom)
+        .SetJSONFromType(AType.RttiType);
+
+      ASchema.SetSchemaReference(AType.Name);
+    end;
+    TWiRLTypeKind.List:
+    begin
+      ASchema.Title := 'array';
+      if not Assigned(ASchema.Items) then
+        ASchema.Items := TOpenAPISchema.Create;
+
+      ProxyTypeToSchema(AType.Item, ASchema.Items);
+    end;
+  end;
 end;
 
 class procedure TOpenAPIv3Engine.JSchemaProcessor.ProcessResource(AResource: TWiRLProxyResource);
@@ -654,6 +592,24 @@ begin
     AResource.Summary := LTags.GetValueAs<string>('description');
 end;
 
+class procedure TOpenAPIv3Engine.JSchemaProcessor.ProcessType(AType: TWiRLProxyType);
+var
+  LTags: TAttributeTags;
+begin
+  if not (AType.Kind = TWiRLTypeKind.Entity) then
+    Exit;
+
+  LTags := SearchForTags(AType.RttiType);
+  if not Assigned(LTags) then
+    Exit;
+
+  if LTags.Exists('title') then
+    AType.Name := LTags.GetValueAs<string>('title');
+
+  if LTags.Exists('description') then
+    AType.Summary := LTags.GetValueAs<string>('description');
+end;
+
 class function TOpenAPIv3Engine.JSchemaProcessor.SearchForTags(AType: TRttiType): TAttributeTags;
 var
   LAttr: JsonSchemaAttribute;
@@ -665,5 +621,6 @@ begin
   LAttr.ParseTags;
   Result := LAttr.Tags;
 end;
+
 
 end.

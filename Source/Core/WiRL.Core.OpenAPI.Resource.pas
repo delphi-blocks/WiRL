@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2025 WiRL Team                                      }
+{       Copyright (c) 2015-2026 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -61,14 +61,20 @@ type
 
   TOpenAPIResourceCustom = class
   private
-    [Context] App: TWiRLApplication;
-    [Context] Conf: TWiRLConfigurationOpenAPI;
-    [Context] Request: TWiRLRequest;
-    [Context] Response: TWiRLResponse;
-    [Context] Resource: TWiRLProxyResource;
+    [Context]
+    App: TWiRLApplication;
+    [Context]
+    Conf: TWiRLConfigurationOpenAPI;
+    [Context]
+    Request: TWiRLRequest;
+    [Context]
+    Response: TWiRLResponse;
+    [Context]
+    Resource: TWiRLProxyResource;
     function FilterContent(const AFileName: string): TStream;
   public
-    [GET, Produces(TMediaType.APPLICATION_JSON)]
+    [GET,
+    Produces(TMediaType.APPLICATION_JSON)]
     function GetSwaggerJSON: TJSONObject;
 
     [GET]
@@ -87,8 +93,7 @@ type
 implementation
 
 uses
-  System.StrUtils, System.TypInfo, System.IOUtils,
-  WiRL.Core.Exceptions;
+  System.StrUtils, System.TypInfo, System.IOUtils, WiRL.Core.Exceptions;
 
 { TOpenAPIResourceCustom }
 
@@ -104,7 +109,7 @@ begin
     Exit(TFileStream.Create(AFileName, fmOpenRead));
 
   if Conf.Document.Servers.Count > 0 then
-    LURL :=  IncludeTrailingSlash(Conf.Document.Servers[0].Url)
+    LURL := IncludeTrailingSlash(Conf.Document.Servers[0].Url)
   else
     LURL := 'http://localhost/';
 
@@ -202,8 +207,7 @@ begin
     Result := TMediaType.APPLICATION_OCTET_STREAM;
 end;
 
-function TSwaggerUIProvider.DirectoryHasIndexFile(const ADirectory: string;
-  out AIndexFullPath: string): Boolean;
+function TSwaggerUIProvider.DirectoryHasIndexFile(const ADirectory: string; out AIndexFullPath: string): Boolean;
 var
   LIndex: Integer;
   LIndexFileName: string;
@@ -299,3 +303,4 @@ begin
 end;
 
 end.
+

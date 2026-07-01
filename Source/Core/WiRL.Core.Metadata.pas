@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2025 WiRL Team                                      }
+{       Copyright (c) 2015-2026 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -60,14 +60,27 @@ type
 
   TWiRLProxyFilters = class(TObjectList<TWiRLProxyFilter>);
 
-  TWiRLProxyEntity = class(TWiRLProxyBase)
+
+  TWiRLTypeKind = (Unsupported, Simple, Entity, List);
+  TWiRLProxyType = class(TWiRLProxyBase)
   private
     FRttiType: TRttiType;
+    FItem: TWiRLProxyType;
+    FKind: TWiRLTypeKind;
+
+    function IsTypeSet(AType: TRttiType; out AItemType: TRttiType): Boolean;
+    function IsTypeList(AType: TRttiType; out AItemType: TRttiType): Boolean;
+    function IsTypeArray(AType: TRttiType; out AItemType: TRttiType): Boolean;
   public
     constructor Create(AType: TRttiType);
+    destructor Destroy; override;
+
     procedure Process(); override;
+    function IsEntity: Boolean;
   public
+    property Kind: TWiRLTypeKind read FKind write FKind;
     property RttiType: TRttiType read FRttiType write FRttiType;
+    property Item: TWiRLProxyType read FItem write FItem;
   end;
 
   TWiRLProxyParameter = class(TWiRLProxyBase)
@@ -79,8 +92,8 @@ type
     FKind: TMethodParamType;
     FRest: Boolean;
     FContext: TRttiType;
-    FEntity: TWiRLProxyEntity;
     FRequired: Boolean;
+    FProxyType: TWiRLProxyType;
     procedure ProcessAttributes;
   public
     constructor Create(AParam: TRttiParameter);
@@ -92,9 +105,9 @@ type
     property Kind: TMethodParamType read FKind write FKind;
     property Value: string read FValue write FValue;
     property Injected: Boolean read FInjected write FInjected;
-    property Entity: TWiRLProxyEntity read FEntity write FEntity;
     property Context: TRttiType read FContext write FContext;
     property Required: Boolean read FRequired write FRequired;
+    property ProxyType: TWiRLProxyType read FProxyType;
 
     property RttiParam: TRttiParameter read FRttiParam write FRttiParam;
     property Attributes: TArray<TCustomAttribute> read FAttributes write FAttributes;
@@ -137,14 +150,10 @@ type
   private
     FRttiType: TRttiType;
     FResultType: TTypeKind;
-    FIsClass: Boolean;
-    FIsRecord: Boolean;
     FIsSingleton: Boolean;
     FIsProcedure: Boolean;
     FIsFunction: Boolean;
-    FIsArray: Boolean;
-    FIsSimple: Boolean;
-    FEntity: TWiRLProxyEntity;
+    FProxyType: TWiRLProxyType;
   public
     constructor Create(AResultType: TRttiType);
     destructor Destroy; override;
@@ -156,13 +165,9 @@ type
     property IsFunction: Boolean read FIsFunction;
 
     property ResultType: TTypeKind read FResultType;
-    property IsClass: Boolean read FIsClass;
-    property IsRecord: Boolean read FIsRecord;
-    property IsArray: Boolean read FIsArray;
-    property IsSimple: Boolean read FIsSimple;
     property IsSingleton: Boolean read FIsSingleton;
     property RttiType: TRttiType read FRttiType;
-    property Entity: TWiRLProxyEntity read FEntity write FEntity;
+    property ProxyType: TWiRLProxyType read FProxyType;
   end;
 
   TWiRLProxyMethodAuth = class(TWiRLProxyBase)
@@ -201,6 +206,7 @@ type
     FAllAttributes: TArray<TCustomAttribute>;
     FStatus: TWiRLHttpStatus;
     FParams: TWiRLProxyParameters;
+    FExcludeOpenAPI: Boolean;
     FAuthHandler: Boolean;
     FResponses: TWiRLProxyMethodResponses;
 
@@ -229,6 +235,7 @@ type
     property Produces: TMediaTypeList read FProduces;
     property Filters: TWiRLProxyFilters read FFilters;
     property Status: TWiRLHttpStatus read FStatus write FStatus;
+    property ExcludeOpenAPI: Boolean read FExcludeOpenAPI;
     property Params: TWiRLProxyParameters read FParams write FParams;
     property Responses: TWiRLProxyMethodResponses read FResponses write FResponses;
 
@@ -261,6 +268,7 @@ type
     FProduces: TMediaTypeList;
     FConsumes: TMediaTypeList;
     FFilters: TWiRLProxyFilters;
+    FExcludeOpenAPI: Boolean;
 
     procedure ProcessAttributes;
     procedure ProcessMethods;
@@ -284,6 +292,7 @@ type
     property Produces: TMediaTypeList read FProduces;
     property Consumes: TMediaTypeList read FConsumes;
     property Filters: TWiRLProxyFilters read FFilters;
+    property ExcludeOpenAPI: Boolean read FExcludeOpenAPI;
 
     // Rtti-based properties (to be removed)
     // Introduce: ClassName, UnitName
@@ -420,7 +429,7 @@ begin
 
 
   // If the method result it's an object there is no Produces let the MBWs choose the output
-  if AMethod.Produces.IsWildCard and (AMethod.MethodResult.IsClass or AMethod.MethodResult.IsRecord) then
+  if AMethod.Produces.IsWildCard and AMethod.MethodResult.ProxyType.IsEntity then
     Exit(True);
 end;
 
@@ -491,6 +500,10 @@ begin
       FAuth.AuthType := TWiRLProxyAuthType.Cookie;
       FAuth.HeaderName := (LAttribute as CookieAuthAttribute).CookieName;
     end
+
+    // OpenAPI exclusion
+    else if LAttribute is ExcludeFromOpenAPIAttribute then
+      FExcludeOpenAPI := True;
   end;
 end;
 
@@ -534,7 +547,8 @@ begin
   FStatus := TWiRLHttpStatus.Create;
   FParams := TWiRLProxyParameters.Create(True);
   FResponses := TWiRLProxyMethodResponses.Create(True);
-  FMethodResult := TWiRLProxyMethodResult.Create(FRttiMethod.ReturnType);
+  if Assigned(FRttiMethod.ReturnType) then
+    FMethodResult := TWiRLProxyMethodResult.Create(FRttiMethod.ReturnType);
   FName := FRttiMethod.Name;
   FIsFunction := Assigned(FRttiMethod.ReturnType);
 end;
@@ -594,7 +608,8 @@ begin
 
   ProcessAttributes();
   ProcessParams();
-  ProcessMethodResult();
+  if Assigned(FMethodResult) then
+    ProcessMethodResult();
 
   FProcessed := True;
 end;
@@ -686,6 +701,9 @@ begin
       FStatus.Reason := LStatus.Reason;
     end
 
+    // OpenAPI exclusion
+    else if LAttribute is ExcludeFromOpenAPIAttribute then
+      FExcludeOpenAPI := True;
   end;
 end;
 
@@ -716,12 +734,12 @@ end;
 constructor TWiRLProxyMethodResult.Create(AResultType: TRttiType);
 begin
   FRttiType := AResultType;
+  FProxyType := TWiRLProxyType.Create(AResultType);
 end;
 
 destructor TWiRLProxyMethodResult.Destroy;
 begin
-  FEntity.Free;
-
+  FProxyType.Free;
   inherited;
 end;
 
@@ -733,29 +751,6 @@ begin
   begin
     FIsFunction := True;
     FResultType := FRttiType.TypeKind;
-    case FResultType of
-      tkClass:
-      begin
-        FIsClass := True;
-        FEntity := TWiRLProxyEntity.Create(FRttiType);
-        FEntity.Process();
-      end;
-
-      tkRecord:
-      begin
-        FIsRecord := True;
-        FEntity := TWiRLProxyEntity.Create(FRttiType);
-        FEntity.Process();
-      end;
-
-      tkArray, tkDynArray:
-      begin
-        { TODO -opaolo -c : Finire TArray<TPet> 07/10/2025 13:49:17 }
-        FIsArray := True;
-      end
-    else
-      FIsSimple := True;
-    end;
   end
   else
     FIsProcedure := True;
@@ -826,12 +821,12 @@ constructor TWiRLProxyParameter.Create(AParam: TRttiParameter);
 begin
   FRttiParam := AParam;
   FName := FRttiParam.Name;
+  FProxyType := TWiRLProxyType.Create(AParam.ParamType);
 end;
 
 destructor TWiRLProxyParameter.Destroy;
 begin
-  FEntity.Free;
-
+  FProxyType.Free;
   inherited;
 end;
 
@@ -879,12 +874,7 @@ begin
     else if LAttr is CookieParamAttribute then
       Kind := TMethodParamType.Cookie
     else if LAttr is BodyParamAttribute then
-    begin
-      Kind := TMethodParamType.Body;
-
-      FEntity := TWiRLProxyEntity.Create(FRttiParam.ParamType);
-      FEntity.Process();
-    end
+      Kind := TMethodParamType.Body
     else if LAttr is FormDataParamAttribute then
       Kind := TMethodParamType.FormData
     else if LAttr is MultipartAttribute then
@@ -1010,24 +1000,6 @@ begin
       Exit(True);
 end;
 
-{ TWiRLProxyEntity }
-
-constructor TWiRLProxyEntity.Create(AType: TRttiType);
-begin
-  FRttiType := AType;
-end;
-
-procedure TWiRLProxyEntity.Process;
-begin
-  inherited;
-  FCode := FRttiType.Name;
-  FName := FRttiType.Name;
-
-  //ProcessAttributes;
-  //FSummary := FindReadXMLDoc();
-
-  FProcessed := True;
-end;
 
 { TWiRLProxyMethodResponse }
 
@@ -1064,6 +1036,169 @@ begin
     Exit(TResponseType.RefSchema);
 
   Result := TResponseType.Content;
+end;
+
+{ TWiRLProxyType }
+
+constructor TWiRLProxyType.Create(AType: TRttiType);
+begin
+  FRttiType := AType;
+  Process();
+end;
+
+destructor TWiRLProxyType.Destroy;
+begin
+  FItem.Free;
+  inherited;
+end;
+
+function TWiRLProxyType.IsEntity: Boolean;
+begin
+  Result := Kind = TWiRLTypeKind.Entity;
+end;
+
+function TWiRLProxyType.IsTypeArray(AType: TRttiType; out AItemType: TRttiType): Boolean;
+begin
+  AItemType := nil;
+
+  if not ((AType.TypeKind = tkArray) or ((AType.TypeKind = tkDynArray))) then
+    Exit(False);
+
+  if AType is TRttiDynamicArrayType then
+    AItemType := (AType as TRttiDynamicArrayType).ElementType
+  else if AType is TRttiArrayType then
+    AItemType := (AType as TRttiArrayType).ElementType;
+
+  if not Assigned(AItemType) then
+    raise EWiRLServerException.CreateFmt('Error determining type for %s', [AType.Name]);
+
+  Result := True;
+end;
+
+function TWiRLProxyType.IsTypeList(AType: TRttiType; out AItemType: TRttiType): Boolean;
+var
+  LMethod: TRttiMethod;
+  LEnumType: TRttiType;
+  LProp: TRttiProperty;
+begin
+  AItemType := nil;
+
+  LMethod := AType.GetMethod('GetEnumerator');
+  if not Assigned(LMethod) or
+     (LMethod.MethodKind <> mkFunction) or
+     (LMethod.ReturnType.Handle.Kind <> tkClass)
+  then
+    Exit(False);
+
+  LEnumType := LMethod.ReturnType;
+
+
+  LMethod := AType.GetMethod('Clear');
+  if not Assigned(LMethod) then
+    Exit(False);
+
+  LProp := AType.GetProperty('Count');
+  if not Assigned(LProp) then
+    Exit(False);
+
+  LProp := LEnumType.GetProperty('Current');
+  if not Assigned(LProp) then
+    Exit(False);
+
+  LMethod := LEnumType.GetMethod('MoveNext');
+  if not Assigned(LMethod) or
+     (Length(LMethod.GetParameters) <> 0) or
+     (LMethod.MethodKind <> mkFunction) or
+     (LMethod.ReturnType.Handle <> TypeInfo(Boolean))
+  then
+    Exit(False);
+
+  LMethod := AType.GetMethod('Add');
+  if not Assigned(LMethod) or (Length(LMethod.GetParameters) <> 1) then
+    Exit(False);
+
+  AItemType := LMethod.GetParameters[0].ParamType;
+
+  Result := True;
+end;
+
+function TWiRLProxyType.IsTypeSet(AType: TRttiType; out AItemType: TRttiType): Boolean;
+begin
+  AItemType := nil;
+
+  if not (AType.TypeKind = tkSet) then
+    Exit(False);
+
+  if AType is TRttiSetType then
+    AItemType := (AType as TRttiSetType).ElementType;
+
+  if not Assigned(AItemType) then
+    raise EWiRLServerException.CreateFmt('Error determining type for %s', [AType.Name]);
+
+  Result := True;
+end;
+
+procedure TWiRLProxyType.Process;
+var
+  LItemType: TRttiType;
+begin
+  inherited;
+  FCode := FRttiType.Name;
+  FName := FRttiType.Name;
+  FProcessed := True;
+
+  //ProcessAttributes;
+  //FSummary := FindReadXMLDoc();
+
+  case FRttiType.TypeKind of
+    tkInteger,
+    tkInt64,
+    tkFloat,
+    tkChar,
+    tkEnumeration,
+    tkString,
+    tkWChar,
+    tkLString,
+    tkWString,
+    tkUString:
+    begin
+      FKind := TWiRLTypeKind.Simple;
+    end;
+
+    tkRecord,
+    tkMRecord,
+    tkClass:
+    begin
+      FKind := TWiRLTypeKind.Entity;
+      if IsTypeList(FRttiType, LItemType) then
+      begin
+        FKind := TWiRLTypeKind.List;
+        FItem := TWiRLProxyType.Create(LItemType);
+      end;
+    end;
+
+    tkSet,
+    tkArray,
+    tkDynArray:
+    begin
+      FKind := TWiRLTypeKind.List;
+      if IsTypeArray(FRttiType, LItemType) then
+        FItem := TWiRLProxyType.Create(LItemType)
+      else if IsTypeSet(FRttiType, LItemType) then
+        FItem := TWiRLProxyType.Create(LItemType);
+    end;
+
+    tkVariant,
+    tkInterface,
+    tkClassRef,
+    tkPointer,
+    tkProcedure,
+    tkMethod:
+    begin
+      FKind := TWiRLTypeKind.Unsupported;
+    end;
+  end;
+
 end;
 
 end.
