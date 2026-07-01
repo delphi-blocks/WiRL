@@ -2,7 +2,7 @@
 {                                                                              }
 {       WiRL: RESTful Library for Delphi                                       }
 {                                                                              }
-{       Copyright (c) 2015-2021 WiRL Team                                      }
+{       Copyright (c) 2015-2026 WiRL Team                                      }
 {                                                                              }
 {       https://github.com/delphi-blocks/WiRL                                  }
 {                                                                              }
@@ -138,7 +138,7 @@ begin
   FUserName := '';
   FURL := AURL;
 
-  ParseURI;
+  Parse;
 end;
 
 procedure TWiRLURL.BasePathChanged;
@@ -358,18 +358,11 @@ end;
 
 procedure TWiRLURL.ParseURI;
 var
-  LDefaultPortNumber: Integer;
   LURI: TURI;
 begin
   LURI := TURI.Create(FURL);
 
   FProtocol := LURI.Scheme;
-  if SameText(FProtocol, '') or SameText(FProtocol, 'http') then
-    LDefaultPortNumber := 80
-  else if SameText(FProtocol, 'https') then
-    LDefaultPortNumber := 443
-  else
-    LDefaultPortNumber := 0;
   FUserName := LURI.Username;
   FPassword := LURI.Password;
   FHostName := LURI.Host;
@@ -459,7 +452,7 @@ end;
 
 procedure TWiRLURL.URLChanged;
 begin
-  ParseURI;
+  Parse;
 end;
 
 class function TWiRLURL.URLDecode(const AString: string): string;
