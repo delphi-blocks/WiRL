@@ -130,6 +130,7 @@ type
     procedure SendHeaders(AImmediate: Boolean = False); virtual; abstract;
     destructor Destroy; override;
 
+    procedure ContentFromFile(const AContentType, AFileTemplate: string);
     procedure FromWiRLStatus(AStatus: TWiRLHttpStatus);
     procedure Redirect(ACode: Integer; const ALocation: string);
     procedure SetNonStandardReasonString(const AValue: string);
@@ -165,6 +166,7 @@ implementation
 
 uses
   System.TypInfo,
+  WiRL.Core.Utils,
   WiRL.Core.Context,
   IdGlobal, IdGlobalProtocols;
 
@@ -202,6 +204,27 @@ type
 
 
 { TWiRLResponse }
+
+procedure TWiRLResponse.ContentFromFile(const AContentType, AFileTemplate: string);
+var
+  LFileName: string;
+  LPathEngine: TWiRLTemplatePaths;
+begin
+  LPathEngine := TWiRLTemplatePaths.Create();
+  try
+    LFileName := LPathEngine.Render(AFileTemplate);
+    if not FileExists(LFileName) then
+    begin
+      StatusCode := 404;
+      ReasonString := Format('Content File [%s] not found', [AFileTemplate]);
+      Exit;
+    end;
+    ContentType := AContentType;
+    ContentStream := TFileStream.Create(LFileName, fmOpenRead);
+  finally
+    LPathEngine.Free;
+  end;
+end;
 
 destructor TWiRLResponse.Destroy;
 begin

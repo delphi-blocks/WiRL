@@ -25,6 +25,8 @@ uses
   WiRL.Core.Context.Server;
 
 type
+  TWiRLServerPathHandler = reference to procedure (AResponse: TWiRLResponse);
+  TWiRLServerPathHandlers = TDictionary<string, TWiRLServerPathHandler>;
 
   TWiRLServer = class(TComponent, IWiRLListener)
   private const
@@ -37,7 +39,7 @@ type
     FActive: Boolean;
     FServerVendor: string;
     FEngineList: TWiRLEngineList;
-    FSinkPaths: TList<string>;
+    FPathHandlers: TWiRLServerPathHandlers;
     procedure FreeEngines;
     function GetPortProp: Integer;
     procedure SetPortProp(APort: Integer);
@@ -45,6 +47,7 @@ type
     procedure SetThreadPoolSizeProp(const Value: Integer);
     procedure SetServerVendor(const Value: string);
     function GetServerImplementation: TObject;
+    function HandlePath(const APath: string; AResponse: TWiRLResponse): Boolean;
   protected
     FEngines: TWiRLEngineRegistry;
     function GetActive: Boolean; virtual;
@@ -65,6 +68,8 @@ type
     function SetPort(APort: Integer): TWiRLServer;
     function SetThreadPoolSize(AThreadPoolSize: Integer): TWiRLServer;
     function AddSinkPath(const APath: string): TWiRLServer;
+    function AddPathHandler(const APath: string; AHandler: TWiRLServerPathHandler): TWiRLServer; overload;
+    function AddPathHandler(const APath, AContentType, AFileTemplate: string): TWiRLServer; overload;
 
     { IWiRLListener }
     procedure HandleRequest(AContext: TWiRLContext; ARequest: TWiRLRequest; AResponse: TWiRLResponse);
@@ -77,7 +82,7 @@ type
   published
     property Active: Boolean read GetActive write SetActive;
     property Port: Integer read GetPortProp write SetPortProp default DefaultPort;
-    property SinkPaths: TList<string> read FSinkPaths write FSinkPaths;
+    property PathHandlers: TWiRLServerPathHandlers read FPathHandlers write FPathHandlers;
     property ThreadPoolSize: Integer read GetThreadPoolSizeProp write SetThreadPoolSizeProp default DefaultThreadPoolSize;
     property ServerName: string read FServerName write FServerName;
     property ServerVendor: string read FServerVendor write SetServerVendor;
@@ -119,16 +124,33 @@ begin
   Result := Self;
 end;
 
+function TWiRLServer.AddPathHandler(const APath, AContentType, AFileTemplate: string): TWiRLServer;
+begin
+  FPathHandlers.Add(APath,
+    procedure (AResponse: TWiRLResponse)
+    begin
+      AResponse.ContentFromFile(AContentType, AFileTemplate);
+    end
+  );
+  Result := Self;
+end;
+
+function TWiRLServer.AddPathHandler(const APath: string; AHandler: TWiRLServerPathHandler): TWiRLServer;
+begin
+  FPathHandlers.Add(APath, AHandler);
+  Result := Self;
+end;
+
 function TWiRLServer.AddSinkPath(const APath: string): TWiRLServer;
 begin
-  FSinkPaths.Add(APath);
+  FPathHandlers.Add(APath, nil);
   Result := Self;
 end;
 
 constructor TWiRLServer.Create(AOwner: TComponent);
 begin
   inherited;
-  FSinkPaths := TList<string>.Create;
+  FPathHandlers := TWiRLServerPathHandlers.Create;
   FEngineList := TWiRLEngineList.Create(Self.FEngines);
   FEngines := TWiRLEngineRegistry.Create(True);
   FHttpServer := TWiRLServerRegistry.Instance.CreateServer(FServerVendor);
@@ -146,7 +168,7 @@ end;
 
 destructor TWiRLServer.Destroy;
 begin
-  FSinkPaths.Free;
+  FPathHandlers.Free;
   FEngineList.Free;
   FreeEngines;
   inherited;
@@ -162,11 +184,9 @@ var
   LEngineInfo: TWiRLEngineInfo;
 begin
   for LEngineInfo in FEngines do
-  begin
     if LEngineInfo.OwnsObjects then
       LEngineInfo.Engine.Free;
-//    LPair.Value.Free;
-  end;
+
   FEngines.Free;
 end;
 
@@ -183,17 +203,27 @@ begin
     raise EWiRLNotFoundException.Create(Format('Engine not found for URL [%s]', [AURL]));
 end;
 
+function TWiRLServer.HandlePath(const APath: string; AResponse: TWiRLResponse): Boolean;
+var
+  LHandler: TWiRLServerPathHandler;
+begin
+  if not FPathHandlers.TryGetValue(APath, LHandler) then
+    Exit(False);
+
+  if Assigned(LHandler) then
+    LHandler(AResponse)
+  else
+    AResponse.StatusCode := 204; //404?
+
+  Result := True;
+end;
+
 procedure TWiRLServer.HandleRequest(AContext: TWiRLContext; ARequest: TWiRLRequest; AResponse: TWiRLResponse);
 var
   LEngine: TWiRLCustomEngine;
-  LPath: string;
 begin
-  for LPath in FSinkPaths do
-    if LPath = ARequest.PathInfo then
-    begin
-      AResponse.StatusCode := 204; //404?
-      Exit;
-    end;
+  if HandlePath(ARequest.PathInfo, AResponse) then
+    Exit;
 
   AContext.Server := Self;
   AContext.Request := ARequest;

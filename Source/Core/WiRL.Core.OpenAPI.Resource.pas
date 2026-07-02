@@ -61,28 +61,22 @@ type
 
   TOpenAPIResourceCustom = class
   private
-    [Context]
-    App: TWiRLApplication;
-    [Context]
-    Conf: TWiRLConfigurationOpenAPI;
-    [Context]
-    Request: TWiRLRequest;
-    [Context]
-    Response: TWiRLResponse;
-    [Context]
-    Resource: TWiRLProxyResource;
+    [Context] App: TWiRLApplication;
+    [Context] Conf: TWiRLConfigurationOpenAPI;
+    [Context] Request: TWiRLRequest;
+    [Context] Response: TWiRLResponse;
+    [Context] Resource: TWiRLProxyResource;
     function FilterContent(const AFileName: string): TStream;
   public
-    [GET,
-    Produces(TMediaType.APPLICATION_JSON)]
+    [GET]
+    [Produces(TMediaType.APPLICATION_JSON)]
     function GetSwaggerJSON: TJSONObject;
 
     [GET]
     [Produces(TMediaType.TEXT_HTML)]
     function GetSwaggerHTML(): TStream;
 
-    [GET]
-    [Path('/{file}')]
+    [GET] [Path('/{file}')]
     [Produces(TMediaType.TEXT_HTML)]
     function GetSwaggerAssets: TStream;
   end;
