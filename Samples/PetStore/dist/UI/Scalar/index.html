@@ -1,6 +1,33 @@
 <!doctype html>
 <html>
   <head>
+  	<style>
+:root {
+  --scalar-custom-header-height: 80px;
+}
+.custom-header {
+  height: var(--scalar-custom-header-height);
+  background-color: var(--scalar-background-1);
+  box-shadow: inset 0 -5px 0 var(--scalar-border-color);
+  color: var(--scalar-color-1);
+  font-size: var(--scalar-font-size-2);
+  padding: 0 18px;
+  position: sticky;
+  justify-content: space-between;
+  top: 0;
+  z-index: 100;
+}
+.custom-header,
+.custom-header nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.custom-header a:hover {
+  color: var(--scalar-color-2);
+}
+
+  	</style>
     <title>Scalar API Reference</title>
     <meta charset="utf-8" />
     <meta
@@ -9,7 +36,12 @@
   </head>
 
   <body>
-  
+  <header class="custom-header scalar-app">
+  <img height="60" alt="MY REST API" src="api-logo.png" / >
+  <nav>
+    <a target="_blank" href="https://wirl.delphiblocks.dev/"><img height="50" alt="Powered by WiRL" src="company-logo.png" / ></a>
+  </nav>
+</header>
     <div id="app"></div>
 
     <!-- Load the Script -->
@@ -20,6 +52,8 @@
       Scalar.createApiReference('#app', {
         // The URL of the OpenAPI/Swagger document
         url: '{%url%}?format=json',
+        layout: 'modern',
+        theme: 'moon',
         // Avoid CORS issues
         //proxyUrl: 'https://proxy.scalar.com',
       })
