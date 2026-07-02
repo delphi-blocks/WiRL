@@ -22,6 +22,7 @@ uses
   WiRL.Configuration.OpenAPI,
   WiRL.Core.Application,
   WiRL.Engine.REST,
+  WiRL.http.Response,
   WiRL.http.Server,
   WiRL.http.Server.Indy,
   Neon.Core.Types,
@@ -107,10 +108,14 @@ begin
 
   LDocument := ConfigureOpenAPIDocument;
 
+  FRESTServer
+    .AddSinkPath('/.well-known/apple-app-site-association')
+    .AddSinkPath('/.well-known/appspecific/com.chrome.devtools.json')
+    .AddPathHandler('/favicon.ico', 'image/x-icon', '{AppPath}\..\dist\favicon.ico');
+
   FEngine :=
     FRESTServer.AddEngine<TWiRLRESTEngine>(ENG_PATH)
       .SetEngineName('RESTEngine');
-
 
   FEngine.AddApplication(APP_PATH)
     .SetAppName('PetStore')
