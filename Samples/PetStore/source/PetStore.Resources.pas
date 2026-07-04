@@ -16,8 +16,8 @@ interface
 uses
   System.Classes, System.SysUtils, System.JSON, System.Rtti,
 
-  WiRL.Core.OpenAPI.Resource,
   WiRL.Engine.REST,
+  WiRL.Core.OpenAPI.Resource,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Exceptions,
@@ -157,7 +157,8 @@ type
     /// <response code="400" name="BadRequest" error="Error">
     ///   Bad Request
     /// </response>
-    [POST, Path('{petId}/uploadImage'), Produces(TMediaType.APPLICATION_JSON), Consumes(TMediaType.APPLICATION_OCTET_STREAM)]
+    [POST, Path('{petId}/uploadImage')]
+    [Consumes(TMediaType.APPLICATION_OCTET_STREAM), Produces(TMediaType.APPLICATION_JSON)]
     function UploadImage(
       [PathParam('petId')] APetID: Int64;
       [QueryParam('additionalMetadata')] const AData: string;

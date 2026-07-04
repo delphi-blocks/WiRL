@@ -17,15 +17,15 @@ uses
   WiRL.Configuration.OpenAPI,
   WiRL.Core.JSON,
   WiRL.Core.OpenAPI,
+  WiRL.Core.Metadata,
   WiRL.Core.Application,
   WiRL.Core.Registry,
   WiRL.Core.Attributes,
-  WiRL.http.Accept.MediaType,
   WiRL.Core.Utils,
-  WiRL.Rtti.Utils,
   WiRL.http.Request,
   WiRL.http.Response,
-  WiRL.Core.Metadata;
+  WiRL.http.Accept.MediaType,
+  WiRL.Rtti.Utils;
 
 type
   TWiRLProcessEvent = function(const AFileName: string): TStream of object;

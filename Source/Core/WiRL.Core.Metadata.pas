@@ -61,7 +61,7 @@ type
   TWiRLProxyFilters = class(TObjectList<TWiRLProxyFilter>);
 
 
-  TWiRLTypeKind = (Unsupported, Simple, Entity, List);
+  TWiRLTypeKind = (Unsupported, Simple, Entity, Stream, List);
   TWiRLProxyType = class(TWiRLProxyBase)
   private
     FRttiType: TRttiType;
@@ -71,6 +71,8 @@ type
     function IsTypeSet(AType: TRttiType; out AItemType: TRttiType): Boolean;
     function IsTypeList(AType: TRttiType; out AItemType: TRttiType): Boolean;
     function IsTypeArray(AType: TRttiType; out AItemType: TRttiType): Boolean;
+    function IsTypeStream(AType: TRttiType): Boolean;
+    function IsTypeStreamable(AType: TRttiType): Boolean;
   public
     constructor Create(AType: TRttiType);
     destructor Destroy; override;
@@ -1138,6 +1140,42 @@ begin
   Result := True;
 end;
 
+function TWiRLProxyType.IsTypeStream(AType: TRttiType): Boolean;
+begin
+  Result := (AType.Name = 'TStream') or AType.InheritsFrom(TStream);
+end;
+
+function TWiRLProxyType.IsTypeStreamable(AType: TRttiType): Boolean;
+var
+  LMethod: TRttiMethod;
+  LParameters: TArray<TRttiParameter>;
+begin
+  if not Assigned(AType) then
+    Exit(False);
+
+  LMethod := AType.GetMethod('LoadFromStream');
+  if Assigned(LMethod) then
+  begin
+    LParameters := LMethod.GetParameters;
+    if Length(LParameters) <> 1 then
+      Exit(False);
+  end
+  else
+    Exit(False);
+
+  LMethod := AType.GetMethod('SaveToStream');
+  if Assigned(LMethod) then
+  begin
+    LParameters := LMethod.GetParameters;
+    if Length(LParameters) <> 1 then
+      Exit(False);
+  end
+  else
+    Exit(False);
+
+  Result := True;
+end;
+
 procedure TWiRLProxyType.Process;
 var
   LItemType: TRttiType;
@@ -1170,11 +1208,24 @@ begin
     tkClass:
     begin
       FKind := TWiRLTypeKind.Entity;
+
       if IsTypeList(FRttiType, LItemType) then
       begin
         FKind := TWiRLTypeKind.List;
         FItem := TWiRLProxyType.Create(LItemType);
       end;
+
+      if IsTypeSet(FRttiType, LItemType) then
+      begin
+        FKind := TWiRLTypeKind.List;
+        FItem := TWiRLProxyType.Create(LItemType);
+      end;
+
+      if IsTypeStream(FRttiType) or IsTypeStreamable(FRttiType) then
+      begin
+        FKind := TWiRLTypeKind.Stream;
+      end;
+
     end;
 
     tkSet,

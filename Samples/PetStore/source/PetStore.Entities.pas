@@ -38,7 +38,7 @@ type
     Name: string;
   end;
 
-  [JsonSchema('title=user')]
+  [JsonSchema('title=User')]
   TUser = record
     Id: Int64;
     Username: string;

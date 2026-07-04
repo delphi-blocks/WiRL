@@ -154,9 +154,6 @@ begin
       //.SetGUIDocFolder('{AppPath}\..\dist\UI\Swagger')
       //.SetGUIDocFolder('{AppPath}\..\dist\UI\Redoc')
 
-      // Set the (optional) API logo
-      .SetAPILogo('api-logo.png')
-
       // Set the OpenAPI document for the OpenAPI engine to fill
       .SetAPIDocument(LDocument)
 

@@ -546,12 +546,14 @@ procedure TOpenAPIv3Engine.ProxyTypeToSchema(AType: TWiRLProxyType; ASchema: TOp
 begin
   case AType.Kind of
     TWiRLTypeKind.Unsupported: ;
+
     TWiRLTypeKind.Simple:
     begin
       ASchema
         .WithNeonConfig(FNeonConfigCustom)
         .SetJSONFromType(AType.RttiType);
     end;
+
     TWiRLTypeKind.Entity:
     begin
       JSchemaProcessor.ProcessType(AType);
@@ -566,6 +568,14 @@ begin
 
       ASchema.SetSchemaReference(AType.Name);
     end;
+
+    TWiRLTypeKind.Stream:
+    begin
+      ASchema
+        .WithNeonConfig(FNeonConfigCustom)
+        .SetJSONFromType(TRttiHelper.Context.GetType(TypeInfo(string)));
+    end;
+
     TWiRLTypeKind.List:
     begin
       ASchema.Title := 'array';
