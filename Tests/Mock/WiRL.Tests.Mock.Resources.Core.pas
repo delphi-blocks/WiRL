@@ -111,6 +111,31 @@ type
     function PostMultipartMixed([FormParam('name')] AName: string; [FormParam('qty')] AQty: Integer): string;
   end;
 
+  // Resources with names that share a common prefix. Used to verify that the
+  // router selects the resource whose path matches exactly and does not pick a
+  // resource whose name merely starts with the requested one (e.g. 'foo' must
+  // not be routed to 'foobar' or 'foobarzan').
+  [Path('/foo')]
+  TFooResource = class
+  public
+    [GET, Produces(TMediaType.TEXT_PLAIN)]
+    function Get(): string;
+  end;
+
+  [Path('/foobar')]
+  TFooBarResource = class
+  public
+    [GET, Produces(TMediaType.TEXT_PLAIN)]
+    function Get(): string;
+  end;
+
+  [Path('/foobarzan')]
+  TFooBarZanResource = class
+  public
+    [GET, Produces(TMediaType.TEXT_PLAIN)]
+    function Get(): string;
+  end;
+
 implementation
 
 { THelloWorldResource }
@@ -214,6 +239,27 @@ begin
   Result := System.StrUtils.ReverseString(AString);
 end;
 
+{ TFooResource }
+
+function TFooResource.Get: string;
+begin
+  Result := 'foo';
+end;
+
+{ TFooBarResource }
+
+function TFooBarResource.Get: string;
+begin
+  Result := 'foobar';
+end;
+
+{ TFooBarZanResource }
+
+function TFooBarZanResource.Get: string;
+begin
+  Result := 'foobarzan';
+end;
+
 function THelloWorldResource.Sum(AOne, ATwo: Integer): Integer;
 begin
   Result := AOne + ATwo;
@@ -236,5 +282,8 @@ end;
 
 initialization
   TWiRLResourceRegistry.Instance.RegisterResource<THelloWorldResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TFooResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TFooBarResource>;
+  TWiRLResourceRegistry.Instance.RegisterResource<TFooBarZanResource>;
 
 end.

@@ -260,7 +260,13 @@ end;
 
 function TWiRLURL.MatchResource(const APath: string): Boolean;
 begin
-  Result := StartsText(APath, FResource);
+  // The resource path must match on complete path segments: a request for
+  // 'foobar' must not be routed to the resource 'foo' just because its name is
+  // a string prefix. An empty APath is the root resource and matches anything.
+  if APath = '' then
+    Result := True
+  else
+    Result := SameText(FResource, APath) or StartsText(APath + '/', FResource);
 end;
 
 function TWiRLURL.MatchPath(AOtherURL: TWiRLURL): Boolean;

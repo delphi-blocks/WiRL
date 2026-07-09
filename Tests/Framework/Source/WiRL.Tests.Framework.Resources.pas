@@ -86,6 +86,11 @@ type
     procedure PostMultipartFile;
     [Test]
     procedure PostMultipartMixed;
+    [Test]
+    [TestCase('foo', 'foo,foo')]
+    [TestCase('foobar', 'foobar,foobar')]
+    [TestCase('foobarzan', 'foobarzan,foobarzan')]
+    procedure TestPrefixedResourcePaths(const APath, AExpected: string);
   end;
 
 implementation
@@ -416,6 +421,15 @@ begin
   WriteMultipartBody(LBoundary, LBody);
   FServer.HandleRequest(FContext, FRequest, FResponse);
   Assert.AreEqual('document.txt', FResponse.Content);
+end;
+
+procedure TTestResource.TestPrefixedResourcePaths(const APath, AExpected: string);
+begin
+  FRequest.Method := 'GET';
+  FRequest.Url := 'http://localhost:1234/rest/app/' + APath;
+  FServer.HandleRequest(FContext, FRequest, FResponse);
+  Assert.AreEqual(200, FResponse.StatusCode);
+  Assert.AreEqual(AExpected, FResponse.Content);
 end;
 
 procedure TTestResource.PostMultipartMixed;
