@@ -182,6 +182,7 @@ begin
     begin
       LExtensions := TStringList.Create;
       LExtensions.Delimiter := ';';
+      LExtensions.StrictDelimiter := True;
       LExtensions.DelimitedText := AExtensions;
       Assert(LExtensions.Count >= 1);
     end;
