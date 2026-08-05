@@ -372,7 +372,10 @@ begin
   Create(AMessage, AStatus);
 
   if Assigned(AData) then
+  begin
+    FData.Free;
     FData := (AData.Clone as TJSONObject);
+  end;
 end;
 
 constructor EWiRLWebApplicationException.Create(AInnerException: Exception;
