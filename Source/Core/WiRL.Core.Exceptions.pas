@@ -349,10 +349,7 @@ end;
 
 constructor EWiRLWebApplicationException.Create(const AMessage: string; AStatus: Integer);
 begin
-  inherited Create(AMessage);
-  FStatus := AStatus;
-  FException := ClassName;
-  FData := TJSONObject.Create;
+  Create(AMessage, AStatus, nil);
 end;
 
 constructor EWiRLWebApplicationException.Create(const AMessage: string;
@@ -369,10 +366,13 @@ end;
 
 constructor EWiRLWebApplicationException.Create(const AMessage: string; AStatus: Integer; AData: TJSONObject);
 begin
-  Create(AMessage, AStatus);
+  inherited Create(AMessage);
+  FStatus := AStatus;
+  FException := ClassName;
 
-  if Assigned(AData) then
-    FData := (AData.Clone as TJSONObject);
+  if Assigned(AData)
+    then FData := (AData.Clone as TJSONObject)
+    else FData := TJSONObject.Create;
 end;
 
 constructor EWiRLWebApplicationException.Create(AInnerException: Exception;

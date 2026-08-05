@@ -30,6 +30,7 @@ type
     function SetIgnoreFieldPrefix(AValue: Boolean): IWiRLConfigurationNeon;
     function SetUseUTCDate(AValue: Boolean): IWiRLConfigurationNeon;
     function SetPrettyPrint(AValue: Boolean): IWiRLConfigurationNeon;
+    function SetRaiseExceptions(AValue: Boolean): IWiRLConfigurationNeon;
     function AddSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
     function RemoveSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
   end;
@@ -39,6 +40,7 @@ type
   private
     FNeonConfiguration: INeonConfiguration;
     FPrettyPrint: Boolean;
+    FRaiseExceptions: Boolean;
     FIgnoreFieldPrefix: Boolean;
     FMemberCustomCase: TCaseFunc;
     FUseUTCDate: Boolean;
@@ -63,6 +65,7 @@ type
     function SetIgnoreFieldPrefix(AValue: Boolean): IWiRLConfigurationNeon;
     function SetUseUTCDate(AValue: Boolean): IWiRLConfigurationNeon;
     function SetPrettyPrint(AValue: Boolean): IWiRLConfigurationNeon;
+    function SetRaiseExceptions(AValue: Boolean): IWiRLConfigurationNeon;
 
     function AddSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
     function RemoveSerializer(ASerializerClass: TCustomSerializerClass): IWiRLConfigurationNeon;
@@ -78,6 +81,7 @@ type
     property Visibility: TNeonVisibility read FVisibility write FVisibility;
     property IgnoreFieldPrefix: Boolean read FIgnoreFieldPrefix write FIgnoreFieldPrefix;
     property UseUTCDate: Boolean read FUseUTCDate write FUseUTCDate;
+    property RaiseExceptions: Boolean read FRaiseExceptions write FRaiseExceptions;
  public
     property Serializers: TNeonSerializerRegistry read FSerializers write FSerializers;
   end;
@@ -101,7 +105,7 @@ begin
   SetVisibility([mvPublic, mvPublished]);
   SetUseUTCDate(True);
   SetPrettyPrint(False);
-
+  SetRaiseExceptions(False);
 end;
 
 class function TWiRLConfigurationNeon.Default: IWiRLConfigurationNeon;
@@ -177,6 +181,7 @@ begin
    .SetIgnoreFieldPrefix(FIgnoreFieldPrefix)
    .SetUseUTCDate(FUseUTCDate)
    .SetPrettyPrint(FPrettyPrint)
+   .SetRaiseExceptions(FRaiseExceptions)
    .GetSerializers
      .RegisterSerializer(TJSONValueSerializer)
      .RegisterSerializer(TGUIDSerializer)
@@ -229,6 +234,13 @@ end;
 function TWiRLConfigurationNeon.SetPrettyPrint(AValue: Boolean): IWiRLConfigurationNeon;
 begin
   FPrettyPrint := AValue;
+  Result := Self;
+end;
+
+function TWiRLConfigurationNeon.SetRaiseExceptions(
+  AValue: Boolean): IWiRLConfigurationNeon;
+begin
+  FRaiseExceptions := AValue;
   Result := Self;
 end;
 
